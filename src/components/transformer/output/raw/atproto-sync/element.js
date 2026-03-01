@@ -39,6 +39,8 @@ const STORAGE_PREFIX = "diffuse/transformer/output/atproto-sync";
  * @extends {OutputTransformer<null>}
  */
 class ATProtoOutputSyncTransformer extends OutputTransformer {
+  static NAME = "diffuse/transformer/output/raw/atproto-sync";
+
   constructor() {
     super();
 

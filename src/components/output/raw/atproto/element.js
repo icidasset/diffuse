@@ -82,7 +82,7 @@ class ATProtoOutput extends BroadcastedOutputElement {
           }
 
           return this.#putRecords("sh.diffuse.output.trackBundle", bundles, {
-            batchSize: 1,
+            upsertBatchSize: 1,
           });
         },
       },
@@ -306,9 +306,9 @@ class ATProtoOutput extends BroadcastedOutputElement {
   /**
    * @param {string} collection
    * @param {Array<{ id: string }>} data
-   * @param {{ batchSize?: number }} [options]
+   * @param {{ deleteBatchSize?: number, upsertBatchSize?: number }} [options]
    */
-  async #putRecords(collection, data, { batchSize = 100 } = {}) {
+  async #putRecords(collection, data, { deleteBatchSize = 100, upsertBatchSize = deleteBatchSize } = {}) {
     const rpc = this.#rpc;
     if (!rpc || !this.#did.value) return;
 
@@ -343,11 +343,14 @@ class ATProtoOutput extends BroadcastedOutputElement {
 
       // 3. Compute diff
       /** @type {unknown[]} */
-      const writes = [];
+      const deletes = [];
+
+      /** @type {unknown[]} */
+      const upserts = [];
 
       for (const [id, { rkey }] of existing) {
         if (!desired.has(id)) {
-          writes.push({
+          deletes.push({
             $type: "com.atproto.repo.applyWrites#delete",
             collection,
             rkey,
@@ -359,14 +362,14 @@ class ATProtoOutput extends BroadcastedOutputElement {
         const entry = existing.get(id);
 
         if (!entry) {
-          writes.push({
+          upserts.push({
             $type: "com.atproto.repo.applyWrites#create",
             collection,
             rkey: id,
             value: record,
           });
         } else if (JSON.stringify(entry.value) !== JSON.stringify(record)) {
-          writes.push({
+          upserts.push({
             $type: "com.atproto.repo.applyWrites#update",
             collection,
             rkey: entry.rkey,
@@ -376,9 +379,7 @@ class ATProtoOutput extends BroadcastedOutputElement {
       }
 
       // 4. Apply in batches
-      for (let i = 0; i < writes.length; i += batchSize) {
-        const batch = writes.slice(i, i + batchSize);
-
+      const applyBatch = async (/** @type {unknown[]} */ batch) => {
         const result = await ok(rpc.post("com.atproto.repo.applyWrites", {
           input: { repo: this.#did.value, writes: batch },
         }));
@@ -386,6 +387,14 @@ class ATProtoOutput extends BroadcastedOutputElement {
         if (result?.commit?.rev) {
           this.#rev.value = result.commit.rev;
         }
+      };
+
+      for (let i = 0; i < deletes.length; i += deleteBatchSize) {
+        await applyBatch(deletes.slice(i, i + deleteBatchSize));
+      }
+
+      for (let i = 0; i < upserts.length; i += upsertBatchSize) {
+        await applyBatch(upserts.slice(i, i + upsertBatchSize));
       }
     } catch (err) {
       if (this.#isSessionError(err)) {
