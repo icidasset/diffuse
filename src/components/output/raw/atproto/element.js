@@ -14,7 +14,7 @@ import {
 } from "./oauth.js";
 
 /**
- * @import {TrackBundle} from "@definitions/types.d.ts"
+ * @import {PlaylistItemBundle, TrackBundle} from "@definitions/types.d.ts"
  * @import {OutputManager} from "../../types.d.ts"
  * @import {ATProtoOutputElement} from "./types.d.ts"
  */
@@ -52,8 +52,31 @@ class ATProtoOutput extends BroadcastedOutputElement {
       },
       playlistItems: {
         empty: () => [],
-        get: () => this.listRecords("sh.diffuse.output.playlistItem"),
-        put: (data) => this.#putRecords("sh.diffuse.output.playlistItem", data),
+        get: async () => {
+          const bundles = await this.listRecords(
+            "sh.diffuse.output.playlistItemBundle",
+          );
+
+          return bundles.flatMap((bundle) => bundle.playlistItems ?? []);
+        },
+        put: (data) => {
+          /** @type {PlaylistItemBundle[]} */
+          const bundles = [];
+
+          for (let i = 0; i < data.length; i += 100) {
+            bundles.push({
+              $type: "sh.diffuse.output.playlistItemBundle",
+              id: TID.now(),
+              playlistItems: data.slice(i, i + 100),
+            });
+          }
+
+          return this.#putRecords(
+            "sh.diffuse.output.playlistItemBundle",
+            bundles,
+            { upsertBatchSize: 1 },
+          );
+        },
       },
       themes: {
         empty: () => [],
