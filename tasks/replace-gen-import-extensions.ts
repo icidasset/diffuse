@@ -9,4 +9,5 @@ function replace(path: string) {
 }
 
 replace("./src/definitions/index.ts");
+replace("./src/definitions/types/sh/diffuse/output/playlistItemBundle.ts");
 replace("./src/definitions/types/sh/diffuse/output/trackBundle.ts");
