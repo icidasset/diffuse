@@ -130,9 +130,13 @@ transformers:
   - title: "Output / Bytes / Automerge"
     desc: "Translate data to and from an Automerge CRDT."
     url: "components/transformer/output/bytes/automerge/element.js"
+    todo: true
   - title: "Output / Bytes / Cambria lenses"
     desc: "Uses the Cambria library to seamlessly translate between data schemas so that no data migration is needed."
     todo: true
+  - title: "Output / Bytes / DASL Sync"
+    desc: "Syncs data between local and remote using CID-based diffing and performs union merges with tombstone tracking when both sides have diverged."
+    url: "components/transformer/output/bytes/dasl-sync/element.js"
   - title: "Output / Bytes / JSON"
     desc: "Raw data schema output ⇄ JSON Uint8Array."
     url: "components/transformer/output/bytes/json/element.js"
@@ -142,6 +146,9 @@ transformers:
   - title: "Output / Refiner / Default"
     desc: "The task of a refiner transformer is to remove the output state that is not meant to be saved to storage. For example, ephemeral tracks; this transformer will keep them in memory, but they will not be present in the output. **Ideally this is part of every theme, but you may swap it out with another transformer that might provide better defaults.**"
     url: "components/transformer/output/refiner/default/element.js"
+  - title: "Output / Refiner / Track URI Passkey"
+    desc: "Encrypts track URIs using a passkey-derived PRF key. On read, decrypts `encrypted://` URIs transparently; on write, re-encrypts all URIs before passing downstream. Tracks that cannot be decrypted are held separately and excluded from the visible collection."
+    url: "components/transformer/output/refiner/track-uri-passkey/element.js"
   - title: "Output / String / JSON"
     desc: "Raw data schema output ⇄ JSON UTF8 string."
     url: "components/transformer/output/string/json/element.js"
@@ -149,6 +156,10 @@ transformers:
 # DEFINITIONS
 
 definitions:
+  - title: "Output / Collaboration"
+    desc: >
+      Represents a collaboration between multiple collaborators on a subject, such as a playlist.
+    url: "definitions/output/collaboration.json"
   - title: "Output / Facet"
     desc: >
       Facet pointer or HTML snippet.
@@ -157,6 +168,10 @@ definitions:
     desc: >
       Represents a single item in a playlist. Tracks are matched based on the given criteria. A playlist is formed by grouping items by their playlist property.
     url: "definitions/output/playlistItem.json"
+  - title: "Output / Playlist Item Bundle"
+    desc: >
+      A bundle of playlist items.
+    url: "definitions/output/playlistItemBundle.json"
   - title: "Output / Progress"
     desc: >
       Used to track progress of (long) audio playback.
