@@ -65,6 +65,7 @@
     "@dotenv-run/esbuild": "npm:@dotenv-run/esbuild@^1.5.1",
     "@std/fs": "jsr:@std/fs@^1.0.19",
     "@std/path": "jsr:@std/path@^1.1.2",
+    "@types/wicg-file-system-access": "npm:@types/wicg-file-system-access@^2023.10.7",
     "esbuild-plugins-node-modules-polyfill": "npm:esbuild-plugins-node-modules-polyfill@^1.8.1",
     "esbuild-plugin-wasm": "npm:esbuild-plugin-wasm@^1.1.0",
     "lume/": "https://cdn.jsdelivr.net/gh/lumeland/lume@3.1.4/",
@@ -192,7 +193,7 @@
   "compilerOptions": {
     "checkJs": true,
     "lib": ["deno.ns", "dom", "esnext"],
-    "types": ["lume/types.ts"],
+    "types": ["lume/types.ts", "@types/wicg-file-system-access"],
     "jsx": "react-jsx",
     "jsxImportSource": "lume",
   },

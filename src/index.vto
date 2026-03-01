@@ -40,10 +40,6 @@ engines:
       Signals that could influence the scope of a set of tracks.
 
 input:
-  - url: "components/input/opensubsonic/element.js"
-    title: "Opensubsonic"
-    desc: >
-      Add any (open)subsonic server.
   - url: "components/input/https/element.js"
     title: "HTTPS"
     desc: >
@@ -52,6 +48,14 @@ input:
     desc: >
       Generate tracks based on HTTPS servers that provide JSON (directory) listings.
     todo: true
+  - url: "components/input/local/element.js"
+    title: "Local"
+    desc: >
+      Audio files or directories from your local device, using the browser's File System Access API.
+  - url: "components/input/opensubsonic/element.js"
+    title: "Opensubsonic"
+    desc: >
+      Add any (open)subsonic server.
   - url: "components/input/s3/element.js"
     title: "S3"
     desc: >

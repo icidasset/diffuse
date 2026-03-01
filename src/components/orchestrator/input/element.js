@@ -2,6 +2,7 @@ import { DiffuseElement } from "@common/element.js";
 
 import "@components/configurator/input/element.js";
 import "@components/input/https/element.js";
+import "@components/input/local/element.js";
 import "@components/input/opensubsonic/element.js";
 import "@components/input/s3/element.js";
 
@@ -62,6 +63,7 @@ class InputOrchestrator extends DiffuseElement {
     return html`
       <dc-input>
         <di-https></di-https>
+        <di-local></di-local>
         <di-opensubsonic></di-opensubsonic>
         <di-s3></di-s3>
       </dc-input>

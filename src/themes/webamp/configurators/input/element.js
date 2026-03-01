@@ -12,6 +12,7 @@ import { buildURI as buildOpenSubsonicURI } from "@components/input/opensubsonic
 import { buildURI as buildS3URI } from "@components/input/s3/common.js";
 
 import { SCHEME as HTTPS_SCHEME } from "@components/input/https/constants.js";
+import { SCHEME as LOCAL_SCHEME } from "@components/input/local/constants.js";
 import { SCHEME as OPENSUBSONIC_SCHEME } from "@components/input/opensubsonic/constants.js";
 import { SCHEME as S3_SCHEME } from "@components/input/s3/constants.js";
 
@@ -194,6 +195,26 @@ class InputConfig extends DiffuseElement {
     if (button) button.disabled = false;
   };
 
+  #addLocalDirectory = async () => {
+    const localInput = /** @type {any} */ (this.$input.value)?.input
+      ?.inputs?.()[LOCAL_SCHEME];
+    if (!localInput) return;
+
+    const uri = await localInput.addDirectory();
+    await this.addSource(uri);
+  };
+
+  #addLocalFiles = async () => {
+    const localInput = /** @type {any} */ (this.$input.value)?.input
+      ?.inputs?.()[LOCAL_SCHEME];
+    if (!localInput) return;
+
+    const uris = await localInput.addFiles();
+    for (const uri of uris) {
+      await this.addSource(uri);
+    }
+  };
+
   /**
    * @param {Event} event
    */
@@ -299,6 +320,11 @@ class InputConfig extends DiffuseElement {
       <style>
       @import "./themes/webamp/98-vars.css";
 
+      .button-row {
+        display: inline-flex;
+        gap: var(--grouped-button-spacing);
+      }
+
       #tabbed {
         display: flex;
         flex-direction: column;
@@ -370,6 +396,11 @@ class InputConfig extends DiffuseElement {
               <span>HTTPS</span>
             </label>
           </li>
+          <li role="tab" aria-selected="${this.$tab.value === "local"}">
+            <label @click="${() => this.$tab.value = "local"}">
+              <span>Local</span>
+            </label>
+          </li>
           <li role="tab" aria-selected="${this.$tab.value === "opensubsonic"}">
             <label @click="${() => this.$tab.value = "opensubsonic"}">
               <span>OpenSubsonic</span>
@@ -398,6 +429,8 @@ class InputConfig extends DiffuseElement {
         return this.#renderOverviewTab(html);
       case "https":
         return this.#renderHttpsTab(html);
+      case "local":
+        return this.#renderLocalTab(html);
       case "opensubsonic":
         return this.#renderOpenSubsonicTab(html);
       case "s3":
@@ -469,6 +502,38 @@ class InputConfig extends DiffuseElement {
             <button type="submit" id="https-submit">Add URL</button>
           </p>
         </form>
+      </div>
+    `;
+  }
+
+  /**
+   * @param {RenderArg["html"]} html
+   */
+  #renderLocalTab(html) {
+    const sources = this.$sourcesOrchestrator.value?.sources();
+
+    return html`
+      <div class="window-body">
+        <fieldset>
+          ${this.#renderList(
+            html,
+            sources?.[LOCAL_SCHEME] ?? [],
+            "Added directories & files",
+          )}
+
+          <p>
+            <button disabled role="delete" @click="${this.#deleteSelected}">
+              Delete selected
+            </button>
+          </p>
+        </fieldset>
+
+        <fieldset>
+          <p class="button-row">
+            <button @click="${this.#addLocalDirectory}">Add directory</button>
+            <button @click="${this.#addLocalFiles}">Add files</button>
+          </p>
+        </fieldset>
       </div>
     `;
   }
