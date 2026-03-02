@@ -1,3 +1,4 @@
+import type { RequestHandler } from "lume/core/server.ts";
 import { dotenvRun } from "@dotenv-run/esbuild";
 import lume from "lume/mod.ts";
 
@@ -17,6 +18,7 @@ const site = lume({
   src: "./src",
   server: {
     debugBar: false,
+    middlewares: [facetHtmlMiddleware],
   },
 });
 
@@ -210,9 +212,8 @@ phosphor("bold/Phosphor-Bold.woff2");
 
 // MISC
 
-site.add([".htm"]);
+site.add([".html"]);
 site.add([".json"]);
-site.add([".txt"]);
 site.use(sourceMaps());
 
 site.script("copy-type-defs", () => {
@@ -232,3 +233,31 @@ site.script("copy-type-defs", () => {
 site.addEventListener("afterBuild", () => {
   // site.run("copy-type-defs");
 });
+
+// MIDDLEWARE
+
+// Facet HTML files are HTML fragments fetched via JS, not full pages.
+// Serving them as text/plain prevents Lume's dev server from injecting
+// its live-reload <script> tag into the fetched content.
+async function facetHtmlMiddleware(
+  request: Request,
+  next: RequestHandler,
+): Promise<Response> {
+  const { pathname } = new URL(request.url);
+  console.log(pathname);
+
+  const isFacetHtml = pathname.endsWith(".html");
+  const response = await next(request);
+
+  if (!isFacetHtml || !response.headers.get("content-type")?.includes("html")) {
+    return response;
+  }
+
+  const headers = new Headers(response.headers);
+  headers.set("content-type", "text/plain; charset=utf-8");
+  return new Response(response.body, {
+    status: response.status,
+    statusText: response.statusText,
+    headers,
+  });
+}
