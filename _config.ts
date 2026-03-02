@@ -216,6 +216,10 @@ site.add([".html"]);
 site.add([".json"]);
 site.use(sourceMaps());
 
+// *.inline.js files are inlined into their companion HTML at build/serve time.
+// Exclude them from the regular build so esbuild doesn't try to bundle them.
+site.ignore((p) => p.endsWith(".inline.js"));
+
 site.script("copy-type-defs", () => {
   for (
     const f of walkSync(
@@ -239,6 +243,9 @@ site.addEventListener("afterBuild", () => {
 // Facet HTML files are HTML fragments fetched via JS, not full pages.
 // Serving them as text/plain prevents Lume's dev server from injecting
 // its live-reload <script> tag into the fetched content.
+//
+// Also inlines any <script type="module" src="./foo.inline.js"> references so
+// that forked facets contain readable JS rather than an external file reference.
 async function facetHtmlMiddleware(
   request: Request,
   next: RequestHandler,
@@ -251,11 +258,64 @@ async function facetHtmlMiddleware(
     return response;
   }
 
+  let content = await response.text();
+  content = await inlineScriptSrc(
+    content,
+    path.join("./src", path.dirname(pathname)),
+  );
+
   const headers = new Headers(response.headers);
   headers.set("content-type", "text/plain; charset=utf-8");
-  return new Response(response.body, {
+  return new Response(content, {
     status: response.status,
     statusText: response.statusText,
     headers,
   });
+}
+
+const SCRIPT_SRC_RE =
+  /<script type="module" src="\.\/([^"]+\.inline\.js)"><\/script>/;
+
+async function inlineScriptSrc(content: string, dir: string): Promise<string> {
+  const match = SCRIPT_SRC_RE.exec(content);
+  if (!match) return content;
+
+  const jsPath = path.join(dir, match[1]);
+  try {
+    return htmlWithInlineJs({ content, jsPath, match: match[0] });
+  } catch {
+    return content;
+  }
+}
+
+site.addEventListener("afterBuild", async () => {
+  for (
+    const f of walkSync("./dist/", { includeDirs: false, exts: [".html"] })
+  ) {
+    const content = Deno.readTextFileSync(f.path);
+    const match = SCRIPT_SRC_RE.exec(content);
+    if (!match) continue;
+
+    const srcDir = path.dirname(f.path).replace(/^dist\//, "src/");
+    const jsPath = path.join(srcDir, match[1]);
+
+    try {
+      const newContent = htmlWithInlineJs({ content, jsPath, match: match[0] });
+      Deno.writeTextFileSync(f.path, newContent);
+    } catch {
+      // leave as-is if the source file can't be read
+    }
+  }
+});
+
+function htmlWithInlineJs({ content, match, jsPath }: {
+  content: string;
+  match: string;
+  jsPath: string;
+}): string {
+  const js =
+    Deno.readTextFileSync(jsPath).split("\n").map((line) => `  ${line}`).join(
+      "\n",
+    ).trimEnd() + "\n";
+  return content.replace(match, `<script type="module">\n${js}</script>`);
 }

@@ -1,0 +1,98 @@
+import foundation from "@diffuse/foundation";
+import { effect } from "@diffuse/common/signal.js";
+import * as Playlist from "@diffuse/common/playlist.js";
+
+const ACTIVE_CLASS = "button--active";
+
+// Setup
+foundation.features.fillQueueAutomatically();
+foundation.features.processInputs();
+
+const repeatShuffle = foundation.engine.repeatShuffle();
+const scope = foundation.engine.scope();
+const output = foundation.orchestrator.output();
+
+// Elements
+const repeatBtn =
+  /** @type {HTMLButtonElement} */ (document.querySelector("#repeat"));
+const shuffleBtn =
+  /** @type {HTMLButtonElement} */ (document.querySelector("#shuffle"));
+const searchInput =
+  /** @type {HTMLInputElement} */ (document.querySelector("#search"));
+const playlistSelect =
+  /** @type {HTMLSelectElement} */ (document.querySelector("#playlist"));
+
+// Repeat & Shuffle state
+effect(() => {
+  repeatBtn.classList.toggle(ACTIVE_CLASS, repeatShuffle.repeat());
+});
+
+effect(() => {
+  shuffleBtn.classList.toggle(ACTIVE_CLASS, repeatShuffle.shuffle());
+});
+
+// Actions
+repeatBtn.onclick = () => {
+  repeatShuffle.setRepeat(!repeatShuffle.repeat());
+};
+
+shuffleBtn.onclick = () => {
+  repeatShuffle.setShuffle(!repeatShuffle.shuffle());
+};
+
+// Search state
+effect(() => {
+  searchInput.value = scope.searchTerm() ?? "";
+});
+
+searchInput.oninput = () => {
+  scope.setSearchTerm(searchInput.value.trim() || undefined);
+};
+
+// Playlist state
+effect(() => {
+  const items = output.playlistItems.collection();
+  const currentPlaylist = scope.playlist();
+
+  // Group items by playlist name
+  const playlistMap = Playlist.gather(items);
+  const all = [...playlistMap.values()].sort((a, b) =>
+    a.name.localeCompare(b.name)
+  );
+
+  const ordered = all.filter((p) => !p.unordered);
+  const unordered = all.filter((p) => p.unordered);
+
+  playlistSelect.innerHTML = `<option value="">All tracks</option>`;
+
+  for (
+    const [label, group] of [
+      ["Ordered", ordered],
+      ["Unordered", unordered],
+    ]
+  ) {
+    if (group.length === 0) continue;
+
+    const optgroup = document.createElement("optgroup");
+    optgroup.label = /** @type {string} */ (label);
+
+    for (const playlist of group) {
+      if (typeof playlist === "string") continue;
+      const option = document.createElement("option");
+
+      option.value = playlist.name;
+      option.textContent = playlist.name;
+      option.selected = playlist.name === currentPlaylist;
+
+      optgroup.appendChild(option);
+    }
+
+    playlistSelect.appendChild(optgroup);
+  }
+});
+
+playlistSelect.onchange = () => {
+  scope.setPlaylist(
+    playlistSelect.value.length ? playlistSelect.value : undefined,
+  );
+};

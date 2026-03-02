@@ -1,0 +1,25 @@
+import foundation from "@diffuse/foundation";
+import ArtworkController from "@diffuse/themes/blur/artwork-controller/element.js";
+
+// Setup the prerequisite elements
+foundation.features.playAudioFromQueue();
+foundation.features.processInputs();
+
+const aud = foundation.engine.audio();
+const art = foundation.processor.artwork();
+const fav = foundation.orchestrator.favourites();
+const inp = foundation.orchestrator.input();
+const out = foundation.orchestrator.output();
+const que = foundation.engine.queue();
+
+// Controller
+const dac = new ArtworkController();
+dac.setAttribute("artwork-processor-selector", art.selector);
+dac.setAttribute("audio-engine-selector", aud.selector);
+dac.setAttribute("input-selector", inp.selector);
+dac.setAttribute("output-selector", out.selector);
+dac.setAttribute("queue-engine-selector", que.selector);
+dac.setAttribute("favourites-orchestrator-selector", fav.selector);
+
+// Add to DOM
+document.body.append(dac);

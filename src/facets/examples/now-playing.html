@@ -8,38 +8,4 @@
   @import "./styles/diffuse/page.css";
 </style>
 
-<script type="module">
-  import foundation from "@diffuse/foundation";
-  import { computed, effect } from "./common/signal.js";
-
-  foundation.features.processInputs();
-  foundation.features.fillQueueAutomatically();
-
-  const output = foundation.orchestrator.output();
-  const queue = foundation.engine.queue();
-
-  const isLoadingTracks = computed(() => {
-    return output.tracks.state() !== "loaded";
-  });
-
-  effect(() => {
-    const now = queue.now();
-    const currentlyPlaying = now ? output.tracks.collection().find(t => t.id === now.id) : undefined;
-    const tags = currentlyPlaying?.tags;
-
-    const element = document.querySelector("#now-playing");
-    if (!element) return;
-
-    if (currentlyPlaying) {
-      element.innerText = `${tags.artist} - ${tags.title}`;
-    } else if (isLoadingTracks()) {
-      // Keep original text
-    } else {
-      element.innerText = "Nothing is playing yet";
-    }
-  });
-
-  document.body.querySelector("button").onclick = () => {
-    queue.shift();
-  };
-</script>
+<script type="module" src="./now-playing.inline.js"></script>
