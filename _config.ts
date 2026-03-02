@@ -133,14 +133,14 @@ site.add("/images");
 site.add([".woff2"]);
 
 site.remoteFile(
-  "vendor/98.css/ms_sans_serif.woff2",
+  "vendor/ms_sans_serif.woff2",
   import.meta.resolve(
     "./node_modules/98.css/fonts/converted/ms_sans_serif.woff2",
   ),
 );
 
 site.remoteFile(
-  "vendor/98.css/ms_sans_serif_bold.woff2",
+  "vendor/ms_sans_serif_bold.woff2",
   import.meta.resolve(
     "./node_modules/98.css/fonts/converted/ms_sans_serif_bold.woff2",
   ),
