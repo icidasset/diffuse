@@ -241,7 +241,7 @@ class Browser extends DiffuseElement {
     const topPad = startIndex * ROW_HEIGHT;
 
     return html`
-      <link rel="stylesheet" href="styles/vendor/98.css" />
+      <link rel="stylesheet" href="vendor/98.css" />
 
       <style>
       @import "./themes/webamp/98-vars.css";

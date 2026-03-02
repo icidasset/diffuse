@@ -24,7 +24,9 @@ const site = lume({
 
 export default site;
 
+////////////////////////////////////////////
 // JS
+////////////////////////////////////////////
 
 site.use(esbuild({
   extensions: [".js"],
@@ -108,18 +110,22 @@ site.use(esbuild({
 
 site.add([".js"]);
 
+////////////////////////////////////////////
 // CSS
+////////////////////////////////////////////
 
 site.use(postcss());
 // site.use(purgecss());
 site.add([".css"]);
 
 site.remoteFile(
-  "styles/vendor/98.css",
+  "vendor/98.css",
   import.meta.resolve("./node_modules/98.css/dist/98.css"),
 );
 
+////////////////////////////////////////////
 // BINARY ASSETS
+////////////////////////////////////////////
 
 site.add("/favicons", "/");
 site.add("/fonts");
@@ -127,34 +133,36 @@ site.add("/images");
 site.add([".woff2"]);
 
 site.remoteFile(
-  "styles/vendor/ms_sans_serif.woff2",
+  "vendor/98.css/ms_sans_serif.woff2",
   import.meta.resolve(
     "./node_modules/98.css/fonts/converted/ms_sans_serif.woff2",
   ),
 );
 
 site.remoteFile(
-  "styles/vendor/ms_sans_serif_bold.woff2",
+  "vendor/98.css/ms_sans_serif_bold.woff2",
   import.meta.resolve(
     "./node_modules/98.css/fonts/converted/ms_sans_serif_bold.woff2",
   ),
 );
 
 site.remoteFile(
-  "fonts/ms_sans_serif.woff2",
+  "fonts/98.css/ms_sans_serif.woff2",
   import.meta.resolve(
     "./node_modules/98.css/fonts/converted/ms_sans_serif.woff2",
   ),
 );
 
 site.remoteFile(
-  "fonts/ms_sans_serif_bold.woff2",
+  "fonts/98.css/ms_sans_serif_bold.woff2",
   import.meta.resolve(
     "./node_modules/98.css/fonts/converted/ms_sans_serif_bold.woff2",
   ),
 );
 
+////////////////////////////////////////////
 // DEFINITIONS
+////////////////////////////////////////////
 
 site.add("/definitions");
 
@@ -188,15 +196,17 @@ site.filter("themeLoaderURL", (text) => {
   return `themes/l/?${key}=${encodeURIComponent(text)}`;
 });
 
+////////////////////////////////////////////
 // PHOSPHOR ICONS
+////////////////////////////////////////////
 
 function phosphor(path: string) {
   site.remoteFile(
-    `styles/vendor/phosphor/${path}`,
+    `vendor/@phosphor-icons/${path}`,
     import.meta.resolve(`./node_modules/@phosphor-icons/web/src/${path}`),
   );
 
-  site.add(`styles/vendor/phosphor/${path}`);
+  site.add(`vendor/@phosphor-icons/${path}`);
 }
 
 phosphor("fill/style.css");
@@ -210,7 +220,35 @@ phosphor("bold/Phosphor-Bold.ttf");
 phosphor("bold/Phosphor-Bold.woff");
 phosphor("bold/Phosphor-Bold.woff2");
 
+////////////////////////////////////////////
+// WEB AWESOME
+////////////////////////////////////////////
+
+for (
+  const f of walkSync("./node_modules/@awesome.me/webawesome/dist-cdn/", {
+    includeDirs: false,
+  })
+) {
+  const relativePath = f.path.replace(
+    /^node_modules\/@awesome\.me\/webawesome\/dist-cdn\//,
+    "",
+  );
+
+  const destPath = `vendor/@awesome.me/webawesome/${relativePath}`;
+
+  site.remoteFile(
+    destPath,
+    import.meta.resolve(
+      `./node_modules/@awesome.me/webawesome/dist-cdn/${relativePath}`,
+    ),
+  );
+
+  site.copy(destPath);
+}
+
+////////////////////////////////////////////
 // MISC
+////////////////////////////////////////////
 
 site.add([".html"]);
 site.add([".json"]);
@@ -238,7 +276,9 @@ site.addEventListener("afterBuild", () => {
   // site.run("copy-type-defs");
 });
 
+////////////////////////////////////////////
 // MIDDLEWARE
+////////////////////////////////////////////
 
 // Facet HTML files are HTML fragments fetched via JS, not full pages.
 // Serving them as text/plain prevents Lume's dev server from injecting

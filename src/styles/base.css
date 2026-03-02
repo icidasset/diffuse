@@ -5,3 +5,7 @@
 
 @import "./diffuse/colors.css";
 @import "./diffuse/fonts.css";
+
+:root {
+  color-scheme: light dark;
+}
