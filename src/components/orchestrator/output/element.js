@@ -1,13 +1,13 @@
 import { ifDefined } from "lit-html/directives/if-defined.js";
-import { DEFAULT_GROUP, DiffuseElement } from "@common/element.js";
+import { DEFAULT_GROUP, DiffuseElement } from "~/common/element.js";
 
-import "@components/configurator/output/element.js";
-import "@components/transformer/output/refiner/default/element.js";
+import "~/components/configurator/output/element.js";
+import "~/components/transformer/output/refiner/default/element.js";
 
 /**
- * @import {RenderArg} from "@common/element.d.ts"
- * @import {OutputElement} from "@components/output/types.d.ts"
- * @import {OutputConfiguratorElement} from "@components/configurator/output/types.d.ts"
+ * @import {RenderArg} from "~/common/element.d.ts"
+ * @import {OutputElement} from "~/components/output/types.d.ts"
+ * @import {OutputConfiguratorElement} from "~/components/configurator/output/types.d.ts"
  */
 
 ////////////////////////////////////////////
@@ -42,23 +42,25 @@ class OutputOrchestrator extends DiffuseElement {
       newlyActicated.forEach((id) => {
         switch (id) {
           case "do-output__dc-output__local": {
-            import("@components/output/polymorphic/indexed-db/element.js");
-            import("@components/transformer/output/string/json/element.js");
+            import("~/components/output/polymorphic/indexed-db/element.js");
+            import("~/components/transformer/output/string/json/element.js");
             break;
           }
           case "do-output__dc-output__atproto": {
-            import("@components/output/raw/atproto/element.js");
+            import("~/components/output/raw/atproto/element.js");
             import(
-              "@components/transformer/output/raw/atproto-sync/element.js"
+              "~/components/transformer/output/raw/atproto-sync/element.js"
             );
             import(
-              "@components/transformer/output/refiner/track-uri-passkey/element.js"
+              "~/components/transformer/output/refiner/track-uri-passkey/element.js"
             );
             break;
           }
           case "do-output__dc-output__s3": {
-            import("@components/output/bytes/s3/element.js");
-            import("@components/transformer/output/bytes/dasl-sync/element.js");
+            import("~/components/output/bytes/s3/element.js");
+            import(
+              "~/components/transformer/output/bytes/dasl-sync/element.js"
+            );
             break;
           }
         }

@@ -1,4 +1,4 @@
-import { computed, signal } from "@common/signal.js";
+import { computed, signal } from "~/common/signal.js";
 import { OutputTransformer } from "../../base.js";
 
 import {
@@ -14,7 +14,7 @@ import {
 } from "./passkey.js";
 
 /**
- * @import { Track } from "@definitions/types.d.ts"
+ * @import { Track } from "~/definitions/types.d.ts"
  */
 
 /**

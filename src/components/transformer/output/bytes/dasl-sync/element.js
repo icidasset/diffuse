@@ -2,19 +2,19 @@ import { decode, encode } from "@atcute/cbor";
 import { ifDefined } from "lit-html/directives/if-defined.js";
 import deepDiff from "@fry69/deep-diff";
 
-import "@components/output/polymorphic/indexed-db/element.js";
+import "~/components/output/polymorphic/indexed-db/element.js";
 
-import * as CID from "@common/cid.js";
-import { diff, strictEquality } from "@common/compare.js";
-import { computed, signal } from "@common/signal.js";
-import { compareTimestamps } from "@common/utils.js";
+import * as CID from "~/common/cid.js";
+import { diff, strictEquality } from "~/common/compare.js";
+import { computed, signal } from "~/common/signal.js";
+import { compareTimestamps } from "~/common/utils.js";
 import { OutputTransformer } from "../../base.js";
-import { promiseLoadedState } from "@components/output/common.js";
+import { promiseLoadedState } from "~/components/output/common.js";
 
 /**
- * @import { SignalReader } from "@common/signal.d.ts";
- * @import { RenderArg } from "@common/element.d.ts"
- * @import { OutputElement } from "@components/output/types.d.ts"
+ * @import { SignalReader } from "~/common/signal.d.ts";
+ * @import { RenderArg } from "~/common/element.d.ts"
+ * @import { OutputElement } from "~/components/output/types.d.ts"
  *
  * @import { Container } from "./types.d.ts"
  */

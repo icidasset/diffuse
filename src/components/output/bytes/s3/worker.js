@@ -1,5 +1,5 @@
-import { createClient } from "@components/input/s3/common.js";
-import { ostiary, rpc } from "@common/worker.js";
+import { createClient } from "~/components/input/s3/common.js";
+import { ostiary, rpc } from "~/common/worker.js";
 
 import { OBJECT_PREFIX } from "./constants.js";
 
@@ -17,7 +17,9 @@ import { OBJECT_PREFIX } from "./constants.js";
 export async function get({ bucket, name }) {
   const client = createClient(bucket);
   const path = bucket.path.replace(/(^\/+|\/+$)/g, "");
-  const key = path ? `${path}/${OBJECT_PREFIX}${name}` : `${OBJECT_PREFIX}${name}`;
+  const key = path
+    ? `${path}/${OBJECT_PREFIX}${name}`
+    : `${OBJECT_PREFIX}${name}`;
 
   try {
     const response = await client.getObject(key);
@@ -34,7 +36,9 @@ export async function get({ bucket, name }) {
 export async function put({ bucket, data, name }) {
   const client = createClient(bucket);
   const path = bucket.path.replace(/(^\/+|\/+$)/g, "");
-  const key = path ? `${path}/${OBJECT_PREFIX}${name}` : `${OBJECT_PREFIX}${name}`;
+  const key = path
+    ? `${path}/${OBJECT_PREFIX}${name}`
+    : `${OBJECT_PREFIX}${name}`;
 
   await client.putObject(key, data);
 }

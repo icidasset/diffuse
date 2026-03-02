@@ -1,5 +1,5 @@
 /**
- * @import {Track} from "@definitions/types.d.ts"
+ * @import {Track} from "~/definitions/types.d.ts"
  */
 
 /**

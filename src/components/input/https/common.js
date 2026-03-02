@@ -1,7 +1,7 @@
-import { cachedConsult } from "@components/input/common.js";
+import { cachedConsult } from "~/components/input/common.js";
 
 /**
- * @import {Track} from "@definitions/types.d.ts"
+ * @import {Track} from "~/definitions/types.d.ts"
  */
 
 /**
@@ -14,7 +14,7 @@ import { cachedConsult } from "@components/input/common.js";
  * ```ts
  * import { expect } from "@std/expect";
  * import { groupTracksByHost } from "./common.js";
- * import type { Track } from "@definitions/types.d.ts";
+ * import type { Track } from "~/definitions/types.d.ts";
  *
  * const tracks: Track[] = [
  *   {
@@ -44,7 +44,7 @@ import { cachedConsult } from "@components/input/common.js";
  * ```ts
  * import { expect } from "@std/expect";
  * import { groupTracksByHost } from "./common.js";
- * import type { Track } from "@definitions/types.d.ts";
+ * import type { Track } from "~/definitions/types.d.ts";
  *
  * const tracks: Track[] = [
  *   {
@@ -121,7 +121,7 @@ export function groupUrisByHost(uris) {
  * ```ts
  * import { expect } from "@std/expect";
  * import { hostsFromTracks } from "./common.js";
- * import type { Track } from "@definitions/types.d.ts";
+ * import type { Track } from "~/definitions/types.d.ts";
  *
  * const tracks: Track[] = [
  *   {

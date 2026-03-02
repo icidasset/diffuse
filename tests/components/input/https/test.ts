@@ -2,12 +2,12 @@ import { describe, it } from "@std/testing/bdd";
 import { expect } from "@std/expect";
 
 import { testWeb } from "@tests/common/index.ts";
-import type { Track } from "@definitions/types.d.ts";
+import type { Track } from "~/definitions/types.d.ts";
 
 describe("components/input/https", () => {
   it("resolves HTTPS URI to same URL", async () => {
     const resolved = await testWeb(async () => {
-      const HttpsInput = await import("@components/input/https/element.js");
+      const HttpsInput = await import("~/components/input/https/element.js");
       const input = new HttpsInput.CLASS();
       document.body.append(input);
 
@@ -24,7 +24,7 @@ describe("components/input/https", () => {
 
   it("provides sources list from tracks", async () => {
     const sources = await testWeb(async () => {
-      const HttpsInput = await import("@components/input/https/element.js");
+      const HttpsInput = await import("~/components/input/https/element.js");
       const input = new HttpsInput.CLASS();
       document.body.append(input);
 
@@ -53,7 +53,7 @@ describe("components/input/https", () => {
 
   it("consult returns undetermined for scheme only", async () => {
     const result = await testWeb(async () => {
-      const HttpsInput = await import("@components/input/https/element.js");
+      const HttpsInput = await import("~/components/input/https/element.js");
       const input = new HttpsInput.CLASS();
       document.body.append(input);
 
@@ -68,7 +68,7 @@ describe("components/input/https", () => {
 
   it("detaches all HTTPS tracks when given scheme", async () => {
     const remaining = await testWeb(async () => {
-      const HttpsInput = await import("@components/input/https/element.js");
+      const HttpsInput = await import("~/components/input/https/element.js");
       const input = new HttpsInput.CLASS();
       document.body.append(input);
 
@@ -96,7 +96,7 @@ describe("components/input/https", () => {
 
   it("detaches tracks from specific domain", async () => {
     const remaining = await testWeb(async () => {
-      const HttpsInput = await import("@components/input/https/element.js");
+      const HttpsInput = await import("~/components/input/https/element.js");
       const input = new HttpsInput.CLASS();
       document.body.append(input);
 
@@ -136,7 +136,7 @@ describe("components/input/https", () => {
 
   it("has correct SCHEME property", async () => {
     const scheme = await testWeb(async () => {
-      const HttpsInput = await import("@components/input/https/element.js");
+      const HttpsInput = await import("~/components/input/https/element.js");
       const input = new HttpsInput.CLASS();
       document.body.append(input);
 

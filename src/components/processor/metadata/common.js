@@ -3,10 +3,10 @@ import * as URI from "fast-uri";
 import { HttpClient } from "@tokenizer/http";
 import { tokenizer as rangeTokenizer } from "@tokenizer/range";
 
-import { removeUndefinedValuesFromRecord } from "@common/utils.js";
+import { removeUndefinedValuesFromRecord } from "~/common/utils.js";
 
 /**
- * @import { TrackStats, TrackTags } from "@definitions/types.d.ts";
+ * @import { TrackStats, TrackTags } from "~/definitions/types.d.ts";
  * @import { Extraction, Urls } from "./types.d.ts";
  */
 

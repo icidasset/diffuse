@@ -1,12 +1,12 @@
 import { keyed } from "lit-html/directives/keyed.js";
 
-import { BroadcastableDiffuseElement, nothing } from "@common/element.js";
-import { computed, signal, untracked } from "@common/signal.js";
+import { BroadcastableDiffuseElement, nothing } from "~/common/element.js";
+import { computed, signal, untracked } from "~/common/signal.js";
 
 /**
  * @import {Actions, Audio, AudioState, AudioStateReadOnly, LoadingState} from "./types.d.ts"
- * @import {RenderArg} from "@common/element.d.ts"
- * @import {SignalReader} from "@common/signal.d.ts"
+ * @import {RenderArg} from "~/common/element.d.ts"
+ * @import {SignalReader} from "~/common/signal.d.ts"
  */
 
 ////////////////////////////////////////////

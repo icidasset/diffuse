@@ -1,9 +1,9 @@
-import { DiffuseElement } from "@common/element.js";
-import { signal } from "@common/signal.js";
-import { listen } from "@common/worker.js";
+import { DiffuseElement } from "~/common/element.js";
+import { signal } from "~/common/signal.js";
+import { listen } from "~/common/worker.js";
 
 /**
- * @import {ProxiedActions} from "@common/worker.d.ts";
+ * @import {ProxiedActions} from "~/common/worker.d.ts";
  * @import {Actions, Item, State} from "./types.d.ts"
  */
 

@@ -1,5 +1,5 @@
-import { BroadcastableDiffuseElement } from "@common/element.js";
-import { signal } from "@common/signal.js";
+import { BroadcastableDiffuseElement } from "~/common/element.js";
+import { signal } from "~/common/signal.js";
 
 ////////////////////////////////////////////
 // ELEMENT

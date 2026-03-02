@@ -1,15 +1,15 @@
 import { ifDefined } from "lit-html/directives/if-defined.js";
 
-import "@components/output/polymorphic/indexed-db/element.js";
+import "~/components/output/polymorphic/indexed-db/element.js";
 
-import { computed, signal } from "@common/signal.js";
+import { computed, signal } from "~/common/signal.js";
 import { OutputTransformer } from "../../base.js";
 import { promiseLoadedState } from "@toko/diffuse/components/output/common.js";
 
 /**
- * @import { RenderArg } from "@common/element.d.ts"
- * @import { OutputElement } from "@components/output/types.d.ts"
- * @import { ATProtoOutputElement } from "@components/output/raw/atproto/types.d.ts"
+ * @import { RenderArg } from "~/common/element.d.ts"
+ * @import { OutputElement } from "~/components/output/types.d.ts"
+ * @import { ATProtoOutputElement } from "~/components/output/raw/atproto/types.d.ts"
  */
 
 const COLLECTIONS = /** @type {const} */ ([

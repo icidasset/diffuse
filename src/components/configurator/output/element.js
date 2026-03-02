@@ -1,10 +1,10 @@
-import { BroadcastableDiffuseElement } from "@common/element.js";
-import { batch, computed, signal } from "@common/signal.js";
+import { BroadcastableDiffuseElement } from "~/common/element.js";
+import { batch, computed, signal } from "~/common/signal.js";
 
 /**
- * @import {DiffuseElement} from "@common/element.js"
- * @import {Facet, PlaylistItem, Theme, Track} from "@definitions/types.d.ts"
- * @import {OutputManagerDeputy, OutputElement} from "@components/output/types.d.ts"
+ * @import {DiffuseElement} from "~/common/element.js"
+ * @import {Facet, PlaylistItem, Theme, Track} from "~/definitions/types.d.ts"
+ * @import {OutputManagerDeputy, OutputElement} from "~/components/output/types.d.ts"
  *
  * @import {OutputConfiguratorElement} from "./types.d.ts"
  */

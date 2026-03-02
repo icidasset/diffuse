@@ -1,5 +1,5 @@
-import foundation from "@diffuse/foundation";
-import BrowserElement from "@diffuse/themes/webamp/browser/element.js";
+import foundation from "~/common/facets/foundation.js";
+import BrowserElement from "~/themes/webamp/browser/element.js";
 
 foundation.features.processInputs();
 foundation.features.searchThroughCollection();

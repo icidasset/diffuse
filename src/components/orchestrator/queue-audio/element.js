@@ -1,10 +1,10 @@
-import { BroadcastableDiffuseElement, query } from "@common/element.js";
-import { untracked } from "@common/signal.js";
+import { BroadcastableDiffuseElement, query } from "~/common/element.js";
+import { untracked } from "~/common/signal.js";
 
 /**
- * @import {InputElement} from "@components/input/types.d.ts"
- * @import {OutputElement} from "@components/output/types.d.ts"
- * @import RepeatShuffleEngine from "@components/engine/repeat-shuffle/element.js"
+ * @import {InputElement} from "~/components/input/types.d.ts"
+ * @import {OutputElement} from "~/components/output/types.d.ts"
+ * @import RepeatShuffleEngine from "~/components/engine/repeat-shuffle/element.js"
  */
 
 ////////////////////////////////////////////
@@ -35,7 +35,7 @@ class QueueAudioOrchestrator extends BroadcastableDiffuseElement {
     // Super
     super.connectedCallback();
 
-    /** @type {import("@components/engine/audio/element.js").CLASS} */
+    /** @type {import("~/components/engine/audio/element.js").CLASS} */
     this.audio = query(this, "audio-engine-selector");
 
     /** @type {InputElement} */
@@ -44,7 +44,7 @@ class QueueAudioOrchestrator extends BroadcastableDiffuseElement {
     /** @type {OutputElement} */
     this.output = query(this, "output-selector");
 
-    /** @type {import("@components/engine/queue/element.js").CLASS} */
+    /** @type {import("~/components/engine/queue/element.js").CLASS} */
     this.queue = query(this, "queue-engine-selector");
 
     /** @type {RepeatShuffleEngine} */

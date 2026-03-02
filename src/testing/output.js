@@ -1,5 +1,5 @@
-import Output from "@components/configurator/output/element.js";
-import { effect } from "@common/signal.js";
+import Output from "~/components/configurator/output/element.js";
+import { effect } from "~/common/signal.js";
 
 const output = new Output();
 

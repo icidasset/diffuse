@@ -1,4 +1,4 @@
-import { ostiary, rpc } from "@common/worker.js";
+import { ostiary, rpc } from "~/common/worker.js";
 import { musicMetadataTags } from "./common.js";
 
 /**

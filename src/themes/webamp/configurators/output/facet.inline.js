@@ -1,5 +1,5 @@
-import foundation from "@diffuse/foundation";
-import OutputConfigElement from "@diffuse/themes/webamp/configurators/output/element.js";
+import foundation from "~/common/facets/foundation.js";
+import OutputConfigElement from "~/themes/webamp/configurators/output/element.js";
 
 const out = foundation.orchestrator.output();
 

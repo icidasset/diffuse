@@ -1,6 +1,6 @@
 import * as TID from "@atcute/tid";
-import { ostiary, rpc } from "@common/worker.js";
-import { groupKey } from "@components/input/common.js";
+import { ostiary, rpc } from "~/common/worker.js";
+import { groupKey } from "~/components/input/common.js";
 import {
   buildURI,
   enumerateAudioFiles,
@@ -14,8 +14,8 @@ import {
 import { SCHEME } from "./constants.js";
 
 /**
- * @import { InputActions as Actions, ConsultGrouping } from "@components/input/types.d.ts";
- * @import { Track } from "@definitions/types.d.ts"
+ * @import { InputActions as Actions, ConsultGrouping } from "~/components/input/types.d.ts";
+ * @import { Track } from "~/definitions/types.d.ts"
  */
 
 ////////////////////////////////////////////

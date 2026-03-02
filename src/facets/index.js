@@ -11,15 +11,15 @@ import { autocompletion } from "@codemirror/autocomplete";
 
 import * as TID from "@atcute/tid";
 
-import * as CID from "@common/cid.js";
-import foundation from "@common/facets/foundation.js";
-import { effect, signal } from "@common/signal.js";
-import { facetFromURI } from "@common/facets/utils.js";
-import { nothing } from "@common/element.js";
-import { loadURI } from "@common/loader.js";
+import * as CID from "~/common/cid.js";
+import foundation from "~/common/facets/foundation.js";
+import { effect, signal } from "~/common/signal.js";
+import { facetFromURI } from "~/common/facets/utils.js";
+import { nothing } from "~/common/element.js";
+import { loadURI } from "~/common/loader.js";
 
 /**
- * @import {Facet} from "@definitions/types.d.ts"
+ * @import {Facet} from "~/definitions/types.d.ts"
  */
 
 ////////////////////////////////////////////

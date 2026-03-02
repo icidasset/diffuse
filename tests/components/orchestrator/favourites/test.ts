@@ -8,10 +8,10 @@ describe("components/orchestrator/favourites", () => {
   it("includes tracks", async () => {
     const favourites = await testWeb(async () => {
       const Output = await import(
-        "@components/configurator/output/element.js"
+        "~/components/configurator/output/element.js"
       );
       const Favourites = await import(
-        "@components/orchestrator/favourites/element.js"
+        "~/components/orchestrator/favourites/element.js"
       );
       const { tracks } = await import("@testing/sample/tracks.js");
 
@@ -39,10 +39,10 @@ describe("components/orchestrator/favourites", () => {
   it("includes multiple tracks", async () => {
     const favourites = await testWeb(async () => {
       const Output = await import(
-        "@components/configurator/output/element.js"
+        "~/components/configurator/output/element.js"
       );
       const Favourites = await import(
-        "@components/orchestrator/favourites/element.js"
+        "~/components/orchestrator/favourites/element.js"
       );
       const { tracks } = await import("@testing/sample/tracks.js");
 
@@ -72,10 +72,10 @@ describe("components/orchestrator/favourites", () => {
   it("does not include duplicate tracks", async () => {
     const favourites = await testWeb(async () => {
       const Output = await import(
-        "@components/configurator/output/element.js"
+        "~/components/configurator/output/element.js"
       );
       const Favourites = await import(
-        "@components/orchestrator/favourites/element.js"
+        "~/components/orchestrator/favourites/element.js"
       );
       const { tracks } = await import("@testing/sample/tracks.js");
 
@@ -102,10 +102,10 @@ describe("components/orchestrator/favourites", () => {
   it("does not include duplicate tracks with different casing", async () => {
     const favourites = await testWeb(async () => {
       const Output = await import(
-        "@components/configurator/output/element.js"
+        "~/components/configurator/output/element.js"
       );
       const Favourites = await import(
-        "@components/orchestrator/favourites/element.js"
+        "~/components/orchestrator/favourites/element.js"
       );
       const { tracks } = await import("@testing/sample/tracks.js");
 
@@ -139,10 +139,10 @@ describe("components/orchestrator/favourites", () => {
   it("expels tracks", async () => {
     const favourites = await testWeb(async () => {
       const Output = await import(
-        "@components/configurator/output/element.js"
+        "~/components/configurator/output/element.js"
       );
       const Favourites = await import(
-        "@components/orchestrator/favourites/element.js"
+        "~/components/orchestrator/favourites/element.js"
       );
       const { tracks } = await import("@testing/sample/tracks.js");
 
@@ -171,10 +171,10 @@ describe("components/orchestrator/favourites", () => {
   it("expels tracks with different casing", async () => {
     const favourites = await testWeb(async () => {
       const Output = await import(
-        "@components/configurator/output/element.js"
+        "~/components/configurator/output/element.js"
       );
       const Favourites = await import(
-        "@components/orchestrator/favourites/element.js"
+        "~/components/orchestrator/favourites/element.js"
       );
       const { tracks } = await import("@testing/sample/tracks.js");
 
@@ -208,10 +208,10 @@ describe("components/orchestrator/favourites", () => {
   it("toggles tracks", async () => {
     const result = await testWeb(async () => {
       const Output = await import(
-        "@components/configurator/output/element.js"
+        "~/components/configurator/output/element.js"
       );
       const Favourites = await import(
-        "@components/orchestrator/favourites/element.js"
+        "~/components/orchestrator/favourites/element.js"
       );
       const { tracks } = await import("@testing/sample/tracks.js");
 
@@ -247,10 +247,10 @@ describe("components/orchestrator/favourites", () => {
   it("toggles mixed tracks (some already favourited)", async () => {
     const favourites = await testWeb(async () => {
       const Output = await import(
-        "@components/configurator/output/element.js"
+        "~/components/configurator/output/element.js"
       );
       const Favourites = await import(
-        "@components/orchestrator/favourites/element.js"
+        "~/components/orchestrator/favourites/element.js"
       );
       const { tracks } = await import("@testing/sample/tracks.js");
 

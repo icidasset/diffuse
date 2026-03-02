@@ -9,11 +9,11 @@ import {
   XrpcHandleResolver,
 } from "@atcute/identity-resolver";
 
-import * as CID from "@common/cid.js";
-import { effect } from "@common/signal.js";
+import * as CID from "~/common/cid.js";
+import { effect } from "~/common/signal.js";
 
 /**
- * @import {SignalReader} from "@common/signal.d.ts"
+ * @import {SignalReader} from "~/common/signal.d.ts"
  */
 
 /**

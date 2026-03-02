@@ -3,7 +3,7 @@ import type {
   PlaylistItem,
   Theme,
   Track,
-} from "@definitions/types.d.ts";
+} from "~/definitions/types.d.ts";
 
 export type FacetsDocument = { collection: Facet[] };
 export type PlaylistItemsDocument = { collection: PlaylistItem[] };

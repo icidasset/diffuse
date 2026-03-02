@@ -1,7 +1,7 @@
 import { Client, ClientResponseError, ok } from "@atcute/client";
 import * as TID from "@atcute/tid";
 
-import { computed, signal } from "@common/signal.js";
+import { computed, signal } from "~/common/signal.js";
 import { BroadcastedOutputElement, outputManager } from "../../common.js";
 
 import {
@@ -14,7 +14,7 @@ import {
 } from "./oauth.js";
 
 /**
- * @import {PlaylistItemBundle, TrackBundle} from "@definitions/types.d.ts"
+ * @import {PlaylistItemBundle, TrackBundle} from "~/definitions/types.d.ts"
  * @import {OutputManager} from "../../types.d.ts"
  * @import {ATProtoOutputElement} from "./types.d.ts"
  */
@@ -331,7 +331,11 @@ class ATProtoOutput extends BroadcastedOutputElement {
    * @param {Array<{ id: string }>} data
    * @param {{ deleteBatchSize?: number, upsertBatchSize?: number }} [options]
    */
-  async #putRecords(collection, data, { deleteBatchSize = 100, upsertBatchSize = deleteBatchSize } = {}) {
+  async #putRecords(
+    collection,
+    data,
+    { deleteBatchSize = 100, upsertBatchSize = deleteBatchSize } = {},
+  ) {
     const rpc = this.#rpc;
     if (!rpc || !this.#did.value) return;
 

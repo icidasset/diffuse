@@ -210,7 +210,7 @@ customElements.define(NAME, CLASS);
 Add the import and the element to the rendered template:
 
 ```js
-import "@components/input/https-json/element.js";
+import "~/components/input/https-json/element.js";
 // ...
 render({ html }) {
   return html`

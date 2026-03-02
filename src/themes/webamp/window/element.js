@@ -1,7 +1,7 @@
-import { DiffuseElement } from "@common/element.js";
+import { DiffuseElement } from "~/common/element.js";
 
 /**
- * @import {RenderArg} from "@common/element.d.ts"
+ * @import {RenderArg} from "~/common/element.d.ts"
  */
 
 ////////////////////////////////////////////

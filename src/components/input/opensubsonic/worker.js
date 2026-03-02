@@ -1,11 +1,11 @@
 import * as TID from "@atcute/tid";
-import { ostiary, rpc } from "@common/worker.js";
+import { ostiary, rpc } from "~/common/worker.js";
 
 import { SCHEME } from "./constants.js";
 import {
   removeUndefinedValuesFromRecord,
   safeDecodeURIComponent,
-} from "@common/utils.js";
+} from "~/common/utils.js";
 import { detach as detachUtil, groupKey } from "../common.js";
 import {
   autoTypeToTrackKind,
@@ -20,8 +20,8 @@ import {
 
 /**
  * @import {Child, SubsonicAPI} from "subsonic-api"
- * @import {Track} from "@definitions/types.d.ts";
- * @import {ConsultGrouping, InputActions as Actions} from "@components/input/types.d.ts";
+ * @import {Track} from "~/definitions/types.d.ts";
+ * @import {ConsultGrouping, InputActions as Actions} from "~/components/input/types.d.ts";
  * @import {Server} from "./types.d.ts"
  */
 

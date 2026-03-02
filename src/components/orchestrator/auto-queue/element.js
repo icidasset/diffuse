@@ -1,10 +1,10 @@
-import { BroadcastableDiffuseElement, query } from "@common/element.js";
+import { BroadcastableDiffuseElement, query } from "~/common/element.js";
 
 /**
- * @import {DiffuseElement} from "@common/element.js";
- * @import {SignalReader} from "@common/signal.d.ts";
- * @import {Track} from "@definitions/types.d.ts"
- * @import RepeatShuffleEngine from "@components/engine/repeat-shuffle/element.js"
+ * @import {DiffuseElement} from "~/common/element.js";
+ * @import {SignalReader} from "~/common/signal.d.ts";
+ * @import {Track} from "~/definitions/types.d.ts"
+ * @import RepeatShuffleEngine from "~/components/engine/repeat-shuffle/element.js"
  */
 
 ////////////////////////////////////////////
@@ -32,7 +32,7 @@ class AutoTracksOrchestrator extends BroadcastableDiffuseElement {
     // Super
     super.connectedCallback();
 
-    /** @type {import("@components/engine/queue/element.js").CLASS} */
+    /** @type {import("~/components/engine/queue/element.js").CLASS} */
     const queue = query(this, "queue-engine-selector");
 
     /** @type {RepeatShuffleEngine} */

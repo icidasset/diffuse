@@ -1,19 +1,19 @@
-import "@components/engine/scope/element.js";
-import "@components/input/opensubsonic/element.js";
-import "@components/input/s3/element.js";
-import "@components/orchestrator/input/element.js";
-import "@components/orchestrator/output/element.js";
-import "@components/orchestrator/process-tracks/element.js";
-import "@components/orchestrator/sources/element.js";
-import "@components/processor/metadata/element.js";
+import "~/components/engine/scope/element.js";
+import "~/components/input/opensubsonic/element.js";
+import "~/components/input/s3/element.js";
+import "~/components/orchestrator/input/element.js";
+import "~/components/orchestrator/output/element.js";
+import "~/components/orchestrator/process-tracks/element.js";
+import "~/components/orchestrator/sources/element.js";
+import "~/components/processor/metadata/element.js";
 
-import * as Input from "@components/configurator/input/element.js";
-import * as Queue from "@components/engine/queue/element.js";
-import * as Search from "@components/processor/search/element.js";
-import * as ScopedTracks from "@components/orchestrator/scoped-tracks/element.js";
+import * as Input from "~/components/configurator/input/element.js";
+import * as Queue from "~/components/engine/queue/element.js";
+import * as Search from "~/components/processor/search/element.js";
+import * as ScopedTracks from "~/components/orchestrator/scoped-tracks/element.js";
 
-import { component } from "@common/element.js";
-import { effect, untracked } from "@common/signal.js";
+import { component } from "~/common/element.js";
+import { effect, untracked } from "~/common/signal.js";
 
 import "./browser/element.js";
 import "./configurators/input/element.js";
@@ -24,8 +24,8 @@ import WindowManager from "./window-manager/element.js";
 import WebampElement from "./webamp/element.js";
 
 /**
- * @import {OutputElement} from "@components/output/types.d.ts"
- * @import {Track} from "@definitions/types.d.ts"
+ * @import {OutputElement} from "~/components/output/types.d.ts"
+ * @import {Track} from "~/definitions/types.d.ts"
  */
 
 const input = component(Input);

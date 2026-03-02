@@ -1,11 +1,11 @@
-import type { Signal, SignalReader } from "@common/signal.d.ts";
-import type { DiffuseElement } from "@common/element.js";
+import type { Signal, SignalReader } from "~/common/signal.d.ts";
+import type { DiffuseElement } from "~/common/element.js";
 import type {
   Facet,
   PlaylistItem,
   Theme,
   Track,
-} from "@definitions/types.d.ts";
+} from "~/definitions/types.d.ts";
 
 export type OutputElement<Encoding = null> =
   & DiffuseElement

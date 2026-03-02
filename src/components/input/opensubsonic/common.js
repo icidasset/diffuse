@@ -2,13 +2,13 @@ import * as URI from "fast-uri";
 import QS from "query-string";
 
 import { SCHEME } from "./constants.js";
-import { cachedConsult } from "@components/input/common.js";
-import { safeDecodeURIComponent } from "@common/utils.js";
+import { cachedConsult } from "~/components/input/common.js";
+import { safeDecodeURIComponent } from "~/common/utils.js";
 import { SubsonicAPIWithoutFetch } from "./class.js";
 
 /**
  * @import {Child} from "subsonic-api"
- * @import {Track} from "@definitions/types.d.ts";
+ * @import {Track} from "~/definitions/types.d.ts";
  * @import {Server} from "./types.d.ts";
  */
 

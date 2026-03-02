@@ -1,8 +1,8 @@
-import { ostiary, rpc } from "@common/worker.js";
+import { ostiary, rpc } from "~/common/worker.js";
 import { createFavouriteItem, filterFavourites } from "./common.js";
 
 /**
- * @import {PlaylistItem, Track} from "@definitions/types.d.ts"
+ * @import {PlaylistItem, Track} from "~/definitions/types.d.ts"
  * @import {Actions} from "./types.d.ts"
  */
 

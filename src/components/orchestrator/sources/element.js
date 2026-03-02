@@ -1,10 +1,10 @@
-import { BroadcastableDiffuseElement, query } from "@common/element.js";
-import { groupTracksPerScheme } from "@common/utils.js";
-import { signal } from "@common/signal.js";
+import { BroadcastableDiffuseElement, query } from "~/common/element.js";
+import { groupTracksPerScheme } from "~/common/utils.js";
+import { signal } from "~/common/signal.js";
 
 /**
- * @import {InputElement, Source} from "@components/input/types.d.ts"
- * @import {OutputElement} from "@components/output/types.d.ts"
+ * @import {InputElement, Source} from "~/components/input/types.d.ts"
+ * @import {OutputElement} from "~/components/output/types.d.ts"
  */
 
 ////////////////////////////////////////////

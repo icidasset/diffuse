@@ -3,13 +3,13 @@ import { xxh32 } from "xxh32";
 // import { pluginQPS } from "@orama/plugin-qps";
 
 import { SCHEMA } from "./constants.js";
-import { announce, ostiary, rpc } from "@common/worker.js";
-import { effect, signal } from "@common/signal.js";
+import { announce, ostiary, rpc } from "~/common/worker.js";
+import { effect, signal } from "~/common/signal.js";
 
 /**
  * @import {SearchParams} from "@orama/orama";
  *
- * @import {Track} from "@definitions/types.d.ts"
+ * @import {Track} from "~/definitions/types.d.ts"
  * @import {Actions, Schema} from "./types.d.ts"
  */
 

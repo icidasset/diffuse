@@ -1,4 +1,4 @@
-import { computed } from "@common/signal.js";
+import { computed } from "~/common/signal.js";
 import { OutputTransformer } from "../../base.js";
 
 /**

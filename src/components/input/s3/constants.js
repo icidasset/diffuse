@@ -1,4 +1,4 @@
-export const IDB_PREFIX = "@components/input/s3";
+export const IDB_PREFIX = "~/components/input/s3";
 export const IDB_BUCKETS = `${IDB_PREFIX}/buckets`;
 export const SCHEME = "s3";
 

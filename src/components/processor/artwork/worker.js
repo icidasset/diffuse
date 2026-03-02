@@ -2,7 +2,7 @@ import * as IDB from "idb-keyval";
 
 import { IDB_ARTWORK_PREFIX } from "./constants.js";
 import { musicMetadataTags } from "../metadata/common.js";
-import { ostiary, rpc } from "@common/worker.js";
+import { ostiary, rpc } from "~/common/worker.js";
 
 /**
  * @import {IPicture} from "music-metadata"

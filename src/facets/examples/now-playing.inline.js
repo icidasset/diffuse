@@ -1,5 +1,5 @@
-import foundation from "@diffuse/foundation";
-import { computed, effect } from "@diffuse/common/signal.js";
+import foundation from "~/common/facets/foundation.js";
+import { computed, effect } from "~/common/signal.js";
 
 foundation.features.processInputs();
 foundation.features.fillQueueAutomatically();

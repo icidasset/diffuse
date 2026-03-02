@@ -1,13 +1,13 @@
 import deepDiff from "@fry69/deep-diff";
 
-import { effect, signal } from "@common/signal.js";
-import { announce, ostiary, rpc, workerProxy } from "@common/worker.js";
+import { effect, signal } from "~/common/signal.js";
+import { announce, ostiary, rpc, workerProxy } from "~/common/worker.js";
 
 /**
- * @import {Track} from "@definitions/types.d.ts"
- * @import {ActionsWithTunnel, ProxiedActions} from "@common/worker.d.ts"
- * @import {InputActions} from "@components/input/types.d.ts"
- * @import {Actions as MetadataProcessorActions} from "@components/processor/metadata/types.d.ts"
+ * @import {Track} from "~/definitions/types.d.ts"
+ * @import {ActionsWithTunnel, ProxiedActions} from "~/common/worker.d.ts"
+ * @import {InputActions} from "~/components/input/types.d.ts"
+ * @import {Actions as MetadataProcessorActions} from "~/components/processor/metadata/types.d.ts"
  *
  * @import {Actions} from "./types.d.ts"
  */
@@ -16,7 +16,7 @@ import { announce, ostiary, rpc, workerProxy } from "@common/worker.js";
 // STATE
 ////////////////////////////////////////////
 
-/** @type {import("@common/signal.d.ts").Signal<{processed: number, total: number}>} */
+/** @type {import("~/common/signal.d.ts").Signal<{processed: number, total: number}>} */
 const $progress = signal({ processed: 0, total: 0 }, {
   compare: (a, b) => !deepDiff(a, b),
 });

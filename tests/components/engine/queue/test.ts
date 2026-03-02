@@ -7,7 +7,7 @@ import { tracks } from "@testing/sample/tracks.js";
 describe("components/engine/queue", () => {
   it("adds tracks", async () => {
     const items = await testWeb(async () => {
-      const QueueEngine = await import("@components/engine/queue/element.js");
+      const QueueEngine = await import("~/components/engine/queue/element.js");
       const engine = new QueueEngine.CLASS();
 
       document.body.append(engine);
@@ -26,7 +26,7 @@ describe("components/engine/queue", () => {
 
   it("pools + fills tracks and shifts the queue", async () => {
     const item = await testWeb(async () => {
-      const QueueEngine = await import("@components/engine/queue/element.js");
+      const QueueEngine = await import("~/components/engine/queue/element.js");
       const engine = new QueueEngine.CLASS();
 
       document.body.append(engine);
@@ -45,7 +45,7 @@ describe("components/engine/queue", () => {
 
   it("[shared worker] adds tracks and shifts + unshifts the queue", async () => {
     const item = await testWeb(async () => {
-      const QueueEngine = await import("@components/engine/queue/element.js");
+      const QueueEngine = await import("~/components/engine/queue/element.js");
       const engine = new QueueEngine.CLASS();
       engine.setAttribute("group", "tests");
 
@@ -66,7 +66,7 @@ describe("components/engine/queue", () => {
 
   it("[shared worker] has the correct past", async () => {
     const item = await testWeb(async () => {
-      const QueueEngine = await import("@components/engine/queue/element.js");
+      const QueueEngine = await import("~/components/engine/queue/element.js");
       const engine = new QueueEngine.CLASS();
       engine.setAttribute("group", "tests");
 

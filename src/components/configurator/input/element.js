@@ -1,8 +1,8 @@
-import { DiffuseElement } from "@common/element.js";
+import { DiffuseElement } from "~/common/element.js";
 
 /**
- * @import {ProxiedActions, Tunnel} from "@common/worker.d.ts"
- * @import {InputActions, InputElement} from "@components/input/types.d.ts"
+ * @import {ProxiedActions, Tunnel} from "~/common/worker.d.ts"
+ * @import {InputActions, InputElement} from "~/components/input/types.d.ts"
  */
 
 /**

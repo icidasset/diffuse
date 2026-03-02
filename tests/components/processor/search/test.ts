@@ -8,7 +8,7 @@ describe("components/processor/search", () => {
   it("finds tracks by album", async () => {
     const results = await testWeb(async () => {
       const SearchProcessor = await import(
-        "@components/processor/search/element.js"
+        "~/components/processor/search/element.js"
       );
       const processor = new SearchProcessor.CLASS();
 
@@ -28,7 +28,7 @@ describe("components/processor/search", () => {
   it("finds tracks by artist", async () => {
     const results = await testWeb(async () => {
       const SearchProcessor = await import(
-        "@components/processor/search/element.js"
+        "~/components/processor/search/element.js"
       );
       const processor = new SearchProcessor.CLASS();
 
@@ -48,7 +48,7 @@ describe("components/processor/search", () => {
   it("finds tracks by title", async () => {
     const results = await testWeb(async () => {
       const SearchProcessor = await import(
-        "@components/processor/search/element.js"
+        "~/components/processor/search/element.js"
       );
       const processor = new SearchProcessor.CLASS();
 

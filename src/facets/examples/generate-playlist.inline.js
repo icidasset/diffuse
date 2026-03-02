@@ -1,4 +1,4 @@
-import foundation from "@diffuse/foundation";
+import foundation from "~/common/facets/foundation.js";
 
 const queue = foundation.engine.queue();
 const output = foundation.orchestrator.output();

@@ -1,22 +1,22 @@
-import { DiffuseElement, nothing, query } from "@common/element.js";
-import { signal } from "@common/signal.js";
+import { DiffuseElement, nothing, query } from "~/common/element.js";
+import { signal } from "~/common/signal.js";
 
-import { NAME as ATPROTO_NAME } from "@components/output/raw/atproto/element.js";
-import { NAME as S3_NAME } from "@components/output/bytes/s3/element.js";
+import { NAME as ATPROTO_NAME } from "~/components/output/raw/atproto/element.js";
+import { NAME as S3_NAME } from "~/components/output/bytes/s3/element.js";
 
-import { NAME as PASSKEY_NAME } from "@components/transformer/output/refiner/track-uri-passkey/element.js";
+import { NAME as PASSKEY_NAME } from "~/components/transformer/output/refiner/track-uri-passkey/element.js";
 
 /**
- * @import {ATProtoOutputElement} from "@components/output/raw/atproto/types.d.ts"
+ * @import {ATProtoOutputElement} from "~/components/output/raw/atproto/types.d.ts"
  *
- * @import {Bucket as S3Bucket} from "@components/input/s3/types.d.ts"
- * @import {S3OutputElement} from "@components/output/bytes/s3/types.d.ts"
+ * @import {Bucket as S3Bucket} from "~/components/input/s3/types.d.ts"
+ * @import {S3OutputElement} from "~/components/output/bytes/s3/types.d.ts"
  *
- * @import {OutputElement} from "@components/output/types.d.ts"
- * @import {OutputConfiguratorElement} from "@components/configurator/output/types.d.ts"
- * @import TrackUriPasskeyTransformer from "@components/transformer/output/refiner/track-uri-passkey/element.js";
+ * @import {OutputElement} from "~/components/output/types.d.ts"
+ * @import {OutputConfiguratorElement} from "~/components/configurator/output/types.d.ts"
+ * @import TrackUriPasskeyTransformer from "~/components/transformer/output/refiner/track-uri-passkey/element.js";
  *
- * @import {RenderArg} from "@common/element.d.ts"
+ * @import {RenderArg} from "~/common/element.d.ts"
  */
 
 /**

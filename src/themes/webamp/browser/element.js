@@ -1,12 +1,16 @@
-import { DiffuseElement, query, whenElementsDefined } from "@common/element.js";
-import { computed, signal, untracked } from "@common/signal.js";
-import * as Playlist from "@common/playlist.js";
+import {
+  DiffuseElement,
+  query,
+  whenElementsDefined,
+} from "~/common/element.js";
+import { computed, signal, untracked } from "~/common/signal.js";
+import * as Playlist from "~/common/playlist.js";
 
 /**
- * @import {RenderArg} from "@common/element.d.ts"
- * @import {SignalReader} from "@common/signal.d.ts";
- * @import {Track} from "@definitions/types.d.ts"
- * @import {OutputElement} from "@components/output/types.d.ts"
+ * @import {RenderArg} from "~/common/element.d.ts"
+ * @import {SignalReader} from "~/common/signal.d.ts";
+ * @import {Track} from "~/definitions/types.d.ts"
+ * @import {OutputElement} from "~/components/output/types.d.ts"
  */
 
 const ROW_HEIGHT = 14;
@@ -29,11 +33,11 @@ class Browser extends DiffuseElement {
   );
 
   $queue = signal(
-    /** @type {import("@components/engine/queue/element.js").CLASS | undefined} */ (undefined),
+    /** @type {import("~/components/engine/queue/element.js").CLASS | undefined} */ (undefined),
   );
 
   $scope = signal(
-    /** @type {import("@components/engine/scope/element.js").CLASS | undefined} */ (undefined),
+    /** @type {import("~/components/engine/scope/element.js").CLASS | undefined} */ (undefined),
   );
 
   $highlightedTrack = signal(/** @type {string | null} */ (null));
@@ -83,10 +87,10 @@ class Browser extends DiffuseElement {
     /** @type {DiffuseElement & { tracks: SignalReader<Track[]> }} */
     const provider = query(this, "tracks-selector");
 
-    /** @type {import("@components/engine/queue/element.js").CLASS} */
+    /** @type {import("~/components/engine/queue/element.js").CLASS} */
     const queue = query(this, "queue-engine-selector");
 
-    /** @type {import("@components/engine/scope/element.js").CLASS} */
+    /** @type {import("~/components/engine/scope/element.js").CLASS} */
     const scope = query(this, "scope-engine-selector");
 
     // Wait for the above dependencies to be defined, then render again.

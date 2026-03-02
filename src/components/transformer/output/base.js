@@ -1,5 +1,5 @@
-import { BroadcastableDiffuseElement, query } from "@common/element.js";
-import { computed, signal } from "@common/signal.js";
+import { BroadcastableDiffuseElement, query } from "~/common/element.js";
+import { computed, signal } from "~/common/signal.js";
 
 /**
  * @import { OutputElement, OutputManagerDeputy } from "../../output/types.d.ts"
@@ -67,7 +67,8 @@ export class OutputTransformer extends BroadcastableDiffuseElement {
           return this.output.signal()?.playlistItems?.collection();
         }),
         loaded: () => {
-          return this.output.signal()?.playlistItems?.loaded() ?? Promise.resolve();
+          return this.output.signal()?.playlistItems?.loaded() ??
+            Promise.resolve();
         },
         reload: () => {
           return this.output.signal()?.playlistItems?.reload() ??

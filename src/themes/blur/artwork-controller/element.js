@@ -9,21 +9,21 @@ import {
   DiffuseElement,
   query,
   whenElementsDefined,
-} from "@common/element.js";
+} from "~/common/element.js";
 
-import { trackArtworkCacheId } from "@common/utils.js";
-import { computed, signal, untracked } from "@common/signal.js";
+import { trackArtworkCacheId } from "~/common/utils.js";
+import { computed, signal, untracked } from "~/common/signal.js";
 
 /**
- * @import {RenderArg} from "@common/element.d.ts"
+ * @import {RenderArg} from "~/common/element.d.ts"
  *
- * @import {InputElement} from "@components/input/types.d.ts"
- * @import {OutputElement} from "@components/output/types.d.ts"
- * @import {Artwork} from "@components/processor/artwork/types.d.ts"
- * @import AudioEngine from "@components/engine/audio/element.js"
- * @import QueueEngine from "@components/engine/queue/element.js"
- * @import ArtworkProcessor from "@components/processor/artwork/element.js"
- * @import FavouritesOrchestrator from "@components/orchestrator/favourites/element.js"
+ * @import {InputElement} from "~/components/input/types.d.ts"
+ * @import {OutputElement} from "~/components/output/types.d.ts"
+ * @import {Artwork} from "~/components/processor/artwork/types.d.ts"
+ * @import AudioEngine from "~/components/engine/audio/element.js"
+ * @import QueueEngine from "~/components/engine/queue/element.js"
+ * @import ArtworkProcessor from "~/components/processor/artwork/element.js"
+ * @import FavouritesOrchestrator from "~/components/orchestrator/favourites/element.js"
  */
 
 class ArtworkController extends DiffuseElement {

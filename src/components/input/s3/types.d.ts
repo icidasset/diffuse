@@ -1,4 +1,4 @@
-import type { Track } from "@definitions/types.d.ts";
+import type { Track } from "~/definitions/types.d.ts";
 
 export type Bucket = {
   accessKey: string;

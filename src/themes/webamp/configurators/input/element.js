@@ -5,27 +5,27 @@ import {
   nothing,
   query,
   queryOptional,
-} from "@common/element.js";
-import { signal } from "@common/signal.js";
+} from "~/common/element.js";
+import { signal } from "~/common/signal.js";
 
-import { buildURI as buildOpenSubsonicURI } from "@components/input/opensubsonic/common.js";
-import { buildURI as buildS3URI } from "@components/input/s3/common.js";
+import { buildURI as buildOpenSubsonicURI } from "~/components/input/opensubsonic/common.js";
+import { buildURI as buildS3URI } from "~/components/input/s3/common.js";
 
-import { SCHEME as HTTPS_SCHEME } from "@components/input/https/constants.js";
-import { SCHEME as LOCAL_SCHEME } from "@components/input/local/constants.js";
-import { SCHEME as OPENSUBSONIC_SCHEME } from "@components/input/opensubsonic/constants.js";
-import { SCHEME as S3_SCHEME } from "@components/input/s3/constants.js";
+import { SCHEME as HTTPS_SCHEME } from "~/components/input/https/constants.js";
+import { SCHEME as LOCAL_SCHEME } from "~/components/input/local/constants.js";
+import { SCHEME as OPENSUBSONIC_SCHEME } from "~/components/input/opensubsonic/constants.js";
+import { SCHEME as S3_SCHEME } from "~/components/input/s3/constants.js";
 
 import { highlightTableEntry } from "../../common/ui.js";
 
 /**
- * @import {RenderArg} from "@common/element.d.ts"
- * @import {Track} from "@definitions/types.d.ts"
- * @import {InputElement} from "@components/input/types.d.ts"
- * @import {OutputElement} from "@components/output/types.d.ts"
+ * @import {RenderArg} from "~/common/element.d.ts"
+ * @import {Track} from "~/definitions/types.d.ts"
+ * @import {InputElement} from "~/components/input/types.d.ts"
+ * @import {OutputElement} from "~/components/output/types.d.ts"
  *
- * @import {Server as OpenSubsonicServer} from "@components/input/opensubsonic/types.d.ts"
- * @import {Bucket as S3Bucket} from "@components/input/s3/types.d.ts"
+ * @import {Server as OpenSubsonicServer} from "~/components/input/opensubsonic/types.d.ts"
+ * @import {Bucket as S3Bucket} from "~/components/input/s3/types.d.ts"
  */
 
 class InputConfig extends DiffuseElement {
@@ -45,11 +45,11 @@ class InputConfig extends DiffuseElement {
   );
 
   $sourcesOrchestrator = signal(
-    /** @type {import("@components/orchestrator/sources/element.js").CLASS | undefined} */ (undefined),
+    /** @type {import("~/components/orchestrator/sources/element.js").CLASS | undefined} */ (undefined),
   );
 
   $processTracksOrchestrator = signal(
-    /** @type {import("@components/orchestrator/process-tracks/element.js").CLASS | undefined} */ (undefined),
+    /** @type {import("~/components/orchestrator/process-tracks/element.js").CLASS | undefined} */ (undefined),
   );
 
   $tab = signal("overview");
@@ -68,10 +68,10 @@ class InputConfig extends DiffuseElement {
     /** @type {OutputElement} */
     const output = query(this, "output-selector");
 
-    /** @type {import("@components/orchestrator/sources/element.js").CLASS} */
+    /** @type {import("~/components/orchestrator/sources/element.js").CLASS} */
     const sourcesOrchestrator = query(this, "sources-orchestrator-selector");
 
-    /** @type {import("@components/orchestrator/process-tracks/element.js").CLASS | null} */
+    /** @type {import("~/components/orchestrator/process-tracks/element.js").CLASS | null} */
     const processTracksOrchestrator = queryOptional(
       this,
       "process-tracks-orchestrator-selector",

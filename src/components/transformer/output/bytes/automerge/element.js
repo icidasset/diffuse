@@ -2,13 +2,13 @@ import * as Automerge from "@automerge/automerge";
 import { ifDefined } from "lit-html/directives/if-defined.js";
 import { isUint8Array } from "iso-base/utils";
 
-import "@components/output/polymorphic/indexed-db/element.js";
+import "~/components/output/polymorphic/indexed-db/element.js";
 
-import { computed, signal } from "@common/signal.js";
+import { computed, signal } from "~/common/signal.js";
 import {
   recursivelyCloneRecords,
   removeUndefinedValuesFromRecord,
-} from "@common/utils.js";
+} from "~/common/utils.js";
 import { OutputTransformer } from "../../base.js";
 import {
   INITIAL_FACETS_DOCUMENT,
@@ -18,9 +18,9 @@ import {
 } from "./constants.js";
 
 /**
- * @import { RenderArg } from "@common/element.d.ts"
- * @import { SignalReader } from "@common/signal.d.ts";
- * @import { OutputElement } from "@components/output/types.d.ts";
+ * @import { RenderArg } from "~/common/element.d.ts"
+ * @import { SignalReader } from "~/common/signal.d.ts";
+ * @import { OutputElement } from "~/components/output/types.d.ts";
  */
 
 /**

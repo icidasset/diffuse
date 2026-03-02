@@ -2,14 +2,14 @@ import {
   BroadcastableDiffuseElement,
   query,
   queryOptional,
-} from "@common/element.js";
-import { batch, computed, signal } from "@common/signal.js";
-import { filterByPlaylist } from "@common/playlist.js";
+} from "~/common/element.js";
+import { batch, computed, signal } from "~/common/signal.js";
+import { filterByPlaylist } from "~/common/playlist.js";
 
 /**
- * @import {Track} from "@definitions/types.d.ts"
- * @import {InputElement} from "@components/input/types.d.ts"
- * @import {OutputElement} from "@components/output/types.d.ts"
+ * @import {Track} from "~/definitions/types.d.ts"
+ * @import {InputElement} from "~/components/input/types.d.ts"
+ * @import {OutputElement} from "~/components/output/types.d.ts"
  */
 
 ////////////////////////////////////////////
@@ -25,11 +25,11 @@ class ScopedTracksOrchestrator extends BroadcastableDiffuseElement {
   #output = signal(/** @type {OutputElement | null} */ (null));
 
   #scope = signal(
-    /** @type {import("@components/engine/scope/element.js").CLASS | null} */ (null),
+    /** @type {import("~/components/engine/scope/element.js").CLASS | null} */ (null),
   );
 
   #search = signal(
-    /** @type {import("@components/processor/search/element.js").CLASS | null} */ (null),
+    /** @type {import("~/components/processor/search/element.js").CLASS | null} */ (null),
   );
 
   #selectedPlaylistItems = computed(() => {
@@ -113,10 +113,10 @@ class ScopedTracksOrchestrator extends BroadcastableDiffuseElement {
     /** @type {OutputElement} */
     const output = query(this, "output-selector");
 
-    /** @type {import("@components/processor/search/element.js").CLASS} */
+    /** @type {import("~/components/processor/search/element.js").CLASS} */
     const search = query(this, "search-processor-selector");
 
-    /** @type {import("@components/engine/scope/element.js").CLASS | null} */
+    /** @type {import("~/components/engine/scope/element.js").CLASS | null} */
     const scope = queryOptional(this, "scope-engine-selector");
 
     // Assign to self

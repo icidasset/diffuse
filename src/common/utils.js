@@ -3,7 +3,7 @@ import { base64url } from "iso-base/rfc4648";
 import { xxh32r } from "xxh32/dist/raw.js";
 
 /**
- * @import {Track} from "@definitions/types.d.ts"
+ * @import {Track} from "~/definitions/types.d.ts"
  */
 
 /**

@@ -1,12 +1,12 @@
-import { BroadcastableDiffuseElement, query } from "@common/element.js";
-import { match as matchPlaylistItem } from "@common/playlist.js";
-import { computed, signal } from "@common/signal.js";
+import { BroadcastableDiffuseElement, query } from "~/common/element.js";
+import { match as matchPlaylistItem } from "~/common/playlist.js";
+import { computed, signal } from "~/common/signal.js";
 import { filterFavourites } from "./common.js";
 
 /**
- * @import {Track} from "@definitions/types.d.ts"
- * @import {ProxiedActions} from "@common/worker.d.ts"
- * @import {OutputElement} from "@components/output/types.d.ts"
+ * @import {Track} from "~/definitions/types.d.ts"
+ * @import {ProxiedActions} from "~/common/worker.d.ts"
+ * @import {OutputElement} from "~/components/output/types.d.ts"
  * @import {Actions} from "./types.d.ts"
  */
 

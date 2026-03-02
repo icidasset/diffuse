@@ -1,7 +1,7 @@
 import * as URI from "fast-uri";
 
 /**
- * @import {Track} from "@definitions/types.d.ts"
+ * @import {Track} from "~/definitions/types.d.ts"
  */
 
 /**

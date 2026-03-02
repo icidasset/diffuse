@@ -1,7 +1,7 @@
 import QS from "query-string";
 import { html, render } from "lit-html";
 
-import { effect, signal } from "@common/signal.js";
+import { effect, signal } from "~/common/signal.js";
 import { rpc, workerLink, workerProxy, workerTunnel } from "./worker.js";
 import { RpcChannel } from "./worker/rpc-channel.js";
 
@@ -489,7 +489,7 @@ export class BroadcastableDiffuseElement extends DiffuseElement {
  * with the correct type based on the element module given.
  *
  * ```
- * import * as QueryEngine from "@components/engine/query/element.js"
+ * import * as QueryEngine from "~/components/engine/query/element.js"
  *
  * const instance = component(QueryEngine)
  * ```

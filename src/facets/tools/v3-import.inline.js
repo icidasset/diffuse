@@ -1,8 +1,8 @@
 import * as TID from "@atcute/tid";
-import foundation from "@diffuse/foundation";
+import foundation from "~/common/facets/foundation.js";
 
 /**
- * @import {PlaylistItem, Track} from "@diffuse/definitions/types.d.ts"
+ * @import {PlaylistItem, Track} from "~/definitions/types.d.ts"
  */
 
 // Setup
@@ -103,6 +103,8 @@ importPlaylistsBtn.onclick = async () => {
 
   try {
     const now = new Date().toISOString();
+
+    /** @type {any[]} */
     const existing = output.playlistItems.collection() ?? [];
     const existingPlaylistNames = new Set(existing.map((p) => p.playlist));
 

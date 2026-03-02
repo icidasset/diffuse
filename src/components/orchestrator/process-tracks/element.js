@@ -1,11 +1,11 @@
-import { BroadcastableDiffuseElement, query } from "@common/element.js";
-import { signal, untracked } from "@common/signal.js";
-import { listen } from "@common/worker.js";
+import { BroadcastableDiffuseElement, query } from "~/common/element.js";
+import { signal, untracked } from "~/common/signal.js";
+import { listen } from "~/common/worker.js";
 
 /**
- * @import {ProxiedActions} from "@common/worker.d.ts"
- * @import {InputElement} from "@components/input/types.d.ts"
- * @import {OutputElement} from "@components/output/types.d.ts"
+ * @import {ProxiedActions} from "~/common/worker.d.ts"
+ * @import {InputElement} from "~/components/input/types.d.ts"
+ * @import {OutputElement} from "~/components/output/types.d.ts"
  *
  * @import {Actions, Progress} from "./types.d.ts"
  */
@@ -86,7 +86,7 @@ class ProcessTracksOrchestrator extends BroadcastableDiffuseElement {
     /** @type {OutputElement} */
     const output = query(this, "output-selector");
 
-    /** @type {import("@components/processor/metadata/element.js").CLASS} */
+    /** @type {import("~/components/processor/metadata/element.js").CLASS} */
     const metadataProcessor = query(this, "metadata-processor-selector");
 
     // Assign to self

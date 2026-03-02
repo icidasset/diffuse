@@ -1,19 +1,19 @@
-import ArtworkProcessor from "@components/processor/artwork/element.js";
-import AudioEngine from "@components/engine/audio/element.js";
-import AutoQueueOrchestrator from "@components/orchestrator/auto-queue/element.js";
-import Queue from "@components/engine/queue/element.js";
-import InputOrchestrator from "@components/orchestrator/input/element.js";
-import OutputOrchestrator from "@components/orchestrator/output/element.js";
-import MetadataProcessor from "@components/processor/metadata/element.js";
-import ProcessTracksOrchestrator from "@components/orchestrator/process-tracks/element.js";
-import QueueAudioOrchestrator from "@components/orchestrator/queue-audio/element.js";
-import RepeatShuffleEngine from "@components/engine/repeat-shuffle/element.js";
-import SearchProcessor from "@components/processor/search/element.js";
-import ScopeEngine from "@components/engine/scope/element.js";
-import ScopedTracksOrchestrator from "@components/orchestrator/scoped-tracks/element.js";
-import FavouritesOrchestrator from "@components/orchestrator/favourites/element.js";
-import MediaSessionOrchestrator from "@components/orchestrator/media-session/element.js";
-import SourcesOrchestrator from "@components/orchestrator/sources/element.js";
+import ArtworkProcessor from "~/components/processor/artwork/element.js";
+import AudioEngine from "~/components/engine/audio/element.js";
+import AutoQueueOrchestrator from "~/components/orchestrator/auto-queue/element.js";
+import Queue from "~/components/engine/queue/element.js";
+import InputOrchestrator from "~/components/orchestrator/input/element.js";
+import OutputOrchestrator from "~/components/orchestrator/output/element.js";
+import MetadataProcessor from "~/components/processor/metadata/element.js";
+import ProcessTracksOrchestrator from "~/components/orchestrator/process-tracks/element.js";
+import QueueAudioOrchestrator from "~/components/orchestrator/queue-audio/element.js";
+import RepeatShuffleEngine from "~/components/engine/repeat-shuffle/element.js";
+import SearchProcessor from "~/components/processor/search/element.js";
+import ScopeEngine from "~/components/engine/scope/element.js";
+import ScopedTracksOrchestrator from "~/components/orchestrator/scoped-tracks/element.js";
+import FavouritesOrchestrator from "~/components/orchestrator/favourites/element.js";
+import MediaSessionOrchestrator from "~/components/orchestrator/media-session/element.js";
+import SourcesOrchestrator from "~/components/orchestrator/sources/element.js";
 
 /**
  * @import { DiffuseElement } from "@toko/diffuse/common/element.js";

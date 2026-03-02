@@ -1,6 +1,6 @@
-import foundation from "@diffuse/foundation";
-import { effect } from "@diffuse/common/signal.js";
-import * as Playlist from "@diffuse/common/playlist.js";
+import foundation from "~/common/facets/foundation.js";
+import { effect } from "~/common/signal.js";
+import * as Playlist from "~/common/playlist.js";
 
 const ACTIVE_CLASS = "button--active";
 

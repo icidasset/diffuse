@@ -1,10 +1,10 @@
-import { BroadcastableDiffuseElement } from "@common/element.js";
-import { batch, computed, effect, signal, untracked } from "@common/signal.js";
-import { strictEquality } from "@common/compare.js";
+import { BroadcastableDiffuseElement } from "~/common/element.js";
+import { batch, computed, effect, signal, untracked } from "~/common/signal.js";
+import { strictEquality } from "~/common/compare.js";
 
 /**
- * @import {Facet, PlaylistItem, Theme, Track} from "@definitions/types.d.ts"
- * @import {SignalReader, SignalWriter} from "@common/signal.d.ts";
+ * @import {Facet, PlaylistItem, Theme, Track} from "~/definitions/types.d.ts"
+ * @import {SignalReader, SignalWriter} from "~/common/signal.d.ts";
  * @import {OutputManager, OutputManagerProperties} from "./types.d.ts"
  */
 

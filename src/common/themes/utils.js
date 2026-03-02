@@ -4,7 +4,7 @@ import { loadURI } from "../loader.js";
 import * as CID from "../cid.js";
 
 /**
- * @import {Theme} from "@definitions/types.d.ts"
+ * @import {Theme} from "~/definitions/types.d.ts"
  */
 
 /**

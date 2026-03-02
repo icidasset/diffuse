@@ -1,5 +1,5 @@
-import foundation from "@common/facets/foundation.js";
-import { createLoader } from "@common/loader.js";
+import foundation from "~/common/facets/foundation.js";
+import { createLoader } from "~/common/loader.js";
 
 createLoader({
   $type: "sh.diffuse.output.facet",

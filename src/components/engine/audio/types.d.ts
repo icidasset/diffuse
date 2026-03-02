@@ -1,4 +1,4 @@
-import type { Signal, SignalReader } from "@common/signal.d.ts";
+import type { Signal, SignalReader } from "~/common/signal.d.ts";
 
 export type Actions = {
   adjustVolume: (_: { audioId?: string; volume: number }) => void;

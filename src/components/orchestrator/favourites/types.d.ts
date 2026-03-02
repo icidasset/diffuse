@@ -1,4 +1,4 @@
-import type { PlaylistItem, Track } from "@definitions/types.d.ts";
+import type { PlaylistItem, Track } from "~/definitions/types.d.ts";
 
 export type Actions = {
   include(args: { playlistItems: PlaylistItem[]; tracks: Track[] }): Promise<

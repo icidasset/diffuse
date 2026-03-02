@@ -1,5 +1,5 @@
-import foundation from "@diffuse/foundation";
-import ArtworkController from "@diffuse/themes/blur/artwork-controller/element.js";
+import foundation from "~/common/facets/foundation.js";
+import ArtworkController from "~/themes/blur/artwork-controller/element.js";
 
 // Setup the prerequisite elements
 foundation.features.playAudioFromQueue();

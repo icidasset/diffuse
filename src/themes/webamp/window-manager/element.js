@@ -1,11 +1,11 @@
-import { DiffuseElement } from "@common/element.js";
-import { signal } from "@common/signal.js";
+import { DiffuseElement } from "~/common/element.js";
+import { signal } from "~/common/signal.js";
 import { debounceMicrotask } from "@vicary/debounce-microtask";
 
-import WindowElement from "../window/element.js"
+import WindowElement from "../window/element.js";
 
 /**
- * @import {RenderArg} from "@common/element.d.ts"
+ * @import {RenderArg} from "~/common/element.d.ts"
  */
 
 ////////////////////////////////////////////
@@ -17,8 +17,8 @@ class WindowManager extends DiffuseElement {
     super();
     this.attachShadow({ mode: "open" });
 
-    this.focusOnWindow = this.focusOnWindow.bind(this)
-    this.windowMoveStart = this.windowMoveStart.bind(this)
+    this.focusOnWindow = this.focusOnWindow.bind(this);
+    this.windowMoveStart = this.windowMoveStart.bind(this);
   }
 
   // SIGNALS
@@ -58,7 +58,10 @@ class WindowManager extends DiffuseElement {
     super.disconnectedCallback();
 
     this.root().removeEventListener("mousedown", this.focusOnWindow);
-    this.root().removeEventListener("dtw-window-start-move", this.windowMoveStart);
+    this.root().removeEventListener(
+      "dtw-window-start-move",
+      this.windowMoveStart,
+    );
 
     document.body.removeEventListener(
       "mousedown",
@@ -98,7 +101,7 @@ class WindowManager extends DiffuseElement {
    */
   async setWindowStatuses(activeId) {
     await customElements.whenDefined("dtw-window");
-    this.activateWindow(activeId)
+    this.activateWindow(activeId);
   }
 
   /**
@@ -140,28 +143,28 @@ class WindowManager extends DiffuseElement {
    * @param {string | null} activeId
    */
   activateWindow(activeId) {
-    this.querySelectorAll("dtw-window").forEach(w => {
-      if (w instanceof WindowElement === false) return
+    this.querySelectorAll("dtw-window").forEach((w) => {
+      if (w instanceof WindowElement === false) return;
 
       if (activeId && w.id === activeId) {
         w.activate();
       } else {
         w.deactivate();
       }
-    })
+    });
   }
 
   /**
    * @param {string} id
    */
   toggleWindow(id) {
-    const w = this.querySelector(`dtw-window#${id}`)
-    if (w instanceof WindowElement === false) return
+    const w = this.querySelector(`dtw-window#${id}`);
+    if (w instanceof WindowElement === false) return;
 
-    w.toggleAttribute("open")
+    w.toggleAttribute("open");
 
     if (w.hasAttribute("open")) {
-      this.activateWindow(id)
+      this.activateWindow(id);
       this.#lastZindex++;
       w.style.zIndex = this.#lastZindex.toString();
     }

@@ -1,12 +1,12 @@
 import * as IDB from "idb-keyval";
 import * as URI from "fast-uri";
 
-import { isAudioFile } from "@components/input/common.js";
-import { safeDecodeURIComponent } from "@common/utils.js";
+import { isAudioFile } from "~/components/input/common.js";
+import { safeDecodeURIComponent } from "~/common/utils.js";
 import { IDB_HANDLES, SCHEME } from "./constants.js";
 
 /**
- * @import { Track } from "@definitions/types.d.ts"
+ * @import { Track } from "~/definitions/types.d.ts"
  */
 
 ////////////////////////////////////////////

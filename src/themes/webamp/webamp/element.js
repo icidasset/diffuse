@@ -1,7 +1,7 @@
 import Webamp from "webamp/lazy";
 
 /**
- * @import {Track} from "@definitions/types.d.ts"
+ * @import {Track} from "~/definitions/types.d.ts"
  */
 class WebampElement extends HTMLElement {
   constructor() {

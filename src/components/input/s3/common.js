@@ -3,12 +3,12 @@ import * as IDB from "idb-keyval";
 import * as URI from "fast-uri";
 import QS from "query-string";
 
-import { cachedConsult } from "@components/input/common.js";
-import { safeDecodeURIComponent } from "@common/utils.js";
+import { cachedConsult } from "~/components/input/common.js";
+import { safeDecodeURIComponent } from "~/common/utils.js";
 import { ENCODINGS, IDB_BUCKETS, SCHEME } from "./constants.js";
 
 /**
- * @import { Track } from "@definitions/types.d.ts";
+ * @import { Track } from "~/definitions/types.d.ts";
  * @import { Bucket } from "./types.d.ts";
  */
 

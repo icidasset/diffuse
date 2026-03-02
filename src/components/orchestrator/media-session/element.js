@@ -2,12 +2,12 @@ import {
   BroadcastableDiffuseElement,
   query,
   queryOptional,
-} from "@common/element.js";
+} from "~/common/element.js";
 
 /**
- * @import {OutputElement} from "@components/output/types.d.ts"
- * @import {Artwork} from "@components/processor/artwork/types.d.ts"
- * @import ArtworkProcessor from "@components/processor/artwork/element.js"
+ * @import {OutputElement} from "~/components/output/types.d.ts"
+ * @import {Artwork} from "~/components/processor/artwork/types.d.ts"
+ * @import ArtworkProcessor from "~/components/processor/artwork/element.js"
  */
 
 ////////////////////////////////////////////
@@ -38,10 +38,10 @@ class MediaSessionOrchestrator extends BroadcastableDiffuseElement {
 
     if (!("mediaSession" in navigator)) return;
 
-    /** @type {import("@components/engine/audio/element.js").CLASS} */
+    /** @type {import("~/components/engine/audio/element.js").CLASS} */
     this.audio = query(this, "audio-engine-selector");
 
-    /** @type {import("@components/engine/queue/element.js").CLASS} */
+    /** @type {import("~/components/engine/queue/element.js").CLASS} */
     this.queue = query(this, "queue-engine-selector");
 
     /** @type {OutputElement | null} */

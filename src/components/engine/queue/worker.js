@@ -1,6 +1,6 @@
-import { announce, ostiary, rpc } from "@common/worker.js";
-import { effect, signal } from "@common/signal.js";
-import { arrayShuffle } from "@common/utils.js";
+import { announce, ostiary, rpc } from "~/common/worker.js";
+import { effect, signal } from "~/common/signal.js";
+import { arrayShuffle } from "~/common/utils.js";
 import { xxh32 } from "xxh32";
 
 /**

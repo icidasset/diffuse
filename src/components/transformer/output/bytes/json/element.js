@@ -1,9 +1,9 @@
-import { computed } from "@common/signal.js";
+import { computed } from "~/common/signal.js";
 import { OutputTransformer } from "../../base.js";
 
 /**
- * @import { OutputManagerDeputy } from "@components/output/types.d.ts"
- * @import { Facet, PlaylistItem, Theme, Track } from "@definitions/types.d.ts"
+ * @import { OutputManagerDeputy } from "~/components/output/types.d.ts"
+ * @import { Facet, PlaylistItem, Theme, Track } from "~/definitions/types.d.ts"
  */
 
 /**

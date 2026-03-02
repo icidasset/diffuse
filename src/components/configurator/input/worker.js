@@ -1,12 +1,12 @@
 import * as URI from "fast-uri";
 
-import { groupTracksPerScheme, groupUrisPerScheme } from "@common/utils.js";
-import { ostiary, rpc, workerProxy } from "@common/worker.js";
+import { groupTracksPerScheme, groupUrisPerScheme } from "~/common/utils.js";
+import { ostiary, rpc, workerProxy } from "~/common/worker.js";
 
 /**
- * @import {Track} from "@definitions/types.d.ts";
- * @import {GroupConsult, InputActions} from "@components/input/types.d.ts"
- * @import {ActionsWithTunnel, ProxiedActions} from "@common/worker.d.ts"
+ * @import {Track} from "~/definitions/types.d.ts";
+ * @import {GroupConsult, InputActions} from "~/components/input/types.d.ts"
+ * @import {ActionsWithTunnel, ProxiedActions} from "~/common/worker.d.ts"
  */
 
 ////////////////////////////////////////////

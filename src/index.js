@@ -1,12 +1,12 @@
-import { GROUP } from "@common/facets/foundation.js";
+import { GROUP } from "~/common/facets/foundation.js";
 
-import { effect } from "@common/signal.js";
+import { effect } from "~/common/signal.js";
 
-import InputConfigurator from "@components/configurator/input/element.js";
-import MetadataProcessor from "@components/processor/metadata/element.js";
-import OutputOrchestrator from "@components/orchestrator/output/element.js";
-import ProcessTracksOrchestrator from "@components/orchestrator/process-tracks/element.js";
-import S3Input from "@components/input/s3/element.js";
+import InputConfigurator from "~/components/configurator/input/element.js";
+import MetadataProcessor from "~/components/processor/metadata/element.js";
+import OutputOrchestrator from "~/components/orchestrator/output/element.js";
+import ProcessTracksOrchestrator from "~/components/orchestrator/process-tracks/element.js";
+import S3Input from "~/components/input/s3/element.js";
 
 // Add components to DOM
 const s3 = new S3Input();

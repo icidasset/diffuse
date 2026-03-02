@@ -1,4 +1,4 @@
-import type { SignalReader } from "@common/signal.d.ts";
+import type { SignalReader } from "~/common/signal.d.ts";
 
 export type Actions = {
   add: (args: { inFront?: boolean; trackIds: string[] }) => void;

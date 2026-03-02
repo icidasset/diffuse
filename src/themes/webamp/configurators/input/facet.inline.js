@@ -1,5 +1,5 @@
-import foundation from "@diffuse/foundation";
-import InputConfigElement from "@diffuse/themes/webamp/configurators/input/element.js";
+import foundation from "~/common/facets/foundation.js";
+import InputConfigElement from "~/themes/webamp/configurators/input/element.js";
 
 const inp = foundation.orchestrator.input();
 const out = foundation.orchestrator.output();
