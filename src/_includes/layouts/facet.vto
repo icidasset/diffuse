@@ -30,13 +30,13 @@ base: "./"
     {{ for url of styles }}
       <link rel="stylesheet" href="{{ url }}" />
     {{ /for }}
+  </head>
+  <body>
+    {{ content }}
 
     <!-- Scripts -->
     {{ for url of scripts }}
       <script src="{{ url }}" type="module"></script>
     {{ /for }}
-  </head>
-  <body>
-    {{ content }}
   </body>
 </html>
