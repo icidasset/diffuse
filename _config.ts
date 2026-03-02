@@ -244,8 +244,6 @@ async function facetHtmlMiddleware(
   next: RequestHandler,
 ): Promise<Response> {
   const { pathname } = new URL(request.url);
-  console.log(pathname);
-
   const isFacetHtml = pathname.endsWith(".html");
   const response = await next(request);
 
