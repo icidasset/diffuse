@@ -54,6 +54,13 @@
     "@testing/": "./src/testing/",
     "@tests/": "./tests/",
 
+    "@common/": "./src/common/",
+    "@components/": "./src/components/",
+    "@definitions/": "./src/definitions/",
+    "@styles/": "./src/styles/",
+    "@themes/": "./src/themes/",
+
+    // Diffuse prefix paths
     "@diffuse/foundation": "./src/common/facets/foundation.js",
 
     "@diffuse/common/": "./src/common/",
@@ -61,12 +68,6 @@
     "@diffuse/definitions/": "./src/definitions/",
     "@diffuse/styles/": "./src/styles/",
     "@diffuse/themes/": "./src/themes/",
-
-    "@common/": "./src/common/",
-    "@components/": "./src/components/",
-    "@definitions/": "./src/definitions/",
-    "@styles/": "./src/styles/",
-    "@themes/": "./src/themes/",
 
     // Build
     "@atcute/lex-cli": "npm:@atcute/lex-cli@^2.5.3",

@@ -33,8 +33,10 @@ class OutputOrchestrator extends DiffuseElement {
     /** @type {Set<string>} */
     let previouslyActivated = new Set();
 
+    await customElements.whenDefined(this.outputConfigurator.localName);
+
     this.effect(() => {
-      const set = this.outputConfigurator.activated();
+      const set = this.activated();
       const newlyActicated = set.difference(previouslyActivated);
 
       newlyActicated.forEach((id) => {
