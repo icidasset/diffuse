@@ -109,8 +109,6 @@ export async function list(cachedTracks = []) {
   const handles = await loadHandles();
   const now = new Date().toISOString();
 
-  console.log(cachedTracks)
-
   /** @type {Record<string, Track>} */
   const cacheByUri = {};
 
@@ -120,12 +118,7 @@ export async function list(cachedTracks = []) {
 
   const trackGroups = groupTracksByTid(cachedTracks);
 
-  const allTids = new Set([
-    ...Object.keys(handles),
-    ...Object.keys(trackGroups),
-  ]);
-
-  console.log(allTids);
+  const allTids = new Set(Object.keys(trackGroups));
 
   const promises = [...allTids].map(async (tid) => {
     const handle = handles[tid];
@@ -134,8 +127,6 @@ export async function list(cachedTracks = []) {
     const perm = await /** @type {any} */ (handle).queryPermission({
       mode: "read",
     });
-
-    console.log(tid, perm, handle.kind);
 
     if (perm !== "granted") {
       const cached = trackGroups[tid]?.tracks[0];
