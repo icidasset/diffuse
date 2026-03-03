@@ -22,4 +22,4 @@ dac.setAttribute("queue-engine-selector", que.selector);
 dac.setAttribute("favourites-orchestrator-selector", fav.selector);
 
 // Add to DOM
-document.body.append(dac);
+(document.querySelector("#container") ?? document.body).append(dac);
