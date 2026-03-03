@@ -40,15 +40,6 @@ class OutputConfigurator extends BroadcastableDiffuseElement {
 
           return this.#memory.facets.value;
         }),
-        loaded: () => {
-          const out = this.#selected.value;
-          if (out) return out.facets.loaded();
-
-          const def = this.#defaultOutput.value;
-          if (def) return def.facets.loaded();
-
-          return Promise.resolve();
-        },
         reload: () => {
           const def = this.#defaultOutput.value;
           if (def) def.facets.reload();
@@ -87,15 +78,6 @@ class OutputConfigurator extends BroadcastableDiffuseElement {
 
           return this.#memory.playlistItems.value;
         }),
-        loaded: () => {
-          const out = this.#selected.value;
-          if (out) return out.playlistItems.loaded();
-
-          const def = this.#defaultOutput.value;
-          if (def) return def.playlistItems.loaded();
-
-          return Promise.resolve();
-        },
         reload: () => {
           const def = this.#defaultOutput.value;
           if (def) def.playlistItems.reload();
@@ -134,15 +116,6 @@ class OutputConfigurator extends BroadcastableDiffuseElement {
 
           return this.#memory.themes.value;
         }),
-        loaded: () => {
-          const out = this.#selected.value;
-          if (out) return out.themes.loaded();
-
-          const def = this.#defaultOutput.value;
-          if (def) return def.themes.loaded();
-
-          return Promise.resolve();
-        },
         reload: () => {
           const def = this.#defaultOutput.value;
           if (def) def.themes.reload();
@@ -181,15 +154,6 @@ class OutputConfigurator extends BroadcastableDiffuseElement {
 
           return this.#memory.tracks.value;
         }),
-        loaded: () => {
-          const out = this.#selected.value;
-          if (out) return out.tracks.loaded();
-
-          const def = this.#defaultOutput.value;
-          if (def) return def.tracks.loaded();
-
-          return Promise.resolve();
-        },
         reload: () => {
           const def = this.#defaultOutput.value;
           if (def) def.tracks.reload();

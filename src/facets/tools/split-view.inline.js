@@ -7,6 +7,8 @@ import "@awesome.me/webawesome/dist/components/select/select.js";
 import "@awesome.me/webawesome/dist/components/option/option.js";
 
 import "~/common/webawesome/detect-dark.js";
+import foundation from "~/common/facets/foundation.js";
+import * as Output from "~/common/output.js";
 
 /**
  * @import { default as WaSplitPanel } from "@awesome.me/webawesome/dist/components/split-panel/split-panel.js"
@@ -275,12 +277,25 @@ document.addEventListener("mouseup", () => {
 const editToggle =
   /** @type {HTMLElement} */ (document.querySelector("#edit-toggle"));
 const editIcon = /** @type {WaIcon} */ (document.querySelector("#edit-icon"));
+const saveCopyBtn =
+  /** @type {HTMLElement} */ (document.querySelector("#save-copy-btn"));
+const saveCopyIcon =
+  /** @type {WaIcon} */ (document.querySelector("#save-copy-icon"));
 
 editToggle.addEventListener("click", () => {
   editMode = !editMode;
   editToggle.setAttribute("aria-label", editMode ? "Done" : "Edit layout");
   editIcon.name = editMode ? "xmark" : "border-all";
   layout.classList.toggle("edit-mode", editMode);
+  saveCopyBtn.style.display = editMode ? "" : "none";
+});
+
+saveCopyBtn.addEventListener("click", async () => {
+  await saveSimplifiedCopy();
+  saveCopyIcon.name = "check";
+  setTimeout(() => {
+    saveCopyIcon.name = "floppy-disk";
+  }, 2000);
 });
 
 // ─── Facet picker ─────────────────────────────────────────────────────────────
@@ -312,6 +327,101 @@ function openPicker(nodePath) {
   facetSelect.value = null;
   customPath.value = "";
   pickerDialog.open = true;
+}
+
+// ─── Save simplified copy ─────────────────────────────────────────────────────
+
+/**
+ * @param {Node} node
+ * @param {string} indent
+ * @returns {string}
+ */
+function generateNodeHTML(node, indent = "") {
+  const inner = indent + "  ";
+
+  if (node.type === "split") {
+    const orientationAttr = node.orientation === "vertical"
+      ? ' orientation="vertical"'
+      : "";
+    return `${indent}<wa-split-panel position="${node.position}"${orientationAttr}>
+${inner}<div slot="start">
+${generateNodeHTML(node.start, inner + "  ")}
+${inner}</div>
+${inner}<div slot="end">
+${generateNodeHTML(node.end, inner + "  ")}
+${inner}</div>
+${indent}</wa-split-panel>`;
+  }
+
+  if (node.facet) {
+    const uri = node.facet.includes("://")
+      ? node.facet
+      : `diffuse://${node.facet}`;
+    const src = "facets/l/?uri=" + encodeURIComponent(uri);
+    return `${indent}<div class="pane">
+${inner}<iframe src="${src}" allow="autoplay"></iframe>
+${indent}</div>`;
+  }
+
+  return `${indent}<div class="pane"></div>`;
+}
+
+function generateSimplifiedHTML() {
+  const scriptClose = "</" + "script>";
+  return `\
+<link rel="stylesheet" href="vendor/@awesome.me/webawesome/styles/themes/default.css" />
+
+<style>
+  body { margin: 0; height: 100dvh; overflow: hidden; }
+  #layout, #layout > * { height: 100%; }
+  wa-split-panel { height: 100%; }
+  [slot="start"], [slot="end"] { height: 100%; }
+  .pane { height: 100%; }
+  .pane iframe { border: none; width: 100%; height: 100%; }
+  .dragging iframe { pointer-events: none; }
+</style>
+
+<div id="layout">
+${generateNodeHTML(state, "  ")}
+</div>
+
+<script type="module">
+  import "@awesome.me/webawesome/dist/components/split-panel/split-panel.js";
+  import "~/common/webawesome/detect-dark.js";
+
+  const layout = document.querySelector("#layout");
+
+  document.addEventListener("mousedown", (e) => {
+    const isDivider = e.composedPath().some(
+      (el) => el instanceof Element && el.getAttribute("part") === "divider",
+    );
+    if (isDivider) layout.classList.add("dragging");
+  }, { capture: true });
+
+  document.addEventListener("mouseup", () => {
+    layout.classList.remove("dragging");
+  });
+${scriptClose}`;
+}
+
+async function saveSimplifiedCopy() {
+  const output = foundation.orchestrator.output();
+  await Output.waitUntilLoaded(output.facets);
+
+  const html = generateSimplifiedHTML();
+  const now = new Date().toISOString();
+
+  await output.facets.save([
+    ...output.facets.collection(),
+    {
+      $type: "sh.diffuse.output.facet",
+      id: crypto.randomUUID(),
+      name: "Split View",
+      html,
+      createdAt: now,
+      updatedAt: now,
+    },
+  ]);
 }
 
 // ─── Init ─────────────────────────────────────────────────────────────────────

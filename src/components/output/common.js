@@ -1,10 +1,10 @@
 import { BroadcastableDiffuseElement } from "~/common/element.js";
-import { batch, computed, effect, signal, untracked } from "~/common/signal.js";
+import { batch, computed, signal, untracked } from "~/common/signal.js";
 import { strictEquality } from "~/common/compare.js";
 
 /**
  * @import {Facet, PlaylistItem, Theme, Track} from "~/definitions/types.d.ts"
- * @import {SignalReader, SignalWriter} from "~/common/signal.d.ts";
+ * @import {SignalWriter} from "~/common/signal.d.ts";
  * @import {OutputManager, OutputManagerProperties} from "./types.d.ts"
  */
 
@@ -65,40 +65,6 @@ export class BroadcastedOutputElement extends BroadcastableDiffuseElement {
       manager.tracks.save = actions.saveTracks;
     }
   }
-}
-
-/**
- * @param {() => void} loader
- * @param {SignalReader<"loading" | "loaded" | "sleeping">} state
- */
-export function promiseLoadedState(loader, state) {
-  return () =>
-    new Promise((resolve) => {
-      let resolved = false;
-
-      const stop = effect(() => {
-        if (resolved) {
-          try {
-            stop();
-          } catch {}
-          return;
-        }
-
-        if (state() === "loaded") {
-          try {
-            stop();
-          } catch {
-            resolved = true;
-          }
-
-          resolve(void 0);
-        }
-      });
-
-      if (state() === "sleeping") {
-        loader();
-      }
-    });
 }
 
 /**
@@ -177,7 +143,6 @@ export function outputManager(
         if (untracked(() => cs.value === "sleeping")) loadFacets();
         return c.value;
       }),
-      loaded: promiseLoadedState(loadFacets, cs.get),
       reload: loadFacets,
       save: async (newFacets) => {
         batch(() => {
@@ -193,7 +158,6 @@ export function outputManager(
         if (untracked(() => pls.value === "sleeping")) loadPlaylistItems();
         return pl.value;
       }),
-      loaded: promiseLoadedState(loadPlaylistItems, pls.get),
       reload: loadPlaylistItems,
       save: async (newPlaylistItems) => {
         batch(() => {
@@ -209,7 +173,6 @@ export function outputManager(
         if (untracked(() => ths.value === "sleeping")) loadThemes();
         return th.value;
       }),
-      loaded: promiseLoadedState(loadThemes, ths.get),
       reload: loadThemes,
       save: async (newThemes) => {
         batch(() => {
@@ -225,7 +188,6 @@ export function outputManager(
         if (untracked(() => ts.value === "sleeping")) loadTracks();
         return t.value;
       }),
-      loaded: promiseLoadedState(loadTracks, ts.get),
       reload: loadTracks,
       save: async (newTracks) => {
         batch(() => {

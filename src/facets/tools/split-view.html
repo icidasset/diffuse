@@ -16,6 +16,17 @@
     >
       <wa-icon id="edit-icon" name="border-all"></wa-icon>
     </wa-button>
+    <wa-button
+      id="save-copy-btn"
+      appearance="filled"
+      variant="neutral"
+      size="small"
+      pill
+      aria-label="Save simplified copy"
+      style="display: none"
+    >
+      <wa-icon id="save-copy-icon" name="floppy-disk"></wa-icon>
+    </wa-button>
   </div>
 
   <wa-dialog id="facet-picker" label="Choose a facet" style="--width: 360px">
@@ -126,6 +137,9 @@
     top: var(--wa-space-xs);
     left: var(--wa-space-xs);
     z-index: 100;
+    display: flex;
+    flex-direction: column;
+    gap: var(--wa-space-2xs);
   }
 
   #facet-select {
