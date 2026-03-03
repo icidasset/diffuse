@@ -8,7 +8,7 @@ main {
   display: flex;
   flex-direction: column;
   font-size: var(--fs-sm);
-  height: 100dvh;
+  height: 100%;
   overflow: hidden;
   position: relative;
   transition:
