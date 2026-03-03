@@ -2,7 +2,7 @@
 <link rel="stylesheet" href="vendor/@awesome.me/webawesome/styles/utilities/layout.css" />
 <link rel="stylesheet" href="vendor/@awesome.me/webawesome/styles/utilities/gap.css" />
 
-<div class="wa-theme-shoelace">
+<div>
   <main id="layout"></main>
 
   <div id="edit-bar">
@@ -54,6 +54,16 @@
   #layout,
   #layout > * {
     height: 100%;
+  }
+
+  wa-button {
+    max-width: 300px;
+  }
+
+  wa-button::part(base),
+  wa-input::part(base),
+  wa-select::part(combobox) {
+    border-width: 2px;
   }
 
   wa-split-panel {

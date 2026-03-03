@@ -6,6 +6,8 @@ import "@awesome.me/webawesome/dist/components/icon/icon.js";
 import "@awesome.me/webawesome/dist/components/select/select.js";
 import "@awesome.me/webawesome/dist/components/option/option.js";
 
+import "~/common/webawesome/detect-dark.js";
+
 /**
  * @import { default as WaSplitPanel } from "@awesome.me/webawesome/dist/components/split-panel/split-panel.js"
  * @import { default as WaDialog } from "@awesome.me/webawesome/dist/components/dialog/dialog.js"
