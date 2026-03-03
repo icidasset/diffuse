@@ -213,7 +213,15 @@ async function atprotoLoader(uri) {
     }),
   );
 
-  return value.html ?? "";
+  if (value.html) {
+    return value.html;
+  }
+
+  if (value.uri) {
+    return loadURI(value.uri);
+  }
+
+  return "";
 }
 
 /**

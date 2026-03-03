@@ -7,7 +7,9 @@ export function highlightTableEntry(event) {
   const tr = event.target.tagName === "TR"
     ? event.target
     : event.target.closest("tr");
+
   if (!tr) return;
+  if (tr.closest("thead")) return;
 
   tr.parentElement?.querySelector("tr.highlighted")?.classList.remove(
     "highlighted",
@@ -15,4 +17,3 @@ export function highlightTableEntry(event) {
 
   tr.classList.add("highlighted");
 }
-

@@ -1,0 +1,127 @@
+<link rel="stylesheet" href="vendor/@awesome.me/webawesome/styles/themes/default.css" />
+<link rel="stylesheet" href="vendor/@awesome.me/webawesome/styles/utilities/layout.css" />
+<link rel="stylesheet" href="vendor/@awesome.me/webawesome/styles/utilities/gap.css" />
+
+<div class="wa-theme-shoelace">
+  <main id="layout"></main>
+
+  <div id="edit-bar">
+    <wa-button
+      id="edit-toggle"
+      appearance="filled"
+      variant="neutral"
+      size="small"
+      pill
+      aria-label="Edit layout"
+    >
+      <wa-icon id="edit-icon" name="border-all"></wa-icon>
+    </wa-button>
+  </div>
+
+  <wa-dialog id="facet-picker" label="Choose a facet" style="--width: 360px">
+    <div class="wa-stack wa-gap-s">
+      <wa-select id="facet-select" placeholder="Built-in facets…">
+        <wa-option value="themes/blur/artwork-controller/facet.html"
+          >Blur / Artwork controller</wa-option
+        >
+        <wa-option value="facets/tools/auto-queue.html">Tools / Automatic Queue</wa-option>
+        <wa-option value="facets/tools/split-view.html">Tools / Split View</wa-option>
+        <wa-option value="facets/tools/v3-import.html">Tools / V3.x Import</wa-option>
+        <wa-option value="themes/webamp/browser/facet.html">Webamp / Browser</wa-option>
+        <wa-option value="themes/webamp/configurators/input/facet.html"
+          >Webamp / Input Configurator</wa-option
+        >
+        <wa-option value="themes/webamp/configurators/output/facet.html"
+          >Webamp / Output Configurator</wa-option
+        >
+      </wa-select>
+      <wa-input
+        id="custom-path"
+        placeholder="facets/tools/auto-queue.html"
+        style="flex: 1"
+      ></wa-input>
+      <wa-button id="custom-confirm" variant="neutral" appearance="filled" pill>Load</wa-button>
+    </div>
+  </wa-dialog>
+</div>
+
+<style>
+  body {
+    margin: 0;
+    height: 100dvh;
+    overflow: hidden;
+  }
+
+  #layout,
+  #layout > * {
+    height: 100%;
+  }
+
+  wa-split-panel {
+    height: 100%;
+  }
+
+  [slot="start"],
+  [slot="end"] {
+    height: 100%;
+  }
+
+  .pane {
+    position: relative;
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+  }
+
+  .pane iframe {
+    flex: 1;
+    border: none;
+    width: 100%;
+  }
+
+  .dragging iframe {
+    pointer-events: none;
+  }
+
+  .pane-overlay {
+    position: absolute;
+    inset: 0;
+    display: none;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: var(--wa-space-xs);
+    background: color-mix(in srgb, var(--wa-color-surface-default) 85%, transparent);
+    backdrop-filter: blur(4px);
+    z-index: 10;
+    padding: var(--wa-space-m);
+  }
+
+  .pane--empty .pane-overlay {
+    display: flex;
+  }
+
+  .edit-mode .pane:not(.pane--empty) .pane-overlay {
+    display: flex;
+  }
+
+  .pane-name {
+    font-size: var(--wa-font-size-xs);
+    color: var(--wa-color-text-quiet);
+    margin-bottom: var(--wa-space-2xs);
+    text-align: center;
+  }
+
+  #edit-bar {
+    position: fixed;
+    top: var(--wa-space-xs);
+    left: var(--wa-space-xs);
+    z-index: 100;
+  }
+
+  #facet-select {
+    width: 100%;
+  }
+</style>
+
+<script type="module" src="./split-view.inline.js"></script>
