@@ -14,25 +14,6 @@ import { IDB_HANDLES, SCHEME } from "./constants.js";
 ////////////////////////////////////////////
 
 /**
- * @param {string} uriString
- * @returns {{ tid: string; path: string } | undefined}
- */
-export function parseURI(uriString) {
-  try {
-    const url = new URL(uriString);
-    if (url.protocol !== `${SCHEME}:`) return undefined;
-    if (!url.host) return undefined;
-
-    return {
-      tid: url.host,
-      path: safeDecodeURIComponent(url.pathname),
-    };
-  } catch {
-    return undefined;
-  }
-}
-
-/**
  * @param {string} tid
  * @param {string} [path]
  */
@@ -42,6 +23,51 @@ export function buildURI(tid, path = "/") {
     host: tid,
     path,
   });
+}
+
+/**
+ * @param {FileSystemDirectoryHandle} dirHandle
+ * @param {string} [basePath]
+ * @returns {Promise<string[]>}
+ */
+export async function enumerateAudioFiles(dirHandle, basePath = "/") {
+  const results = [];
+
+  for await (const [name, handle] of /** @type {any} */ (dirHandle).entries()) {
+    const entryPath = basePath + name;
+
+    if (handle.kind === "directory") {
+      const sub = await enumerateAudioFiles(
+        /** @type {FileSystemDirectoryHandle} */ (handle),
+        entryPath + "/",
+      );
+      results.push(...sub);
+    } else if (isAudioFile(name)) {
+      results.push(entryPath);
+    }
+  }
+
+  return results;
+}
+
+/**
+ * @param {FileSystemHandle} handle
+ * @param {string} path
+ * @returns {Promise<FileSystemFileHandle>}
+ */
+export async function getHandleFile(handle, path) {
+  if (handle.kind === "file") {
+    return /** @type {FileSystemFileHandle} */ (handle);
+  }
+
+  const parts = path.replace(/^\//, "").split("/").filter(Boolean);
+  let current = /** @type {FileSystemDirectoryHandle} */ (handle);
+
+  for (const part of parts.slice(0, -1)) {
+    current = await current.getDirectoryHandle(part);
+  }
+
+  return current.getFileHandle(/** @type {string} */ (parts.at(-1)));
 }
 
 /**
@@ -90,6 +116,45 @@ export function groupUrisByTid(uris) {
   return acc;
 }
 
+export function isSupported() {
+  return typeof (/** @type {any} */ (globalThis).showDirectoryPicker) !==
+    "undefined";
+}
+
+/**
+ * @returns {Promise<Record<string, FileSystemHandle>>}
+ */
+export async function loadHandles() {
+  const i = await IDB.get(IDB_HANDLES);
+  return i ?? {};
+}
+
+/**
+ * @param {string} uriString
+ * @returns {{ tid: string; path: string } | undefined}
+ */
+export function parseURI(uriString) {
+  try {
+    const url = new URL(uriString);
+    if (url.protocol !== `${SCHEME}:`) return undefined;
+    if (!url.host) return undefined;
+
+    return {
+      tid: url.host,
+      path: safeDecodeURIComponent(url.pathname),
+    };
+  } catch {
+    return undefined;
+  }
+}
+
+/**
+ * @param {Record<string, FileSystemHandle>} handles
+ */
+export async function saveHandles(handles) {
+  await IDB.set(IDB_HANDLES, handles);
+}
+
 /**
  * @param {Track[]} tracks
  * @returns {Record<string, string>}
@@ -105,64 +170,4 @@ export function tidsFromTracks(tracks) {
   });
 
   return acc;
-}
-
-/**
- * @returns {Promise<Record<string, FileSystemHandle>>}
- */
-export async function loadHandles() {
-  const i = await IDB.get(IDB_HANDLES);
-  return i ?? {};
-}
-
-/**
- * @param {Record<string, FileSystemHandle>} handles
- */
-export async function saveHandles(handles) {
-  await IDB.set(IDB_HANDLES, handles);
-}
-
-/**
- * @param {FileSystemHandle} handle
- * @param {string} path
- * @returns {Promise<FileSystemFileHandle>}
- */
-export async function getHandleFile(handle, path) {
-  if (handle.kind === "file") {
-    return /** @type {FileSystemFileHandle} */ (handle);
-  }
-
-  const parts = path.replace(/^\//, "").split("/").filter(Boolean);
-  let current = /** @type {FileSystemDirectoryHandle} */ (handle);
-
-  for (const part of parts.slice(0, -1)) {
-    current = await current.getDirectoryHandle(part);
-  }
-
-  return current.getFileHandle(/** @type {string} */ (parts.at(-1)));
-}
-
-/**
- * @param {FileSystemDirectoryHandle} dirHandle
- * @param {string} [basePath]
- * @returns {Promise<string[]>}
- */
-export async function enumerateAudioFiles(dirHandle, basePath = "/") {
-  const results = [];
-
-  for await (const [name, handle] of /** @type {any} */ (dirHandle).entries()) {
-    const entryPath = basePath + name;
-
-    if (handle.kind === "directory") {
-      const sub = await enumerateAudioFiles(
-        /** @type {FileSystemDirectoryHandle} */ (handle),
-        entryPath + "/",
-      );
-      results.push(...sub);
-    } else if (isAudioFile(name)) {
-      results.push(entryPath);
-    }
-  }
-
-  return results;
 }

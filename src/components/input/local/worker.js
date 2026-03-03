@@ -7,6 +7,7 @@ import {
   getHandleFile,
   groupTracksByTid,
   groupUrisByTid,
+  isSupported,
   loadHandles,
   parseURI,
   saveHandles,
@@ -26,7 +27,7 @@ import { SCHEME } from "./constants.js";
  * @type {Actions['consult']}
  */
 export async function consult(fileUriOrScheme) {
-  if (typeof FileSystemHandle === "undefined") {
+  if (!isSupported()) {
     return { supported: false, reason: "No browser support" };
   }
 

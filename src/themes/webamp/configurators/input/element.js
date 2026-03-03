@@ -10,6 +10,7 @@ import { signal } from "~/common/signal.js";
 
 import { buildURI as buildOpenSubsonicURI } from "~/components/input/opensubsonic/common.js";
 import { buildURI as buildS3URI } from "~/components/input/s3/common.js";
+import { isSupported as supportsLocalFsAccess } from "~/components/input/local/common.js";
 
 import { SCHEME as HTTPS_SCHEME } from "~/components/input/https/constants.js";
 import { SCHEME as LOCAL_SCHEME } from "~/components/input/local/constants.js";
@@ -529,10 +530,26 @@ class InputConfig extends DiffuseElement {
         </fieldset>
 
         <fieldset>
-          <p class="button-row">
-            <button @click="${this.#addLocalDirectory}">Add directory</button>
-            <button @click="${this.#addLocalFiles}">Add files</button>
-          </p>
+          ${supportsLocalFsAccess()
+            ? html`
+              <p class="button-row">
+                <button @click="${this.#addLocalDirectory}">
+                  Add directory
+                </button>
+                <button @click="${this.#addLocalFiles}">Add files</button>
+              </p>
+            `
+            : html`
+              <p class="with-icon with-icon--large">
+                <img
+                  src="images/icons/windows_98/msg_warning-0.png"
+                  width="24"
+                />
+                Your browser does not support the File System Access API.<br />
+                Use a Chromium-based browser to add local files.
+                <!-- TODO: Add an alternative facet where you can just drag & drop your local files. -->
+              </p>
+            `}
         </fieldset>
       </div>
     `;
