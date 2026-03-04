@@ -265,10 +265,12 @@ class Browser extends DiffuseElement {
       }
 
       search input {
+        color: inherit;
         flex: 1;
       }
 
       search select {
+        color: inherit;
         max-width: 33%;
       }
 
