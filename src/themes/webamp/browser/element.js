@@ -16,6 +16,16 @@ import * as Playlist from "~/common/playlist.js";
 const ROW_HEIGHT = 14;
 const OVERSCAN = 20;
 
+const SORT_OPTIONS = [
+  { label: "Default order", value: [] },
+  { label: "Added to collection", value: ["createdAt"] },
+  { label: "Title", value: ["tags.title"] },
+  { label: "Album", value: ["tags.album", "tags.disc.no", "tags.track.no"] },
+  { label: "Artist", value: ["tags.artist", "tags.album", "tags.disc.no", "tags.track.no"] },
+  { label: "Year", value: ["tags.year"] },
+  { label: "Date", value: ["tags.date"] },
+];
+
 class Browser extends DiffuseElement {
   constructor() {
     super();
@@ -125,6 +135,15 @@ class Browser extends DiffuseElement {
         /** @type {HTMLSelectElement} */ (select).value = playlist ?? "";
       }
     });
+
+    this.effect(() => {
+      const sortBy = this.$scope.value?.sortBy();
+      const select = this.root().querySelector("#sort-by-select");
+
+      if (select) {
+        /** @type {HTMLSelectElement} */ (select).value = JSON.stringify(sortBy ?? []);
+      }
+    });
   }
 
   /**
@@ -220,6 +239,15 @@ class Browser extends DiffuseElement {
     this.$scope.value?.setPlaylist(value === "" ? undefined : value);
   };
 
+  /**
+   * @param {Event} event
+   */
+  setSortBy = (event) => {
+    const value = /** @type {HTMLSelectElement} */ (event.currentTarget).value;
+
+    this.$scope.value?.setSortBy(JSON.parse(value));
+  };
+
   // RENDER
 
   /**
@@ -231,6 +259,7 @@ class Browser extends DiffuseElement {
     const tracks = this.$provider.value?.tracks() ?? [];
     const playlist = this.$scope.value?.playlist();
     const searchTerm = this.$scope.value?.searchTerm() ?? "";
+    const sortByJson = JSON.stringify(this.$scope.value?.sortBy() ?? []);
 
     // Virtual list
     const totalTracks = tracks.length;
@@ -350,6 +379,13 @@ class Browser extends DiffuseElement {
               </optgroup>
             `
           )}
+        </select>
+        <label for="sort-by-select">Sort:</label>
+        <select id="sort-by-select" @change="${this.setSortBy}">
+          ${SORT_OPTIONS.map((opt) => {
+            const json = JSON.stringify(opt.value);
+            return html`<option value="${json}" ?selected="${sortByJson === json}">${opt.label}</option>`;
+          })}
         </select>
       </search>
 

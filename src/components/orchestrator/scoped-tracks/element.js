@@ -183,16 +183,43 @@ class ScopedTracksOrchestrator extends BroadcastableDiffuseElement {
       }
     });
 
-    // Watch `#tracksSearch` + Playlist
+    // Watch `#tracksSearch` + Playlist + Sort
     this.effect(async () => {
       const tracks = this.#tracksSearch.value;
       const playlistItems = this.#selectedPlaylistItems();
+      const sortBy = this.#scope.value?.sortBy();
 
       if ((await this.isLeader()) === false) return;
 
-      const final = playlistItems?.length
+      let final = playlistItems?.length
         ? filterByPlaylist(tracks, playlistItems)
         : tracks;
+
+      if (sortBy?.length) {
+        final = [...final].sort((a, b) => {
+          for (const field of sortBy) {
+            let aVal = /** @type {any} */ (a);
+            let bVal = /** @type {any} */ (b);
+
+            for (const key of field.split(".")) {
+              aVal = aVal?.[key];
+              bVal = bVal?.[key];
+            }
+
+            if (aVal == null && bVal == null) continue;
+            if (aVal == null) return 1;
+            if (bVal == null) return -1;
+
+            const cmp = typeof aVal === "string" && typeof bVal === "string"
+              ? aVal.localeCompare(bVal)
+              : aVal < bVal ? -1 : aVal > bVal ? 1 : 0;
+
+            if (cmp !== 0) return cmp;
+          }
+
+          return 0;
+        });
+      }
 
       this.#tracksFinal.set(final);
     });

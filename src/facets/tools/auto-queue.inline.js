@@ -21,6 +21,8 @@ const searchInput =
   /** @type {HTMLInputElement} */ (document.querySelector("#search"));
 const playlistSelect =
   /** @type {HTMLSelectElement} */ (document.querySelector("#playlist"));
+const sortBySelect =
+  /** @type {HTMLSelectElement} */ (document.querySelector("#sort-by"));
 
 // Repeat & Shuffle state
 effect(() => {
@@ -95,4 +97,19 @@ playlistSelect.onchange = () => {
   scope.setPlaylist(
     playlistSelect.value.length ? playlistSelect.value : undefined,
   );
+};
+
+// Sort by state
+effect(() => {
+  const current = JSON.stringify(scope.sortBy());
+  for (const option of sortBySelect.options) {
+    if (JSON.stringify(JSON.parse(option.value)) === current) {
+      sortBySelect.value = option.value;
+      break;
+    }
+  }
+});
+
+sortBySelect.onchange = () => {
+  scope.setSortBy(JSON.parse(sortBySelect.value));
 };

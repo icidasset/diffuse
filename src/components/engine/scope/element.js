@@ -12,9 +12,11 @@ class ScopeEngine extends BroadcastableDiffuseElement {
 
   #playlist = signal(/** @type {string | undefined} */ (undefined));
   #searchTerm = signal(/** @type {string | undefined} */ (undefined));
+  #sortBy = signal(/** @type {string[]} */ ([]));
 
   playlist = this.#playlist.get;
   searchTerm = this.#searchTerm.get;
+  sortBy = this.#sortBy.get;
 
   // LIFECYCLE
 
@@ -27,11 +29,13 @@ class ScopeEngine extends BroadcastableDiffuseElement {
       const actions = this.broadcast(this.identifier, {
         setPlaylist: { strategy: "replicate", fn: this.setPlaylist },
         setSearchTerm: { strategy: "replicate", fn: this.setSearchTerm },
+        setSortBy: { strategy: "replicate", fn: this.setSortBy },
       });
 
       if (actions) {
         this.setPlaylist = actions.setPlaylist;
         this.setSearchTerm = actions.setSearchTerm;
+        this.setSortBy = actions.setSortBy;
       }
     }
 
@@ -46,6 +50,8 @@ class ScopeEngine extends BroadcastableDiffuseElement {
       localStorage.getItem(`${storagePrefix}/playlistId`) ?? undefined;
     this.#searchTerm.value =
       localStorage.getItem(`${storagePrefix}/searchTerm`) ?? undefined;
+    this.#sortBy.value =
+      JSON.parse(localStorage.getItem(`${storagePrefix}/sortBy`) ?? "[]");
 
     // Effects
     this.effect(() => {
@@ -63,6 +69,14 @@ class ScopeEngine extends BroadcastableDiffuseElement {
       if (val) localStorage.setItem(key, val);
       else localStorage.removeItem(key);
     });
+
+    this.effect(() => {
+      const key = `${storagePrefix}/sortBy`;
+      const val = this.#sortBy.value;
+
+      if (val.length) localStorage.setItem(key, JSON.stringify(val));
+      else localStorage.removeItem(key);
+    });
   }
 
   // ACTIONS
@@ -72,6 +86,9 @@ class ScopeEngine extends BroadcastableDiffuseElement {
 
   /** @param {string | undefined} val */
   setSearchTerm = async (val) => this.#searchTerm.value = val;
+
+  /** @param {string[]} val */
+  setSortBy = async (val) => this.#sortBy.value = val;
 }
 
 export default ScopeEngine;

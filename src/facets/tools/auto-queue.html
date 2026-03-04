@@ -23,6 +23,20 @@
         <input id="search" type="search" placeholder="Search" />
       </label>
     </div>
+    <div class="row">
+      <label class="with-icon" for="sort-by">
+        <i class="ph-bold ph-arrows-down-up"></i>
+        <select id="sort-by">
+          <option value="[]">Default order</option>
+          <option value='["createdAt"]'>Added to collection</option>
+          <option value='["tags.title"]'>Title</option>
+          <option value='["tags.album","tags.disc.no","tags.track.no"]'>Album</option>
+          <option value='["tags.artist","tags.album","tags.disc.no","tags.track.no"]'>Artist</option>
+          <option value='["tags.year"]'>Year</option>
+          <option value='["tags.date"]'>Date</option>
+        </select>
+      </label>
+    </div>
   </div>
 </main>
 
