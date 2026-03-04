@@ -24,7 +24,7 @@ import * as Output from "~/common/output.js";
  * @typedef {PaneNode | SplitNode} Node
  */
 
-const STORAGE_KEY = "diffuse:split-view:layout";
+const STORAGE_KEY = "diffuse/facets/tools/split-view/builder/layout";
 
 // ─── State ───────────────────────────────────────────────────────────────────
 
@@ -366,7 +366,10 @@ ${indent}</div>`;
   return `${indent}<div class="pane"></div>`;
 }
 
-function generateSimplifiedHTML() {
+/**
+ * @param {string} id
+ */
+function generateSimplifiedHTML(id) {
   const scriptClose = "</" + "script>";
   return `\
 <link rel="stylesheet" href="vendor/@awesome.me/webawesome/styles/themes/default.css" />
@@ -401,6 +404,20 @@ ${generateNodeHTML(state, "  ")}
   document.addEventListener("mouseup", () => {
     layout.classList.remove("dragging");
   });
+
+  const POSITIONS_KEY = "diffuse/facets/tools/split-view/${id}/positions";
+  const savedPositions = (() => {
+    try { return JSON.parse(localStorage.getItem(POSITIONS_KEY) ?? "{}"); }
+    catch { return {}; }
+  })();
+
+  document.querySelectorAll("wa-split-panel").forEach((panel, i) => {
+    if (savedPositions[i] !== undefined) panel.position = savedPositions[i];
+    panel.addEventListener("wa-reposition", () => {
+      savedPositions[i] = panel.position;
+      localStorage.setItem(POSITIONS_KEY, JSON.stringify(savedPositions));
+    });
+  });
 ${scriptClose}`;
 }
 
@@ -408,14 +425,15 @@ async function saveSimplifiedCopy() {
   const output = foundation.orchestrator.output();
   await Output.waitUntilLoaded(output.facets);
 
-  const html = generateSimplifiedHTML();
+  const id = crypto.randomUUID();
+  const html = generateSimplifiedHTML(id);
   const now = new Date().toISOString();
 
   await output.facets.save([
     ...output.facets.collection(),
     {
       $type: "sh.diffuse.output.facet",
-      id: crypto.randomUUID(),
+      id,
       name: "Split View",
       html,
       createdAt: now,
