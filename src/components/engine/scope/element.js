@@ -44,14 +44,15 @@ class ScopeEngine extends BroadcastableDiffuseElement {
 
     // Signals
     const storagePrefix =
-      `${this.constructor.prototype.constructor.NAME}/${this.group}/`;
+      `${this.constructor.prototype.constructor.NAME}/${this.group}`;
 
     this.#playlist.value =
       localStorage.getItem(`${storagePrefix}/playlistId`) ?? undefined;
     this.#searchTerm.value =
       localStorage.getItem(`${storagePrefix}/searchTerm`) ?? undefined;
-    this.#sortBy.value =
-      JSON.parse(localStorage.getItem(`${storagePrefix}/sortBy`) ?? "[]");
+    this.#sortBy.value = JSON.parse(
+      localStorage.getItem(`${storagePrefix}/sortBy`) ?? "[]",
+    );
 
     // Effects
     this.effect(() => {
