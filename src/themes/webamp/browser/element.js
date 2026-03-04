@@ -17,11 +17,14 @@ const ROW_HEIGHT = 14;
 const OVERSCAN = 20;
 
 const SORT_OPTIONS = [
-  { label: "Default order", value: [] },
+  { label: "Default", value: [] },
   { label: "Added to collection", value: ["createdAt"] },
   { label: "Title", value: ["tags.title"] },
   { label: "Album", value: ["tags.album", "tags.disc.no", "tags.track.no"] },
-  { label: "Artist", value: ["tags.artist", "tags.album", "tags.disc.no", "tags.track.no"] },
+  {
+    label: "Artist",
+    value: ["tags.artist", "tags.album", "tags.disc.no", "tags.track.no"],
+  },
   { label: "Year", value: ["tags.year"] },
   { label: "Date", value: ["tags.date"] },
 ];
@@ -141,7 +144,9 @@ class Browser extends DiffuseElement {
       const select = this.root().querySelector("#sort-by-select");
 
       if (select) {
-        /** @type {HTMLSelectElement} */ (select).value = JSON.stringify(sortBy ?? []);
+        /** @type {HTMLSelectElement} */ (select).value = JSON.stringify(
+          sortBy ?? [],
+        );
       }
     });
   }
@@ -380,11 +385,14 @@ class Browser extends DiffuseElement {
             `
           )}
         </select>
-        <label for="sort-by-select">Sort:</label>
+        <label for="sort-by-select">Sort by:</label>
         <select id="sort-by-select" @change="${this.setSortBy}">
           ${SORT_OPTIONS.map((opt) => {
             const json = JSON.stringify(opt.value);
-            return html`<option value="${json}" ?selected="${sortByJson === json}">${opt.label}</option>`;
+            return html`
+              <option value="${json}" ?selected="${sortByJson === json}">${opt
+                .label}</option>
+            `;
           })}
         </select>
       </search>
@@ -400,7 +408,7 @@ class Browser extends DiffuseElement {
           </thead>
         </table>
         <div class="virtual-scroll" style="height:${totalHeight}px">
-          <table style="transform:translateY(${topPad}px)">
+          <table style="transform: translateY(${topPad}px)">
             <colgroup>
               <col style="width:40%">
               <col style="width:30%">
