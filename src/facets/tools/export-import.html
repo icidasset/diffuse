@@ -1,0 +1,96 @@
+<main>
+  <div class="panel">
+    <p>
+      Export all Diffuse data to a JSON snapshot, or restore from a previously
+      exported file. Importing replaces all data in that category.
+    </p>
+    <hr />
+    <div class="row">
+      <button id="export" disabled>
+        <span class="with-icon"><i class="ph-bold ph-download-simple"></i> Export all data</span>
+      </button>
+    </div>
+    <hr />
+    <div class="row">
+      <label class="with-icon" for="file">
+        <i class="ph-bold ph-upload"></i>
+        <input id="file" type="file" accept=".json,application/json" />
+      </label>
+    </div>
+    <hr />
+    <div class="row">
+      <button id="import-tracks" disabled>
+        <span class="with-icon"><i class="ph-bold ph-music-note"></i> Import tracks</span>
+      </button>
+    </div>
+    <div class="row">
+      <button id="import-playlists" disabled>
+        <span class="with-icon"><i class="ph-bold ph-playlist"></i> Import playlists</span>
+      </button>
+    </div>
+    <div class="row">
+      <button id="import-facets" disabled>
+        <span class="with-icon"><i class="ph-bold ph-squares-four"></i> Import facets</span>
+      </button>
+    </div>
+    <div class="row">
+      <button id="import-themes" disabled>
+        <span class="with-icon"><i class="ph-bold ph-palette"></i> Import themes</span>
+      </button>
+    </div>
+    <div id="status" class="status" hidden></div>
+  </div>
+</main>
+
+<style>
+  @import "./styles/base.css";
+  @import "./styles/wireframe/ui.css";
+  @import "./vendor/@phosphor-icons/bold/style.css";
+
+  body {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    height: 100dvh;
+  }
+
+  main {
+    padding: var(--space-md);
+  }
+
+  p {
+    line-height: var(--leading-relaxed);
+    max-width: 42ch;
+  }
+
+  label {
+    flex: 1;
+  }
+
+  input[type="file"] {
+    flex: 1;
+  }
+
+  .status {
+    margin-top: var(--space-sm);
+    font-size: var(--text-sm);
+  }
+
+  .status--success {
+    color: var(--accent);
+
+    @media (prefers-color-scheme: dark) {
+      color: var(--accent-twist-4);
+    }
+  }
+
+  .status--error {
+    color: var(--accent-twist-5);
+
+    @media (prefers-color-scheme: dark) {
+      color: var(--accent-twist-3);
+    }
+  }
+</style>
+
+<script type="module" src="./export-import.inline.js"></script>
