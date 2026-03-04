@@ -27,6 +27,10 @@ class DefaultOutputRefinerTransformer extends OutputTransformer {
         collection: computed(() => {
           return base.playlistItems.collection() ?? [];
         }),
+        save: async (newPlaylists) => {
+          const filtered = newPlaylists.filter((p) => !p.ephemeral);
+          await base.playlistItems.save(filtered);
+        },
       },
       themes: {
         ...base.themes,

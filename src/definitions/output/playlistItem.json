@@ -15,6 +15,7 @@
             "description": "Criteria for matching this item against a set of tracks",
             "items": { "type": "ref", "ref": "#criterion" }
           },
+          "ephemeral": { "type": "boolean" },
           "playlist": { "type": "string", "description": "The name of the playlist" },
           "positionedAfter": {
             "type": "string",
