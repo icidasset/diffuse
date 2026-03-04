@@ -230,10 +230,14 @@ class AudioEngine extends BroadcastableDiffuseElement {
    * @type {Actions["supply"]}
    */
   supply(args) {
-    const existingSet = new Set(this.#items.value.map((a) => a.id));
-    const newSet = new Set(args.audio.map((a) => a.id));
+    const existingMap = new Map(this.#items.value.map((a) => [a.id, a]));
 
-    if (newSet.difference(existingSet).size !== 0) {
+    const hasNewIds = args.audio.some((a) => !existingMap.has(a.id));
+    const hasPreloadChanges = args.audio.some(
+      (a) => existingMap.get(a.id)?.isPreload !== a.isPreload,
+    );
+
+    if (hasNewIds || hasPreloadChanges) {
       this.#items.value = args.audio;
     }
 
