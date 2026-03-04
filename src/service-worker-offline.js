@@ -134,21 +134,9 @@ async function lookup(request) {
 async function handleFetch(request) {
   // When we know we're offline, skip the network entirely.
   if (navigator.onLine) {
-    const response = await fetch(request);
-
-    // Partial content (range requests) — return as-is, do not cache.
-    if (response.status === 206) return response;
-
-    // Skip caching audio/video.
-    const contentType = response.headers.get("content-type") ?? "";
-    if (MEDIA_CONTENT_TYPE.test(contentType)) return response;
-
-    // Cache full successful responses, including opaque cross-origin ones.
-    if (response.status === 200 || response.type === "opaque") {
-      store(request, response.clone());
-    }
-
-    return response;
+    try {
+      return await fetchAndStore(request);
+    } catch {}
   }
 
   const cached = await lookup(request);
@@ -158,4 +146,25 @@ async function handleFetch(request) {
     status: 503,
     statusText: "Unavailable asset, not cached",
   });
+}
+
+/**
+ * @param {Request} request
+ */
+async function fetchAndStore(request) {
+  const response = await fetch(request);
+
+  // Partial content (range requests) — return as-is, do not cache.
+  if (response.status === 206) return response;
+
+  // Skip caching audio/video.
+  const contentType = response.headers.get("content-type") ?? "";
+  if (MEDIA_CONTENT_TYPE.test(contentType)) return response;
+
+  // Cache full successful responses, including opaque cross-origin ones.
+  if (response.status === 200 || response.type === "opaque") {
+    store(request, response.clone());
+  }
+
+  return response;
 }
