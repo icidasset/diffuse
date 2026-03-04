@@ -2,8 +2,6 @@
 title: "Diffuse"
 
 base: "./"
-scripts: []
-styles: []
 ---
 
 <html lang="en">
@@ -12,6 +10,9 @@ styles: []
 
     <meta name="color-scheme" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+
+    <meta name="media-controllable" />
+    <meta name="mobile-web-app-capable" content="yes" />
 
     <title>{{title}}</title>
 
@@ -31,13 +32,17 @@ styles: []
     {{ for url of styles }}
       <link rel="stylesheet" href="{{ url }}" />
     {{ /for }}
+  </head>
+  <body>
+    {{ content }}
+
+    <!-- Make every touched URL available offline -->
+    <do-offline></do-offline>
+    <script src="components/orchestrator/offline/element.js" type="module"></script>
 
     <!-- Scripts -->
     {{ for url of scripts }}
       <script src="{{ url }}" type="module"></script>
     {{ /for }}
-  </head>
-  <body>
-    {{ content }}
   </body>
 </html>
