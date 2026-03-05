@@ -12,11 +12,11 @@ scripts:
   - facets/index.js
 
 examples:
-  - url: "facets/examples/now-playing.html"
+  - url: "facets/examples/now-playing/index.html"
     title: "Now playing"
     desc: >
       Shows what's currently set to "now playing" in the queue, along with a button to shift the queue to the next track.
-  - url: "facets/examples/generate-playlist.html"
+  - url: "facets/examples/generate-playlist/index.html"
     title: "Generate playlist"
     desc: >
       Make a list of what previously played in the queue.
@@ -71,31 +71,31 @@ examples:
         <li>
           <p>
             <i class="ph-fill ph-plus"></i>
-            <strong><a href="{{ ('themes/webamp/configurators/input/facet.html') |> facetLoaderURL }}">Add</a></strong> audio from various places on the web and your device.
+            <strong><a href="{{ ('themes/webamp/configurators/input/facet/index.html') |> facetLoaderURL }}">Add</a></strong> audio from various places on the web and your device.
           </p>
         </li>
         <li>
           <p>
             <i class="ph-fill ph-queue"></i>
-            <strong><a href="{{ ('themes/webamp/browser/facet.html') |> facetLoaderURL }}">Browse</a></strong> your collection to put something into the queue.
+            <strong><a href="{{ ('themes/webamp/browser/facet/index.html') |> facetLoaderURL }}">Browse</a></strong> your collection to put something into the queue.
           </p>
         </li>
         <li>
           <p>
             <i class="ph-fill ph-queue"></i>
-            <strong><a href="{{ ('facets/tools/auto-queue.html') |> facetLoaderURL }}">Automate</a></strong> adding items to the queue, for infinite playback or listening to a playlist.
+            <strong><a href="{{ ('facets/tools/auto-queue/index.html') |> facetLoaderURL }}">Automate</a></strong> adding items to the queue, for infinite playback or listening to a playlist.
           </p>
         </li>
         <li>
           <p>
             <i class="ph-fill ph-music-note"></i>
-            <strong><a href="{{ ('themes/blur/artwork-controller/facet.html') |> facetLoaderURL }}">Play</a></strong> queued songs.
+            <strong><a href="{{ ('themes/blur/artwork-controller/facet/index.html') |> facetLoaderURL }}">Play</a></strong> queued songs.
           </p>
         </li>
         <li>
           <p>
             <i class="ph-fill ph-person"></i>
-            <strong><a href="{{ ('themes/webamp/configurators/output/facet.html') |> facetLoaderURL }}">Manage</a></strong> your user data, sync with your other devices or other people.
+            <strong><a href="{{ ('themes/webamp/configurators/output/facet/index.html') |> facetLoaderURL }}">Manage</a></strong> your user data, sync with your other devices or other people.
           </p>
         </li>
       </ol>
@@ -107,7 +107,7 @@ examples:
         To use these facets, simply open whichever ones provide the functionality that you're looking for at a given moment. You can browse existing ones here and create one below.
       </p>
       <p>
-        For example, say you want to play music; two options would be: (1) <a href="{{ ('themes/webamp/browser/facet.html') |> facetLoaderURL }}">browse</a> for a specific song and add it to the queue, or (2) <a href="{{ ('facets/tools/auto-queue.html') |> facetLoaderURL }}">automatically</a> add a bunch of shuffled songs to the queue. Next, you need a way to play the items you added to the queue. That's where a <a href="{{ ('themes/blur/artwork-controller/facet.html') |> facetLoaderURL }}">controller</a> could be used.
+        For example, say you want to play music; two options would be: (1) <a href="{{ ('themes/webamp/browser/facet/index.html') |> facetLoaderURL }}">browse</a> for a specific song and add it to the queue, or (2) <a href="{{ ('facets/tools/auto-queue/index.html') |> facetLoaderURL }}">automatically</a> add a bunch of shuffled songs to the queue. Next, you need a way to play the items you added to the queue. That's where a <a href="{{ ('themes/blur/artwork-controller/facet/index.html') |> facetLoaderURL }}">controller</a> could be used.
       </p>
       <p>
         <em>You might ask, why can't I do all of this in just one window? That's what <a href="themes/">themes</a> are for, if you need something more streamlined. If you however want a customised experience, or prefer certain interfaces for certain things, that's what facets are for.</em>
