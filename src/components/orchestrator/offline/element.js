@@ -14,7 +14,7 @@ import { DiffuseElement } from "~/common/element.js";
  *
  * Attributes:
  *   cache-name      Name of the cache to use (default: "diffuse-offline")
- *   scope           Service worker scope (default: document.baseURI ?? "./")
+ *   scope           Service worker scope (default: "./")
  *   src             URL of the service worker script (default: built-in service-worker.js)
  *                   Must be served from a path within the requested scope, or the server
  *                   must include a `Service-Worker-Allowed: /` response header.
@@ -31,7 +31,7 @@ class OfflineOrchestrator extends DiffuseElement {
     if (!("serviceWorker" in navigator)) return;
 
     const cacheName = this.getAttribute("cache-name") ?? "diffuse-offline";
-    const scope = this.getAttribute("scope") ?? document.baseURI ?? "./";
+    const scope = this.getAttribute("scope") ?? "./";
     const src = this.getAttribute("src");
 
     const swUrl = new URL(
