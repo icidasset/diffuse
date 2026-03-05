@@ -23,10 +23,5 @@ export const SCHEMA = {
       no: /** @type {const} */ ("number"),
     },
   },
-
-  // TODO:
-  // isFavorite: "boolean" as const,
-  // inPlaylists: [ ... ],
-
   embeddings: /** @type {const} */ ("vector[512]"),
 };

@@ -1,5 +1,4 @@
 import { Temporal } from "@js-temporal/polyfill";
-import { base64url } from "iso-base/rfc4648";
 import { xxh32r } from "xxh32/dist/raw.js";
 
 /**

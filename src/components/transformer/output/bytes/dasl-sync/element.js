@@ -286,7 +286,6 @@ class DaslBytesSyncOutputTransformer extends OutputTransformer {
     };
 
     return {
-      // TODO: Do we need this? Too big of a perf penalty?
       cid: await CID.create(0x71, encode(newInventory)),
       data: collection,
       inventory: newInventory,

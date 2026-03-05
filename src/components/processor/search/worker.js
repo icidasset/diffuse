@@ -1,6 +1,5 @@
 import * as Orama from "@orama/orama";
 import { xxh32 } from "xxh32";
-// import { pluginQPS } from "@orama/plugin-qps";
 
 import { SCHEMA } from "./constants.js";
 import { announce, ostiary, rpc } from "~/common/worker.js";
@@ -30,10 +29,6 @@ export const $supplyFingerprint = signal(
 // DATABASE
 ////////////////////////////////////////////
 
-// TODO:
-// * pluginEmbeddings
-// * pluginQPS
-
 /**
  * @type {Orama.OramaPlugin[]}
  */
@@ -42,11 +37,6 @@ const PLUGINS = [];
 const db = Orama.create({
   schema: SCHEMA,
   plugins: PLUGINS,
-  // components: {
-  // TODO:
-  // https://docs.orama.com/open-source/usage/insert#remote-document-storing
-  // documentStore: { ... }
-  // },
 });
 
 ////////////////////////////////////////////
@@ -122,6 +112,7 @@ ostiary((context) => {
   });
 
   // Effects
+  // -------
 
   // Communicate state
   effect(() =>
@@ -142,7 +133,6 @@ async function _search(params, tracks) {
     // @ts-ignore: No clue what the correct type is for this one
     sortBy,
     ...params,
-    // mode: "hybrid",
     threshold: 0, // AND operator: all search terms must match in at least one property
     limit: 10000,
     offset: tracks.length,

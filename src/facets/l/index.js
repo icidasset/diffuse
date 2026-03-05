@@ -1,5 +1,6 @@
 import foundation from "~/common/facets/foundation.js";
-import { createLoader } from "~/common/loader.js";
+import * as CID from "~/common/cid.js";
+import { createLoader, renderError } from "~/common/loader.js";
 
 createLoader({
   $type: "sh.diffuse.output.facet",
@@ -8,11 +9,25 @@ createLoader({
     const output = foundation.orchestrator.output();
     return output.facets;
   },
-  render(facet) {
-    // TODO: Validate if CID matches HTML
+  async render(facet) {
     const container = /** @type {HTMLDivElement} */ (
       document.querySelector("#container")
     );
+
+    if (facet.cid) {
+      const valid = await CID.verify(
+        new TextEncoder().encode(facet.html ?? ""),
+        facet.cid,
+      );
+
+      if (!valid) {
+        renderError(
+          container,
+          "CID mismatch: HTML content does not match the CID",
+        );
+        return;
+      }
+    }
 
     const range = document.createRange();
     range.selectNode(container);
