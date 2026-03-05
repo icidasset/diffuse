@@ -13,8 +13,8 @@ class ScopeEngine extends BroadcastableDiffuseElement {
   #groupBy = signal(/** @type {string | undefined} */ (undefined));
   #playlist = signal(/** @type {string | undefined} */ (undefined));
   #searchTerm = signal(/** @type {string | undefined} */ (undefined));
-  #sortBy = signal(/** @type {string[]} */ ([]));
-  #sortDirection = signal(/** @type {string | undefined} */ (undefined));
+  #sortBy = signal(/** @type {string[]} */ (["createdAt"]));
+  #sortDirection = signal(/** @type {"asc" | "desc" | undefined} */ ("desc"));
 
   groupBy = this.#groupBy.get;
   playlist = this.#playlist.get;
@@ -54,17 +54,19 @@ class ScopeEngine extends BroadcastableDiffuseElement {
     const storagePrefix =
       `${this.constructor.prototype.constructor.NAME}/${this.group}`;
 
-    this.#groupBy.value =
-      localStorage.getItem(`${storagePrefix}/groupBy`) ?? undefined;
+    this.#groupBy.value = localStorage.getItem(`${storagePrefix}/groupBy`) ??
+      undefined;
     this.#playlist.value =
       localStorage.getItem(`${storagePrefix}/playlistId`) ?? undefined;
     this.#searchTerm.value =
       localStorage.getItem(`${storagePrefix}/searchTerm`) ?? undefined;
     this.#sortBy.value = JSON.parse(
-      localStorage.getItem(`${storagePrefix}/sortBy`) ?? "[]",
+      localStorage.getItem(`${storagePrefix}/sortBy`) ?? `["createdAt"]`,
     );
     this.#sortDirection.value =
-      localStorage.getItem(`${storagePrefix}/sortDirection`) ?? undefined;
+      /** @type {"desc" | "asc"} */ (localStorage.getItem(
+        `${storagePrefix}/sortDirection`,
+      ) ?? "desc");
 
     // Effects
     this.effect(() => {
@@ -122,7 +124,7 @@ class ScopeEngine extends BroadcastableDiffuseElement {
   /** @param {string[]} val */
   setSortBy = async (val) => this.#sortBy.value = val;
 
-  /** @param {string | undefined} val */
+  /** @param {"asc" | "desc" | undefined} val */
   setSortDirection = async (val) => this.#sortDirection.value = val;
 }
 
