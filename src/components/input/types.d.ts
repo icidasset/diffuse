@@ -35,9 +35,20 @@ export type InputElement =
 
 export type InputSchemeProvider = { SCHEME: string };
 
-export type ResolvedUri = undefined | {
-  stream: ReadableStream;
+export type ResolvedUri = undefined | ResolveUriAsUrl | ResolveUriAsStream;
+
+export type ResolveUriAsUrl = {
   expiresAt: number;
-} | { url: string; expiresAt: number };
+  url: string;
+};
+
+export type ResolveUriAsStream = {
+  expiresAt: number;
+  mimeType: string;
+  stream: ReadableStream;
+
+  /** Total duration in seconds. */
+  duration?: number;
+};
 
 export type Source = { label: string; uri: string };

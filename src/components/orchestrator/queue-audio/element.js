@@ -74,11 +74,12 @@ class QueueAudioOrchestrator extends BroadcastableDiffuseElement {
 
     const activeItem = queue.now();
     const nextItem = queue.future()[0] ?? null;
-
     const tracks = this.output?.tracks.collection();
+
     const activeTrack = activeItem
       ? tracks?.find((t) => t.id === activeItem.id)
       : undefined;
+
     const nextTrack = nextItem
       ? tracks?.find((t) => t.id === nextItem.id)
       : undefined;
@@ -92,20 +93,17 @@ class QueueAudioOrchestrator extends BroadcastableDiffuseElement {
       ? await input.resolve({ method: "GET", uri: activeTrack.uri })
       : undefined;
 
-    if (resolvedUri && "stream" in resolvedUri) {
-      throw new Error("Streams are not supported yet.");
-    }
-
-    const url = resolvedUri?.url;
-
     // Check if we still need to render
     if (queue.now?.()?.id !== activeItem?.id) return;
 
     // Supply active track immediately
     // TODO: Take URL expiration timestamp into account
-    const activeAudio = activeItem && url
-      ? [{ id: activeItem.id, isPreload: false, url }]
+    // TODO: Add support for seeking streams
+    //       (requires a lot of code, decoding audio frames, etc.)
+    const activeAudio = activeItem && resolvedUri
+      ? [{ id: activeItem.id, isPreload: false, ...resolvedUri }]
       : [];
+
     audio.supply({
       audio: activeAudio,
       play: activeItem && isPlaying ? { audioId: activeItem.id } : undefined,
@@ -120,9 +118,11 @@ class QueueAudioOrchestrator extends BroadcastableDiffuseElement {
         method: "GET",
         uri: nextTrack.uri,
       });
+
       const nextUrl = resolvedNextUri && !("stream" in resolvedNextUri)
         ? resolvedNextUri.url
         : undefined;
+
       if (!nextUrl) return;
 
       audio.supply({
@@ -143,7 +143,7 @@ class QueueAudioOrchestrator extends BroadcastableDiffuseElement {
     const aud = now ? this.audio.state(now.id) : undefined;
 
     if (aud?.hasEnded() && (await this.isLeader())) {
-      // TODO: Not sure yet if this is the best way to approach this.
+      // NOTE: Not sure yet if this is the best way to approach this.
       //       The idea is that scrobblers would more easily pick this up,
       //       as opposed to just resetting the audio.
       if (this.repeatShuffle?.repeat()) {

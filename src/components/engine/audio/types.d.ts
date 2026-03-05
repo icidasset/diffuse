@@ -11,13 +11,26 @@ export type Actions = {
   ) => void;
 };
 
-export type Audio = {
+export type Audio = AudioUrl | AudioStream;
+
+export type AudioUrl = AudioBase & { url: string };
+
+export type AudioStream = AudioBase & {
+  stream: ReadableStream;
+
+  /** Total duration in seconds. */
+  duration?: number;
+
+  /** Return a new stream starting at the given time. Required for seeking on stream items. */
+  seek?: (timeSeconds: number) => Promise<ReadableStream>;
+};
+
+export type AudioBase = {
   id: string;
   isPreload: boolean;
   mimeType?: string;
   // NOTE: Initial progress
   progress?: number;
-  url: string;
 };
 
 export type AudioState = {

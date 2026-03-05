@@ -4,7 +4,7 @@ import { BroadcastableDiffuseElement, nothing } from "~/common/element.js";
 import { computed, signal, untracked } from "~/common/signal.js";
 
 /**
- * @import {Actions, Audio, AudioState, AudioStateReadOnly, LoadingState} from "./types.d.ts"
+ * @import {Actions, AudioUrl, AudioState, AudioStateReadOnly, LoadingState} from "./types.d.ts"
  * @import {RenderArg} from "~/common/element.d.ts"
  * @import {SignalReader} from "~/common/signal.d.ts"
  */
@@ -34,8 +34,14 @@ class AudioEngine extends BroadcastableDiffuseElement {
 
   // SIGNALS
 
-  #items = signal(/** @type {Audio[]} */ ([]));
+  #items = signal(/** @type {AudioUrl[]} */ ([]));
   #volume = signal(0.5);
+
+  /** @type {Map<string, ReadableStream>} Streams pending MediaSource setup */
+  #streams = new Map();
+
+  /** @type {Map<string, string>} MediaSource object URLs created from streams, keyed by item ID */
+  #mediaSourceUrls = new Map();
 
   // STATE
 
@@ -232,16 +238,198 @@ class AudioEngine extends BroadcastableDiffuseElement {
   supply(args) {
     const existingMap = new Map(this.#items.value.map((a) => [a.id, a]));
 
-    const hasNewIds = args.audio.some((a) => !existingMap.has(a.id));
-    const hasPreloadChanges = args.audio.some(
+    // Start loading new streams
+    for (const item of args.audio) {
+      if (
+        "stream" in item &&
+        !existingMap.has(item.id) &&
+        !this.#streams.has(item.id)
+      ) {
+        this.#streams.set(item.id, item.stream);
+        this.#resolveStream(
+          item.id,
+          item.stream,
+          item.mimeType ?? "",
+          item.seek,
+          item.duration,
+        );
+      }
+    }
+
+    // Stop streams that are no longer needed
+    const newIds = new Set(args.audio.map((a) => a.id));
+
+    for (const [id, objectUrl] of this.#mediaSourceUrls) {
+      if (!newIds.has(id)) {
+        URL.revokeObjectURL(objectUrl);
+        this.#mediaSourceUrls.delete(id);
+      }
+    }
+
+    for (const id of this.#streams.keys()) {
+      if (!newIds.has(id)) this.#streams.delete(id);
+    }
+
+    /** @type {AudioUrl[]} Remove `stream` field, replace it with `url` */
+    const resolvedAudio = args.audio.map((a) => {
+      const url = "stream" in a ? this.#mediaSourceUrls.get(a.id) : a.url;
+
+      if (!url) {
+        throw new Error("Stream did not produce a media source url");
+      }
+
+      return {
+        id: a.id,
+        isPreload: a.isPreload,
+        mimeType: a.mimeType,
+        progress: a.progress,
+        url,
+      };
+    });
+
+    const hasNewIds = resolvedAudio.some((a) => !existingMap.has(a.id));
+    const hasPreloadChanges = resolvedAudio.some(
       (a) => existingMap.get(a.id)?.isPreload !== a.isPreload,
     );
 
     if (hasNewIds || hasPreloadChanges) {
-      this.#items.value = args.audio;
+      this.#items.value = resolvedAudio;
     }
 
     if (args.play) this.play(args.play);
+  }
+
+  // STREAMS
+
+  /**
+   * @param {string} id
+   * @param {ReadableStream} stream
+   * @param {string} mimeType
+   * @param {((timeSeconds: number) => Promise<ReadableStream>) | undefined} seekFn
+   * @param {number | undefined} duration
+   */
+  async #resolveStream(id, stream, mimeType, seekFn, duration) {
+    const mediaSource = new MediaSource();
+    const objectUrl = URL.createObjectURL(mediaSource);
+
+    this.#mediaSourceUrls.set(id, objectUrl);
+    this.#streams.delete(id);
+
+    // Yield so the render triggered by supply() can complete, ensuring the
+    // audio element is in the DOM before we set its src.
+    await Promise.resolve();
+
+    if (!this.#mediaSourceUrls.has(id)) {
+      // Item was removed while waiting
+      URL.revokeObjectURL(objectUrl);
+      return;
+    }
+
+    const itemEl = this.#itemElement(id);
+    if (!itemEl) {
+      URL.revokeObjectURL(objectUrl);
+      this.#mediaSourceUrls.delete(id);
+      return;
+    }
+
+    // MediaSource must be attached via audio.src directly;
+    // <source> elements do not trigger sourceopen.
+    itemEl.audio.src = objectUrl;
+
+    await new Promise((resolve) => {
+      mediaSource.addEventListener("sourceopen", resolve, { once: true });
+    });
+
+    if (duration !== undefined) mediaSource.duration = duration;
+
+    const sourceBuffer = mediaSource.addSourceBuffer(mimeType);
+
+    // 'reader' is always the current active reader; the seeking handler
+    // closes over this variable so it always cancels the right one.
+    let reader = stream.getReader();
+    let seekPending = false;
+    let seekTarget = 0;
+
+    const onSeeking = () => {
+      if (!seekFn) return;
+      const audio = itemEl.audio;
+      const target = audio.currentTime;
+
+      // Only intervene if the target is outside what's already buffered.
+      for (let i = 0; i < audio.buffered.length; i++) {
+        if (
+          audio.buffered.start(i) <= target && target <= audio.buffered.end(i)
+        ) {
+          return; // Browser can handle it with buffered data.
+        }
+      }
+
+      seekPending = true;
+      seekTarget = target;
+      reader.cancel().catch(() => {});
+    };
+
+    itemEl.audio.addEventListener("seeking", onSeeking);
+
+    try {
+      while (true) {
+        if (!this.#mediaSourceUrls.has(id)) {
+          await reader.cancel();
+          break;
+        }
+
+        let done, value;
+
+        try {
+          ({ done, value } = await reader.read());
+        } catch {
+          done = true;
+        }
+
+        if (!this.#mediaSourceUrls.has(id)) break;
+
+        if (seekPending) {
+          seekPending = false;
+
+          // Clear all buffered data before feeding from the new position.
+          if (sourceBuffer.updating) {
+            await new Promise((r) =>
+              sourceBuffer.addEventListener("updateend", r, { once: true })
+            );
+          }
+          await new Promise((r) => {
+            sourceBuffer.addEventListener("updateend", r, { once: true });
+            sourceBuffer.remove(0, Infinity);
+          });
+
+          if (!seekFn) throw new Error("seekFn is undefined");
+          reader = (await seekFn(seekTarget)).getReader();
+
+          continue;
+        }
+
+        if (done) {
+          if (mediaSource.readyState === "open") mediaSource.endOfStream();
+          break;
+        }
+
+        if (sourceBuffer.updating) {
+          await new Promise((r) =>
+            sourceBuffer.addEventListener("updateend", r, { once: true })
+          );
+        }
+
+        sourceBuffer.appendBuffer(value);
+        await new Promise((r) =>
+          sourceBuffer.addEventListener("updateend", r, { once: true })
+        );
+      }
+    } catch (err) {
+      console.error("[audio engine] Stream error:", err);
+      if (mediaSource.readyState === "open") mediaSource.endOfStream("decode");
+    } finally {
+      itemEl.audio.removeEventListener("seeking", onSeeking);
+    }
   }
 
   // RENDER
@@ -274,17 +462,21 @@ class AudioEngine extends BroadcastableDiffuseElement {
             initial-progress="${ip}"
             mime-type="${audio.mimeType ? audio.mimeType : nothing}"
             preload="${audio.isPreload ? `preload` : nothing}"
-            url="${audio.url}"
+            url="${audio.url ?? nothing}"
           >
             <audio
               crossorigin="anonymous"
               muted="true"
               preload="auto"
             >
-              <source
-                src="${audio.url}"
-                ${audio.mimeType ? 'type="' + audio.mimeType + '"' : ""}
-              />
+              ${audio.url
+                ? html`
+                  <source
+                    src="${audio.url}"
+                    ${audio.mimeType ? 'type="' + audio.mimeType + '"' : ""}
+                  />
+                `
+                : nothing}
             </audio>
           </de-audio-item>
         `,
