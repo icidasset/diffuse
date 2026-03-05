@@ -13,7 +13,7 @@
           "ephemeral": { "type": "boolean" },
           "kind": {
             "type": "string",
-            "enum": ["audiobook", "miscellaneous", "music", "placeholder", "podcast"]
+            "enum": ["audiobook", "miscellaneous", "music", "placeholder", "podcast", "stream"]
           },
           "stats": {
             "type": "ref",
