@@ -1,15 +1,9 @@
 <main>
   <div class="panel">
     <p>
-      Export all Diffuse data to a JSON snapshot, or restore from a previously
-      exported file. Importing replaces all data in that category.
+      Import data from the previous version of Diffuse (v3). Upload the snapshot JSON file you
+      exported.
     </p>
-    <hr />
-    <div class="row">
-      <button id="export" disabled>
-        <span class="with-icon"><i class="ph-bold ph-download-simple"></i> Export all data</span>
-      </button>
-    </div>
     <hr />
     <div class="row">
       <label class="with-icon" for="file">
@@ -19,23 +13,13 @@
     </div>
     <hr />
     <div class="row">
-      <button id="import-tracks" disabled>
-        <span class="with-icon"><i class="ph-bold ph-music-note"></i> Import tracks</span>
+      <button id="import-favourites" disabled>
+        <span class="with-icon"><i class="ph-fill ph-star"></i> Import favourites</span>
       </button>
     </div>
     <div class="row">
       <button id="import-playlists" disabled>
         <span class="with-icon"><i class="ph-bold ph-playlist"></i> Import playlists</span>
-      </button>
-    </div>
-    <div class="row">
-      <button id="import-facets" disabled>
-        <span class="with-icon"><i class="ph-bold ph-squares-four"></i> Import facets</span>
-      </button>
-    </div>
-    <div class="row">
-      <button id="import-themes" disabled>
-        <span class="with-icon"><i class="ph-bold ph-palette"></i> Import themes</span>
       </button>
     </div>
     <div id="status" class="status" hidden></div>
@@ -46,6 +30,7 @@
   @import "./styles/base.css";
   @import "./styles/wireframe/ui.css";
   @import "./vendor/@phosphor-icons/bold/style.css";
+  @import "./vendor/@phosphor-icons/fill/style.css";
 
   body {
     display: flex;
@@ -93,4 +78,4 @@
   }
 </style>
 
-<script type="module" src="./export-import.inline.js"></script>
+<script type="module" src="./index.inline.js"></script>

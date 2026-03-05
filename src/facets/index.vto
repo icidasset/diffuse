@@ -11,42 +11,6 @@ styles:
 scripts:
   - facets/index.js
 
-# FACETS
-
-builtIn:
-  - url: "themes/blur/artwork-controller/facet.html"
-    title: "Blur / Artwork controller"
-    desc: >
-      Audio playback controller with an artwork display.
-  - url: "facets/tools/auto-queue.html"
-    title: "Tools / Automatic Queue"
-    desc: >
-      Everything you need to automatically put tracks into the queue.
-  - url: "facets/tools/export-import.html"
-    title: "Tools / Export & Import"
-    desc: >
-      Export all data as a JSON snapshot, or restore from a previously exported file.
-  - url: "facets/tools/split-view.html"
-    title: "Tools / Split View"
-    desc: >
-      Arrange multiple facets side-by-side in a resizable split-panel layout.
-  - url: "facets/tools/v3-import.html"
-    title: "Tools / V3.x Import"
-    desc: >
-      Import data from Diffuse v3.
-  - url: "themes/webamp/browser/facet.html"
-    title: "Webamp / Browser"
-    desc: >
-      Collection browser + search in a retro, win98, look.
-  - url: "themes/webamp/configurators/input/facet.html"
-    title: "Webamp / Input Configurator"
-    desc: >
-      Windows 98 styled input configurator where you can add music sources.
-  - url: "themes/webamp/configurators/output/facet.html"
-    title: "Webamp / Output Configurator"
-    desc: >
-      Windows 98 styled output configurator where you can manage your data storage.
-
 examples:
   - url: "facets/examples/now-playing.html"
     title: "Now playing"
@@ -159,7 +123,7 @@ examples:
     <section class="flex">
       <h2 id="built-in">Built-in</h2>
 
-      {{ await comp.facets({ id: "builtin", items: builtIn }) }}
+      {{ await comp.facets({ id: "builtin", items: facets }) }}
     </section>
 
     <section class="flex">

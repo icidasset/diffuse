@@ -32,19 +32,9 @@
   <wa-dialog id="facet-picker" label="Choose a facet" style="--width: 360px">
     <div class="wa-stack wa-gap-s">
       <wa-select id="facet-select" placeholder="Built-in facets…">
-        <wa-option value="themes/blur/artwork-controller/facet.html"
-          >Blur / Artwork controller</wa-option
-        >
-        <wa-option value="facets/tools/auto-queue.html">Tools / Automatic Queue</wa-option>
-        <wa-option value="facets/tools/export-import.html">Tools / Export &amp; Import</wa-option>
-        <wa-option value="facets/tools/v3-import.html">Tools / V3.x Import</wa-option>
-        <wa-option value="themes/webamp/browser/facet.html">Webamp / Browser</wa-option>
-        <wa-option value="themes/webamp/configurators/input/facet.html"
-          >Webamp / Input Configurator</wa-option
-        >
-        <wa-option value="themes/webamp/configurators/output/facet.html"
-          >Webamp / Output Configurator</wa-option
-        >
+        {{ for item of facets }}{{ if item.url !== "facets/tools/split-view.html" }}
+        <wa-option value="{{ item.url }}">{{ item.title }}</wa-option>
+        {{ /if }}{{ /for }}
       </wa-select>
       <wa-input
         id="custom-path"
@@ -148,4 +138,4 @@
   }
 </style>
 
-<script type="module" src="./split-view.inline.js"></script>
+<script type="module" src="./index.inline.js"></script>

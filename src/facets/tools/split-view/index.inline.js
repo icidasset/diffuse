@@ -1,3 +1,5 @@
+import { Temporal } from "@js-temporal/polyfill";
+
 import "@awesome.me/webawesome/dist/components/split-panel/split-panel.js";
 import "@awesome.me/webawesome/dist/components/dialog/dialog.js";
 import "@awesome.me/webawesome/dist/components/button/button.js";
@@ -434,7 +436,7 @@ async function saveSimplifiedCopy() {
     {
       $type: "sh.diffuse.output.facet",
       id,
-      name: "Split View",
+      name: `Split View (${Temporal.Now.instant().toLocaleString()})`,
       html,
       createdAt: now,
       updatedAt: now,
