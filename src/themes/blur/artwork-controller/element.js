@@ -11,7 +11,6 @@ import {
   whenElementsDefined,
 } from "~/common/element.js";
 
-import { trackArtworkCacheId } from "~/common/utils.js";
 import { computed, signal, untracked } from "~/common/signal.js";
 
 /**
@@ -180,7 +179,7 @@ class ArtworkController extends DiffuseElement {
       return;
     }
 
-    const cacheId = await trackArtworkCacheId(track);
+    const cacheId = track.id;
 
     const resGet = await this.$input.value?.resolve({
       method: "GET",
@@ -217,9 +216,7 @@ class ArtworkController extends DiffuseElement {
 
     // Check if queue item has changed while fetching the artwork
     const currTrack = this.currentTrack();
-    const currCacheId = currTrack
-      ? await trackArtworkCacheId(currTrack)
-      : undefined;
+    const currCacheId = currTrack ? currTrack.id : undefined;
 
     if (cacheId === currCacheId) {
       const art = allArt[0];

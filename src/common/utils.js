@@ -162,13 +162,3 @@ export function safeDecodeURIComponent(str) {
         : String.fromCharCode(parseInt(byte, 16)),
   );
 }
-
-/**
- * @param {Track} track
- * @returns {Promise<string>}
- */
-export async function trackArtworkCacheId(track) {
-  return await crypto.subtle
-    .digest("SHA-256", new TextEncoder().encode(track.uri))
-    .then((a) => base64url.encode(new Uint8Array(a)));
-}
