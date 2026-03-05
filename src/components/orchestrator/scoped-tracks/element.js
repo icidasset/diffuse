@@ -188,6 +188,7 @@ class ScopedTracksOrchestrator extends BroadcastableDiffuseElement {
       const tracks = this.#tracksSearch.value;
       const playlistItems = this.#selectedPlaylistItems();
       const sortBy = this.#scope.value?.sortBy();
+      const sortDirection = this.#scope.value?.sortDirection();
 
       if ((await this.isLeader()) === false) return;
 
@@ -196,6 +197,7 @@ class ScopedTracksOrchestrator extends BroadcastableDiffuseElement {
         : tracks;
 
       if (sortBy?.length) {
+        const dir = sortDirection === "desc" ? -1 : 1;
         final = [...final].sort((a, b) => {
           for (const field of sortBy) {
             let aVal = /** @type {any} */ (a);
@@ -214,7 +216,7 @@ class ScopedTracksOrchestrator extends BroadcastableDiffuseElement {
               ? aVal.localeCompare(bVal)
               : aVal < bVal ? -1 : aVal > bVal ? 1 : 0;
 
-            if (cmp !== 0) return cmp;
+            if (cmp !== 0) return cmp * dir;
           }
 
           return 0;

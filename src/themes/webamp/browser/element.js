@@ -16,18 +16,12 @@ import * as Playlist from "~/common/playlist.js";
 const ROW_HEIGHT = 14;
 const OVERSCAN = 20;
 
-const SORT_OPTIONS = [
-  { label: "Default", value: [] },
-  { label: "Added to collection", value: ["createdAt"] },
-  { label: "Title", value: ["tags.title"] },
-  { label: "Album", value: ["tags.album", "tags.disc.no", "tags.track.no"] },
-  {
-    label: "Artist",
-    value: ["tags.artist", "tags.album", "tags.disc.no", "tags.track.no"],
-  },
-  { label: "Year", value: ["tags.year"] },
-  { label: "Date", value: ["tags.date"] },
-];
+/** @type {Record<string, string[]>} */
+const COLUMN_SORT = {
+  title: ["tags.title"],
+  artist: ["tags.artist", "tags.album", "tags.disc.no", "tags.track.no"],
+  album: ["tags.album", "tags.disc.no", "tags.track.no"],
+};
 
 class Browser extends DiffuseElement {
   constructor() {
@@ -138,17 +132,6 @@ class Browser extends DiffuseElement {
         /** @type {HTMLSelectElement} */ (select).value = playlist ?? "";
       }
     });
-
-    this.effect(() => {
-      const sortBy = this.$scope.value?.sortBy();
-      const select = this.root().querySelector("#sort-by-select");
-
-      if (select) {
-        /** @type {HTMLSelectElement} */ (select).value = JSON.stringify(
-          sortBy ?? [],
-        );
-      }
-    });
   }
 
   /**
@@ -245,12 +228,23 @@ class Browser extends DiffuseElement {
   };
 
   /**
-   * @param {Event} event
+   * @param {string} column
    */
-  setSortBy = (event) => {
-    const value = /** @type {HTMLSelectElement} */ (event.currentTarget).value;
+  sortByColumn = (column) => {
+    const scope = this.$scope.value;
+    if (!scope) return;
 
-    this.$scope.value?.setSortBy(JSON.parse(value));
+    const isActive = JSON.stringify(COLUMN_SORT[column]) ===
+      JSON.stringify(scope.sortBy());
+
+    if (isActive) {
+      scope.setSortDirection(
+        scope.sortDirection() === "desc" ? undefined : "desc",
+      );
+    } else {
+      scope.setSortBy(COLUMN_SORT[column] ?? []);
+      scope.setSortDirection(undefined);
+    }
   };
 
   // RENDER
@@ -264,7 +258,15 @@ class Browser extends DiffuseElement {
     const tracks = this.$provider.value?.tracks() ?? [];
     const playlist = this.$scope.value?.playlist();
     const searchTerm = this.$scope.value?.searchTerm() ?? "";
-    const sortByJson = JSON.stringify(this.$scope.value?.sortBy() ?? []);
+    const sortBy = this.$scope.value?.sortBy() ?? [];
+    const sortDirection = this.$scope.value?.sortDirection();
+    const sortedColumn = Object.entries(COLUMN_SORT).find(
+      ([, v]) => JSON.stringify(v) === JSON.stringify(sortBy),
+    )?.[0];
+    const ariaSort = /** @param {string} col */ (col) =>
+      sortedColumn === col
+        ? (sortDirection === "desc" ? "descending" : "ascending")
+        : "none";
 
     // Virtual list
     const totalTracks = tracks.length;
@@ -334,11 +336,21 @@ class Browser extends DiffuseElement {
       }
 
       table th {
+        cursor: pointer;
+        user-select: none;
         width: 30%;
 
         &:first-child {
           width: 40%;
         }
+      }
+
+      table th[aria-sort="ascending"]::after {
+        content: " ▲";
+      }
+
+      table th[aria-sort="descending"]::after {
+        content: " ▼";
       }
 
       .virtual-scroll table {
@@ -385,25 +397,24 @@ class Browser extends DiffuseElement {
             `
           )}
         </select>
-        <label for="sort-by-select">Sort by:</label>
-        <select id="sort-by-select" @change="${this.setSortBy}">
-          ${SORT_OPTIONS.map((opt) => {
-            const json = JSON.stringify(opt.value);
-            return html`
-              <option value="${json}" ?selected="${sortByJson === json}">${opt
-                .label}</option>
-            `;
-          })}
-        </select>
       </search>
 
       <div class="sunken-panel">
         <table class="virtual-header">
           <thead>
             <tr>
-              <th>Title</th>
-              <th>Artist</th>
-              <th>Album</th>
+              <th
+                aria-sort="${ariaSort(`title`)}"
+                @click="${() => this.sortByColumn(`title`)}"
+              >Title</th>
+              <th
+                aria-sort="${ariaSort(`artist`)}"
+                @click="${() => this.sortByColumn(`artist`)}"
+              >Artist</th>
+              <th
+                aria-sort="${ariaSort(`album`)}"
+                @click="${() => this.sortByColumn(`album`)}"
+              >Album</th>
             </tr>
           </thead>
         </table>
