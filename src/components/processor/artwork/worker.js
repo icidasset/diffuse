@@ -1,8 +1,12 @@
 import * as IDB from "idb-keyval";
 
 import { IDB_ARTWORK_PREFIX } from "./constants.js";
+import { create as createCid } from "~/common/cid.js";
 import { musicMetadataTags } from "../metadata/common.js";
 import { ostiary, rpc } from "~/common/worker.js";
+
+// multicodec raw bytes
+const RAW = 0x55;
 
 /**
  * @import {IPicture} from "music-metadata"
@@ -205,9 +209,21 @@ async function musicBrainzCover(remainingReleases, req) {
  */
 async function processRequest(req) {
   // Check if already processed
-  // TODO: Retry if none was found?
-  const cache = await IDB.get(`${IDB_ARTWORK_PREFIX}/${req.cacheId}`);
-  if (cache && Array.isArray(cache) && cache.length) return cache;
+
+  /** @type {string[] | undefined} */
+  const cachedCids = await IDB.get(
+    `${IDB_ARTWORK_PREFIX}/track/${req.cacheId}`,
+  );
+
+  if (cachedCids?.length) {
+    /** @type {Artwork[]} */
+    const art = await Promise.all(
+      cachedCids.map((cid) => IDB.get(`${IDB_ARTWORK_PREFIX}/image/${cid}`)),
+    );
+
+    const found = art.filter(Boolean);
+    if (found.length) return found;
+  }
 
   // Request override
   if (req.tags?.artist?.toUpperCase() === "VA") {
@@ -254,8 +270,19 @@ async function processRequest(req) {
     art.push(...fromLastFm);
   }
 
-  // Save artwork to IDB
-  await IDB.set(`${IDB_ARTWORK_PREFIX}/${req.cacheId}`, art);
+  // Save artwork to IDB — store each image by its content CID,
+  // then map the track to those CIDs
+  const cids = await Promise.all(
+    art.map(async (a) => {
+      const cid = await createCid(RAW, a.bytes);
+      const key = `${IDB_ARTWORK_PREFIX}/image/${cid}`;
+      if (await IDB.get(key)) return cid;
+      await IDB.set(key, a);
+      return cid;
+    }),
+  );
+
+  await IDB.set(`${IDB_ARTWORK_PREFIX}/track/${req.cacheId}`, cids);
 
   // Fin
   return art;
