@@ -238,9 +238,11 @@ class Browser extends DiffuseElement {
       JSON.stringify(scope.sortBy());
 
     if (isActive) {
-      scope.setSortDirection(
-        scope.sortDirection() === "desc" ? undefined : "desc",
-      );
+      if (scope.sortDirection() === "desc") {
+        scope.revertToDefaultSort();
+      } else {
+        scope.setSortDirection("desc");
+      }
     } else {
       scope.setSortBy(COLUMN_SORT[column] ?? []);
       scope.setSortDirection(undefined);
@@ -340,6 +342,12 @@ class Browser extends DiffuseElement {
         user-select: none;
         width: 30%;
 
+        &:after {
+          font-size: 82%;
+          position: absolute;
+          right: 6px;
+        }
+
         &:first-child {
           width: 40%;
         }
@@ -406,15 +414,21 @@ class Browser extends DiffuseElement {
               <th
                 aria-sort="${ariaSort(`title`)}"
                 @click="${() => this.sortByColumn(`title`)}"
-              >Title</th>
+              >
+                Title
+              </th>
               <th
                 aria-sort="${ariaSort(`artist`)}"
                 @click="${() => this.sortByColumn(`artist`)}"
-              >Artist</th>
+              >
+                Artist
+              </th>
               <th
                 aria-sort="${ariaSort(`album`)}"
                 @click="${() => this.sortByColumn(`album`)}"
-              >Album</th>
+              >
+                Album
+              </th>
             </tr>
           </thead>
         </table>

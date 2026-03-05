@@ -260,11 +260,15 @@ export async function deriveCipherKey(prfSecond) {
       name: "HKDF",
       hash: "SHA-256",
 
-      // @ts-ignore
-      salt: utf8.decode("diffuse-atproto-passkey-salt"),
+      salt:
+        /** @type {ArrayBuffer} */ (/** @type {unknown} */ (utf8.decode(
+          "diffuse-atproto-passkey-salt",
+        ))),
 
-      // @ts-ignore
-      info: utf8.decode("diffuse-atproto-track-uri"),
+      info:
+        /** @type {ArrayBuffer} */ (/** @type {unknown} */ (utf8.decode(
+          "diffuse-atproto-track-uri",
+        ))),
     },
     keyMaterial,
     256,

@@ -1,4 +1,3 @@
-/// <reference no-default-lib="true" />
 /// <reference lib="webworker" />
 
 import { create as createCid } from "./common/cid.js";

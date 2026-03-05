@@ -31,6 +31,10 @@ class ScopeEngine extends BroadcastableDiffuseElement {
     // Broadcast if needed
     if (this.hasAttribute("group")) {
       const actions = this.broadcast(this.identifier, {
+        revertToDefaultSort: {
+          strategy: "replicate",
+          fn: this.revertToDefaultSort,
+        },
         setGroupBy: { strategy: "replicate", fn: this.setGroupBy },
         setPlaylist: { strategy: "replicate", fn: this.setPlaylist },
         setSearchTerm: { strategy: "replicate", fn: this.setSearchTerm },
@@ -39,6 +43,7 @@ class ScopeEngine extends BroadcastableDiffuseElement {
       });
 
       if (actions) {
+        this.revertToDefaultSort = actions.revertToDefaultSort;
         this.setGroupBy = actions.setGroupBy;
         this.setPlaylist = actions.setPlaylist;
         this.setSearchTerm = actions.setSearchTerm;
@@ -111,6 +116,11 @@ class ScopeEngine extends BroadcastableDiffuseElement {
   }
 
   // ACTIONS
+
+  revertToDefaultSort = async () => {
+    this.#sortBy.value = ["createdAt"];
+    this.#sortDirection.value = "desc";
+  };
 
   /** @param {string | undefined} val */
   setGroupBy = async (val) => this.#groupBy.value = val;
