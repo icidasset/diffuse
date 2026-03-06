@@ -1,6 +1,6 @@
-<img src="https://diffuse.sh/images/diffuse-light.svg" alt="Diffuse" width="158" />
+# Diffuse
 
-**Construct your audio player**, make a music player and browser by composing web components.
+**Construct your audio player by composing web components.**
 
 Diffuse provides a range of custom elements: audio input, data output, metadata & artwork processing, audio playback, a queue system, and much more.
 
@@ -11,12 +11,10 @@ More information on the [website](https://elements.diffuse.sh/latest/).
 
 ## Developer usage
 
-You can either consume the Diffuse library via the [deployed instance](https://elements.diffuse.sh/latest/) (the listed elements link to Javascript files) or the [Javascript package](https://jsr.io/@toko/diffuse).
-
-From there you can use the custom elements as with any other custom DOM element, by writing HTML or creating a `Class` instance.
+You can either consume the Diffuse library via the [deployed instance](https://elements.diffuse.sh/latest/) (the listed elements link to Javascript files) or the [Javascript package](https://jsr.io/@toko/diffuse). From there you can use the custom elements as with any other custom DOM element, by writing HTML or creating a `Class` instance.
 
 ```html
-<script src="https://elements.diffuse.sh/bafybeiezh4rgv7gk73o5dalfyilv5nfopezyvshtj5j7hrn23r4n27k7da/components/engine/queue/element.js"></script>
+<script src="https://elements.diffuse.sh/bafybeiexuhqumeljxdmmsdfet5oh2h7pam6fy7gbktqfbsai5qfu2ze6hq/components/engine/queue/element.js"></script>
 
 <de-queue></de-queue>
 ```
@@ -33,18 +31,18 @@ document.body.append(queue)
 
 ## Build it yourself
 
-Install [deno](https://docs.deno.com/runtime/getting_started/installation/).
+Install [Deno](https://docs.deno.com/runtime/getting_started/installation/).
 
 ```shell
 deno run gen:defs:types
-deno run build # or deno run build
+deno run build # or deno run serve
 ```
 
 Diffuse is built with:
 - [Deno](https://deno.com)
 - Web components (custom elements)
 - Web workers (also: shared + service workers)
-- Signals (currently alien-signals, but hopefully [TC39](https://github.com/tc39/proposal-signals) in the future)
+- Signals (currently [alien-signals](https://github.com/stackblitz/alien-signals), but hopefully [TC39](https://github.com/tc39/proposal-signals) in the future)
 - [`lit-html`](https://lit.dev/docs/libraries/standalone-templates/)
 - [`music-metadata`](https://github.com/Borewit/music-metadata)
-- Lume & ESBuild
+- [Lume](https://lume.land) & [ESBuild](https://esbuild.github.io)
