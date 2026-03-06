@@ -1,0 +1,57 @@
+{{ set guideClass = () => url?.startsWith('/facets/') && !url?.startsWith('/facets/you/') && !url?.startsWith('/facets/featured/') && !url?.startsWith('/facets/playback/') && !url?.startsWith('/facets/browse/') && !url?.startsWith('/facets/audio-input/') && !url?.startsWith('/facets/user-data/') ? 'button--bg-twist-2' : 'button--transparent' }}
+
+<nav>
+  <a href="facets/" class="button {{ guideClass() }} button--border">
+    <span class="with-icon">
+      <i class="ph-fill ph-book-open-text"></i>
+      Guide
+    </span>
+  </a>
+
+  <a href="facets/you/" class="button {{ url?.startsWith('/facets/you/') ? 'button--bg-twist-2' : 'button--transparent' }} button--border">
+    <span class="with-icon">
+      <i class="ph-fill ph-person"></i>
+      Your collection
+    </span>
+  </a>
+
+  <a href="facets/featured/" class="button {{ url?.startsWith('/facets/featured/') ? 'button--bg-twist-2' : 'button--transparent' }} button--border">
+    <span class="with-icon">
+      <i class="ph-fill ph-sparkle"></i>
+      Featured
+    </span>
+  </a>
+
+  <a href="facets/build/" class="button {{ url?.startsWith('/facets/build/') ? 'button--bg-twist-2' : 'button--transparent' }} button--border">
+    <span class="with-icon">
+      <i class="ph-fill ph-hammer"></i>
+      Build
+    </span>
+  </a>
+
+  <div class="divider"></div>
+
+  <a href="facets/playback/" class="button {{ url?.startsWith('/facets/playback/') ? 'button--bg-twist-2' : 'button--transparent' }} button--border">
+    <span class="with-icon">
+      Playback
+    </span>
+  </a>
+
+  <a href="facets/browse/" class="button {{ url?.startsWith('/facets/browse/') ? 'button--bg-twist-2' : 'button--transparent' }} button--border">
+    <span class="with-icon">
+      Browse
+    </span>
+  </a>
+
+  <a href="facets/audio-input/" class="button {{ url?.startsWith('/facets/audio-input/') ? 'button--bg-twist-2' : 'button--transparent' }} button--border">
+    <span class="with-icon">
+      Audio input
+    </span>
+  </a>
+
+  <a href="facets/user-data/" class="button {{ url?.startsWith('/facets/user-data/') ? 'button--bg-twist-2' : 'button--transparent' }} button--border">
+    <span class="with-icon">
+      User data
+    </span>
+  </a>
+</nav>
