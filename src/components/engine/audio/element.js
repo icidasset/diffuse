@@ -129,11 +129,11 @@ class AudioEngine extends BroadcastableDiffuseElement {
 
           if (!el.audio) return;
 
-          const progress = el.$state.progress.value;
+          const currentTime = el.$state.currentTime.value;
           const canPlay = () => {
             this.seek({
               audioId: item.id,
-              percentage: progress,
+              currentTime: currentTime,
             });
 
             if (el.$state.isPlaying.value) this.play({ audioId: item.id });
@@ -224,10 +224,15 @@ class AudioEngine extends BroadcastableDiffuseElement {
   /**
    * @type {Actions["seek"]}
    */
-  seek({ audioId, percentage }) {
+  seek({ audioId, currentTime, percentage }) {
     this.#withAudioNode(audioId, (audio) => {
-      if (!isNaN(audio.duration)) {
-        audio.currentTime = audio.duration * percentage;
+      if (currentTime != undefined) {
+        audio.currentTime = currentTime;
+      } else if (
+        percentage != undefined && !isNaN(audio.duration) &&
+        audio.duration !== Infinity
+      ) {
+        audio.currentTime = percentage * audio.duration;
       }
     });
   }
@@ -503,7 +508,8 @@ class AudioEngine extends BroadcastableDiffuseElement {
       const state = this.state(item.id);
       if (!state) return false;
 
-      return state.isPlaying() || state.hasEnded() || state.progress() === 1;
+      return state.isPlaying() || state.hasEnded() ||
+        state.currentTime() === state.duration();
     });
   }
 
@@ -575,18 +581,29 @@ class AudioEngineItem extends BroadcastableDiffuseElement {
   constructor() {
     super();
 
-    const ip = this.getAttribute("initial-progress");
+    // TODO:
+    // const ip = this.getAttribute("initial-progress");
 
     /**
      * @type {AudioState}
      */
     this.$state = {
+      currentTime: signal(0),
       duration: signal(0),
       hasEnded: signal(false),
       isPlaying: signal(false),
       isPreload: signal(this.hasAttribute("preload")),
       loadingState: signal(/** @type {LoadingState} */ ("loading")),
-      progress: signal(ip ? parseFloat(ip) : 0),
+
+      progress: computed(() => {
+        const currentTime = this.$state.currentTime.value;
+        const duration = this.$state.duration.value;
+
+        if (isNaN(duration)) return 0;
+        if (duration === Infinity) return 0;
+
+        return currentTime / duration;
+      }),
     };
   }
 
@@ -613,6 +630,10 @@ class AudioEngineItem extends BroadcastableDiffuseElement {
       const actions = this.broadcast(
         this.identifier,
         {
+          getCurrentTime: {
+            strategy: "leaderOnly",
+            fn: this.$state.currentTime.get,
+          },
           getDuration: { strategy: "leaderOnly", fn: this.$state.duration.get },
           getHasEnded: { strategy: "leaderOnly", fn: this.$state.hasEnded.get },
           getIsPlaying: {
@@ -627,9 +648,12 @@ class AudioEngineItem extends BroadcastableDiffuseElement {
             strategy: "leaderOnly",
             fn: this.$state.loadingState.get,
           },
-          getProgress: { strategy: "leaderOnly", fn: this.$state.progress.get },
 
           // SET
+          setCurrentTime: {
+            strategy: "replicate",
+            fn: this.$state.currentTime.set,
+          },
           setDuration: { strategy: "replicate", fn: this.$state.duration.set },
           setHasEnded: { strategy: "replicate", fn: this.$state.hasEnded.set },
           setIsPlaying: {
@@ -644,7 +668,6 @@ class AudioEngineItem extends BroadcastableDiffuseElement {
             strategy: "replicate",
             fn: this.$state.loadingState.set,
           },
-          setProgress: { strategy: "replicate", fn: this.$state.progress.set },
         },
         {
           // Sync leadership with engine's broadcasting channel
@@ -653,20 +676,20 @@ class AudioEngineItem extends BroadcastableDiffuseElement {
       );
 
       if (actions) {
+        this.$state.currentTime.set = actions.setCurrentTime;
         this.$state.duration.set = actions.setDuration;
         this.$state.hasEnded.set = actions.setHasEnded;
         this.$state.isPlaying.set = actions.setIsPlaying;
         this.$state.isPreload.set = actions.setIsPreload;
         this.$state.loadingState.set = actions.setLoadingState;
-        this.$state.progress.set = actions.setProgress;
 
         untracked(async () => {
+          this.$state.currentTime.value = await actions.getCurrentTime();
           this.$state.duration.value = await actions.getDuration();
           this.$state.hasEnded.value = await actions.getHasEnded();
           this.$state.isPlaying.value = await actions.getIsPlaying();
           this.$state.isPreload.value = await actions.getIsPreload();
           this.$state.loadingState.value = await actions.getLoadingState();
-          this.$state.progress.value = await actions.getProgress();
         });
       }
     }
@@ -686,12 +709,14 @@ class AudioEngineItem extends BroadcastableDiffuseElement {
       mimeType: this.getAttribute("mime-type") ?? undefined,
       url: this.getAttribute("url") ?? "",
 
+      currentTime: this.$state.currentTime.get,
       duration: this.$state.duration.get,
       hasEnded: this.$state.hasEnded.get,
       isPlaying: this.$state.isPlaying.get,
       isPreload: this.$state.isPreload.get,
       loadingState: this.$state.loadingState.get,
-      progress: this.$state.progress.get,
+
+      progress: this.$state.progress,
     };
   }
 
@@ -726,7 +751,12 @@ class AudioEngineItem extends BroadcastableDiffuseElement {
       const progress = JSON.parse(
         item.getAttribute("initial-progress") ?? "0",
       );
-      audio.currentTime = audio.duration * progress;
+      if (
+        progress !== 0 && !isNaN(audio.duration) && audio.duration !== Infinity
+      ) {
+        audio.currentTime = audio.duration * progress;
+      }
+
       item.removeAttribute("initial-progress");
     }
 
@@ -802,10 +832,7 @@ class AudioEngineItem extends BroadcastableDiffuseElement {
     const audio = /** @type {HTMLAudioElement} */ (event.target);
     if (isNaN(audio.duration) || audio.duration === 0) return;
 
-    const progress = audio.currentTime / audio.duration;
-    if (progress === 0) return;
-
-    engineItem(audio)?.$state.progress.set(progress);
+    engineItem(audio)?.$state.currentTime.set(audio.currentTime);
   }
 
   /**

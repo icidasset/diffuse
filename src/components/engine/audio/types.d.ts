@@ -5,7 +5,9 @@ export type Actions = {
   pause: (_: { audioId: string }) => void;
   play: (_: { audioId: string; volume?: number }) => void;
   reload: (_: { audioId: string; play: boolean; progress?: number }) => void;
-  seek: (_: { audioId: string; percentage: number }) => void;
+  seek: (
+    _: { currentTime?: number; audioId: string; percentage?: number },
+  ) => void;
   supply: (
     _: { audio: Audio[]; play?: { audioId: string; volume?: number } },
   ) => void;
@@ -29,17 +31,22 @@ export type AudioBase = {
   id: string;
   isPreload: boolean;
   mimeType?: string;
-  // NOTE: Initial progress
+  /**
+   * Initial progress
+   */
   progress?: number;
 };
 
 export type AudioState = {
+  currentTime: Signal<number>;
   duration: Signal<number>;
   hasEnded: Signal<boolean>;
   isPlaying: Signal<boolean>;
   isPreload: Signal<boolean>;
   loadingState: Signal<LoadingState>;
-  progress: Signal<number>;
+
+  // Computed
+  progress: SignalReader<number>;
 };
 
 export type AudioStateReadOnly = {
@@ -47,11 +54,15 @@ export type AudioStateReadOnly = {
   url: string;
   mimeType: string | undefined;
 
+  /** https://developer.mozilla.org/en-US/docs/Web/API/BaseAudioContext/currentTime */
+  currentTime: SignalReader<number>;
   duration: SignalReader<number>;
   hasEnded: SignalReader<boolean>;
   isPlaying: SignalReader<boolean>;
   isPreload: SignalReader<boolean>;
   loadingState: SignalReader<LoadingState>;
+
+  // Computed
   progress: SignalReader<number>;
 };
 

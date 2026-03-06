@@ -228,8 +228,10 @@ export function fillShuffle(fillAmount, future, autoFutureCount) {
 export function _shift(future) {
   const n = $now.value;
   const f = future ?? $future.value;
+  const v = f[0];
 
-  $now.value = f[0] ?? null;
+  if (!v) return;
+  $now.value = v;
   if (n) $past.value = [...$past.value, n];
   $future.value = f.slice(1);
 }

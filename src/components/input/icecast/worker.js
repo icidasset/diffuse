@@ -95,7 +95,7 @@ export async function list(cachedTracks = []) {
       const parsed = parseURI(track.uri);
       if (!parsed) return track;
 
-      const metadata = await fetchMetadata(parsed.httpsUrl);
+      const metadata = await fetchMetadata(parsed.streamUrl);
       if (!metadata) return track;
 
       return {
@@ -131,7 +131,7 @@ export async function resolve({ uri }) {
   const expiresAtSeconds = Math.round(Date.now() / 1000) + expiresInSeconds;
 
   return {
-    url: parsed.httpsUrl,
+    url: parsed.streamUrl,
     expiresAt: expiresAtSeconds,
   };
 }

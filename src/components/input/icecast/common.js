@@ -8,9 +8,10 @@ import { SCHEME } from "./constants.js";
  */
 
 /**
- * Build an icecast:// URI from an HTTPS URL.
+ * Build an icecast:// URI from an HTTP or HTTPS URL.
+ * HTTP streams are encoded with a `tls=0` query parameter; HTTPS is the default.
  *
- * @param {string} httpsUrl
+ * @param {string} streamUrl
  * @returns {string}
  *
  * @example Build URI from HTTPS URL
@@ -22,27 +23,31 @@ import { SCHEME } from "./constants.js";
  * expect(uri).toBe("icecast://radio.example.com/stream.mp3");
  * ```
  *
- * @example Build URI with port
+ * @example Build URI from HTTP URL
  * ```ts
  * import { expect } from "@std/expect";
  * import { buildURI } from "./common.js";
  *
- * const uri = buildURI("https://radio.example.com:8000/live");
- * expect(uri).toBe("icecast://radio.example.com:8000/live");
+ * const uri = buildURI("http://radio.example.com:8000/live");
+ * expect(uri).toBe("icecast://radio.example.com:8000/live?tls=0");
  * ```
  */
-export function buildURI(httpsUrl) {
-  const url = new URL(httpsUrl);
-  return `${SCHEME}://${url.host}${url.pathname}${url.search}`;
+export function buildURI(streamUrl) {
+  const url = new URL(streamUrl);
+  const tls = url.protocol === "https:";
+  const query = tls ? url.search : `${url.search ? url.search + "&" : "?"}tls=0`;
+  return `${SCHEME}://${url.host}${url.pathname}${query}`;
 }
 
 /**
  * Parse an icecast:// URI.
+ * Returns the resolved HTTP or HTTPS stream URL based on the `tls` query param
+ * (absent or `tls=1` → HTTPS; `tls=0` → HTTP).
  *
  * @param {string} uriString
- * @returns {{ host: string; path: string; httpsUrl: string } | undefined}
+ * @returns {{ host: string; path: string; streamUrl: string } | undefined}
  *
- * @example Parse a valid icecast URI
+ * @example Parse a valid icecast URI (defaults to HTTPS)
  * ```ts
  * import { expect } from "@std/expect";
  * import { parseURI } from "./common.js";
@@ -50,17 +55,17 @@ export function buildURI(httpsUrl) {
  * const result = parseURI("icecast://radio.example.com/stream.mp3");
  * expect(result?.host).toBe("radio.example.com");
  * expect(result?.path).toBe("/stream.mp3");
- * expect(result?.httpsUrl).toBe("https://radio.example.com/stream.mp3");
+ * expect(result?.streamUrl).toBe("https://radio.example.com/stream.mp3");
  * ```
  *
- * @example Parse icecast URI with port
+ * @example Parse icecast URI for an HTTP stream
  * ```ts
  * import { expect } from "@std/expect";
  * import { parseURI } from "./common.js";
  *
- * const result = parseURI("icecast://radio.example.com:8000/live");
+ * const result = parseURI("icecast://radio.example.com:8000/live?tls=0");
  * expect(result?.host).toBe("radio.example.com:8000");
- * expect(result?.httpsUrl).toBe("https://radio.example.com:8000/live");
+ * expect(result?.streamUrl).toBe("http://radio.example.com:8000/live");
  * ```
  *
  * @example Reject non-icecast URI
@@ -77,10 +82,18 @@ export function parseURI(uriString) {
     const url = new URL(uriString);
     if (url.protocol !== `${SCHEME}:`) return undefined;
 
+    const tls = url.searchParams.get("tls") !== "0";
+    const protocol = tls ? "https" : "http";
+
+    // Strip the tls param from the forwarded URL's search string
+    const params = new URLSearchParams(url.search);
+    params.delete("tls");
+    const search = params.size > 0 ? `?${params}` : "";
+
     return {
       host: url.host,
       path: url.pathname,
-      httpsUrl: `https://${url.host}${url.pathname}${url.search}`,
+      streamUrl: `${protocol}://${url.host}${url.pathname}${search}`,
     };
   } catch {
     return undefined;
@@ -163,12 +176,12 @@ export function hostsFromTracks(tracks) {
  * Fetch ICY metadata from an Icecast stream.
  * Returns undefined if the stream is unreachable or does not support ICY metadata.
  *
- * @param {string} httpsUrl
+ * @param {string} streamUrl
  * @returns {Promise<import("@cloudradio/icy-parser").IcyMetadata | undefined>}
  */
-export async function fetchMetadata(httpsUrl) {
+export async function fetchMetadata(streamUrl) {
   try {
-    const parser = new IcyParser(httpsUrl);
+    const parser = new IcyParser(streamUrl);
     return await parser.parseOnce();
   } catch {
     return undefined;
@@ -179,11 +192,11 @@ export async function fetchMetadata(httpsUrl) {
 async function consultStream(uri) {
   const parsed = parseURI(uri);
   if (!parsed) return false;
-  const metadata = await fetchMetadata(parsed.httpsUrl);
+  const metadata = await fetchMetadata(parsed.streamUrl);
   return metadata !== undefined;
 }
 
 export const consultStreamCached = cachedConsult(
   consultStream,
-  (uri) => new URL(uri.replace(/^icecast:/, "https:")).host,
+  (uri) => parseURI(uri)?.host ?? uri,
 );

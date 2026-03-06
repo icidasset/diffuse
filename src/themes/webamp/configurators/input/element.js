@@ -13,6 +13,8 @@ import { buildURI as buildS3URI } from "~/components/input/s3/common.js";
 import { isSupported as supportsLocalFsAccess } from "~/components/input/local/common.js";
 
 import { SCHEME as HTTPS_SCHEME } from "~/components/input/https/constants.js";
+import { buildURI as buildIcecastURI } from "~/components/input/icecast/common.js";
+import { SCHEME as ICECAST_SCHEME } from "~/components/input/icecast/constants.js";
 import { SCHEME as LOCAL_SCHEME } from "~/components/input/local/constants.js";
 import { SCHEME as OPENSUBSONIC_SCHEME } from "~/components/input/opensubsonic/constants.js";
 import { SCHEME as S3_SCHEME } from "~/components/input/s3/constants.js";
@@ -240,6 +242,27 @@ class InputConfig extends DiffuseElement {
   /**
    * @param {Event} event
    */
+  #addIcecastUrl = async (event) => {
+    event.preventDefault();
+
+    /** @type {HTMLButtonElement | null} */
+    const button = this.root().querySelector("#icecast-submit");
+    if (button) button.disabled = true;
+
+    const url = this.formElement("icecast-url")?.value;
+
+    if (!url) {
+      throw new Error("Missing required `url` input value");
+    }
+
+    await this.addSource(buildIcecastURI(url));
+
+    if (button) button.disabled = false;
+  };
+
+  /**
+   * @param {Event} event
+   */
   #deleteSelected = async (event) => {
     const button = /** @type {HTMLElement} */ (event.target);
     const fieldset = event.target ? button.closest("fieldset") : null;
@@ -381,6 +404,7 @@ class InputConfig extends DiffuseElement {
       /* FORMS */
 
       input, select, textarea {
+        color: rgb(34, 34, 34);
         flex: 1;
       }
       </style>
@@ -395,6 +419,11 @@ class InputConfig extends DiffuseElement {
           <li role="tab" aria-selected="${this.$tab.value === "https"}">
             <label @click="${() => this.$tab.value = "https"}">
               <span>HTTPS</span>
+            </label>
+          </li>
+          <li role="tab" aria-selected="${this.$tab.value === "icecast"}">
+            <label @click="${() => this.$tab.value = "icecast"}">
+              <span>Icecast</span>
             </label>
           </li>
           <li role="tab" aria-selected="${this.$tab.value === "local"}">
@@ -430,6 +459,8 @@ class InputConfig extends DiffuseElement {
         return this.#renderOverviewTab(html);
       case "https":
         return this.#renderHttpsTab(html);
+      case "icecast":
+        return this.#renderIcecastTab(html);
       case "local":
         return this.#renderLocalTab(html);
       case "opensubsonic":
@@ -501,6 +532,49 @@ class InputConfig extends DiffuseElement {
 
           <p>
             <button type="submit" id="https-submit">Add URL</button>
+          </p>
+        </form>
+      </div>
+    `;
+  }
+
+  /**
+   * @param {RenderArg["html"]} html
+   */
+  #renderIcecastTab(html) {
+    const sources = this.$sourcesOrchestrator.value?.sources();
+
+    return html`
+      <div class="window-body">
+        <fieldset>
+          ${this.#renderList(
+            html,
+            sources?.[ICECAST_SCHEME] ?? [],
+            "Added streams",
+          )}
+
+          <p>
+            <button disabled role="delete" @click="${this.#deleteSelected}">
+              Delete selected
+            </button>
+          </p>
+        </fieldset>
+
+        <form @submit="${this.#addIcecastUrl}">
+          <fieldset>
+            <div class="field-row">
+              <label for="icecast-url">URL:</label>
+              <input
+                id="icecast-url"
+                type="url"
+                required
+                placeholder="https://example.com/stream"
+              />
+            </div>
+          </fieldset>
+
+          <p>
+            <button type="submit" id="icecast-submit">Add stream</button>
           </p>
         </form>
       </div>

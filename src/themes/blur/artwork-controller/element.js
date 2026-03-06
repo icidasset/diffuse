@@ -255,17 +255,23 @@ class ArtworkController extends DiffuseElement {
   #formatTimestamps() {
     const currTrack = this.currentTrack();
     const audio = this.audio();
-    const prog = audio?.progress() ?? 0;
+    const curMs = (audio?.currentTime() ?? 0) * 1000;
     const durMs = currTrack?.stats?.duration ??
       (audio?.duration() != null ? audio.duration() * 1000 : undefined);
 
-    if (audio && durMs != undefined && !isNaN(durMs)) {
+    if (audio && durMs && !isNaN(durMs)) {
       const p = Temporal.Duration.from({
-        milliseconds: Math.round(durMs * prog),
+        milliseconds: Math.round(curMs),
       }).round({
         largestUnit: "hours",
         smallestUnit: "seconds",
       });
+
+      if (durMs === Infinity) {
+        this.#time.value = this.#formatTime(p);
+        this.#duration.value = "∞";
+        return;
+      }
 
       const d = Temporal.Duration.from({ milliseconds: Math.round(durMs) })
         .round({
@@ -467,7 +473,7 @@ class ArtworkController extends DiffuseElement {
                 ? `normal`
                 : `italic`}">
                 ${activeQueueItem?.tags?.artist ??
-                  (activeQueueItem ? `Waiting on queue ...` : ``)}
+                  (activeQueueItem ? `` : `Waiting on queue ...`)}
               </span>
             </cite>
 

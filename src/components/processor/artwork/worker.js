@@ -259,6 +259,9 @@ async function processRequest(req) {
 
   art.push(...fromMeta);
 
+  // Stop here if insufficient metadata is present
+  if (!req.tags?.artist || !req.tags?.album) return art;
+
   // If no artwork, try finding it on other sources
   if (art.length === 0) {
     const fromMusicBrainz = await musicBrainz(req);
