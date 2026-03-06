@@ -24,7 +24,7 @@
       </label>
     </div>
     <div class="row">
-      <label class="with-icon" for="sort-by">
+      <label class="with-icon" for="sort-by" style="width: min(80vw, var(--container-xs))">
         <i class="ph-bold ph-arrows-down-up"></i>
         <select id="sort-by">
           <option value="[]">Default order</option>
@@ -37,6 +37,7 @@
           <option value='["tags.year"]'>Year</option>
           <option value='["tags.date"]'>Date</option>
         </select>
+        <button id="sort-direction" style="flex: none">DESC</button>
       </label>
     </div>
   </div>
@@ -60,6 +61,7 @@
 
   label {
     flex: 1;
+    flex-wrap: wrap;
     letter-spacing: var(--leading-relaxed);
     text-transform: uppercase;
   }

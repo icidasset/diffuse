@@ -23,6 +23,8 @@ const playlistSelect =
   /** @type {HTMLSelectElement} */ (document.querySelector("#playlist"));
 const sortBySelect =
   /** @type {HTMLSelectElement} */ (document.querySelector("#sort-by"));
+const sortDirectionBtn =
+  /** @type {HTMLButtonElement} */ (document.querySelector("#sort-direction"));
 
 // Repeat & Shuffle state
 effect(() => {
@@ -112,4 +114,15 @@ effect(() => {
 
 sortBySelect.onchange = () => {
   scope.setSortBy(JSON.parse(sortBySelect.value));
+};
+
+// Sort direction state
+effect(() => {
+  const dir = scope.sortDirection() ?? "desc";
+  sortDirectionBtn.textContent = dir.toUpperCase();
+});
+
+sortDirectionBtn.onclick = () => {
+  const dir = scope.sortDirection() ?? "desc";
+  scope.setSortDirection(dir === "asc" ? "desc" : "asc");
 };
