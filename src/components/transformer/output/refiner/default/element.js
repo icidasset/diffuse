@@ -1,8 +1,16 @@
-import { computed } from "~/common/signal.js";
+import * as IDB from "idb-keyval";
+
+import { computed, signal } from "~/common/signal.js";
 import { OutputTransformer } from "../../base.js";
 
+const IDB_KEY_PLAYLISTS =
+  "diffuse/transformer/output/refiner/default/playlistItems/ephemeral";
+const IDB_KEY_TRACKS =
+  "diffuse/transformer/output/refiner/default/tracks/ephemeral";
+
 /**
- * @import { OutputManagerDeputy } from "../../../../output/types.d.ts"
+ * @import { OutputManagerDeputy } from "~/components/output/types.d.ts"
+ * @import { PlaylistItem, Track } from "~/definitions/types.d.ts"
  */
 
 /**
@@ -13,6 +21,19 @@ class DefaultOutputRefinerTransformer extends OutputTransformer {
     super();
 
     const base = this.base();
+
+    // Ephemeral signals
+    const ephemeralPlaylistItems = signal(/** @type {any[]} */ ([]));
+    const ephemeralTracks = signal(/** @type {any[]} */ ([]));
+
+    // Restore stored ephemeral items
+    IDB.get(IDB_KEY_PLAYLISTS).then((items) => {
+      if (items) ephemeralPlaylistItems.set(items);
+    });
+
+    IDB.get(IDB_KEY_TRACKS).then((items) => {
+      if (items) ephemeralTracks.set(items);
+    });
 
     /** @type {OutputManagerDeputy} */
     const manager = {
@@ -25,10 +46,27 @@ class DefaultOutputRefinerTransformer extends OutputTransformer {
       playlistItems: {
         ...base.playlistItems,
         collection: computed(() => {
-          return base.playlistItems.collection() ?? [];
+          return [
+            ...(base.playlistItems.collection() ?? []),
+            ...ephemeralPlaylistItems.get(),
+          ];
         }),
         save: async (newPlaylists) => {
-          const filtered = newPlaylists.filter((p) => !p.ephemeral);
+          /** @type {PlaylistItem[]} */
+          const ephemeral = [];
+
+          const filtered = newPlaylists.filter((p) => {
+            if (p.ephemeral) {
+              ephemeral.push(p);
+              return false;
+            } else {
+              return true;
+            }
+          });
+
+          await IDB.set(IDB_KEY_PLAYLISTS, ephemeral);
+          ephemeralPlaylistItems.set(ephemeral);
+
           await base.playlistItems.save(filtered);
         },
       },
@@ -41,10 +79,27 @@ class DefaultOutputRefinerTransformer extends OutputTransformer {
       tracks: {
         ...base.tracks,
         collection: computed(() => {
-          return base.tracks.collection() ?? [];
+          return [
+            ...(base.tracks.collection() ?? []),
+            ...ephemeralTracks.get(),
+          ];
         }),
         save: async (newTracks) => {
-          const filtered = newTracks.filter((t) => !t.ephemeral);
+          /** @type {Track[]} */
+          const ephemeral = [];
+
+          const filtered = newTracks.filter((t) => {
+            if (t.ephemeral) {
+              ephemeral.push(t);
+              return false;
+            } else {
+              return true;
+            }
+          });
+
+          await IDB.set(IDB_KEY_TRACKS, ephemeral);
+          ephemeralTracks.set(ephemeral);
+
           await base.tracks.save(filtered);
         },
       },
