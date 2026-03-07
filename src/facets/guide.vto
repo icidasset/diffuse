@@ -1,0 +1,21 @@
+---
+layout: layouts/facets.vto
+base: ../../
+title: Guide | Facets | Diffuse
+---
+
+<section>
+  <h1 hidden>Guide</h1>
+  <p>
+    To use these facets, simply open whichever ones provide the functionality that you're looking for at a given moment. You can browse existing facets here and create one too. If you found something you like, you can save it to your list and adjust it if need be.
+  </p>
+  <p>
+    For example, say you want to play music; two options would be: (1) <a href="{{ ('themes/webamp/browser/facet/index.html') |> facetLoaderURL }}">browse</a> for a specific song and add it to the queue, or (2) <a href="{{ ('facets/tools/auto-queue/index.html') |> facetLoaderURL }}">automatically</a> add a bunch of shuffled songs to the queue. Next, you need a way to play the items you added to the queue. That's where a <a href="{{ ('themes/blur/artwork-controller/facet/index.html') |> facetLoaderURL }}">controller</a> could be used.
+  </p>
+  <p>
+    <em>You might ask, why can't I do all of this in just one window? That's what <a href="themes/">themes</a> are for, if you need something more streamlined. If you however want a customised experience, or prefer certain interfaces for certain things, that's what facets are for.</em>
+  </p>
+  <p>
+    <small><i class="ph-fill ph-info"></i> Every facet has access to your audio collection and your user data, along with any other shared state.</small>
+  </p>
+</section>

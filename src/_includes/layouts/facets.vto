@@ -1,0 +1,31 @@
+---
+layout: layouts/diffuse.vto
+base: ../../
+title: Facets | Diffuse
+
+styles:
+  - styles/base.css
+  - styles/diffuse/page.css
+  - vendor/@phosphor-icons/bold/style.css
+  - vendor/@phosphor-icons/fill/style.css
+---
+
+<header>
+  <div style="min-width: var(--container-md)">
+    <div>
+      <a class="diffuse-logo" href="./" style="display: inline-block;">
+        {{ await comp.diffuse.logo() }}
+      </a>
+    </div>
+    <p class="construct dither-mask" style="color: var(--accent-twist-2); margin-top: 0; max-width: none;">
+      Facets
+    </p>
+  </div>
+  <div class="dither-mask filler filler--bg-twist-2"></div>
+</header>
+
+<main>
+  {{ await comp.facets.nav({ url, facets }) }}
+
+  {{ content }}
+</main>

@@ -99,6 +99,26 @@ ul.columns {
 .filler {
   background: oklch(from var(--accent) l c h / 0.2);
   flex: 1;
+
+  &.filler--bg-twist-1 {
+    background-color: oklch(from var(--accent-twist-1) l c h / 0.2);
+  }
+
+  &.filler--bg-twist-2 {
+    background-color: oklch(from var(--accent-twist-2) l c h / 0.2);
+  }
+
+  &.filler--bg-twist-3 {
+    background-color: oklch(from var(--accent-twist-3) l c h / 0.2);
+  }
+
+  &.filler--bg-twist-4 {
+    background-color: oklch(from var(--accent-twist-4) l c h / 0.2);
+  }
+
+  &.filler--bg-twist-5 {
+    background-color: oklch(from var(--accent-twist-5) l c h / 0.2);
+  }
 }
 
 .flex {

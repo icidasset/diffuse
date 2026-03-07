@@ -1,32 +1,40 @@
 - url: "themes/blur/artwork-controller/facet/index.html"
   title: "Blur / Artwork controller"
+  category: Playback
   desc: >
     Audio playback controller with an artwork display.
 - url: "facets/tools/auto-queue/index.html"
   title: "Tools / Automatic Queue"
+  category: Playback
   desc: >
-    Everything you need to automatically put tracks into the queue.
+    Automatically put tracks into the queue.
 - url: "facets/tools/export-import/index.html"
   title: "Tools / Export & Import"
+  category: User data
   desc: >
     Export all data as a JSON snapshot, or restore from a previously exported file.
 - url: "facets/tools/split-view/index.html"
   title: "Tools / Split View"
+  category: Miscellaneous
   desc: >
     Arrange multiple facets side-by-side in a resizable split-panel layout.
 - url: "facets/tools/v3-import/index.html"
   title: "Tools / V3.x Import"
+  category: User data
   desc: >
     Import data from Diffuse v3.
 - url: "themes/webamp/browser/facet/index.html"
   title: "Webamp / Browser"
+  category: Browsing
   desc: >
     Collection browser + search in a retro, win98, look.
 - url: "themes/webamp/configurators/input/facet/index.html"
   title: "Webamp / Input Configurator"
+  category: Audio input
   desc: >
     Windows 98 styled input configurator where you can add music sources.
 - url: "themes/webamp/configurators/output/facet/index.html"
   title: "Webamp / Output Configurator"
+  category: User data
   desc: >
     Windows 98 styled output configurator where you can manage your data storage.
