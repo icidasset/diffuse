@@ -21,6 +21,7 @@
   --bg-color: var(--color-2);
   --text-color: var(--color-1);
 
+  --border-color: oklch(from var(--text-color) l c h / 0.05);
   --code-color: oklch(from #fefcf1 l c h);
   --form-color: oklch(from var(--bg-color) calc(l - 0.075) c h / 1);
 }

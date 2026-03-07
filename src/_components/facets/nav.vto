@@ -1,4 +1,5 @@
 {{ set colorClass = (path) => url === "/" + path ? 'button--bg-twist-2' : 'button--transparent' }}
+{{ set slug = (cat) => cat.toLowerCase().replace(/\s+/g, '-') }}
 
 <nav>
   <a href="facets/guide" class="button {{ colorClass("facets/guide/") }} button--border">
@@ -31,12 +32,21 @@
 
   <div class="divider"></div>
 
-  {{ for category of [...new Set(facets.map(f => f.category))].sort() }}
-    {{ set slug = category.toLowerCase().replace(/\s+/g, '-') }}
-    <a href="facets/{{ slug }}/" class="button {{ colorClass("facets/" + slug + "/") }} button--border">
-      <span class="with-icon">
-        {{ category }}
-      </span>
-    </a>
-  {{ /for }}
+  <a href="facets/data/" class="button {{ colorClass("facets/data/") }} button--border">
+    Data Input & Output
+  </a>
+
+  <a href="facets/playback/" class="button {{ colorClass("facets/playback/") }} button--border">
+    Playback
+  </a>
+
+  <a href="facets/browsing/" class="button {{ colorClass("facets/browsing/") }} button--border">
+    Browsing
+  </a>
+
+  <a href="facets/misc/" class="button {{ colorClass("facets/misc/") }} button--border">
+    <span class="with-icon">
+      <i class="ph-fill ph-treasure-chest"></i>
+    </span>
+  </a>
 </nav>

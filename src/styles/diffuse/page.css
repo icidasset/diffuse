@@ -165,7 +165,7 @@ ul.columns {
   }
 
   & > a:not(:last-child) {
-    border-bottom: 1px solid oklch(from currentColor l c h / 0.05);
+    border-bottom: 1px solid var(--border-color);
   }
 
   i {
@@ -196,6 +196,28 @@ textarea {
   height: var(--container-xs);
   padding: var(--space-xs);
   resize: none;
+}
+
+/**
+ * Grid
+ */
+
+.grid {
+  display: grid;
+  gap: var(--space-2xs);
+  grid-template-columns: repeat(auto-fill, minmax(min(var(--container-xs), 100%), 1fr));
+  list-style: none;
+  max-width: 100%;
+  padding: 0;
+
+  li::marker {
+    content: none;
+  }
+
+  li {
+    border: 1px solid var(--border-color);
+    padding: var(--space-md);
+  }
 }
 
 /**
@@ -351,7 +373,7 @@ small {
 }
 
 .divider {
-  background-color: oklch(from currentColor l c h / 0.05);
+  background-color: var(--border-color);
   height: stretch;
   width: 1px;
 }
@@ -462,7 +484,7 @@ ul li::marker {
 
 nav {
   align-items: center;
-  border-bottom: 1px solid oklch(from currentColor l c h / 0.05);
+  border-bottom: 1px solid var(--border-color);
   display: flex;
   flex-wrap: wrap;
   gap: var(--space-xs);
