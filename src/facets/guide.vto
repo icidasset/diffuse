@@ -4,18 +4,47 @@ base: ../../
 title: Guide | Facets | Diffuse
 ---
 
-<section>
-  <h1 hidden>Guide</h1>
-  <p>
-    To use these facets, simply open whichever ones provide the functionality that you're looking for at a given moment. You can browse existing facets here and create one too. If you found something you like, you can save it to your list and adjust it if need be.
-  </p>
-  <p>
-    For example, say you want to play music; two options would be: (1) <a href="{{ ('themes/webamp/browser/facet/index.html') |> facetLoaderURL }}">browse</a> for a specific song and add it to the queue, or (2) <a href="{{ ('facets/tools/auto-queue/index.html') |> facetLoaderURL }}">automatically</a> add a bunch of shuffled songs to the queue. Next, you need a way to play the items you added to the queue. That's where a <a href="{{ ('themes/blur/artwork-controller/facet/index.html') |> facetLoaderURL }}">controller</a> could be used.
-  </p>
-  <p>
-    <em>You might ask, why can't I do all of this in just one window? That's what <a href="themes/">themes</a> are for, if you need something more streamlined. If you however want a customised experience, or prefer certain interfaces for certain things, that's what facets are for.</em>
-  </p>
-  <p>
-    <small><i class="ph-fill ph-info"></i> Every facet has access to your audio collection and your user data, along with any other shared state.</small>
-  </p>
-</section>
+<h1 hidden>Guide</h1>
+
+<div class="columns">
+  <section>
+    <h3>Getting started</h3>
+
+    <p>
+      To use these facets, simply open whichever ones provide the functionality that you're looking for at a given moment. You can browse existing facets here and create one too. If you found something you like, you can save it to your list and adjust it if need be.
+    </p>
+    <p>
+      For example, say you want to play music; two options would be: (1) <a href="{{ ('themes/webamp/browser/facet/index.html') |> facetLoaderURL }}">browse</a> for a specific song and add it to the queue, or (2) <a href="{{ ('facets/tools/auto-queue/index.html') |> facetLoaderURL }}">automatically</a> add a bunch of shuffled songs to the queue. Next, you need a way to play the items you added to the queue. That's where a <a href="{{ ('themes/blur/artwork-controller/facet/index.html') |> facetLoaderURL }}">controller</a> could be used.
+    </p>
+    <p>
+      <em>You might ask, why can't I do all of this in just one window? That's what <a href="themes/">themes</a> are for, if you need something more streamlined. If you however want a customised experience, or prefer certain interfaces for certain things, that's what facets are for.</em>
+    </p>
+    <p>
+      <small><i class="ph-fill ph-info"></i> Every facet has access to your audio collection and your user data, along with any other shared state.</small>
+    </p>
+  </section>
+
+  <section>
+    <h3>Concept</h3>
+
+    <p>
+      Facets are unlike traditional software; instead of combining several features into a single user interface and producing data output, we do the opposite, we start with the data and work our way up from there.
+    </p>
+
+    <p>
+      <strong>It provides every user the ability to choose what features and interface they want to layer on top of their data.</strong> The data flow goes like so:
+    </p>
+
+    <p>
+      <em>Data → Transformers → Solo components → Configurators → Orchestrators → Facets</em>
+    </p>
+
+    <p>
+      Facets can provide any amount of features and user interface they see fit. The key here is that the user can combine facets because the components that consist of it are connected, they broadcast their state and your data that has been updated.
+    </p>
+
+    <p>
+      Finally, facets are just regular web pages so they can live wherever. We save them to the user-data storage that's configured and give the user the option to share it. This means that you can load facets from other people, <strong>building software cooperatively</strong>.
+    </p>
+  </section>
+</div>

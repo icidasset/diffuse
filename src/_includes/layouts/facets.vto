@@ -10,6 +10,12 @@ styles:
   - vendor/@phosphor-icons/fill/style.css
 ---
 
+<style>
+  .construct, h2 {
+    color: var(--accent-twist-2);
+  }
+</style>
+
 <header>
   <div style="min-width: var(--container-md)">
     <div>
@@ -17,7 +23,7 @@ styles:
         {{ await comp.diffuse.logo() }}
       </a>
     </div>
-    <p class="construct dither-mask" style="color: var(--accent-twist-2); margin-top: 0; max-width: none;">
+    <p class="construct dither-mask" style="margin-top: 0; max-width: none;">
       Facets
     </p>
   </div>
