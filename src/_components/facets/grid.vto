@@ -1,4 +1,4 @@
-<ul class="grid">
+<ul class="grid" style="margin-top: var(--space-lg);">
   {{ for index, item of items }}
     <li data-uri="{{ item.url |> facetOrThemeURI }}" data-name="{{item.title}}">
       <div style="position: relative;">
@@ -14,7 +14,7 @@
         </button>
       </div>
       <div class="list-description">
-        {{item.desc |> md(true)}}
+        {{ item.desc |> md(true) }}
       </div>
 
       <!-- Dropdown Menu -->

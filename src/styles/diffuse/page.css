@@ -141,12 +141,12 @@ ul.columns {
  */
 
 .dropdown {
-  background: var(--bg-color);
+  background: oklch(from var(--bg-color) calc(l - 0.05) c h);
   border: 0;
   border-radius: var(--radius-md);
   box-shadow: var(--box-shadow-lg);
   color: var(--text-color);
-  font-size: var(--fs-xs);
+  font-size: var(--fs-sm);
   margin: 0;
   margin-top: var(--space-3xs);
   padding: 0;
@@ -161,7 +161,8 @@ ul.columns {
   & > a {
     cursor: pointer;
     display: block;
-    padding: var(--space-3xs) var(--space-2xs);
+    min-width: var(--space-3xl);
+    padding: var(--space-xs) var(--space-sm);
     text-decoration: none;
 
     & > * {
@@ -180,6 +181,10 @@ ul.columns {
 
   a:hover i {
     opacity: 1;
+  }
+
+  .with-icon {
+    gap: var(--space-2xs);
   }
 }
 
@@ -493,7 +498,6 @@ nav {
   display: flex;
   flex-wrap: wrap;
   gap: var(--space-xs);
-  margin-bottom: var(--space-lg);
   margin-top: var(--space-md);
   padding-bottom: var(--space-md);
 }
