@@ -85,17 +85,20 @@ async function store(request, response) {
   const cidKey = cidUrl(cid);
 
   const caches = await openCaches();
+  const minRequest = new Request(request.url);
 
   // Only store the content if we haven't seen this CID before
   if (!(await caches.content.match(cidKey))) {
     await caches.content.put(new Request(cidKey), response);
   }
 
-  // Update the URL → CID map
-  await caches.index.put(
-    new Request(request.url),
-    new Response(cid, { headers: { "content-type": "text/plain" } }),
-  );
+  if (!(await caches.index.match(minRequest))) {
+    // Update the URL → CID map
+    await caches.index.put(
+      new Request(request.url),
+      new Response(cid, { headers: { "content-type": "text/plain" } }),
+    );
+  }
 }
 
 /**
@@ -108,9 +111,12 @@ async function lookup(request) {
   const caches = await openCaches();
 
   const indexEntry = await caches.index.match(request);
+  if (!indexEntry) console.log("⚔️", request.url);
+
   if (!indexEntry) return undefined;
 
   const cid = await indexEntry.text();
+  console.log("REQ", request.url, cid);
   return caches.content.match(cidUrl(cid));
 }
 
