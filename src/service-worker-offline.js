@@ -2,6 +2,10 @@
 
 import { create as createCid } from "./common/cid.js";
 
+const fileTreePromise = import("./file-tree.json", { with: { type: "json" } })
+  .then((m) => m.default)
+  .catch(() => null);
+
 /** Media content types to ignore */
 const MEDIA_CONTENT_TYPE = /^(audio|video)\//;
 
@@ -48,7 +52,7 @@ self.addEventListener("fetch", (_event) => {
 });
 
 ////////////////////////////////////////////
-// CACHE (content-addressed)
+// CONTENT-ADDRESSED CACHE
 ////////////////////////////////////////////
 
 /**
@@ -73,32 +77,51 @@ async function openCaches() {
 }
 
 /**
+ * Looks up a pathname in the pre-built file tree and returns its CID, or
+ * `undefined` if the entry is absent or the tree failed to load.
+ *
+ * @param {string} pathname - e.g. "/components/foo.js"
+ * @returns {Promise<string | undefined>}
+ */
+async function cidFromTree(pathname) {
+  /** @type {Record<string, string> | null} */
+  const tree = await fileTreePromise;
+  if (!tree) return undefined;
+  const key = pathname.replace(/^\//, "");
+  return tree[key];
+}
+
+/**
  * Computes the CID of `response`'s body and writes it into the two-level cache.
  * The same content is stored only once, regardless of how many URLs reference it.
+ *
+ * Uses the pre-built file tree CID when available; falls back to hashing the
+ * response body when the entry is missing from the tree.
  *
  * @param {Request} request
  * @param {Response} response - a clone; its body is fully consumed here
  */
 async function store(request, response) {
-  const bytes = new Uint8Array(await response.clone().arrayBuffer());
-  const cid = await createCid(RAW_CODEC, bytes);
+  const { pathname } = new URL(request.url);
+  const cid = await cidFromTree(pathname) ??
+    await createCid(
+      RAW_CODEC,
+      new Uint8Array(await response.clone().arrayBuffer()),
+    );
   const cidKey = cidUrl(cid);
 
   const caches = await openCaches();
-  const minRequest = new Request(request.url);
 
   // Only store the content if we haven't seen this CID before
   if (!(await caches.content.match(cidKey))) {
     await caches.content.put(new Request(cidKey), response);
   }
 
-  if (!(await caches.index.match(minRequest))) {
-    // Update the URL → CID map
-    await caches.index.put(
-      new Request(request.url),
-      new Response(cid, { headers: { "content-type": "text/plain" } }),
-    );
-  }
+  // Update the URL → CID map
+  await caches.index.put(
+    new Request(request.url),
+    new Response(cid, { headers: { "content-type": "text/plain" } }),
+  );
 }
 
 /**
@@ -111,12 +134,9 @@ async function lookup(request) {
   const caches = await openCaches();
 
   const indexEntry = await caches.index.match(request);
-  if (!indexEntry) console.log("⚔️", request.url);
-
   if (!indexEntry) return undefined;
 
   const cid = await indexEntry.text();
-  console.log("REQ", request.url, cid);
   return caches.content.match(cidUrl(cid));
 }
 
@@ -137,7 +157,6 @@ async function lookup(request) {
  * @returns {Promise<Response>}
  */
 async function handleFetch(request) {
-  // When we know we're offline, skip the network entirely.
   if (navigator.onLine) {
     try {
       return await fetchAndStore(request);

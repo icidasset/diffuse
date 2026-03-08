@@ -7,7 +7,7 @@ import { DiffuseElement } from "~/common/element.js";
 /**
  * Registers a service worker that makes the page available offline.
  *
- * All resources fetched by the page are cached as they load.
+ * All resources, except audio & video, fetched by the page are cached as they load.
  * While online, requests always go to the network (the cache is bypassed),
  * and successful responses are stored for later. While offline, the cache
  * is used as a fallback.

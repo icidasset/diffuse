@@ -43,20 +43,12 @@
     "subsonic-api": "npm:subsonic-api@^3.2.0",
     "throttle-debounce": "npm:throttle-debounce@^5.0.2",
     "xxh32": "npm:xxh32@^2.0.5",
+    "webamp": "npm:webamp@^2.2.0",
 
     // music-metadata
     "@tokenizer/http": "npm:@tokenizer/http@^0.9.2",
     "@tokenizer/range": "npm:@tokenizer/range@^0.13.0",
     "music-metadata": "npm:music-metadata@^11.10.6",
-
-    // Webamp
-    "webamp": "npm:webamp@^2.2.0",
-
-    // Paths
-    "@testing/": "./src/testing/",
-    "@tests/": "./tests/",
-
-    "~/": "./src/",
 
     // Build
     "@atcute/lex-cli": "npm:@atcute/lex-cli@^2.5.3",
@@ -73,6 +65,12 @@
     "@astral/astral": "jsr:@astral/astral",
     "@std/expect": "jsr:@std/expect",
     "@std/testing/bdd": "jsr:@std/testing/bdd",
+
+    // Paths
+    "~/": "./src/",
+
+    "@testing/": "./src/testing/",
+    "@tests/": "./tests/",
   },
   "exports": {
     // .js

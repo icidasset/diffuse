@@ -13,6 +13,8 @@ import { walkSync } from "@std/fs/walk";
 import { nodeModulesPolyfillPlugin } from "esbuild-plugins-node-modules-polyfill";
 import { wasmLoader } from "esbuild-plugin-wasm";
 
+import { create as createCID } from "~/common/cid.js";
+
 const site = lume({
   dest: "./dist",
   src: "./src",
@@ -40,6 +42,7 @@ site.use(esbuild({
     format: "esm",
     minify: false,
     // outExtension: { ".js": ".min.js" },
+    external: ["./file-tree.json"],
     platform: "browser",
     plugins: [
       dotenvRun({
@@ -348,6 +351,40 @@ site.addEventListener("afterBuild", async () => {
       // leave as-is if the source file can't be read
     }
   }
+});
+
+site.addEventListener("afterBuild", async () => {
+  const RAW = 0x55;
+
+  async function buildFileTree(
+    dir: string,
+    prefix = "",
+  ): Promise<Record<string, string>> {
+    const tree: Record<string, string> = {};
+
+    for (const entry of Deno.readDirSync(dir)) {
+      const entryPath = path.join(dir, entry.name);
+      const entryKey = prefix ? `${prefix}/${entry.name}` : entry.name;
+      if (entry.isDirectory) {
+        Object.assign(tree, await buildFileTree(entryPath, entryKey));
+      } else {
+        const data = Deno.readFileSync(entryPath);
+        tree[entryKey] = await createCID(RAW, data);
+      }
+    }
+
+    return tree;
+  }
+
+  const tree = await buildFileTree("dist/");
+  const sorted = Object.fromEntries(
+    Object.keys(tree).sort().map((k) => [k, tree[k]]),
+  );
+
+  Deno.writeTextFileSync(
+    "./dist/file-tree.json",
+    JSON.stringify(sorted, null, 2),
+  );
 });
 
 function htmlWithInlineJs({ content, match, jsPath }: {
