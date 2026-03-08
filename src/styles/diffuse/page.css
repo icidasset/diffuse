@@ -224,9 +224,39 @@ textarea {
     content: none;
   }
 
-  li {
+  .grid-item {
     border: 1px solid var(--border-color);
+    display: flex;
+  }
+
+  .grid-item__contents {
+    flex: 1;
     padding: var(--space-md);
+  }
+
+  .grid-item__menu {
+    border-left: 1px solid var(--border-color);
+    display: flex;
+    flex-direction: column;
+    justify-content: space-evenly;
+
+    hr {
+      background: var(--border-color);
+      border: 0;
+      height: 1px;
+      margin: 0;
+      padding: 0;
+    }
+  }
+
+  .grid-item__menu button,
+  .grid-item__menu .button {
+    --button-bg-opacity: 0.3;
+    align-items: center;
+    border-radius: 0;
+    display: flex;
+    flex: 1;
+    justify-content: center;
   }
 }
 
