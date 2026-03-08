@@ -2,8 +2,143 @@
 layout: layouts/facets.vto
 base: ../../
 title: Build | Facets | Diffuse
+
+styles:
+  - styles/base.css
+  - styles/diffuse/page.css
+  - styles/diffuse/code-editor.css
+  - vendor/@phosphor-icons/bold/style.css
+  - vendor/@phosphor-icons/fill/style.css
+
+scripts:
+  - facets/build.js
+
+examples:
+  - url: "facets/examples/now-playing/index.html"
+    title: "Now playing"
+    desc: >
+      Shows what's currently set to "now playing" in the queue, along with a button to shift the queue to the next track.
+  - url: "facets/examples/generate-playlist/index.html"
+    title: "Generate playlist"
+    desc: >
+      Make a list of what previously played in the queue.
 ---
 
-<section>
-  <h1 hidden>Build</h1>
+<h1 id="build" hidden>Build</h1>
+
+
+<!-- BUILD -->
+<section style="margin-top: var(--space-lg);">
+  <form id="build-form" class="columns">
+    <div class="flex">
+      <div id="html-input-container" class="code-editor monospace-font">
+      </div>
+    </div>
+
+    <div style="flex: 1; max-width: var(--container-sm)">
+      <p style="margin-top: 0">
+        Your code here builds on the <a href="#foundation">foundation</a> listed below, and will be injected into a <span style="white-space: nowrap"><code>&lt;div id="container"&gt;</code></span> element in the body.
+      </p>
+      <p>
+        <input id="name-input" type="text" placeholder="Name" name="name" required />
+      </p>
+      <p>
+        <textarea id="description-input" placeholder="Description" name="description" rows="5"></textarea>
+      </p>
+      <p>
+        <span class="button-row">
+          <button class="button--bg-twist-2" name="save">Save</button>
+          <button class="button--bg-twist-2" name="save+open">Save &amp; Open</button>
+        </span>
+      </p>
+    </div>
+  </form>
 </section>
+
+<!-- FOUNDATION -->
+<div class="columns">
+  <section class="flex">
+    <h2 id="foundation">Foundation</h2>
+
+    <p>
+      Diffuse comes with a foundation that preconfigures all elements so you don't have to set them up yourself, along with a combination of elements for certain features. It internally tracks the DOM addition of the custom elements, so no need to worry about setting up an element multiple times.
+    </p>
+    <p>
+      <small><i class="ph-fill ph-info"></i> Refer to the <a href="#elements">elements index</a> to find out what each element does.</small>
+    </p>
+    <div class="code-block">
+      <code>
+        {{- echo -}}
+          import foundation from "common/facets/foundation.js"
+        {{ /echo }}
+{{ echo -}}foundation.engine.audio(){{- /echo }}
+{{ echo -}}foundation.engine.queue(){{- /echo }}
+{{ echo -}}foundation.engine.repeatShuffle(){{- /echo }}
+{{ echo -}}foundation.engine.scope(){{- /echo }}
+
+{{ echo -}}foundation.orchestrator.autoQueue(){{- /echo }}
+{{ echo -}}foundation.orchestrator.favourites(){{- /echo }}
+{{ echo -}}foundation.orchestrator.input(){{- /echo }}
+{{ echo -}}foundation.orchestrator.output(){{- /echo }}
+{{ echo -}}foundation.orchestrator.queueAudio(){{- /echo }}
+{{ echo -}}foundation.orchestrator.processTracks(){{- /echo }}
+{{ echo -}}foundation.orchestrator.scopedTracks(){{- /echo }}
+{{ echo -}}foundation.orchestrator.sources(){{- /echo }}
+
+{{ echo -}}foundation.processor.artwork(){{- /echo }}
+{{ echo -}}foundation.processor.metadata(){{- /echo }}
+{{ echo -}}foundation.processor.search(){{- /echo -}}
+      </code>
+    </div>
+
+    <p>
+      <small>Features:</small>
+    </p>
+    <ul style="margin-bottom: 0;">
+      <li>
+        <span>Fill the queue automatically <small>(infinite play)</small></span>
+        <div class="list-description">
+          <code>foundation.features.fillQueueAutomatically()</code>
+        </div>
+      </li>
+      <li>
+        <span>Play audio from the queue</span>
+        <div class="list-description">
+          <code>foundation.features.playAudioFromQueue()</code>
+        </div>
+      </li>
+      <li>
+        <span>Process inputs <small>(into tracks, etc)</small></span>
+        <div class="list-description">
+          <code>foundation.features.processInputs()</code>
+        </div>
+      </li>
+      <li>
+        <span>Search through your collection</span>
+        <div class="list-description" style="margin-bottom: 0;">
+          <code>foundation.features.searchThroughCollection()</code>
+        </div>
+      </li>
+    </ul>
+  </section>
+
+  <section class="flex">
+    <h2 id="examples">Examples</h2>
+
+    <p>
+      Some simple examples to help you understand how to build your own facet. Click the edit button to load them into the code editor above.
+    </p>
+
+    {{ await comp.facets.examples({ id: "examples", items: examples }) }}
+
+    <h2 id="notes">Notes</h2>
+    <p>
+      While you have the ability to do whatever you want in a custom facet, the existing facets are designed to work a certain way; so here's some things to keep in mind:
+    </p>
+    <ul>
+      <li><span>In most cases you'll want to call <code>foundation.features.processInputs()</code> so that your audio files and streams actually show up.</span></li>
+      <li><span>Most elements are configured in broadcast mode so they communicate across tabs. There are a few exceptions such as inputs, where we prefer parallelisation.</span></li>
+      <li><span>You can use facets in combination with themes by adding the elements used in the theme to a group and then passing in the group name as a URL query parameter (eg. <code>group=facets</code>)</span></li>
+    </ul>
+  </section>
+</div>

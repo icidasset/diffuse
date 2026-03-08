@@ -1,0 +1,20 @@
+<ul>
+  {{ for index, item of items }}
+    <li data-uri="{{ item.url |> facetOrThemeURI }}" data-name="{{item.title}}" style="margin-top: var(--space-md)">
+      <div style="display: flex; gap: var(--space-xs); justify-content: space-between;">
+        <a href="{{ item.url |> facetLoaderURL }}">
+          {{item.title}}
+        </a>
+        <button class="button--small button--bg-twist-2" rel="edit">
+          <span class="with-icon">
+            <i class="ph-fill ph-code-block"></i>
+            Edit
+          </span>
+        </button>
+      </div>
+      <div class="list-description">
+        {{ item.desc |> md(true) }}
+      </div>
+    </li>
+  {{ /for }}
+</ul>

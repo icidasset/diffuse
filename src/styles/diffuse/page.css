@@ -203,7 +203,6 @@ textarea {
 }
 
 textarea {
-  height: var(--container-xs);
   padding: var(--space-xs);
   resize: none;
 }
@@ -388,8 +387,7 @@ a.button {
   &.button--small {
     font-size: var(--fs-xs);
     line-height: 1;
-    padding: var(--space-3xs);
-    border-radius: var(--radius-xs);
+    padding: var(--space-3xs) var(--space-2xs);
   }
 
   &.button--subtle {
