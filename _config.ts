@@ -34,7 +34,9 @@ site.use(esbuild({
     alias: {
       "@automerge/automerge": "https://esm.sh/@automerge/automerge@^3.2.3",
     },
+    assetNames: "assets/[name]-[hash]",
     bundle: true,
+    chunkNames: "chunks/[name]-[hash]",
     format: "esm",
     minify: false,
     // outExtension: { ".js": ".min.js" },
