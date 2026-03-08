@@ -116,9 +116,9 @@ effect(() => {
 });
 
 const emptyFacetsList = html`
-  <p style="margin-bottom: 0;">
+  <div>
     <i class="ph-fill ph-info"></i> You have not saved any facets yet.
-  </p>
+  </div>
 `;
 
 /**
