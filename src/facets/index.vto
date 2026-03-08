@@ -4,6 +4,10 @@ base: ../
 title: Featured | Facets | Diffuse
 ---
 
+<h1 hidden>Featured</h1>
+
 <section>
-  <h1 hidden>Featured</h1>
+  {{ await comp.facets.grid({ id: "featured", items: facets.filter(f => f.featured) }) }}
 </section>
+
+<script src="facets/pages/grid-toggle.js" type="module"></script>

@@ -258,6 +258,13 @@ textarea {
     flex: 1;
     justify-content: center;
   }
+
+  .grid-item__title {
+    align-items: center;
+    display: flex;
+    gap: var(--space-xs);
+    justify-content: space-between;
+  }
 }
 
 /**

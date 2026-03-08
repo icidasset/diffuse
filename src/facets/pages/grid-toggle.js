@@ -12,7 +12,7 @@ const gridItems = /** @type {NodeListOf<HTMLLIElement>} */ (
 );
 
 for (const li of gridItems) {
-  const container = li.querySelector("div[style]");
+  const container = li.querySelector(".grid-item__title");
   if (!container) continue;
 
   const button = document.createElement("button");

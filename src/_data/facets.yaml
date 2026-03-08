@@ -1,11 +1,13 @@
 - url: "themes/blur/artwork-controller/facet/index.html"
   title: "Blur / Artwork controller"
   category: Playback
+  featured: true
   desc: >
     Audio playback controller with an artwork display.
 - url: "facets/tools/auto-queue/index.html"
   title: "Tools / Automatic Queue"
   category: Playback
+  featured: true
   desc: >
     Automatically put tracks into the queue.
 - url: "facets/tools/export-import/index.html"
@@ -26,15 +28,18 @@
 - url: "themes/webamp/browser/facet/index.html"
   title: "Webamp / Browser"
   category: Browsing
+  featured: true
   desc: >
-    Collection browser + search in a retro, win98, look.
+    Collection browser and search.
 - url: "themes/webamp/configurators/input/facet/index.html"
   title: "Webamp / Input Configurator"
   category: Data
+  featured: true
   desc: >
-    Windows 98 styled input configurator where you can add music sources.
+    Add your audio sources.
 - url: "themes/webamp/configurators/output/facet/index.html"
   title: "Webamp / Output Configurator"
   category: Data
+  featured: true
   desc: >
-    Windows 98 styled output configurator where you can manage your data storage.
+    Manage your data storage.

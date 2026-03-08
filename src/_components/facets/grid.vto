@@ -1,13 +1,15 @@
 <ul class="grid" style="margin-top: var(--space-lg);">
   {{ for index, item of items }}
-    <li data-uri="{{ item.url |> facetOrThemeURI }}" data-name="{{item.title}}">
-      <div style="display: flex; align-items: center; gap: var(--space-xs); justify-content: space-between;">
-        <a href="{{ item.url |> facetLoaderURL }}" style="padding: var(--space-3xs) 0">
-          {{item.title}}
-        </a>
-      </div>
-      <div class="list-description">
-        {{ item.desc |> md(true) }}
+    <li class="grid-item" data-uri="{{ item.url |> facetOrThemeURI }}" data-name="{{item.title}}">
+      <div class="grid-item__contents">
+        <div class="grid-item__title">
+          <a href="{{ item.url |> facetLoaderURL }}" style="padding: var(--space-3xs) 0">
+            {{item.title}}
+          </a>
+        </div>
+        <div class="list-description">
+          {{ item.desc |> md(true) }}
+        </div>
       </div>
     </li>
   {{ /for }}
