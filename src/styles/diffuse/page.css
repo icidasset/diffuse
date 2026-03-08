@@ -137,10 +137,10 @@ ul.columns {
  */
 
 .dropdown {
-  background: oklch(from var(--bg-color) calc(l - 0.05) c h);
+  background: oklch(from var(--bg-color) calc(l + 0.2) c h);
   border: 0;
   border-radius: var(--radius-md);
-  box-shadow: var(--box-shadow-lg);
+  box-shadow: var(--box-shadow-xl);
   color: var(--text-color);
   font-size: var(--fs-sm);
   margin: 0;
@@ -149,6 +149,10 @@ ul.columns {
   position: fixed;
   position-area: bottom span-left;
   text-align: left;
+
+  @media (prefers-color-scheme: dark) {
+    background: oklch(from var(--bg-color) calc(l - 0.05) c h);
+  }
 
   &::backdrop {
     background: transparent;

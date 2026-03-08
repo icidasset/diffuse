@@ -29,21 +29,27 @@ effect(() => {
 
   const h = col.length && state === "loaded"
     ? html`
-      <ul style="margin: 0; max-width: none;">
-        ${col.map((c) =>
+      <ul class="grid" style="margin: 0">
+        ${col.map((c, index) =>
           keyed(
             c.id,
             html`
-              <li style="margin-bottom: var(--space-sm)">
-                <div style="position: relative;">
-                  <a href="facets/l/?id=${c.id}">
+              <li>
+                <div
+                  style="display: flex; align-items: center; gap: var(--space-xs); justify-content: space-between; position: relative;"
+                >
+                  <a
+                    href="facets/l/?id=${c
+                      .id}"
+                    style="display: inline-block; padding: var(--space-3xs) 0"
+                  >
                     ${c.name}
                   </a>
                   <button
-                    class="button--fixed button--transparent"
+                    class="button--transparent"
                     popovertarget="facet-menu-col-${c.id}"
                     style="anchor-name: --facet-anchor-col-${c
-                      .id}; position: absolute; right: 0; top: 50%; transform: translateY(-50%);"
+                      .id}; font-size: var(--fs-base); padding: var(--space-3xs) 0;"
                   >
                     <i class="ph-fill ph-dots-three-circle"></i>
                   </button>
