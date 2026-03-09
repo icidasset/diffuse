@@ -37,7 +37,7 @@ base: "./"
 
     <!-- Styles -->
     {{ for url of styles }}
-      <link rel="stylesheet" href="{{ url }}" />
+      <link rel="stylesheet" href="{{ url }}" blocking="render" />
     {{ /for }}
   </head>
   <body>
@@ -45,11 +45,11 @@ base: "./"
 
     <!-- Make every touched URL available offline -->
     <do-offline></do-offline>
-    <script src="components/orchestrator/offline/element.js" type="module"></script>
+    <script src="components/orchestrator/offline/element.js" type="module" blocking="render"></script>
 
     <!-- Scripts -->
     {{ for url of scripts }}
-      <script src="{{ url }}" type="module"></script>
+      <script src="{{ url }}" type="module" blocking="render"></script>
     {{ /for }}
   </body>
 </html>

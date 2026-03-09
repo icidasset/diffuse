@@ -48,6 +48,10 @@ input:
     desc: >
       Generate tracks based on HTTPS servers that provide JSON (directory) listings.
     todo: true
+  - url: "components/input/icecast/element.js"
+    title: "Icecast"
+    desc: >
+      Icecast internet radio streams. Fetches ICY metadata to populate track information.
   - url: "components/input/local/element.js"
     title: "Local"
     desc: >
@@ -80,9 +84,15 @@ orchestrators:
   - url: "components/orchestrator/media-session/element.js"
     title: "Media Session"
     desc: "Keeps the browser/os media session in sync with queue and audio state. Adds handlers for previous, next, seek to, etc."
+  - url: "components/orchestrator/offline/element.js"
+    title: "Offline"
+    desc: "Registers a service worker that makes the page available offline. Resources (except audio & video) are cached as they load and served from cache when offline."
   - url: "components/orchestrator/output/element.js"
     title: "Output"
     desc: "**A default output configuration.** Contains all the outputs provided here along with the relevant transformers."
+  - url: "components/orchestrator/path-collections/element.js"
+    title: "Path Collections"
+    desc: "Wraps an output element to generate ephemeral playlists based on the first path segment of each track's URI. Ephemeral items are excluded from storage."
   - url: "components/orchestrator/process-tracks/element.js"
     title: "Process inputs into tracks"
     desc: "Whenever the cached tracks are initially loaded through the passed output element it will list tracks by using the passed input element. Afterwards it loops over all tracks and checks if metadata needs to be fetched. If anything has changed, it'll pass the results to the output element."
