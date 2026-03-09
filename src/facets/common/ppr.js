@@ -2,11 +2,28 @@ import * as Build from "./build.js";
 import * as Grid from "./grid.js";
 import * as You from "./you.js";
 
+/** Base pathname of the app (e.g. "/" at root, "/diffuse/" in a subdirectory). */
+const BASE_PATHNAME = new URL(document.baseURI).pathname;
+
+/**
+ * Strips the app's base path prefix from an absolute pathname,
+ * returning a root-relative path like "/facets/build".
+ *
+ * @param {string} pathname
+ */
+function relativePathname(pathname) {
+  const stripped = pathname.replace(/\/$/, "");
+  const base = BASE_PATHNAME.replace(/\/$/, "");
+  return base.length > 0 && stripped.startsWith(base)
+    ? stripped.slice(base.length)
+    : stripped;
+}
+
 /**
  * @param {URL} url
  */
 async function initJsBasedOnPage(url) {
-  const path = url.pathname.replace(/(\/$)/, "");
+  const path = relativePathname(url.pathname);
 
   Grid.insertToggleButtons();
   await Grid.monitorToggleButtonStates();
@@ -47,7 +64,8 @@ function navigateHandler(event) {
   if (url.origin !== location.origin) return;
 
   // Only intercept /facets/[section]/ paths (not deeper sub-paths like /facets/tools/*)
-  const parts = url.pathname.split("/").filter(Boolean);
+  const relative = relativePathname(url.pathname);
+  const parts = relative.split("/").filter(Boolean);
   if (parts[0] !== "facets") return;
   if (parts.length > 2) return;
 
