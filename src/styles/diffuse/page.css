@@ -1,7 +1,3 @@
-@view-transition {
-  navigation: auto;
-}
-
 body {
   background-color: var(--bg-color);
   color: var(--text-color);
