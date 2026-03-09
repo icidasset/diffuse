@@ -5,29 +5,43 @@ import { unsafeHTML } from "lit-html/directives/unsafe-html.js";
 
 import * as Output from "~/common/output.js";
 import foundation from "~/common/facets/foundation.js";
-import { effect } from "~/common/signal.js";
 import { nothing } from "~/common/element.js";
 
-////////////////////////////////////////////
-// YOUR COLLECTION
-////////////////////////////////////////////
+import { deleteFacet } from "./crud.js";
 
-/** @type {HTMLElement | null} */
-const listEl = document.querySelector("#list");
-if (!listEl) throw new Error("List element not found");
+const EMPTY_FACETS_LIST = html`
+  <div>
+    <i class="ph-fill ph-info"></i> You have not saved any facets yet.
+  </div>
+`;
 
-const output = foundation.orchestrator.output();
+/** */
+export async function renderList() {
+  /** @type {HTMLElement | null} */
+  const listEl = document.querySelector("#list");
+  if (!listEl) throw new Error("List element not found");
+  listEl.innerHTML = "";
 
-listEl.innerHTML = "";
+  const output = foundation.orchestrator.output();
 
-effect(() => {
+  if (output.facets.state() !== "loaded") {
+    const loading = html`
+      <div class="with-icon">
+        <i class="ph-bold ph-spinner-gap"></i>
+        Loading items
+      </div>
+    `;
+
+    render(loading, listEl);
+  }
+
+  await Output.waitUntilLoaded(output.facets);
+
   const col = output.facets.collection().sort((a, b) => {
     return a.name.toLocaleLowerCase().localeCompare(b.name.toLocaleLowerCase());
   });
 
-  const state = output.facets.state();
-
-  const h = col.length && state === "loaded"
+  const h = col.length
     ? html`
       <ul class="grid" style="margin: 0">
         ${col.map((c, index) =>
@@ -95,36 +109,7 @@ effect(() => {
         )}
       </ul>
     `
-    : state === "loaded"
-    ? emptyFacetsList
-    : html`
-      <div class="with-icon">
-        <i class="ph-bold ph-spinner-gap"></i>
-        Loading items
-      </div>
-    `;
+    : EMPTY_FACETS_LIST;
 
   render(h, listEl);
-});
-
-const emptyFacetsList = html`
-  <div>
-    <i class="ph-fill ph-info"></i> You have not saved any facets yet.
-  </div>
-`;
-
-/**
- * @param {{ id: string }} _
- */
-function deleteFacet({ id }) {
-  return async () => {
-    const c = confirm("Are you sure you want to delete this facet?");
-    if (!c) return;
-
-    await Output.waitUntilLoaded(output.facets);
-
-    output.facets.save(
-      output.facets.collection().filter((c) => !(c.id === id)),
-    );
-  };
 }
