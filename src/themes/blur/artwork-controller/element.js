@@ -433,7 +433,7 @@ class ArtworkController extends DiffuseElement {
       <link rel="stylesheet" href="themes/blur/artwork-controller/element.css" />
 
       <main style="background-color: ${this.#artworkColor.value ??
-        `revert-layer`};">
+        `var(--color-3)`}; opacity: 0;">
         <section class="artwork">
           <label style="display: ${this.group === DEFAULT_GROUP
             ? `none`
@@ -444,7 +444,7 @@ class ArtworkController extends DiffuseElement {
           ${artwork}
         </section>
 
-        <section class="controller" style="opacity: 0;">
+        <section class="controller">
           <div class="gradient-blur">
             <div></div>
             <div></div>
@@ -459,7 +459,7 @@ class ArtworkController extends DiffuseElement {
           <div
             class="controller__background"
             style="background-color: ${this.#artworkColor.value ??
-              `revert-layer`};"
+              `transparent`};"
           >
           </div>
 

@@ -9,11 +9,13 @@ main {
   flex-direction: column;
   font-size: var(--fs-sm);
   height: 100%;
+  opacity: 1 !important;
   overflow: hidden;
   position: relative;
   transition:
     background-color var(--transition-durition),
-    color var(--transition-durition);
+    color var(--transition-durition),
+    opacity var(--transition-durition);
 }
 
 /* Artwork */
@@ -89,7 +91,6 @@ progress[value]::-moz-progress-bar {
 
 .controller {
   flex-shrink: 0;
-  opacity: 1 !important;
   padding: 0 var(--space-md) var(--space-md);
   position: relative;
 }
