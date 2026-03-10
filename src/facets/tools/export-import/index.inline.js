@@ -12,9 +12,9 @@ const fileInput =
   /** @type {HTMLInputElement} */ (document.querySelector("#file"));
 const importTracksBtn =
   /** @type {HTMLButtonElement} */ (document.querySelector("#import-tracks"));
-const importPlaylistsBtn =
+const importPlaylistItemsBtn =
   /** @type {HTMLButtonElement} */ (document.querySelector(
-    "#import-playlists",
+    "#import-playlist-items",
   ));
 const importFacetsBtn =
   /** @type {HTMLButtonElement} */ (document.querySelector("#import-facets"));
@@ -78,7 +78,7 @@ fileInput.onchange = async () => {
   json = null;
   statusEl.hidden = true;
   importTracksBtn.disabled = true;
-  importPlaylistsBtn.disabled = true;
+  importPlaylistItemsBtn.disabled = true;
   importFacetsBtn.disabled = true;
   importThemesBtn.disabled = true;
 
@@ -100,7 +100,7 @@ fileInput.onchange = async () => {
   }
 
   if (Array.isArray(json?.playlistItems) && json.playlistItems.length > 0) {
-    importPlaylistsBtn.disabled = false;
+    importPlaylistItemsBtn.disabled = false;
   }
 
   if (Array.isArray(json?.facets) && json.facets.length > 0) {
@@ -127,8 +127,8 @@ importTracksBtn.onclick = async () => {
   }
 };
 
-// Import playlists
-importPlaylistsBtn.onclick = async () => {
+// Import playlist items
+importPlaylistItemsBtn.onclick = async () => {
   /** @type {any[]} */
   const playlistItems = json?.playlistItems;
   if (!Array.isArray(playlistItems) || playlistItems.length === 0) return;

@@ -18,9 +18,9 @@ const importFavouritesBtn =
   /** @type {HTMLButtonElement} */ (document.querySelector(
     "#import-favourites",
   ));
-const importPlaylistsBtn =
+const importPlaylistItemsBtn =
   /** @type {HTMLButtonElement} */ (document.querySelector(
-    "#import-playlists",
+    "#import-playlist-items",
   ));
 const statusEl = /** @type {HTMLElement} */ (document.querySelector("#status"));
 
@@ -45,7 +45,7 @@ fileInput.onchange = async () => {
   json = null;
   statusEl.hidden = true;
   importFavouritesBtn.disabled = true;
-  importPlaylistsBtn.disabled = true;
+  importPlaylistItemsBtn.disabled = true;
 
   if (!file) return;
 
@@ -65,7 +65,7 @@ fileInput.onchange = async () => {
   }
 
   if (json?.playlists?.data?.length > 0) {
-    importPlaylistsBtn.disabled = false;
+    importPlaylistItemsBtn.disabled = false;
   }
 };
 
@@ -95,8 +95,8 @@ importFavouritesBtn.onclick = async () => {
   }
 };
 
-// Import playlists on button click
-importPlaylistsBtn.onclick = async () => {
+// Import playlist items on button click
+importPlaylistItemsBtn.onclick = async () => {
   /** @type {any[]} */
   const items = json?.playlists?.data;
   if (!items || items.length === 0) return;
