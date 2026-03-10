@@ -141,7 +141,9 @@ export function outputManager(
     facets: {
       collection: computed(() => {
         if (untracked(() => cs.value === "sleeping")) loadFacets();
-        return c.value;
+        return cs.value === "loading"
+          ? { state: "loading" }
+          : { state: "loaded", data: c.value };
       }),
       reload: loadFacets,
       save: async (newFacets) => {
@@ -151,12 +153,13 @@ export function outputManager(
         });
         await facets.put(newFacets);
       },
-      state: cs.get,
     },
     playlistItems: {
       collection: computed(() => {
         if (untracked(() => pls.value === "sleeping")) loadPlaylistItems();
-        return pl.value;
+        return pls.value === "loading"
+          ? { state: "loading" }
+          : { state: "loaded", data: pl.value };
       }),
       reload: loadPlaylistItems,
       save: async (newPlaylistItems) => {
@@ -166,12 +169,13 @@ export function outputManager(
         });
         await playlistItems.put(newPlaylistItems);
       },
-      state: pls.get,
     },
     themes: {
       collection: computed(() => {
         if (untracked(() => ths.value === "sleeping")) loadThemes();
-        return th.value;
+        return ths.value === "loading"
+          ? { state: "loading" }
+          : { state: "loaded", data: th.value };
       }),
       reload: loadThemes,
       save: async (newThemes) => {
@@ -181,12 +185,13 @@ export function outputManager(
         });
         await themes.put(newThemes);
       },
-      state: ths.get,
     },
     tracks: {
       collection: computed(() => {
         if (untracked(() => ts.value === "sleeping")) loadTracks();
-        return t.value;
+        return ts.value === "loading"
+          ? { state: "loading" }
+          : { state: "loaded", data: t.value };
       }),
       reload: loadTracks,
       save: async (newTracks) => {
@@ -196,20 +201,12 @@ export function outputManager(
         });
         await tracks.put(newTracks);
       },
-      state: ts.get,
     },
     signals: {
       facets: c,
       playlistItems: pl,
       themes: th,
       tracks: t,
-
-      states: {
-        facets: cs,
-        playlistItems: pls,
-        themes: ths,
-        tracks: ts,
-      },
     },
   };
 }

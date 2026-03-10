@@ -51,9 +51,8 @@ class ATProtoOutputSyncTransformer extends OutputTransformer {
       this[name] = {
         collection: computed(() => {
           const l = local();
-          if (!l) return [];
-          const data = l[name].collection();
-          return Array.isArray(data) ? data : [];
+          if (!l) return { state: "loading" };
+          return l[name].collection();
         }),
         reload: async () => {
           await this.#sync();
@@ -64,10 +63,10 @@ class ATProtoOutputSyncTransformer extends OutputTransformer {
 
           // Track deletions: any id present in local but absent in
           // newData has been deleted by the user.
-          const oldData = l[name].collection();
-          if (Array.isArray(oldData)) {
+          const oldCol = l[name].collection();
+          if (oldCol.state === "loaded" && Array.isArray(oldCol.data)) {
             const newIds = new Set(newData.map((/** @type {any} */ r) => r.id));
-            for (const record of oldData) {
+            for (const record of oldCol.data) {
               if (!newIds.has(record.id)) {
                 this.#addTombstone(name, record.id);
               }
@@ -88,7 +87,6 @@ class ATProtoOutputSyncTransformer extends OutputTransformer {
             this.#markDirty();
           }
         },
-        state: computed(() => local()?.[name].state() ?? "sleeping"),
       };
     }
 
@@ -150,26 +148,36 @@ class ATProtoOutputSyncTransformer extends OutputTransformer {
       }
 
       const localHasData = COLLECTIONS.some((name) => {
-        const data = l[name].collection();
-        return Array.isArray(data) && data.length > 0;
+        const col = l[name].collection();
+        return col.state === "loaded" && Array.isArray(col.data) &&
+          col.data.length > 0;
       });
 
       if (!localHasData && !dirty) {
         // Local is empty and clean — just pull remote
         for (const name of COLLECTIONS) {
-          const remoteData = remote[name].collection();
-          if (Array.isArray(remoteData) && remoteData.length > 0) {
-            this.#trackIds(name, remoteData);
-            await l[name].save(remoteData);
+          const remoteCol = remote[name].collection();
+          if (
+            remoteCol.state === "loaded" && Array.isArray(remoteCol.data) &&
+            remoteCol.data.length > 0
+          ) {
+            this.#trackIds(name, remoteCol.data);
+            await l[name].save(remoteCol.data);
           }
         }
       } else {
         // Union merge
         for (const name of COLLECTIONS) {
-          const localData = l[name].collection();
-          const remoteData = remote[name].collection();
-          const localArr = Array.isArray(localData) ? localData : [];
-          const remoteArr = Array.isArray(remoteData) ? remoteData : [];
+          const localCol = l[name].collection();
+          const remoteCol = remote[name].collection();
+          const localArr =
+            localCol.state === "loaded" && Array.isArray(localCol.data)
+              ? localCol.data
+              : [];
+          const remoteArr =
+            remoteCol.state === "loaded" && Array.isArray(remoteCol.data)
+              ? remoteCol.data
+              : [];
 
           const merged = this.#mergeRecords(name, localArr, remoteArr);
 

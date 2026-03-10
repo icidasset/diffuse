@@ -55,7 +55,8 @@ searchInput.oninput = () => {
 
 // Playlist state
 effect(() => {
-  const items = output.playlistItems.collection();
+  const col = output.playlistItems.collection();
+  const items = col.state === "loaded" ? col.data : [];
   const currentPlaylist = scope.playlist();
 
   // Group items by playlist name

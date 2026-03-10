@@ -48,7 +48,8 @@ class Sources extends BroadcastableDiffuseElement {
 
     // Effects
     this.effect(() => {
-      const tracks = output.tracks.collection();
+      const col = output.tracks.collection();
+      const tracks = col.state === "loaded" ? col.data : [];
       const groups = groupTracksPerScheme(tracks);
 
       /** @type {{ [scheme: string]: Source[] }} */

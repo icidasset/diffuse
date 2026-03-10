@@ -40,16 +40,14 @@ class DaslBytesSyncOutputTransformer extends OutputTransformer {
     /**
      * @template {{ id: string; updatedAt: string }} T
      * @param {string} kind
-     * @param {SignalReader<Uint8Array | undefined>} localCollection
-     * @param {SignalReader<Uint8Array | undefined>} remoteCollection
-     * @param {SignalReader<"loading" | "loaded" | "sleeping">} remoteState
+     * @param {SignalReader<{ state: "loading" } | { state: "loaded"; data: Uint8Array | undefined }>} localCollection
+     * @param {SignalReader<{ state: "loading" } | { state: "loaded"; data: Uint8Array | undefined }>} remoteCollection
      * @param {{ saveLocal: (bytes: Uint8Array) => Promise<void>; saveRemote: (bytes: Uint8Array) => Promise<void> }} sync
      */
     const state = (
       kind,
       localCollection,
       remoteCollection,
-      remoteState,
       { saveLocal, saveRemote },
     ) => {
       const container = signal(
@@ -66,9 +64,12 @@ class DaslBytesSyncOutputTransformer extends OutputTransformer {
         if (!isReady.value) return;
         if (merging.value.isBusy) return;
 
-        const lb = localCollection();
-        const rb = remote.ready() ? remoteCollection() : undefined;
-        const rs = remoteState();
+        const lc = localCollection();
+        const rc = remote.ready() ? remoteCollection() : undefined;
+
+        const lb = lc?.state === "loaded" ? lc.data : undefined;
+        const rb = rc?.state === "loaded" ? rc.data : undefined;
+        const rs = rc?.state;
 
         /** @type {Container<T> | undefined} */
         const l = lb ? decode(lb) : undefined;
@@ -137,9 +138,8 @@ class DaslBytesSyncOutputTransformer extends OutputTransformer {
     // Container signals
     const facets = state(
       "facets",
-      computed(() => local()?.facets.collection()),
+      computed(() => local()?.facets.collection() ?? { state: "loading" }),
       remote.facets.collection,
-      remote.facets.state,
       {
         saveLocal: async (v) => local()?.facets.save(v),
         saveRemote: remote.facets.save,
@@ -148,9 +148,10 @@ class DaslBytesSyncOutputTransformer extends OutputTransformer {
 
     const playlistItems = state(
       "playlistItems",
-      computed(() => local()?.playlistItems.collection()),
+      computed(() =>
+        local()?.playlistItems.collection() ?? { state: "loading" }
+      ),
       remote.playlistItems.collection,
-      remote.playlistItems.state,
       {
         saveLocal: async (v) => local()?.playlistItems.save(v),
         saveRemote: remote.playlistItems.save,
@@ -159,9 +160,8 @@ class DaslBytesSyncOutputTransformer extends OutputTransformer {
 
     const themes = state(
       "themes",
-      computed(() => local()?.themes.collection()),
+      computed(() => local()?.themes.collection() ?? { state: "loading" }),
       remote.themes.collection,
-      remote.themes.state,
       {
         saveLocal: async (v) => local()?.themes.save(v),
         saveRemote: remote.themes.save,
@@ -170,9 +170,8 @@ class DaslBytesSyncOutputTransformer extends OutputTransformer {
 
     const tracks = state(
       "tracks",
-      computed(() => local()?.tracks.collection()),
+      computed(() => local()?.tracks.collection() ?? { state: "loading" }),
       remote.tracks.collection,
-      remote.tracks.state,
       {
         saveLocal: async (v) => local()?.tracks.save(v),
         saveRemote: remote.tracks.save,
@@ -407,14 +406,16 @@ class DaslBytesSyncOutputTransformer extends OutputTransformer {
   /**
    * @template {{ id: string; updatedAt: string }} T
    * @param {{ save: (bytes: Uint8Array) => Promise<void> | void }} local
-   * @param {{ collection: SignalReader<Uint8Array | undefined>, reload: () => Promise<void>, save: (bytes: Uint8Array) => Promise<void>, state: SignalReader<"loading" | "loaded" | "sleeping"> }} remote
+   * @param {{ collection: SignalReader<{ state: "loading" } | { state: "loaded"; data: Uint8Array | undefined }>, reload: () => Promise<void>, save: (bytes: Uint8Array) => Promise<void> }} remote
    * @param {SignalReader<Container<T>>} container
-   * @returns {{ collection: SignalReader<T[]>, reload: () => Promise<void>, save: (items: T[]) => Promise<void>, state: SignalReader<"loading" | "loaded" | "sleeping"> }}
+   * @returns {{ collection: SignalReader<{ state: "loading" } | { state: "loaded"; data: T[] }>, reload: () => Promise<void>, save: (items: T[]) => Promise<void> }}
    */
   managerProp(local, remote, container) {
     return {
       collection: computed(() => {
-        return container().data;
+        const c = container();
+        if (!c.cid) return { state: "loading" };
+        return { state: "loaded", data: c.data };
       }),
       reload: remote.reload,
       save: async (/** @type {T[]} */ newItems) => {
@@ -426,10 +427,6 @@ class DaslBytesSyncOutputTransformer extends OutputTransformer {
         const bytes = this.save(adjustedContainer);
         await local.save(bytes);
       },
-      state: computed(() => {
-        if (container().cid) return "loaded";
-        return "loading";
-      }),
     };
   }
 

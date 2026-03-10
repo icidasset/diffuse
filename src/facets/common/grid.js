@@ -29,9 +29,7 @@ export function insertToggleButtons() {
       if (!uri || !name) return;
 
       const out = foundation.orchestrator.output();
-      await Output.waitUntilLoaded(out.facets);
-
-      const collection = out.facets.collection();
+      const collection = await Output.data(out.facets);
       const isActive = collection.some((f) => f.uri === uri);
 
       if (isActive) {
@@ -55,16 +53,15 @@ let stopMonitor;
 
 export async function monitorToggleButtonStates() {
   if (stopMonitor) stopMonitor();
-
   const out = foundation.orchestrator.output();
-  await Output.waitUntilLoaded(out.facets);
 
   stopMonitor = effect(() => {
     const gridItems = /** @type {NodeListOf<HTMLLIElement>} */ (
       document.querySelectorAll(".grid li")
     );
 
-    const collection = out.facets.collection();
+    const col = out.facets.collection();
+    const collection = col.state === "loaded" ? col.data : [];
     const activeURIs = new Set(collection.map((f) => f.uri));
 
     for (const li of gridItems) {

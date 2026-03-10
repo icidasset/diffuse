@@ -72,9 +72,9 @@ class ArtworkController extends DiffuseElement {
   currentTrack = computed(() => {
     const item = this.$queue.value?.now();
     if (!item) return undefined;
-    return this.$output.value?.tracks.collection().find((t) =>
-      t.id === item.id
-    );
+    const col = this.$output.value?.tracks.collection();
+    if (!col || col.state !== "loaded") return undefined;
+    return col.data.find((t) => t.id === item.id);
   });
 
   isPlaying = computed(() => {

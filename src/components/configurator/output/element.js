@@ -38,7 +38,9 @@ class OutputConfigurator extends BroadcastableDiffuseElement {
           const def = this.#defaultOutput.value;
           if (def) return def.facets.collection();
 
-          return this.#memory.facets.value;
+          return this.#setupFinished.value
+            ? { state: "loaded", data: this.#memory.facets.value }
+            : { state: "loading" };
         }),
         reload: () => {
           const def = this.#defaultOutput.value;
@@ -58,15 +60,6 @@ class OutputConfigurator extends BroadcastableDiffuseElement {
 
           this.#memory.facets.value = newFacets;
         },
-        state: computed(() => {
-          const out = this.#selected.value;
-          if (out) return out.facets.state();
-
-          const def = this.#defaultOutput.value;
-          if (def) return def.facets.state();
-
-          return this.#setupFinished.value ? "loaded" : "sleeping";
-        }),
       },
       playlistItems: {
         collection: computed(() => {
@@ -76,7 +69,9 @@ class OutputConfigurator extends BroadcastableDiffuseElement {
           const def = this.#defaultOutput.value;
           if (def) return def.playlistItems.collection();
 
-          return this.#memory.playlistItems.value;
+          return this.#setupFinished.value
+            ? { state: "loaded", data: this.#memory.playlistItems.value }
+            : { state: "loading" };
         }),
         reload: () => {
           const def = this.#defaultOutput.value;
@@ -96,15 +91,6 @@ class OutputConfigurator extends BroadcastableDiffuseElement {
 
           this.#memory.playlistItems.value = newPlaylistItems;
         },
-        state: computed(() => {
-          const out = this.#selected.value;
-          if (out) return out.playlistItems.state();
-
-          const def = this.#defaultOutput.value;
-          if (def) return def.playlistItems.state();
-
-          return this.#setupFinished.value ? "loaded" : "sleeping";
-        }),
       },
       themes: {
         collection: computed(() => {
@@ -114,7 +100,9 @@ class OutputConfigurator extends BroadcastableDiffuseElement {
           const def = this.#defaultOutput.value;
           if (def) return def.themes.collection();
 
-          return this.#memory.themes.value;
+          return this.#setupFinished.value
+            ? { state: "loaded", data: this.#memory.themes.value }
+            : { state: "loading" };
         }),
         reload: () => {
           const def = this.#defaultOutput.value;
@@ -134,15 +122,6 @@ class OutputConfigurator extends BroadcastableDiffuseElement {
 
           this.#memory.themes.value = newThemes;
         },
-        state: computed(() => {
-          const out = this.#selected.value;
-          if (out) return out.themes.state();
-
-          const def = this.#defaultOutput.value;
-          if (def) return def.themes.state();
-
-          return this.#setupFinished.value ? "loaded" : "sleeping";
-        }),
       },
       tracks: {
         collection: computed(() => {
@@ -152,7 +131,9 @@ class OutputConfigurator extends BroadcastableDiffuseElement {
           const def = this.#defaultOutput.value;
           if (def) return def.tracks.collection();
 
-          return this.#memory.tracks.value;
+          return this.#setupFinished.value
+            ? { state: "loaded", data: this.#memory.tracks.value }
+            : { state: "loading" };
         }),
         reload: () => {
           const def = this.#defaultOutput.value;
@@ -172,15 +153,6 @@ class OutputConfigurator extends BroadcastableDiffuseElement {
 
           this.#memory.tracks.value = newTracks;
         },
-        state: computed(() => {
-          const out = this.#selected.value;
-          if (out) return out.tracks.state();
-
-          const def = this.#defaultOutput.value;
-          if (def) return def.tracks.state();
-
-          return this.#setupFinished.value ? "loaded" : "sleeping";
-        }),
       },
 
       // Other

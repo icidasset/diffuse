@@ -43,17 +43,17 @@ effect(() => {
 
 // Export all data as a JSON snapshot
 exportBtn.onclick = async () => {
-  await Output.waitUntilLoaded(output.facets);
-  await Output.waitUntilLoaded(output.playlistItems);
-  await Output.waitUntilLoaded(output.themes);
-  await Output.waitUntilLoaded(output.tracks);
+  const facets = await Output.data(output.facets);
+  const playlistItems = await Output.data(output.playlistItems);
+  const themes = await Output.data(output.themes);
+  const tracks = await Output.data(output.tracks);
 
   const data = {
     exportedAt: new Date().toISOString(),
-    tracks: output.tracks.collection() ?? [],
-    playlistItems: output.playlistItems.collection() ?? [],
-    facets: output.facets.collection() ?? [],
-    themes: output.themes.collection() ?? [],
+    facets,
+    playlistItems,
+    themes,
+    tracks,
   };
 
   const blob = new Blob([JSON.stringify(data, null, 2)], {

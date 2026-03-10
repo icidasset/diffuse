@@ -42,14 +42,16 @@ async function addSampleContent() {
   </span>`;
 
   const demo = await s3.demo();
-  await Output.waitUntilLoaded(output.tracks);
+
+  await output.tracks.save([
+    ...(await Output.data(output.tracks)),
+    demo.track,
+  ]);
 
   addDemoBtn.innerHTML = `<span>
     <i class="ph-fill ph-hourglass-medium"></i>
     Processing source
   </span>`;
-
-  await output.tracks.save([...output.tracks.collection(), demo.track]);
 
   await pto.process();
 

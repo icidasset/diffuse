@@ -425,14 +425,12 @@ ${scriptClose}`;
 
 async function saveSimplifiedCopy() {
   const output = foundation.orchestrator.output();
-  await Output.waitUntilLoaded(output.facets);
-
   const id = crypto.randomUUID();
   const html = generateSimplifiedHTML(id);
   const now = new Date().toISOString();
 
   await output.facets.save([
-    ...output.facets.collection(),
+    ...(await Output.data(output.facets)),
     {
       $type: "sh.diffuse.output.facet",
       id,

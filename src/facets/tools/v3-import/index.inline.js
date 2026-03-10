@@ -104,8 +104,9 @@ importPlaylistItemsBtn.onclick = async () => {
   try {
     const now = new Date().toISOString();
 
+    const existingCol = output.playlistItems.collection();
     /** @type {any[]} */
-    const existing = output.playlistItems.collection() ?? [];
+    const existing = existingCol.state === "loaded" ? existingCol.data : [];
     const existingPlaylistNames = new Set(existing.map((p) => p.playlist));
 
     const newPlaylistItems = items

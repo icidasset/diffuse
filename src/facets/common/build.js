@@ -233,13 +233,11 @@ export function listenForExamplesEdit() {
 ////////////////////////////////////////////
 
 export async function editFacetFromURL() {
-  await Output.waitUntilLoaded(output.facets);
-
-  // Load facet from url
   const idParam = new URLSearchParams(location.search).get("id");
 
   if (idParam) {
-    const facet = output.facets.collection().find((f) => f.id === idParam);
+    const col = await Output.data(output.facets);
+    const facet = col.find((f) => f.id === idParam);
     if (facet) await editFacet(facet);
   }
 }

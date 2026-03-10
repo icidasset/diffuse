@@ -5,9 +5,11 @@ import { effect } from "~/common/signal.js";
  */
 
 /**
- * @param {{ collection: SignalReader<any>; state: SignalReader<"loading" | "loaded" | "sleeping"> }} output
+ * @template T
+ * @param {{ collection: SignalReader<{ state: "loading" } | { state: "loaded"; data: T }> }} output
+ * @returns {Promise<T>}
  */
-export async function waitUntilLoaded(output) {
+export async function data(output) {
   return await new Promise((resolve) => {
     let resolved = false;
 
@@ -17,11 +19,11 @@ export async function waitUntilLoaded(output) {
         return;
       }
 
-      if (output.state() === "loaded") {
+      const col = output.collection();
+
+      if (col.state === "loaded") {
         resolved = true;
-        resolve(void 0);
-      } else if (output.state() === "sleeping") {
-        output.collection();
+        resolve(col.data);
       }
     });
   });

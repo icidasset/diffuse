@@ -13,8 +13,10 @@ function generatePlaylist() {
     ...queue.future().filter((i) => i.manualEntry),
   ];
 
+  const tracksCol = output.tracks.collection();
+  const tracksList = tracksCol.state === "loaded" ? tracksCol.data : [];
   const playlist = queueItems
-    .map((item) => output.tracks.collection().find((t) => t.id === item?.id))
+    .map((item) => tracksList.find((t) => t.id === item?.id))
     .filter((t) => t);
 
   const element = document.querySelector("main ol");

@@ -18,15 +18,17 @@ class PathCollectionsOrchestrator extends OutputTransformer {
     const base = this.base();
 
     const ephemeralItems = computed(() => {
-      return createEphemeralItems(base.tracks.collection() ?? []);
+      const col = base.tracks.collection();
+      return createEphemeralItems(col.state === "loaded" ? col.data : []);
     });
 
     this.facets = base.facets;
     this.playlistItems = {
       ...base.playlistItems,
       collection: computed(() => {
-        const stored = base.playlistItems.collection() ?? [];
-        return [...stored, ...ephemeralItems()];
+        const col = base.playlistItems.collection();
+        if (col.state !== "loaded") return col;
+        return { state: "loaded", data: [...col.data, ...ephemeralItems()] };
       }),
       /** @type {(typeof base.playlistItems.save)} */
       save: async (items) => {

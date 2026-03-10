@@ -110,8 +110,8 @@ class ProcessTracksOrchestrator extends BroadcastableDiffuseElement {
     // unless already done so (possibly through another instance of this element)
     if (this.hasAttribute("process-when-ready")) {
       const unregister = this.effect(() => {
-        const state = output.tracks.state();
-        if (state !== "loaded") return;
+        const col = output.tracks.collection();
+        if (col.state !== "loaded") return;
 
         if (this.#performedInitialProcess.value) {
           unregister();
@@ -157,7 +157,8 @@ class ProcessTracksOrchestrator extends BroadcastableDiffuseElement {
     this.#isProcessing.value = true;
     console.log("🪵 Processing initiated");
 
-    const cachedTracks = this.output.tracks.collection();
+    const tracksCol = this.output.tracks.collection();
+    const cachedTracks = tracksCol.state === "loaded" ? tracksCol.data : [];
     const result = await this.#proxy.process(cachedTracks);
 
     // Save if collection changed

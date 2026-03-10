@@ -50,8 +50,9 @@ document.body.addEventListener(
         const theme = await themeFromURI({ name, uri }, { fetchHTML: false });
         const out = foundation.orchestrator.output();
 
+        const col = out.themes.collection();
         out.themes.save([
-          ...out.themes.collection(),
+          ...(col.state === "loaded" ? col.data : []),
           theme,
         ]);
         break;
@@ -73,13 +74,14 @@ listEl.innerHTML = "";
 const output = foundation.orchestrator.output();
 
 effect(() => {
-  const col = output.themes.collection().sort((a, b) => {
-    return a.name.toLocaleLowerCase().localeCompare(b.name.toLocaleLowerCase());
-  });
+  const themesCol = output.themes.collection();
+  const col = themesCol.state === "loaded"
+    ? [...themesCol.data].sort((a, b) => {
+      return a.name.toLocaleLowerCase().localeCompare(b.name.toLocaleLowerCase());
+    })
+    : [];
 
-  const state = output.themes.state();
-
-  const h = col.length && state === "loaded"
+  const h = col.length && themesCol.state === "loaded"
     ? html`
       <ul>
         ${col.map((c) =>
@@ -146,7 +148,7 @@ effect(() => {
         )}
       </ul>
     `
-    : state === "loaded"
+    : themesCol.state === "loaded"
     ? emptyThemesList
     : html`
       <div class="with-icon" style="font-size: var(--fs-sm);">
@@ -172,9 +174,9 @@ function deleteTheme({ id }) {
     const c = confirm("Are you sure you want to delete this theme?");
     if (!c) return;
 
-    output.themes.save(
-      output.themes.collection().filter((c) => !(c.id === id)),
-    );
+    const col = output.themes.collection();
+    if (col.state !== "loaded") return;
+    output.themes.save(col.data.filter((c) => !(c.id === id)));
   };
 }
 
@@ -280,7 +282,8 @@ async function editTheme(ogTheme) {
  */
 async function saveTheme(theme) {
   const col = output.themes.collection();
-  const colWithoutId = col.filter((c) => c.id !== theme.id);
+  const data = col.state === "loaded" ? col.data : [];
+  const colWithoutId = data.filter((c) => c.id !== theme.id);
   await output.themes.save([...colWithoutId, {
     ...theme,
     updatedAt: new Date().toISOString(),

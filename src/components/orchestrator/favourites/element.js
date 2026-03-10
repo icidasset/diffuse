@@ -45,8 +45,9 @@ class FavouritesOrchestrator extends BroadcastableDiffuseElement {
     const output = this.#output.value;
     if (!output) return [];
 
-    const playlistItems = output.playlistItems.collection();
-    return filterFavourites(playlistItems ?? []);
+    const col = output.playlistItems.collection();
+    if (col.state !== "loaded") return [];
+    return filterFavourites(col.data);
   });
 
   // LIFECYCLE
@@ -98,7 +99,8 @@ class FavouritesOrchestrator extends BroadcastableDiffuseElement {
       return;
     }
 
-    const playlistItems = output.playlistItems.collection();
+    const col = output.playlistItems.collection();
+    const playlistItems = col.state === "loaded" ? col.data : [];
     const result = await this.#proxy.include({
       playlistItems,
       tracks: tracksArray,
@@ -121,7 +123,8 @@ class FavouritesOrchestrator extends BroadcastableDiffuseElement {
       return;
     }
 
-    const playlistItems = output.playlistItems.collection();
+    const col = output.playlistItems.collection();
+    const playlistItems = col.state === "loaded" ? col.data : [];
     const result = await this.#proxy.expel({
       playlistItems,
       tracks: tracksArray,
@@ -145,7 +148,8 @@ class FavouritesOrchestrator extends BroadcastableDiffuseElement {
       return;
     }
 
-    const playlistItems = output.playlistItems.collection();
+    const col = output.playlistItems.collection();
+    const playlistItems = col.state === "loaded" ? col.data : [];
     const result = await this.#proxy.toggle({
       playlistItems,
       tracks: tracksArray,

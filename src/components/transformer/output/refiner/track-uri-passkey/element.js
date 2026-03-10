@@ -15,6 +15,7 @@ import {
 
 /**
  * @import { Track } from "~/definitions/types.d.ts"
+ * @import { OutputManager } from "~/components/output/types.d.ts"
  */
 
 /**
@@ -49,8 +50,10 @@ class TrackUriPasskeyTransformer extends OutputTransformer {
 
     // Tracks
     this.#tracks = () => {
-      const raw = base.tracks.collection();
-      if (!raw) return { locked: [], unlocked: [] };
+      const col = base.tracks.collection();
+      if (col.state === "loading") {
+        return { state: "loading", locked: [], unlocked: [] };
+      }
 
       const key = encryptionKey.get();
 
@@ -60,7 +63,7 @@ class TrackUriPasskeyTransformer extends OutputTransformer {
       /** @type {Track[]} */
       const locked = [];
 
-      for (const track of raw) {
+      for (const track of col.data) {
         if (!isEncryptedUri(track.uri)) {
           unlocked.push(track);
         } else if (key) {
@@ -74,16 +77,18 @@ class TrackUriPasskeyTransformer extends OutputTransformer {
         }
       }
 
-      return { locked, unlocked };
+      return { state: "loaded", locked, unlocked };
     };
 
+    /** @type {OutputManager["tracks"]} */
     this.tracks = {
       ...base.tracks,
 
       collection: computed(() => {
-        const { locked, unlocked } = this.#tracks();
-        lockedTracks.set(locked);
-        return unlocked;
+        const result = this.#tracks();
+        if (result.state === "loading") return { state: "loading" };
+        lockedTracks.set(result.locked);
+        return { state: "loaded", data: result.unlocked };
       }),
 
       save: async (/** @type {Track[]} */ newTracks) => {
@@ -179,11 +184,11 @@ class TrackUriPasskeyTransformer extends OutputTransformer {
         return;
       }
 
-      const unlocked = this.tracks.collection();
-      if (this.tracks.state() !== "loaded") return;
+      const col = this.tracks.collection();
+      if (col.state === "loading") return;
 
       saved = true;
-      this.tracks.save(unlocked);
+      this.tracks.save(col.data);
     });
   }
 
@@ -211,11 +216,11 @@ class TrackUriPasskeyTransformer extends OutputTransformer {
         return;
       }
 
-      const unlocked = this.tracks.collection();
-      if (this.tracks.state() !== "loaded") return;
+      const col = this.tracks.collection();
+      if (col.state !== "loaded") return;
 
       saved = true;
-      this.tracks.save(unlocked);
+      this.tracks.save(col.data);
     });
   }
 
@@ -234,13 +239,13 @@ class TrackUriPasskeyTransformer extends OutputTransformer {
         return;
       }
 
-      const unlocked = this.tracks.collection();
-      if (this.tracks.state() !== "loaded") return;
+      const col = this.tracks.collection();
+      if (col.state !== "loaded") return;
 
       removed = true;
 
       this.#encryptionKey.value = null;
-      this.tracks.save(unlocked);
+      this.tracks.save(col.data);
     });
   }
 }

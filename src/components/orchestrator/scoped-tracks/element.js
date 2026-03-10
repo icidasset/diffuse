@@ -36,9 +36,9 @@ class ScopedTracksOrchestrator extends BroadcastableDiffuseElement {
     const playlist = this.#scope.value?.playlist();
     if (!playlist) return undefined;
 
-    return this.#output.value?.playlistItems.collection().filter((p) =>
-      p.playlist === playlist
-    );
+    const col = this.#output.value?.playlistItems.collection();
+    if (!col || col.state !== "loaded") return undefined;
+    return col.data.filter((p) => p.playlist === playlist);
   });
 
   #tracksAvailable = signal(/** @type {Track[]} */ ([]));
@@ -132,18 +132,19 @@ class ScopedTracksOrchestrator extends BroadcastableDiffuseElement {
 
     // Watch tracks collection
     this.effect(async () => {
-      const collection = output.tracks.collection();
+      const tracksCol = output.tracks.collection();
       if ((await this.isLeader()) === false) return;
+      if (tracksCol.state !== "loaded") return;
 
       /** @type {string[]} */
       const uris = [];
-      const tracks = collection.filter((t) => {
+      const tracks = tracksCol.data.filter((t) => {
         uris.push(t.uri);
         return t.kind !== "placeholder";
       });
 
       // Consult inputs
-      const groups = collection.length ? await input.groupConsult(uris) : {};
+      const groups = tracksCol.data.length ? await input.groupConsult(uris) : {};
 
       /** @type {Set<string>} */
       const availableUris = new Set();

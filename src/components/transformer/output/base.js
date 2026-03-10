@@ -40,74 +40,62 @@ export class OutputTransformer extends BroadcastableDiffuseElement {
   // MANAGER
 
   base() {
-    /** @type {OutputManagerDeputy<T | undefined>} */
+    /** @type {OutputManagerDeputy<T>} */
     const m = {
       facets: {
         collection: computed(() => {
-          return this.output.signal()?.facets?.collection();
+          return this.output.signal()?.facets?.collection() ??
+            { state: "loading" };
         }),
         reload: () => {
           return this.output.signal()?.facets?.reload() ??
             Promise.resolve();
         },
         save: async (newFacets) => {
-          if (newFacets === undefined) return;
           await this.output.whenDefined;
           await this.output.signal()?.facets.save(newFacets);
         },
-        state: computed(() => {
-          return this.output.signal()?.facets.state() ?? "sleeping";
-        }),
       },
       playlistItems: {
         collection: computed(() => {
-          return this.output.signal()?.playlistItems?.collection();
+          return this.output.signal()?.playlistItems?.collection() ??
+            { state: "loading" };
         }),
         reload: () => {
           return this.output.signal()?.playlistItems?.reload() ??
             Promise.resolve();
         },
         save: async (newPlaylistItems) => {
-          if (newPlaylistItems === undefined) return;
           await this.output.whenDefined;
           await this.output.signal()?.playlistItems.save(newPlaylistItems);
         },
-        state: computed(() => {
-          return this.output.signal()?.playlistItems.state() ?? "sleeping";
-        }),
       },
       themes: {
         collection: computed(() => {
-          return this.output.signal()?.themes?.collection();
+          return this.output.signal()?.themes?.collection() ??
+            { state: "loading" };
         }),
         reload: () => {
           return this.output.signal()?.themes?.reload() ??
             Promise.resolve();
         },
         save: async (newThemes) => {
-          if (newThemes === undefined) return;
           await this.output.whenDefined;
           await this.output.signal()?.themes.save(newThemes);
         },
-        state: computed(() => {
-          return this.output.signal()?.themes.state() ?? "sleeping";
-        }),
       },
       tracks: {
         collection: computed(() => {
-          return this.output.signal()?.tracks?.collection();
+          return this.output.signal()?.tracks?.collection() ??
+            { state: "loading" };
         }),
         reload: () => {
           return this.output.signal()?.tracks?.reload() ?? Promise.resolve();
         },
         save: async (newTracks) => {
-          if (newTracks === undefined) return;
           await this.output.whenDefined;
           await this.output.signal()?.tracks.save(newTracks);
         },
-        state: computed(() => {
-          return this.output.signal()?.tracks.state() ?? "sleeping";
-        }),
       },
 
       // Other non-data related state

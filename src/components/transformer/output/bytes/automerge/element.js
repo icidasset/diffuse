@@ -35,22 +35,44 @@ class AutomergeBytesOutputTransformer extends OutputTransformer {
 
     /**
      * @template T
-     * @param {SignalReader<Uint8Array | undefined>} localCollection
-     * @param {SignalReader<Uint8Array | undefined>} remoteCollection
+     * @param {SignalReader<{ state: "loading" } | { state: "loaded"; data: Uint8Array | undefined }>} localCollection
+     * @param {SignalReader<{ state: "loading" } | { state: "loaded"; data: Uint8Array | undefined }>} remoteCollection
      * @param {Automerge.Doc<T>} initial
-     * @returns {SignalReader<{ doc: Automerge.Doc<T>; diverged: boolean; local: boolean; remote: boolean; }>}
+     * @returns {SignalReader<{ doc: Automerge.Doc<T>; diverged: boolean; local: boolean; remote: boolean; remoteLoaded: boolean; }>}
      */
     const state = (localCollection, remoteCollection, initial) =>
       computed(() => {
-        const l = loadDocument(localCollection);
-        const r = remote.ready() ? loadDocument(remoteCollection) : undefined;
+        const lc = localCollection();
+        const rc = remote.ready() ? remoteCollection() : undefined;
+
+        const l = loadDocument(lc?.state === "loaded" ? lc.data : undefined);
+        const r = rc?.state === "loaded" ? loadDocument(rc.data) : undefined;
+        const remoteLoaded = rc?.state === "loaded";
 
         if (!r) {
           return l
-            ? { doc: l, diverged: true, local: false, remote: true }
-            : { doc: initial, diverged: false, local: false, remote: false };
+            ? {
+              doc: l,
+              diverged: true,
+              local: false,
+              remote: true,
+              remoteLoaded,
+            }
+            : {
+              doc: initial,
+              diverged: false,
+              local: false,
+              remote: false,
+              remoteLoaded,
+            };
         } else if (!l) {
-          return { doc: r, diverged: true, local: true, remote: false };
+          return {
+            doc: r,
+            diverged: true,
+            local: true,
+            remote: false,
+            remoteLoaded,
+          };
         }
 
         const lh = Automerge.getHeads(l)[0];
@@ -64,29 +86,32 @@ class AutomergeBytesOutputTransformer extends OutputTransformer {
           diverged,
           local: Automerge.hasHeads(r, [lh]),
           remote: Automerge.hasHeads(l, [rh]),
+          remoteLoaded,
         };
       });
 
     const facets = state(
-      computed(() => local()?.facets?.collection()),
+      computed(() => local()?.facets?.collection() ?? { state: "loading" }),
       remote.facets.collection,
       INITIAL_FACETS_DOCUMENT,
     );
 
     const playlistItems = state(
-      computed(() => local()?.playlistItems?.collection()),
+      computed(() =>
+        local()?.playlistItems?.collection() ?? { state: "loading" }
+      ),
       remote.playlistItems.collection,
       INITIAL_PLAYLIST_ITEMS_DOCUMENT,
     );
 
     const themes = state(
-      computed(() => local()?.themes?.collection()),
+      computed(() => local()?.themes?.collection() ?? { state: "loading" }),
       remote.themes.collection,
       INITIAL_THEMES_DOCUMENT,
     );
 
     const tracks = state(
-      computed(() => local()?.tracks?.collection()),
+      computed(() => local()?.tracks?.collection() ?? { state: "loading" }),
       remote.tracks.collection,
       INITIAL_TRACKS_DOCUMENT,
     );
@@ -129,7 +154,7 @@ class AutomergeBytesOutputTransformer extends OutputTransformer {
       if (!l) return;
 
       this.effect(() => {
-        if (remote.facets.state() !== "loaded") return;
+        if (!facets().remoteLoaded) return;
         const s = facets();
         if (s.diverged) {
           const bytes = Automerge.save(s.doc);
@@ -139,7 +164,7 @@ class AutomergeBytesOutputTransformer extends OutputTransformer {
       });
 
       this.effect(() => {
-        if (remote.playlistItems.state() !== "loaded") return;
+        if (!playlistItems().remoteLoaded) return;
         const s = playlistItems();
         if (s.diverged) {
           const bytes = Automerge.save(s.doc);
@@ -149,7 +174,7 @@ class AutomergeBytesOutputTransformer extends OutputTransformer {
       });
 
       this.effect(() => {
-        if (remote.themes.state() !== "loaded") return;
+        if (!themes().remoteLoaded) return;
         const s = themes();
         if (s.diverged) {
           const bytes = Automerge.save(s.doc);
@@ -159,7 +184,7 @@ class AutomergeBytesOutputTransformer extends OutputTransformer {
       });
 
       this.effect(() => {
-        if (remote.tracks.state() !== "loaded") return;
+        if (!tracks().remoteLoaded) return;
         const s = tracks();
         if (s.diverged) {
           const bytes = Automerge.save(s.doc);
@@ -216,12 +241,10 @@ export default AutomergeBytesOutputTransformer;
 
 /**
  * @template T
- * @param {SignalReader<Uint8Array | undefined>} source
+ * @param {Uint8Array | undefined} value
  * @returns {Automerge.Doc<T> | undefined}
  */
-export function loadDocument(source) {
-  const value = source();
-
+export function loadDocument(value) {
   if (isUint8Array(value)) {
     return Automerge.load(value);
   } else if (value == undefined) {
@@ -233,15 +256,21 @@ export function loadDocument(source) {
 
 /**
  * @template {Record<string, any>} T
- * @param {SignalReader<{ collection: SignalReader<Uint8Array | undefined>, reload: () => Promise<void>, save: (bytes: Uint8Array) => Promise<void>, state: SignalReader<"loading" | "loaded" | "sleeping"> } | undefined>} local
- * @param {{ collection: SignalReader<Uint8Array | undefined>, reload: () => Promise<void>, save: (bytes: Uint8Array) => Promise<void>, state: SignalReader<"loading" | "loaded" | "sleeping"> }} remote
+ * @param {SignalReader<{ collection: SignalReader<{ state: "loading" } | { state: "loaded"; data: Uint8Array | undefined }>, reload: () => Promise<void>, save: (bytes: Uint8Array) => Promise<void> } | undefined>} local
+ * @param {{ collection: SignalReader<{ state: "loading" } | { state: "loaded"; data: Uint8Array | undefined }>, reload: () => Promise<void>, save: (bytes: Uint8Array) => Promise<void> }} remote
  * @param {SignalReader<Automerge.Doc<{ collection: T[] }>>} document
  * @param {{ stripUndefined?: boolean }} [opts]
- * @returns {{ collection: SignalReader<T[]>, reload: () => Promise<void>, save: (items: T[]) => Promise<void>, state: SignalReader<"loading" | "loaded" | "sleeping"> }}
+ * @returns {{ collection: SignalReader<{ state: "loading" } | { state: "loaded"; data: T[] }>, reload: () => Promise<void>, save: (items: T[]) => Promise<void> }}
  */
 export function automergeEntry(local, remote, document, opts) {
   return {
-    collection: computed(() => document().collection),
+    collection: computed(() => {
+      const col = local()?.collection();
+      if (!col || col.state !== "loaded") {
+        return { state: col?.state ?? "loading" };
+      }
+      return { state: "loaded", data: document().collection };
+    }),
     reload: remote.reload,
     save: async (/** @type {T[]} */ newItems) => {
       const doc = Automerge.change(document(), (d) => {
@@ -256,7 +285,6 @@ export function automergeEntry(local, remote, document, opts) {
       const bytes = Automerge.save(doc);
       await local()?.save(bytes);
     },
-    state: computed(() => local()?.state() ?? "sleeping"),
   };
 }
 

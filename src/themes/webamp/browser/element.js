@@ -50,8 +50,9 @@ class Browser extends DiffuseElement {
   $highlightedTrack = signal(/** @type {string | null} */ (null));
 
   $groupedPlaylists = computed(() => {
-    const items = this.$output.value?.playlistItems.collection();
-    if (!items?.length) return [];
+    const col = this.$output.value?.playlistItems.collection();
+    if (!col || col.state !== "loaded" || !col.data.length) return [];
+    const items = col.data;
 
     // Group items by playlist name
     /** @type {Map<string, { name: string, unordered: boolean }>} */
@@ -256,7 +257,9 @@ class Browser extends DiffuseElement {
    */
   render({ html }) {
     const highlighted = this.$highlightedTrack.value;
-    const isLoading = this.$output.value?.tracks?.state() !== "loaded";
+    const isLoading =
+      this.$output.value?.tracks?.collection().state !== "loaded";
+
     const tracks = this.$provider.value?.tracks() ?? [];
     const playlist = this.$scope.value?.playlist();
     const searchTerm = this.$scope.value?.searchTerm() ?? "";
@@ -265,6 +268,7 @@ class Browser extends DiffuseElement {
     const sortedColumn = Object.entries(COLUMN_SORT).find(
       ([, v]) => JSON.stringify(v) === JSON.stringify(sortBy),
     )?.[0];
+
     const ariaSort = /** @param {string} col */ (col) =>
       sortedColumn === col
         ? (sortDirection === "desc" ? "descending" : "ascending")

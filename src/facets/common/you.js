@@ -167,7 +167,6 @@ export async function renderList() {
   }
 
   const output = foundation.orchestrator.output();
-  await Output.waitUntilLoaded(output.facets);
 
   stopMonitor = effect(() => {
     _renderList(output, listEl);
@@ -179,7 +178,9 @@ export async function renderList() {
  * @param {HTMLElement} listEl
  */
 function _renderList(output, listEl) {
-  if (output.facets.state() !== "loaded") {
+  const facetsCol = output.facets.collection();
+
+  if (facetsCol.state !== "loaded") {
     const loading = html`
       <div class="with-icon">
         <i class="ph-bold ph-spinner animate-spin"></i>
@@ -190,9 +191,13 @@ function _renderList(output, listEl) {
     render(loading, listEl);
   }
 
-  const col = output.facets.collection().sort((a, b) => {
-    return a.name.toLocaleLowerCase().localeCompare(b.name.toLocaleLowerCase());
-  });
+  const col = facetsCol.state === "loaded"
+    ? [...facetsCol.data].sort((a, b) => {
+      return a.name.toLocaleLowerCase().localeCompare(
+        b.name.toLocaleLowerCase(),
+      );
+    })
+    : [];
 
   const h = col.length
     ? html`

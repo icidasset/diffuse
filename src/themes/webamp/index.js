@@ -107,10 +107,13 @@ effect(() => {
   /** @type {Track[]} */
   const tracksToAdd = [];
 
+  const tracksCol = output.tracks.collection();
+  const tracksList = tracksCol.state === "loaded" ? tracksCol.data : [];
+
   Object.entries(newIdx).forEach(([id, n]) => {
     const x = index[id] ?? 0;
     if (n > x) {
-      const track = output.tracks.collection().find((t) => t.id === id);
+      const track = tracksList.find((t) => t.id === id);
       if (track) tracksToAdd.push(track);
       index[id] = x + 1;
     }
@@ -138,8 +141,8 @@ effect(() => {
 const tracksPromise = Promise.withResolvers();
 
 effect(() => {
-  const state = output.tracks.state();
-  if (state !== "loaded") return;
+  const col = output.tracks.collection();
+  if (col.state !== "loaded") return;
 
   const fingerprintSearch = search.supplyFingerprint();
   if (fingerprintSearch === undefined) return;

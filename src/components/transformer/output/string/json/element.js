@@ -19,8 +19,12 @@ class JsonStringOutputTransformer extends OutputTransformer {
       facets: {
         ...base.facets,
         collection: computed(() => {
-          const json = base.facets.collection();
-          return typeof json === "string" ? parseArray(json) : [];
+          const col = base.facets.collection();
+          if (col.state !== "loaded") return col;
+          return {
+            state: "loaded",
+            data: typeof col.data === "string" ? parseArray(col.data) : [],
+          };
         }),
         save: async (newFacets) => {
           const json = JSON.stringify(newFacets);
@@ -30,8 +34,12 @@ class JsonStringOutputTransformer extends OutputTransformer {
       playlistItems: {
         ...base.playlistItems,
         collection: computed(() => {
-          const json = base.playlistItems.collection();
-          return typeof json === "string" ? parseArray(json) : [];
+          const col = base.playlistItems.collection();
+          if (col.state !== "loaded") return col;
+          return {
+            state: "loaded",
+            data: typeof col.data === "string" ? parseArray(col.data) : [],
+          };
         }),
         save: async (newPlaylistItems) => {
           const json = JSON.stringify(newPlaylistItems);
@@ -41,8 +49,12 @@ class JsonStringOutputTransformer extends OutputTransformer {
       themes: {
         ...base.themes,
         collection: computed(() => {
-          const json = base.themes.collection();
-          return typeof json === "string" ? parseArray(json) : [];
+          const col = base.themes.collection();
+          if (col.state !== "loaded") return col;
+          return {
+            state: "loaded",
+            data: typeof col.data === "string" ? parseArray(col.data) : [],
+          };
         }),
         save: async (newThemes) => {
           const json = JSON.stringify(newThemes);
@@ -52,8 +64,12 @@ class JsonStringOutputTransformer extends OutputTransformer {
       tracks: {
         ...base.tracks,
         collection: computed(() => {
-          const json = base.tracks.collection();
-          return typeof json === "string" ? parseArray(json) : [];
+          const col = base.tracks.collection();
+          if (col.state !== "loaded") return col;
+          return {
+            state: "loaded",
+            data: typeof col.data === "string" ? parseArray(col.data) : [],
+          };
         }),
         save: async (newTracks) => {
           const json = JSON.stringify(newTracks);

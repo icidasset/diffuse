@@ -6,9 +6,8 @@ const output = new Output();
 document.body.append(output);
 
 effect(() => {
-  console.log(output.tracks.state());
-});
-
-effect(() => {
-  console.log(output.tracks.collection());
+  const col = output.tracks.collection();
+  if (col.state === "loaded") {
+    console.log(col.data);
+  }
 });

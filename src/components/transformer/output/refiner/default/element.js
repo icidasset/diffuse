@@ -40,16 +40,20 @@ class DefaultOutputRefinerTransformer extends OutputTransformer {
       facets: {
         ...base.facets,
         collection: computed(() => {
-          return base.facets.collection() ?? [];
+          const col = base.facets.collection();
+          if (col.state !== "loaded") return col;
+          return { state: "loaded", data: col.data };
         }),
       },
       playlistItems: {
         ...base.playlistItems,
         collection: computed(() => {
-          return [
-            ...(base.playlistItems.collection() ?? []),
-            ...ephemeralPlaylistItems.get(),
-          ];
+          const col = base.playlistItems.collection();
+          if (col.state !== "loaded") return col;
+          return {
+            state: "loaded",
+            data: [...col.data, ...ephemeralPlaylistItems.get()],
+          };
         }),
         save: async (newPlaylists) => {
           /** @type {PlaylistItem[]} */
@@ -73,16 +77,20 @@ class DefaultOutputRefinerTransformer extends OutputTransformer {
       themes: {
         ...base.themes,
         collection: computed(() => {
-          return base.themes.collection() ?? [];
+          const col = base.themes.collection();
+          if (col.state !== "loaded") return col;
+          return { state: "loaded", data: col.data };
         }),
       },
       tracks: {
         ...base.tracks,
         collection: computed(() => {
-          return [
-            ...(base.tracks.collection() ?? []),
-            ...ephemeralTracks.get(),
-          ];
+          const col = base.tracks.collection();
+          if (col.state !== "loaded") return col;
+          return {
+            state: "loaded",
+            data: [...col.data, ...ephemeralTracks.get()],
+          };
         }),
         save: async (newTracks) => {
           /** @type {Track[]} */

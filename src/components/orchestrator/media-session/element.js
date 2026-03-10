@@ -71,8 +71,9 @@ class MediaSessionOrchestrator extends BroadcastableDiffuseElement {
     if (!this.queue) return;
 
     const now = this.queue.now();
-    const track = now && this.output
-      ? this.output.tracks.collection().find((t) => t.id === now.id)
+    const tracksCol = this.output?.tracks.collection();
+    const track = now && tracksCol?.state === "loaded"
+      ? tracksCol.data.find((t) => t.id === now.id)
       : undefined;
 
     if (!track) {

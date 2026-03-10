@@ -1,5 +1,5 @@
 import foundation from "~/common/facets/foundation.js";
-import { computed, effect } from "~/common/signal.js";
+import { effect } from "~/common/signal.js";
 
 foundation.features.processInputs();
 foundation.features.fillQueueAutomatically();
@@ -7,14 +7,12 @@ foundation.features.fillQueueAutomatically();
 const output = foundation.orchestrator.output();
 const queue = foundation.engine.queue();
 
-const isLoadingTracks = computed(() => {
-  return output.tracks.state() !== "loaded";
-});
-
 effect(() => {
   const now = queue.now();
-  const currentlyPlaying = now
-    ? output.tracks.collection().find((t) => t.id === now.id)
+  const tracksCol = output.tracks.collection();
+  const isLoadingTracks = tracksCol.state !== "loaded";
+  const currentlyPlaying = now && tracksCol.state === "loaded"
+    ? tracksCol.data.find((t) => t.id === now.id)
     : undefined;
   const tags = currentlyPlaying?.tags;
 
@@ -26,7 +24,7 @@ effect(() => {
     element.innerText = `${tags?.artist ?? "Unknown artist"} - ${
       tags?.title ?? "Unknown title"
     }`;
-  } else if (isLoadingTracks()) {
+  } else if (isLoadingTracks) {
     // Keep original text
   } else {
     element.innerText = "Nothing is playing yet";

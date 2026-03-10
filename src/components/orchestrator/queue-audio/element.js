@@ -74,7 +74,8 @@ class QueueAudioOrchestrator extends BroadcastableDiffuseElement {
 
     const activeItem = queue.now();
     const nextItem = queue.future()[0] ?? null;
-    const tracks = this.output?.tracks.collection();
+    const tracksCol = this.output?.tracks.collection();
+    const tracks = tracksCol?.state === "loaded" ? tracksCol.data : undefined;
 
     const activeTrack = activeItem
       ? tracks?.find((t) => t.id === activeItem.id)

@@ -24,7 +24,7 @@ import { effect } from "~/common/signal.js";
  * @typedef {object} LoaderConfig
  * @property {string} $type - The atproto $type
  * @property {string} label - Human-readable label for error messages (e.g. "Facet", "Theme")
- * @property {() => { collection: SignalReader<LoadableItem[]>; state: SignalReader<"loading" | "loaded" | "sleeping"> }} source - The collection source
+ * @property {() => { collection: SignalReader<{ state: "loading" } | { state: "loaded"; data: LoadableItem[] }> }} source - The collection source
  * @property {(item: LoadableItem) => void} render - Renders the loaded item
  */
 
@@ -79,8 +79,9 @@ export function createLoader(config) {
       loader = "uri";
     } else {
       const source = config.source();
-      const collection = source.collection();
-      if (source.state() !== "loaded") return;
+      const col = source.collection();
+      if (col.state !== "loaded") return;
+      const collection = col.data;
 
       if (id) {
         item = collection.find((c) => c.id === id);

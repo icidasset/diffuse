@@ -107,7 +107,7 @@ class InputConfig extends DiffuseElement {
       }
 
       const _trigger = sourcesOrchestrator.sources();
-      if (output.tracks.state() !== "loaded") return;
+      if (output.tracks.collection().state !== "loaded") return;
       processTracksOrchestrator?.process();
     });
   }
@@ -276,9 +276,10 @@ class InputConfig extends DiffuseElement {
     const uri = selected.getAttribute("data-uri");
     if (!uri) throw new Error("Missing `uri` attribute");
 
+    const tracksCol = this.$output.value?.tracks.collection();
     const detachedTracks = await this.$input.value?.detach({
       fileUriOrScheme: uri,
-      tracks: this.$output.value?.tracks.collection() ?? [],
+      tracks: tracksCol?.state === "loaded" ? tracksCol.data : [],
     });
 
     if (detachedTracks) this.$output.value?.tracks.save(detachedTracks);
@@ -316,9 +317,9 @@ class InputConfig extends DiffuseElement {
       uri,
     };
 
-    await this.$output.value?.tracks.save(
-      [...(this.$output.value?.tracks.collection() ?? []), track],
-    );
+    const existingTracksCol = this.$output.value?.tracks.collection();
+    const existingTracks = existingTracksCol?.state === "loaded" ? existingTracksCol.data : [];
+    await this.$output.value?.tracks.save([...existingTracks, track]);
 
     this.$tab.value = "overview";
   }
