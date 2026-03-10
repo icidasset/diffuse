@@ -2,7 +2,7 @@ import { describe, it } from "@std/testing/bdd";
 import { expect } from "@std/expect";
 
 import { testWeb } from "@tests/common/index.ts";
-import { tracks } from "@testing/sample/tracks.js";
+import { tracks } from "~/testing/sample/tracks.js";
 
 describe("components/orchestrator/favourites", () => {
   it("includes tracks", async () => {
@@ -13,7 +13,7 @@ describe("components/orchestrator/favourites", () => {
       const Favourites = await import(
         "~/components/orchestrator/favourites/element.js"
       );
-      const { tracks } = await import("@testing/sample/tracks.js");
+      const { tracks } = await import("~/testing/sample/tracks.js");
 
       const output = new Output.CLASS();
       output.id = "test-output";
@@ -44,7 +44,7 @@ describe("components/orchestrator/favourites", () => {
       const Favourites = await import(
         "~/components/orchestrator/favourites/element.js"
       );
-      const { tracks } = await import("@testing/sample/tracks.js");
+      const { tracks } = await import("~/testing/sample/tracks.js");
 
       const output = new Output.CLASS();
       output.id = "test-output";
@@ -77,7 +77,7 @@ describe("components/orchestrator/favourites", () => {
       const Favourites = await import(
         "~/components/orchestrator/favourites/element.js"
       );
-      const { tracks } = await import("@testing/sample/tracks.js");
+      const { tracks } = await import("~/testing/sample/tracks.js");
 
       const output = new Output.CLASS();
       output.id = "test-output";
@@ -107,7 +107,7 @@ describe("components/orchestrator/favourites", () => {
       const Favourites = await import(
         "~/components/orchestrator/favourites/element.js"
       );
-      const { tracks } = await import("@testing/sample/tracks.js");
+      const { tracks } = await import("~/testing/sample/tracks.js");
 
       const output = new Output.CLASS();
       output.id = "test-output";
@@ -144,7 +144,7 @@ describe("components/orchestrator/favourites", () => {
       const Favourites = await import(
         "~/components/orchestrator/favourites/element.js"
       );
-      const { tracks } = await import("@testing/sample/tracks.js");
+      const { tracks } = await import("~/testing/sample/tracks.js");
 
       const output = new Output.CLASS();
       output.id = "test-output";
@@ -176,7 +176,7 @@ describe("components/orchestrator/favourites", () => {
       const Favourites = await import(
         "~/components/orchestrator/favourites/element.js"
       );
-      const { tracks } = await import("@testing/sample/tracks.js");
+      const { tracks } = await import("~/testing/sample/tracks.js");
 
       const output = new Output.CLASS();
       output.id = "test-output";
@@ -213,7 +213,7 @@ describe("components/orchestrator/favourites", () => {
       const Favourites = await import(
         "~/components/orchestrator/favourites/element.js"
       );
-      const { tracks } = await import("@testing/sample/tracks.js");
+      const { tracks } = await import("~/testing/sample/tracks.js");
 
       const output = new Output.CLASS();
       output.id = "test-output";
@@ -252,7 +252,7 @@ describe("components/orchestrator/favourites", () => {
       const Favourites = await import(
         "~/components/orchestrator/favourites/element.js"
       );
-      const { tracks } = await import("@testing/sample/tracks.js");
+      const { tracks } = await import("~/testing/sample/tracks.js");
 
       const output = new Output.CLASS();
       output.id = "test-output";
