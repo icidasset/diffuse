@@ -37,9 +37,15 @@ const ADD_FROM_URI_ITEM = html`
 `;
 
 const EMPTY_FACETS_LIST = html`
-  <div>
-    <i class="ph-fill ph-info"></i> You have not saved any facets yet.
-  </div>
+  <p>
+    <span>
+      You haven't saved anything yet. Add a facet by browsing the <a
+        href="facets/"
+      >featured ones</a> or any of the other categories. You can click the toggle
+      to quickly add or remove from your collection. Alternatively, add one using
+      an URI:
+    </span>
+  </p>
 `;
 
 ////////////////////////////////////////////
@@ -176,7 +182,7 @@ function _renderList(output, listEl) {
   if (output.facets.state() !== "loaded") {
     const loading = html`
       <div class="with-icon">
-        <i class="ph-bold ph-spinner-gap"></i>
+        <i class="ph-bold ph-spinner animate-spin"></i>
         Loading items
       </div>
     `;
