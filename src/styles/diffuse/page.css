@@ -419,7 +419,7 @@ small {
 
 .divider {
   background-color: var(--border-color);
-  height: stretch;
+  height: 2.5em;
   width: 1px;
 }
 
@@ -535,6 +535,12 @@ nav {
   gap: var(--space-xs);
   margin-top: var(--space-md);
   padding-bottom: var(--space-md);
+
+  .button:not(:has(.with-icon)) {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
 }
 
 /**
