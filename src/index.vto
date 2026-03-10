@@ -9,6 +9,7 @@ styles:
 
 scripts:
   - index.js
+  - common/pages/version-upgrade.js
 
 # ELEMENTS
 
@@ -203,21 +204,31 @@ definitions:
       A bundle of tracks.
     url: "definitions/output/trackBundle.json"
 
+# LINKS
+
+links:
+  - title: "Bluesky"
+    url: "https://bsky.app/profile/tokono.ma"
+    desc: "Follow Diffuse updates."
+  - title: "Discord"
+    url: "https://discord.gg/KUnhstJV"
+    desc: "Chat with us in the U&A Discord #diffuse channel."
+  - title: "Github"
+    url: "https://github.com/icidasset/diffuse"
+    desc: "Source code."
+  - title: "Tangled"
+    url: "https://tangled.org/tokono.ma/diffuse"
+    desc: "Source code."
+
 ---
 
 <header>
   <div>
-    <h1 class="diffuse-logo">
+    <h1 hidden>Diffuse</h1>
+    <div class="diffuse-logo-container">
       {{ await comp.diffuse.logo() }}
-      <span id="status">
-        <a href="/latest/" title="Upgrade to latest" class="animate-spin">
-          <i class="ph-bold ph-spinner"></i>
-        </a>
-        <a href="/chronicle/" title="Browse versions of Diffuse">
-          <i class="ph-fill ph-star-four"></i>
-        </a>
-      </span>
-    </h1>
+      {{ await comp.diffuse.status() }}
+    </div>
     <p class="construct dither-mask">
       Your audio<br />your data<br />your rules
     </p>
@@ -235,6 +246,7 @@ definitions:
       <li><a href="#agency">Agency</a></li>
       <li><a href="#elements">Elements</a></li>
       <li><a href="#definitions">Definitions</a></li>
+      <li><a href="#links">Links</a></li>
     </ul>
     <p>
       <small>Built by <a href="https://tokono.ma">tokono.ma</a></small>
@@ -457,12 +469,20 @@ definitions:
     </div>
   </section>
 
-  <!-- DEFINITIONS -->
-  <section>
-    <h2 id="definitions">Definitions</h2>
+  <!-- DEFINITIONS + LINKS -->
+  <div class="columns">
+    <section>
+      <h2 id="definitions">Definitions</h2>
 
-    <p>All of the elements here are built with these data definitions in mind. That said, you can mix elements that use different definitions; you just have to put a transformer between them in order to translate between them, if needed.</p>
+      <p>All of the elements here are built with these data definitions in mind. That said, you can mix elements that use different definitions; you just have to put a transformer between them in order to translate between them, if needed.</p>
 
-    {{ await comp.list({ items: definitions }) }}
-  </section>
+      {{ await comp.list({ items: definitions }) }}
+    </section>
+
+    <section>
+      <h2 id="links">Links</h2>
+
+      {{ await comp.list({ items: links }) }}
+    </section>
+  </div>
 </main>

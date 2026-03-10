@@ -503,7 +503,7 @@ ul li::marker {
  * Logo
  */
 
-.diffuse-logo {
+.diffuse-logo-container {
   align-items: center;
   display: flex;
   font-size: var(--fs-lg);

@@ -12,6 +12,7 @@ styles:
 
 scripts:
   - facets/common/ppr.js
+  - common/pages/version-upgrade.js
 ---
 
 <style>
@@ -22,10 +23,11 @@ scripts:
 
 <header style="overflow: hidden">
   <div style="min-width: var(--container-md)">
-    <div>
-      <a class="diffuse-logo" href="./" style="display: inline-block;">
+    <div class="diffuse-logo-container">
+      <a href="./" style="display: inline-block;">
         {{ await comp.diffuse.logo() }}
       </a>
+      {{ await comp.diffuse.status() }}
     </div>
     <p class="construct dither-mask" style="margin-top: 0; max-width: none;">
       Facets
