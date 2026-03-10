@@ -5,9 +5,36 @@ import { unsafeHTML } from "lit-html/directives/unsafe-html.js";
 
 import * as Output from "~/common/output.js";
 import foundation from "~/common/facets/foundation.js";
+import { effect } from "~/common/signal.js";
+import { facetFromURI } from "~/common/facets/utils.js";
 import { nothing } from "~/common/element.js";
 
-import { deleteFacet } from "./crud.js";
+import { deleteFacet, saveFacet } from "./crud.js";
+
+/**
+ * @import {OutputElement} from "~/components/output/types.d.ts";
+ */
+
+const ADD_FROM_URI_ITEM = html`
+  <li
+    class="grid-item"
+    style="background: oklch(from var(--accent-twist-2) l c h / 0.0625);"
+  >
+    <div
+      class="grid-item__contents"
+      style="display: flex; align-items: center; justify-content: center;"
+    >
+      <button
+        class="button--transparent with-icon"
+        style="color: var(--accent-twist-2); font-size: var(--fs-sm); font-weight: 600;"
+        @click="${openAddFromURIModal}"
+      >
+        <i class="ph-fill ph-plus-circle"></i>
+        Add from URI
+      </button>
+    </div>
+  </li>
+`;
 
 const EMPTY_FACETS_LIST = html`
   <div>
@@ -15,15 +42,137 @@ const EMPTY_FACETS_LIST = html`
   </div>
 `;
 
+////////////////////////////////////////////
+// DIALOG
+////////////////////////////////////////////
+
+function openAddFromURIModal() {
+  let dialog = /** @type {HTMLDialogElement | null} */ (
+    document.getElementById("add-from-uri-dialog")
+  );
+
+  if (!dialog) {
+    dialog = /** @type {HTMLDialogElement} */ (
+      document.createElement("dialog")
+    );
+
+    dialog.id = "add-from-uri-dialog";
+    dialog.style.cssText =
+      "position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%); margin: 0;";
+
+    render(
+      html`
+        <form id="add-from-uri-form">
+          <p>
+            <strong>Load a facet from a URI.</strong> Currently supported URI schemes:
+            <code>https</code>, <code>at</code> (AT Protocol) and <code>diffuse</code>
+            (references internal facets).
+          </p>
+
+          <div style="display: flex; flex-direction: column; gap: var(--space-xs)">
+            <div>
+              <label>Name</label>
+              <input
+                id="add-uri-name"
+                type="text"
+                placeholder="My Feature Name"
+                required
+                autocomplete="off"
+              />
+            </div>
+            <div>
+              <label>URI</label>
+              <input
+                id="add-uri-uri"
+                type="url"
+                placeholder="at://..."
+                required
+                autocomplete="off"
+              />
+            </div>
+          </div>
+          <div style="display: flex; gap: var(--space-xs); margin-top: var(--space-sm)">
+            <button class="button--bg-twist-2" type="submit">Add</button>
+            <button class="button--bg-neutral" type="button" id="add-uri-cancel">
+              Cancel
+            </button>
+          </div>
+        </form>
+      `,
+      dialog,
+    );
+
+    document.body.appendChild(dialog);
+
+    dialog.querySelector("#add-uri-cancel")?.addEventListener("click", () => {
+      /** @type {HTMLDialogElement} */ (dialog).close();
+    });
+
+    dialog.querySelector("#add-from-uri-form")?.addEventListener(
+      "submit",
+      async (e) => {
+        e.preventDefault();
+        const nameEl = /** @type {HTMLInputElement} */ (
+          dialog?.querySelector("#add-uri-name")
+        );
+        const uriEl = /** @type {HTMLInputElement} */ (
+          dialog?.querySelector("#add-uri-uri")
+        );
+        const name = nameEl?.value.trim() ?? "";
+        const uri = uriEl?.value.trim() ?? "";
+        if (!name || !uri) return;
+        const facet = await facetFromURI({ name, uri }, { fetchHTML: false });
+        await saveFacet(facet);
+        /** @type {HTMLDialogElement} */ (dialog).close();
+      },
+    );
+  }
+
+  const nameEl = /** @type {HTMLInputElement} */ (
+    dialog.querySelector("#add-uri-name")
+  );
+  const uriEl = /** @type {HTMLInputElement} */ (
+    dialog.querySelector("#add-uri-uri")
+  );
+  if (nameEl) nameEl.value = "";
+  if (uriEl) uriEl.value = "";
+
+  dialog.showModal();
+}
+
+////////////////////////////////////////////
+// LIST
+////////////////////////////////////////////
+
+/** @type {() => void | undefined} */
+let stopMonitor;
+
 /** */
 export async function renderList() {
+  if (stopMonitor) stopMonitor();
+
   /** @type {HTMLElement | null} */
   const listEl = document.querySelector("#list");
   if (!listEl) throw new Error("List element not found");
-  listEl.innerHTML = "";
+
+  if (listEl.getAttribute("data-rendered") === "f") {
+    listEl.innerHTML = "";
+    listEl.removeAttribute("data-rendered");
+  }
 
   const output = foundation.orchestrator.output();
+  await Output.waitUntilLoaded(output.facets);
 
+  stopMonitor = effect(() => {
+    _renderList(output, listEl);
+  });
+}
+
+/**
+ * @param {OutputElement} output
+ * @param {HTMLElement} listEl
+ */
+function _renderList(output, listEl) {
   if (output.facets.state() !== "loaded") {
     const loading = html`
       <div class="with-icon">
@@ -34,8 +183,6 @@ export async function renderList() {
 
     render(loading, listEl);
   }
-
-  await Output.waitUntilLoaded(output.facets);
 
   const col = output.facets.collection().sort((a, b) => {
     return a.name.toLocaleLowerCase().localeCompare(b.name.toLocaleLowerCase());
@@ -106,10 +253,15 @@ export async function renderList() {
               </li>
             `,
           )
-        )}
+        )} ${ADD_FROM_URI_ITEM}
       </ul>
     `
-    : EMPTY_FACETS_LIST;
+    : html`
+      ${EMPTY_FACETS_LIST}
+      <ul class="grid" style="margin: var(--space-sm) 0 0">
+        ${ADD_FROM_URI_ITEM}
+      </ul>
+    `;
 
   render(h, listEl);
 }

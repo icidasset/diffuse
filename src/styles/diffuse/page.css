@@ -133,6 +133,18 @@ ul.columns {
 }
 
 /**
+ * Dialog
+ */
+
+dialog {
+  background: var(--bg-color);
+  border: 2px solid var(--border-color);
+  border-radius: var(--radius-md);
+  padding: var(--space-lg);
+  min-width: min(87.5dvw, var(--container-sm));
+}
+
+/**
  * Dropdown menu
  */
 
@@ -192,10 +204,18 @@ ul.columns {
  * Forms
  */
 
+label {
+  display: block;
+  font-size: var(--fs-sm);
+  font-weight: 500;
+  margin-bottom: var(--space-3xs);
+}
+
 input,
 textarea {
   background: transparent;
   border: 3px solid var(--form-color);
+  border-radius: var(--radius-sm);
   color: inherit;
   font-size: var(--fs-sm);
   padding: var(--space-2xs);
@@ -225,6 +245,7 @@ textarea {
 
   .grid-item {
     border: 1px solid var(--border-color);
+    border-radius: var(--radius-md);
     display: flex;
   }
 
@@ -368,6 +389,10 @@ a.button {
 
   &.button--bg-twist-5 {
     background-color: oklch(from var(--accent-twist-5) l c h / var(--button-bg-opacity));
+  }
+
+  &.button--bg-neutral {
+    background-color: oklch(from var(--text-color) l c h / calc(0.35 * var(--button-bg-opacity)));
   }
 
   &.button--border {
