@@ -509,7 +509,7 @@ class AudioEngine extends BroadcastableDiffuseElement {
       if (!state) return false;
 
       return state.isPlaying() || state.hasEnded() ||
-        state.currentTime() === state.duration();
+        (state.duration() > 0 && state.currentTime() === state.duration());
     });
   }
 
