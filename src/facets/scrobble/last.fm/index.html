@@ -1,0 +1,93 @@
+<link rel="stylesheet" href="vendor/@awesome.me/webawesome/styles/themes/default.css" />
+
+<main>
+  <wa-card>
+    <div slot="header" class="card-header">
+      <strong>Last.fm</strong>
+      <!--<wa-button id="settings-btn" appearance="plain" size="small" aria-label="API credentials">
+        <wa-icon name="gear"></wa-icon>
+      </wa-button>-->
+    </div>
+
+    <div id="state-connect" class="card-body">
+      <p>Connect your Last.fm account to start scrobbling.</p>
+      <wa-button id="sign-in-btn" variant="brand" appearance="filled">
+        <wa-icon slot="prefix" name="plug"></wa-icon>
+        Connect
+      </wa-button>
+    </div>
+
+    <div id="state-connected" class="card-body" hidden>
+      <p id="handle-paragraph" hidden>Connected as <strong id="handle-text"></strong>.</p>
+      <wa-button id="sign-out-btn" variant="neutral" appearance="outlined" hidden>
+        <wa-icon slot="prefix" name="plug-slash"></wa-icon>
+        Disconnect
+      </wa-button>
+    </div>
+  </wa-card>
+</main>
+
+<wa-drawer id="credentials-drawer" label="API Credentials" placement="end">
+  <div class="drawer-body">
+    <wa-input id="api-key-input" label="API Key" placeholder="Default"></wa-input>
+    <wa-input
+      id="api-secret-input"
+      label="API Secret"
+      type="password"
+      placeholder="Default"
+    ></wa-input>
+  </div>
+  <div slot="footer" class="drawer-footer">
+    <wa-button id="save-creds-btn" variant="brand" appearance="filled">Save</wa-button>
+    <wa-button id="reset-creds-btn" variant="neutral" appearance="outlined"
+      >Reset to defaults</wa-button
+    >
+  </div>
+</wa-drawer>
+
+<style>
+  body {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    min-height: 100dvh;
+    margin: 0;
+  }
+
+  wa-card {
+    width: min(360px, calc(100vw - 2rem));
+  }
+
+  .card-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+  }
+
+  .card-body {
+    display: flex;
+    flex-direction: column;
+    gap: var(--wa-space-m);
+  }
+
+  .drawer-body {
+    display: flex;
+    flex-direction: column;
+    gap: var(--wa-space-m);
+  }
+
+  .drawer-footer {
+    display: flex;
+    gap: var(--wa-space-s);
+  }
+
+  [hidden] {
+    display: none !important;
+  }
+
+  p {
+    margin: 0;
+  }
+</style>
+
+<script type="module" src="./index.inline.js"></script>

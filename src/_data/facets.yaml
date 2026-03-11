@@ -10,6 +10,11 @@
   featured: true
   desc: >
     Automatically put tracks into the queue.
+- url: "facets/scrobble/last.fm/index.html"
+  title: "Scrobble / Last.fm"
+  category: Data
+  desc: >
+    Enable Last.fm scrobbling.
 - url: "facets/tools/export-import/index.html"
   title: "Tools / Export & Import"
   category: Data

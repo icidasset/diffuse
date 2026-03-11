@@ -13,7 +13,9 @@ import ScopeEngine from "~/components/engine/scope/element.js";
 import ScopedTracksOrchestrator from "~/components/orchestrator/scoped-tracks/element.js";
 import FavouritesOrchestrator from "~/components/orchestrator/favourites/element.js";
 import MediaSessionOrchestrator from "~/components/orchestrator/media-session/element.js";
+import ScrobbleAudioOrchestrator from "~/components/orchestrator/scrobble-audio/element.js";
 import SourcesOrchestrator from "~/components/orchestrator/sources/element.js";
+import ScrobbleConfigurator from "~/components/configurator/scrobbles/element.js";
 
 /**
  * @import { DiffuseElement } from "@toko/diffuse/common/element.js";
@@ -29,6 +31,7 @@ export const config = {
   GROUP,
 
   features: {
+    audioScrobbling,
     fillQueueAutomatically,
     playAudioFromQueue,
     processInputs,
@@ -36,6 +39,9 @@ export const config = {
   },
 
   // Elements
+  configurator: {
+    scrobbles,
+  },
   engine: {
     audio,
     queue,
@@ -51,6 +57,7 @@ export const config = {
     queueAudio,
     processTracks,
     scopedTracks,
+    scrobbleAudio,
     sources,
   },
   processor: {
@@ -63,6 +70,17 @@ export const config = {
 export default config;
 
 // 📦️
+
+function audioScrobbling() {
+  return {
+    configurator: {
+      scrobbles: scrobbles(),
+    },
+    orchestrator: {
+      scrobbleAudio: scrobbleAudio(),
+    },
+  };
+}
 
 function fillQueueAutomatically() {
   return {
@@ -122,6 +140,15 @@ function searchThroughCollection() {
 }
 
 // 🥡
+
+// Configurators
+function scrobbles() {
+  const sc = new ScrobbleConfigurator();
+  sc.setAttribute("group", GROUP);
+  sc.setAttribute("id", "scrobbles");
+
+  return findExistingOrAdd(sc);
+}
 
 // Engines
 function audio() {
@@ -285,6 +312,18 @@ function scopedTracks() {
   sto.setAttribute("search-processor-selector", s.selector);
 
   return findExistingOrAdd(sto);
+}
+
+function scrobbleAudio() {
+  const a = audio();
+  const sc = scrobbles();
+
+  const sao = new ScrobbleAudioOrchestrator();
+  sao.setAttribute("group", GROUP);
+  sao.setAttribute("audio-engine-selector", a.selector);
+  sao.setAttribute("scrobbles-selector", sc.selector);
+
+  return findExistingOrAdd(sao);
 }
 
 function sources() {

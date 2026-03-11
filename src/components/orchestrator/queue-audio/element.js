@@ -101,8 +101,13 @@ class QueueAudioOrchestrator extends BroadcastableDiffuseElement {
     // TODO: Take URL expiration timestamp into account
     // TODO: Add support for seeking streams
     //       (requires a lot of code, decoding audio frames, etc.)
-    const activeAudio = activeItem && resolvedUri
-      ? [{ id: activeItem.id, isPreload: false, ...resolvedUri }]
+    const activeAudio = activeTrack && resolvedUri
+      ? [{
+        id: activeTrack.id,
+        isPreload: false,
+        track: activeTrack,
+        ...resolvedUri,
+      }]
       : [];
 
     audio.supply({
@@ -131,6 +136,7 @@ class QueueAudioOrchestrator extends BroadcastableDiffuseElement {
           id: nextItem.id,
           isPreload: true,
           url: nextUrl,
+          track: nextTrack,
         }],
       });
     }, 30_000);

@@ -288,6 +288,7 @@ class AudioEngine extends BroadcastableDiffuseElement {
         isPreload: a.isPreload,
         mimeType: a.mimeType,
         progress: a.progress,
+        track: a.track,
         url,
       };
     });

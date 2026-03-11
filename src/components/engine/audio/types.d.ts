@@ -1,4 +1,5 @@
 import type { Signal, SignalReader } from "~/common/signal.d.ts";
+import type { Track } from "~/definitions/types.d.ts";
 
 export type Actions = {
   adjustVolume: (_: { audioId?: string; volume: number }) => void;
@@ -35,6 +36,7 @@ export type AudioBase = {
    * Initial progress
    */
   progress?: number;
+  track: Track;
 };
 
 export type AudioState = {

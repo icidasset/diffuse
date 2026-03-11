@@ -28,13 +28,6 @@ base: "./"
     <meta name="msapplication-TileColor" content="#8a90a9" />
     <meta name="theme-color" content="#8a90a9" />
 
-    <!-- Preload items so they're ready before first paint (prevents flash during view transitions) -->
-    <link rel="preload" as="font" type="font/woff2" crossorigin href="fonts/InterVariable.woff2" />
-    <link rel="preload" as="font" type="font/woff2" crossorigin href="fonts/InterVariable-Italic.woff2" />
-    <link rel="preload" as="font" type="font/woff2" crossorigin href="fonts/CommitMonoVariable.woff2" />
-    <link rel="preload" as="font" type="font/woff2" crossorigin href="vendor/@phosphor-icons/bold/Phosphor-Bold.woff2" />
-    <link rel="preload" as="font" type="font/woff2" crossorigin href="vendor/@phosphor-icons/fill/Phosphor-Fill.woff2" />
-
     <!-- Styles -->
     {{ for url of styles }}
       <link rel="stylesheet" href="{{ url }}" />
