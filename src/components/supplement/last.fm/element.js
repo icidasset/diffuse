@@ -1,7 +1,7 @@
 import { md5 } from "@noble/hashes/legacy.js";
 import { bytesToHex, utf8ToBytes } from "@noble/hashes/utils.js";
 
-import { DiffuseElement } from "~/common/element.js";
+import { BroadcastableDiffuseElement } from "~/common/element.js";
 import { computed, signal } from "~/common/signal.js";
 
 /**
@@ -16,7 +16,6 @@ import { computed, signal } from "~/common/signal.js";
 const LASTFM_API_URL = "https://ws.audioscrobbler.com/2.0/";
 const LASTFM_AUTH_URL = "https://www.last.fm/api/auth/";
 const STORAGE_KEY = "diffuse/supplement/last.fm/session";
-const PENDING_TOKEN_KEY = "diffuse/supplement/last.fm/pending-token";
 
 const DEFAULT_API_KEY = "4f0fe85b67baef8bb7d008a8754a95e5";
 const DEFAULT_API_SECRET = "0cec3ca0f58e04a5082f1131aba1e0d3";
@@ -28,7 +27,7 @@ const DEFAULT_API_SECRET = "0cec3ca0f58e04a5082f1131aba1e0d3";
 /**
  * @implements {ScrobbleElement}
  */
-class LastFmSupplement extends DiffuseElement {
+class LastFmScrobbler extends BroadcastableDiffuseElement {
   static NAME = "diffuse/supplement/last.fm";
 
   get #apiKey() {
@@ -41,33 +40,60 @@ class LastFmSupplement extends DiffuseElement {
 
   // SIGNALS
 
-  #sessionKey = signal(/** @type {string | null} */ (null));
   #handle = signal(/** @type {string | null} */ (null));
+  #sessionKey = signal(/** @type {string | null} */ (null));
 
   // STATE
 
-  isAuthenticated = computed(() => this.#sessionKey.value !== null);
   handle = this.#handle.get;
+  isAuthenticated = computed(() => this.#sessionKey.value !== null);
 
   // LIFECYCLE
 
   /** @override */
   connectedCallback() {
+    // Broadcast if needed
+    if (this.hasAttribute("group")) {
+      const actions = this.broadcast(this.identifier, {
+        nowPlaying: { strategy: "leaderOnly", fn: this.nowPlaying },
+        scrobble: { strategy: "leaderOnly", fn: this.scrobble },
+
+        setHandle: { strategy: "replicate", fn: this.#handle.set },
+        setSession: { strategy: "replicate", fn: this.#sessionKey.set },
+      });
+
+      if (actions) {
+        this.nowPlaying = actions.nowPlaying;
+        this.scrobble = actions.scrobble;
+
+        this.#handle.set = actions.setHandle;
+        this.#sessionKey.set = actions.setSession;
+      }
+    }
+
     super.connectedCallback();
+
     this.#tryRestore();
   }
 
   async #tryRestore() {
     await this.whenConnected();
 
-    // Check for a pending token in sessionStorage (returning from auth redirect)
-    const pendingToken = sessionStorage.getItem(PENDING_TOKEN_KEY);
+    // last.fm appends ?token=TOKEN to the callback URL after authorization.
+    const urlParams = new URLSearchParams(location.search);
+    const urlToken = urlParams.get("token");
 
-    if (pendingToken) {
-      sessionStorage.removeItem(PENDING_TOKEN_KEY);
+    if (urlToken) {
+      urlParams.delete("token");
+      const newSearch = urlParams.toString();
+      history.replaceState(
+        null,
+        "",
+        location.pathname + (newSearch ? "?" + newSearch : "") + location.hash,
+      );
 
       try {
-        const session = await this.#getSession(pendingToken);
+        const session = await this.#getSession(urlToken);
         this.#setSession(session);
       } catch (err) {
         console.warn("last.fm: failed to exchange token for session", err);
@@ -82,8 +108,13 @@ class LastFmSupplement extends DiffuseElement {
     if (stored) {
       try {
         const { key, name: handle } = JSON.parse(stored);
-        this.#sessionKey.value = key;
-        this.#handle.value = handle;
+        if (await this.isLeader()) {
+          this.#sessionKey.set(key);
+          this.#handle.set(handle);
+        } else {
+          this.#sessionKey.value = key;
+          this.#handle.value = handle;
+        }
       } catch {
         localStorage.removeItem(STORAGE_KEY);
       }
@@ -94,35 +125,32 @@ class LastFmSupplement extends DiffuseElement {
 
   /**
    * Initiate the last.fm auth flow.
-   * Requests a token and redirects the browser to the authorization page.
+   * Redirects the browser to the authorization page; last.fm appends ?token=TOKEN to the callback.
    */
-  async signIn() {
-    const token = await this.#getToken();
-
-    sessionStorage.setItem(PENDING_TOKEN_KEY, token);
-
+  signIn() {
     const callbackUrl = location.origin + location.pathname + location.search;
     const authUrl = new URL(LASTFM_AUTH_URL);
     authUrl.searchParams.set("api_key", this.#apiKey);
-    authUrl.searchParams.set("token", token);
     authUrl.searchParams.set("cb", callbackUrl);
 
-    location.assign(authUrl.toString());
+    // Navigate the top-level frame so last.fm's X-Frame-Options doesn't block loading
+    // when this element is used inside an iframe.
+    (window.top ?? window).location.assign(authUrl.toString());
   }
 
   /**
    * Clear the stored session.
    */
   signOut() {
-    this.#sessionKey.value = null;
-    this.#handle.value = null;
+    this.#sessionKey.set(null);
+    this.#handle.set(null);
     localStorage.removeItem(STORAGE_KEY);
   }
 
   /** @param {{ key: string, name: string }} session */
   #setSession({ key, name: handle }) {
-    this.#sessionKey.value = key;
-    this.#handle.value = handle;
+    this.#sessionKey.set(key);
+    this.#handle.set(handle);
     localStorage.setItem(STORAGE_KEY, JSON.stringify({ key, name: handle }));
   }
 
@@ -218,12 +246,6 @@ class LastFmSupplement extends DiffuseElement {
     return this.#call(method, { ...params, sk });
   }
 
-  /** @returns {Promise<string>} */
-  async #getToken() {
-    const data = await this.#call("auth.getToken");
-    return data.token;
-  }
-
   /**
    * @param {string} token
    * @returns {Promise<{ key: string, name: string }>}
@@ -234,13 +256,13 @@ class LastFmSupplement extends DiffuseElement {
   }
 }
 
-export default LastFmSupplement;
+export default LastFmScrobbler;
 
 ////////////////////////////////////////////
 // REGISTER
 ////////////////////////////////////////////
 
-export const CLASS = LastFmSupplement;
-export const NAME = "ds-lastfm";
+export const CLASS = LastFmScrobbler;
+export const NAME = "ds-lastfm-scrobbler";
 
 customElements.define(NAME, CLASS);

@@ -15,7 +15,8 @@ import FavouritesOrchestrator from "~/components/orchestrator/favourites/element
 import MediaSessionOrchestrator from "~/components/orchestrator/media-session/element.js";
 import ScrobbleAudioOrchestrator from "~/components/orchestrator/scrobble-audio/element.js";
 import SourcesOrchestrator from "~/components/orchestrator/sources/element.js";
-import ScrobbleConfigurator from "~/components/configurator/scrobbles/element.js";
+import ScrobblesConfigurator from "~/components/configurator/scrobbles/element.js";
+import LastFmScrobbler from "../../components/supplement/last.fm/element.js";
 
 /**
  * @import { DiffuseElement } from "@toko/diffuse/common/element.js";
@@ -31,7 +32,6 @@ export const config = {
   GROUP,
 
   features: {
-    audioScrobbling,
     fillQueueAutomatically,
     playAudioFromQueue,
     processInputs,
@@ -71,17 +71,6 @@ export default config;
 
 // 📦️
 
-function audioScrobbling() {
-  return {
-    configurator: {
-      scrobbles: scrobbles(),
-    },
-    orchestrator: {
-      scrobbleAudio: scrobbleAudio(),
-    },
-  };
-}
-
 function fillQueueAutomatically() {
   return {
     engine: {
@@ -100,6 +89,9 @@ function fillQueueAutomatically() {
 
 function playAudioFromQueue() {
   return {
+    configurator: {
+      scrobbles: scrobbles(),
+    },
     engine: {
       audio: audio(),
       queue: queue(),
@@ -107,6 +99,7 @@ function playAudioFromQueue() {
     orchestrator: {
       mediaSession: mediaSession(),
       queueAudio: queueAudio(),
+      scrobbleAudio: scrobbleAudio(),
     },
   };
 }
@@ -143,11 +136,23 @@ function searchThroughCollection() {
 
 // Configurators
 function scrobbles() {
-  const sc = new ScrobbleConfigurator();
+  const sc = new ScrobblesConfigurator();
   sc.setAttribute("group", GROUP);
   sc.setAttribute("id", "scrobbles");
 
-  return findExistingOrAdd(sc);
+  const existing = document.body.querySelector(sc.selector);
+
+  if (existing) {
+    return /** @type {ScrobblesConfigurator} */ (existing);
+  }
+
+  const lastFm = new LastFmScrobbler();
+  lastFm.setAttribute("group", GROUP);
+
+  sc.append(lastFm);
+
+  document.body.append(sc);
+  return sc;
 }
 
 // Engines

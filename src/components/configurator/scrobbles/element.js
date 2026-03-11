@@ -12,7 +12,7 @@ import { DiffuseElement } from "~/common/element.js";
 /**
  * @implements {ScrobbleActions}
  */
-class ScrobbleConfigurator extends DiffuseElement {
+class ScrobblesConfigurator extends DiffuseElement {
   static NAME = "diffuse/configurator/scrobbles";
 
   // SCROBBLE ACTIONS
@@ -60,13 +60,13 @@ class ScrobbleConfigurator extends DiffuseElement {
   }
 }
 
-export default ScrobbleConfigurator;
+export default ScrobblesConfigurator;
 
 ////////////////////////////////////////////
 // REGISTER
 ////////////////////////////////////////////
 
-export const CLASS = ScrobbleConfigurator;
+export const CLASS = ScrobblesConfigurator;
 export const NAME = "dc-scrobbles";
 
-customElements.define(NAME, ScrobbleConfigurator);
+customElements.define(NAME, CLASS);

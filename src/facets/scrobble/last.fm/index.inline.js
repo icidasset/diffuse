@@ -6,8 +6,9 @@ import "@awesome.me/webawesome/dist/components/icon/icon.js";
 
 import "~/common/webawesome/detect-dark.js";
 
-import LastFmSupplement from "~/components/supplement/last.fm/element.js";
+import LastFmScrobbler from "~/components/supplement/last.fm/element.js";
 import { effect } from "~/common/signal.js";
+import { GROUP } from "~/common/facets/foundation.js";
 
 /**
  * @import { default as WaDrawer } from "@awesome.me/webawesome/dist/components/drawer/drawer.js"
@@ -30,17 +31,20 @@ function loadCredentials() {
 }
 
 // Find existing or create new ds-lastfm element
-let lastFm = /** @type {LastFmSupplement | null} */ (
-  document.body.querySelector("ds-lastfm")
+let lastFm = /** @type {LastFmScrobbler | null} */ (
+  document.body.querySelector("ds-lastfm-scrobbler")
 );
 
 if (!lastFm) {
-  lastFm = new LastFmSupplement();
+  lastFm = new LastFmScrobbler();
+  lastFm.setAttribute("group", GROUP)
+
   const creds = loadCredentials();
   if (creds) {
     lastFm.setAttribute("api-key", creds.apiKey);
     lastFm.setAttribute("api-secret", creds.apiSecret);
   }
+
   document.body.append(lastFm);
 }
 
