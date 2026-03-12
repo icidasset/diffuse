@@ -188,6 +188,7 @@ function _renderList(output, listEl) {
     `;
 
     render(loading, listEl);
+    return;
   }
 
   const col = facetsCol.state === "loaded"

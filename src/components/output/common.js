@@ -141,9 +141,9 @@ export function outputManager(
     facets: {
       collection: computed(() => {
         if (untracked(() => cs.value === "sleeping")) loadFacets();
-        return cs.value === "loading"
-          ? { state: "loading" }
-          : { state: "loaded", data: c.value };
+        return cs.value === "loaded"
+          ? { state: "loaded", data: c.value }
+          : { state: "loading" };
       }),
       reload: loadFacets,
       save: async (newFacets) => {
@@ -157,9 +157,9 @@ export function outputManager(
     playlistItems: {
       collection: computed(() => {
         if (untracked(() => pls.value === "sleeping")) loadPlaylistItems();
-        return pls.value === "loading"
-          ? { state: "loading" }
-          : { state: "loaded", data: pl.value };
+        return pls.value === "loaded"
+          ? { state: "loaded", data: pl.value }
+          : { state: "loading" };
       }),
       reload: loadPlaylistItems,
       save: async (newPlaylistItems) => {
@@ -173,9 +173,9 @@ export function outputManager(
     themes: {
       collection: computed(() => {
         if (untracked(() => ths.value === "sleeping")) loadThemes();
-        return ths.value === "loading"
-          ? { state: "loading" }
-          : { state: "loaded", data: th.value };
+        return ths.value === "loaded"
+          ? { state: "loaded", data: th.value }
+          : { state: "loading" };
       }),
       reload: loadThemes,
       save: async (newThemes) => {
@@ -189,9 +189,9 @@ export function outputManager(
     tracks: {
       collection: computed(() => {
         if (untracked(() => ts.value === "sleeping")) loadTracks();
-        return ts.value === "loading"
-          ? { state: "loading" }
-          : { state: "loaded", data: t.value };
+        return ts.value === "loaded"
+          ? { state: "loaded", data: t.value }
+          : { state: "loading" };
       }),
       reload: loadTracks,
       save: async (newTracks) => {
