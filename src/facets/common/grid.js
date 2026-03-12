@@ -82,7 +82,7 @@ export async function monitorToggleButtonStates() {
         ? "ph-fill ph-toggle-right"
         : "ph-fill ph-toggle-left";
       /** @type {HTMLElement} */ (icon).style.color = isActive
-        ? "var(--accent-twist-2)"
+        ? li.getAttribute("data-active-color") ?? "var(--accent-twist-2)"
         : "";
     }
   });

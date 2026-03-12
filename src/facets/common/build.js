@@ -97,10 +97,15 @@ async (event) => {
     document.querySelector("#description-input")
   );
 
+  const kindEl = /** @type {HTMLSelectElement | null} */ (
+    document.querySelector("#kind-input")
+  );
+
   const html = editor.state.doc.toString();
   const cid = await CID.create(0x55, new TextEncoder().encode(html));
   const name = nameEl?.value ?? "nameless";
   const description = descriptionEl?.value ?? "";
+  const kind = /** @type {"interactive" | "prelude"} */ (kindEl?.value ?? "interactive");
 
   /** @type {Facet} */
   const facet = $editingFacet.value
@@ -109,6 +114,7 @@ async (event) => {
       cid,
       description,
       html,
+      kind,
       name,
     }
     : {
@@ -117,6 +123,7 @@ async (event) => {
       cid,
       description,
       html,
+      kind,
       name,
     };
 
@@ -144,6 +151,10 @@ async function editFacet(ogFacet) {
     document.querySelector("#description-input")
   );
 
+  const kindEl = /** @type {HTMLSelectElement | null} */ (
+    document.querySelector("#kind-input")
+  );
+
   if (!nameEl) return;
 
   // Reset url — remove `id` param if not matching the facet
@@ -169,6 +180,10 @@ async function editFacet(ogFacet) {
 
   $editingFacet.value = facet;
   nameEl.value = facet.name;
+
+  if (kindEl) {
+    kindEl.value = facet.kind ?? "interactive";
+  }
 
   if (descriptionEl) {
     descriptionEl.value = facet.description ?? "";

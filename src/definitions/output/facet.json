@@ -22,6 +22,12 @@
             "type": "string",
             "description": "The UTF8 HTML string that makes up the facet"
           },
+          "kind": {
+            "type": "string",
+            "default": "interactive",
+            "enum": ["interactive", "prelude"],
+            "description": "A facet is by default interactive, but headless 'prelude' facets may also be created, these run before any main interactive facet is loaded."
+          },
           "name": { "type": "string" },
           "updatedAt": { "type": "string", "format": "datetime" },
           "uri": {

@@ -1,18 +1,25 @@
 import foundation from "~/common/facets/foundation.js";
 import * as CID from "~/common/cid.js";
-import { createLoader, renderError } from "~/common/loader.js";
+import * as Output from "~/common/output.js";
+import { createLoader, loadURI, renderError } from "~/common/loader.js";
 
+// Output element
 const output = await foundation.orchestrator.output();
 
+// Contaienr
+const container = /** @type {HTMLDivElement} */ (
+  document.querySelector("#container")
+);
+
+// Preludes
+const facets = await Output.data(output.facets);
+
+// Load
 createLoader({
   $type: "sh.diffuse.output.facet",
   label: "Facet",
   source: () => output.facets,
   async render(facet) {
-    const container = /** @type {HTMLDivElement} */ (
-      document.querySelector("#container")
-    );
-
     if (facet.cid) {
       const valid = await CID.verify(
         new TextEncoder().encode(facet.html ?? ""),
@@ -28,11 +35,24 @@ createLoader({
       }
     }
 
+    container.innerHTML = "";
+
     const range = document.createRange();
     range.selectNode(container);
     const documentFragment = range.createContextualFragment(facet.html ?? "");
 
-    container.innerHTML = "";
+    const preludes = facets
+      .filter((f) => f.kind === "prelude")
+      .sort((a, b) => a.name.localeCompare(b.name));
+
+    for (const prelude of preludes) {
+      const html = prelude.html ??
+        (prelude.uri ? await loadURI(prelude.uri) : "");
+      if (!html) continue;
+      const preludeFragment = range.createContextualFragment(html);
+      container.append(preludeFragment);
+    }
+
     container.append(documentFragment);
   },
 });

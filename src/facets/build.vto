@@ -33,6 +33,12 @@ examples:
         <input id="name-input" type="text" placeholder="Name" name="name" required />
       </p>
       <p>
+        <select id="kind-input" name="kind">
+          <option value="interactive" selected>Interactive</option>
+          <option value="prelude">Prelude</option>
+        </select>
+      </p>
+      <p>
         <textarea id="description-input" placeholder="Description" name="description" rows="5"></textarea>
       </p>
       <p>
@@ -61,6 +67,8 @@ examples:
         {{- echo -}}
           import foundation from "common/facets/foundation.js"
         {{ /echo }}
+{{ echo -}}await foundation.configurator.scrobbles(){{- /echo }}
+
 {{ echo -}}await foundation.engine.audio(){{- /echo }}
 {{ echo -}}await foundation.engine.queue(){{- /echo }}
 {{ echo -}}await foundation.engine.repeatShuffle(){{- /echo }}
@@ -69,10 +77,12 @@ examples:
 {{ echo -}}await foundation.orchestrator.autoQueue(){{- /echo }}
 {{ echo -}}await foundation.orchestrator.favourites(){{- /echo }}
 {{ echo -}}await foundation.orchestrator.input(){{- /echo }}
+{{ echo -}}await foundation.orchestrator.mediaSession(){{- /echo }}
 {{ echo -}}await foundation.orchestrator.output(){{- /echo }}
 {{ echo -}}await foundation.orchestrator.queueAudio(){{- /echo }}
 {{ echo -}}await foundation.orchestrator.processTracks(){{- /echo }}
 {{ echo -}}await foundation.orchestrator.scopedTracks(){{- /echo }}
+{{ echo -}}await foundation.orchestrator.scrobbleAudio(){{- /echo }}
 {{ echo -}}await foundation.orchestrator.sources(){{- /echo }}
 
 {{ echo -}}await foundation.processor.artwork(){{- /echo }}

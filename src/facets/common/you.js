@@ -3,6 +3,7 @@ import { keyed } from "lit-html/directives/keyed.js";
 import { marked } from "marked";
 import { unsafeHTML } from "lit-html/directives/unsafe-html.js";
 
+import * as FacetCategory from "~/common/facets/category.js";
 import foundation from "~/common/facets/foundation.js";
 import { effect } from "~/common/signal.js";
 import { facetFromURI } from "~/common/facets/utils.js";
@@ -202,13 +203,16 @@ function _renderList(output, listEl) {
   const h = col.length
     ? html`
       <ul class="grid" style="margin: 0">
-        ${col.map((c, index) =>
-          keyed(
+        ${col.map((c, index) => {
+          const color = FacetCategory.color(c);
+          const kind = FacetCategory.name(c);
+
+          return keyed(
             c.id,
             html`
               <li class="grid-item">
                 <div class="grid-item__contents">
-                  <div>
+                  <div class="grid-item__title">
                     <a
                       href="facets/l/?id=${c
                         .id}"
@@ -216,6 +220,8 @@ function _renderList(output, listEl) {
                     >
                       ${c.name}
                     </a>
+                    <span class="grid-item__kind" style="color: ${color};"
+                    >${kind}</span>
                   </div>
                   <div class="list-description">
                     <div>
@@ -263,8 +269,8 @@ function _renderList(output, listEl) {
                 </div>
               </li>
             `,
-          )
-        )} ${ADD_FROM_URI_ITEM}
+          );
+        })} ${ADD_FROM_URI_ITEM}
       </ul>
     `
     : html`
