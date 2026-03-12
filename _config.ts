@@ -1,12 +1,11 @@
 import type { RequestHandler } from "lume/core/server.ts";
 
-import { builtinModules } from "node:module";
 import { dotenvRun } from "@dotenv-run/esbuild";
 import lume from "lume/mod.ts";
 
+import brotli from "lume/plugins/brotli.ts";
 import esbuild from "lume/plugins/esbuild.ts";
 import postcss from "lume/plugins/postcss.ts";
-import purgecss from "lume/plugins/purgecss.ts";
 import sourceMaps from "lume/plugins/source_maps.ts";
 
 import * as path from "@std/path";
@@ -14,6 +13,8 @@ import { ensureDirSync } from "@std/fs/ensure-dir";
 import { walkSync } from "@std/fs/walk";
 import { nodeModulesPolyfillPlugin } from "esbuild-plugins-node-modules-polyfill";
 import { wasmLoader } from "esbuild-plugin-wasm";
+import autoprefixer from "autoprefixer";
+import cssnano from "cssnano";
 
 import { create as createCID } from "~/common/cid.js";
 
@@ -25,8 +26,6 @@ const site = lume({
     middlewares: [facetHtmlMiddleware],
   },
 });
-
-console.log(builtinModules);
 
 export default site;
 
@@ -119,8 +118,15 @@ site.add([".js"]);
 // CSS
 ////////////////////////////////////////////
 
-site.use(postcss());
-// site.use(purgecss());
+site.use(postcss({
+  plugins: [
+    autoprefixer(),
+    cssnano({
+      preset: "default",
+    }),
+  ],
+}));
+
 site.add([".css"]);
 
 site.remoteFile(
@@ -257,6 +263,8 @@ for (
 
 site.add([".html"]);
 site.add([".json"]);
+
+site.use(brotli());
 site.use(sourceMaps());
 
 // *.inline.js files are inlined into their companion HTML at build/serve time.
