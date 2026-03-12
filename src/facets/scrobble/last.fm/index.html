@@ -25,33 +25,44 @@
       </wa-button>
     </div>
   </wa-card>
+
+  <wa-drawer id="credentials-drawer" label="API Credentials" placement="end">
+    <div class="drawer-body">
+      <wa-input id="api-key-input" label="API Key" placeholder="Default"></wa-input>
+      <wa-input
+        id="api-secret-input"
+        label="API Secret"
+        type="password"
+        placeholder="Default"
+      ></wa-input>
+    </div>
+    <div slot="footer" class="drawer-footer">
+      <wa-button id="save-creds-btn" variant="brand" appearance="filled">Save</wa-button>
+      <wa-button id="reset-creds-btn" variant="neutral" appearance="outlined"
+        >Reset to defaults</wa-button
+      >
+    </div>
+  </wa-drawer>
 </main>
 
-<wa-drawer id="credentials-drawer" label="API Credentials" placement="end">
-  <div class="drawer-body">
-    <wa-input id="api-key-input" label="API Key" placeholder="Default"></wa-input>
-    <wa-input
-      id="api-secret-input"
-      label="API Secret"
-      type="password"
-      placeholder="Default"
-    ></wa-input>
-  </div>
-  <div slot="footer" class="drawer-footer">
-    <wa-button id="save-creds-btn" variant="brand" appearance="filled">Save</wa-button>
-    <wa-button id="reset-creds-btn" variant="neutral" appearance="outlined"
-      >Reset to defaults</wa-button
-    >
-  </div>
-</wa-drawer>
-
 <style>
-  body {
+  #container {
     display: flex;
     align-items: center;
     justify-content: center;
     min-height: 100dvh;
     margin: 0;
+  }
+
+  main {
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 750ms;
+
+    &.has-loaded {
+      opacity: 1;
+      pointer-events: auto;
+    }
   }
 
   wa-card {
@@ -91,3 +102,8 @@
 </style>
 
 <script type="module" src="./index.inline.js"></script>
+
+<script type="module">
+  await customElements.whenDefined("wa-button");
+  document.querySelector("main")?.classList.add("has-loaded");
+</script>

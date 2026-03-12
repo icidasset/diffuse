@@ -42,11 +42,13 @@ class LastFmScrobbler extends BroadcastableDiffuseElement {
 
   #handle = signal(/** @type {string | null} */ (null));
   #sessionKey = signal(/** @type {string | null} */ (null));
+  #isAuthenticating = signal(false);
 
   // STATE
 
   handle = this.#handle.get;
   isAuthenticated = computed(() => this.#sessionKey.value !== null);
+  isAuthenticating = this.#isAuthenticating.get;
 
   // LIFECYCLE
 
@@ -92,11 +94,14 @@ class LastFmScrobbler extends BroadcastableDiffuseElement {
         location.pathname + (newSearch ? "?" + newSearch : "") + location.hash,
       );
 
+      this.#isAuthenticating.set(true);
       try {
         const session = await this.#getSession(urlToken);
         this.#setSession(session);
       } catch (err) {
         console.warn("last.fm: failed to exchange token for session", err);
+      } finally {
+        this.#isAuthenticating.set(false);
       }
 
       return;

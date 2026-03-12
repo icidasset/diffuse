@@ -37,7 +37,7 @@ let lastFm = /** @type {LastFmScrobbler | null} */ (
 
 if (!lastFm) {
   lastFm = new LastFmScrobbler();
-  lastFm.setAttribute("group", GROUP)
+  lastFm.setAttribute("group", GROUP);
 
   const creds = loadCredentials();
   if (creds) {
@@ -57,12 +57,15 @@ await customElements.whenDefined(lastFm.localName);
 const stateConnect = /** @type {HTMLElement} */ (
   document.querySelector("#state-connect")
 );
+
 const stateConnected = /** @type {HTMLElement} */ (
   document.querySelector("#state-connected")
 );
+
 const handleParagraph = /** @type {HTMLElement} */ (
   document.querySelector("#handle-paragraph")
 );
+
 const handleText = /** @type {HTMLElement} */ (
   document.querySelector("#handle-text")
 );
@@ -112,6 +115,7 @@ if (existingCreds) {
 
 effect(() => {
   const isAuthenticated = lastFm.isAuthenticated();
+  const isAuthenticating = lastFm.isAuthenticating();
   const handle = lastFm.handle();
 
   stateConnect.hidden = isAuthenticated;
@@ -120,6 +124,9 @@ effect(() => {
   handleParagraph.hidden = !handle;
   signOutBtn.hidden = !isAuthenticated;
   if (handle) handleText.textContent = handle;
+
+  // @ts-ignore
+  signInBtn.disabled = isAuthenticating;
 });
 
 ////////////////////////////////////////////

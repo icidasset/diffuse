@@ -4,6 +4,7 @@ import type { Track } from "~/definitions/types.d.ts";
 
 export type ScrobbleElement = DiffuseElement & ScrobbleActions & {
   isAuthenticated: SignalReader<boolean>;
+  isAuthenticating: SignalReader<boolean>;
   handle: SignalReader<string | null>;
 };
 
