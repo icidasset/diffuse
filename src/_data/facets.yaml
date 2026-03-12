@@ -10,6 +10,13 @@
   featured: true
   desc: >
     Automatically put tracks into the queue.
+- url: "facets/scrobble/index.html"
+  title: "Scrobble"
+  kind: "prelude"
+  category: Misc
+  featured: true
+  desc: >
+    Enable scrobbling, keep track of what you're listening to.
 - url: "facets/scrobble/last.fm/index.html"
   title: "Scrobble / Last.fm"
   category: Misc

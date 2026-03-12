@@ -10,10 +10,13 @@ import * as CID from "../cid.js";
  */
 
 /**
- * @param {{ name: string; uri: string }} _args
+ * @param {{ description?: string; kind: string | undefined; name: string; uri: string }} _args
  * @param {{ fetchHTML: boolean }} options
  */
-export async function facetFromURI({ name, uri }, { fetchHTML }) {
+export async function facetFromURI(
+  { description, kind, name, uri },
+  { fetchHTML },
+) {
   const html = fetchHTML ? await loadURI(uri) : undefined;
   const cid = html
     ? await CID.create(0x55, new TextEncoder().encode(html))
@@ -26,8 +29,10 @@ export async function facetFromURI({ name, uri }, { fetchHTML }) {
     createdAt: timestamp,
     id: TID.now(),
     cid,
+    description,
     html,
     name,
+    kind: kind === "interactive" || kind === "prelude" ? kind : undefined,
     updatedAt: timestamp,
     uri,
   };

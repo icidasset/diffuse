@@ -82,7 +82,7 @@ async function fillQueueAutomatically() {
 }
 
 async function playAudioFromQueue() {
-  const [a, q, ms, qa, sca] = await Promise.all([
+  const [a, q, ms, qa] = await Promise.all([
     // engine
     audio(),
     queue(),
@@ -90,7 +90,6 @@ async function playAudioFromQueue() {
     // orchestrator
     mediaSession(),
     queueAudio(),
-    scrobbleAudio(),
   ]);
 
   return {
@@ -101,7 +100,6 @@ async function playAudioFromQueue() {
     orchestrator: {
       mediaSession: ms,
       queueAudio: qa,
-      scrobbleAudio: sca,
     },
   };
 }

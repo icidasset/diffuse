@@ -18,7 +18,9 @@
     <li
       class="grid-item"
       data-active-color="{{color}}"
+      data-description="{{item.desc.trim()}}"
       data-name="{{item.title}}"
+      data-kind="{{item.kind ?? `interface`}}"
       data-uri="{{ item.url |> facetOrThemeURI }}"
     >
       <div class="grid-item__contents">

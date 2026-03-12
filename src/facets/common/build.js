@@ -105,7 +105,8 @@ async (event) => {
   const cid = await CID.create(0x55, new TextEncoder().encode(html));
   const name = nameEl?.value ?? "nameless";
   const description = descriptionEl?.value ?? "";
-  const kind = /** @type {"interactive" | "prelude"} */ (kindEl?.value ?? "interactive");
+  const kind =
+    /** @type {"interactive" | "prelude"} */ (kindEl?.value ?? "interactive");
 
   /** @type {Facet} */
   const facet = $editingFacet.value
@@ -231,9 +232,13 @@ export function listenForExamplesEdit() {
       const name = target.closest("li")?.getAttribute("data-name");
       if (!name) return;
 
+      const kind = target.closest("li")?.getAttribute("data-kind") ?? undefined;
+
       switch (rel) {
         case "edit": {
-          const facet = await facetFromURI({ name, uri }, { fetchHTML: true });
+          const facet = await facetFromURI({ kind, name, uri }, {
+            fetchHTML: true,
+          });
           editFacet(facet);
           document.querySelector("#build")?.scrollIntoView();
           break;

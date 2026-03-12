@@ -225,8 +225,8 @@ textarea {
 select {
   appearance: none;
   background: transparent;
-  border: 2px solid var(--form-color);
-  border-radius: var(--radius-md);
+  border: 3px solid var(--form-color);
+  border-radius: var(--radius-sm);
   color: inherit;
   font-family: inherit;
   font-size: var(--fs-sm);
@@ -304,8 +304,9 @@ textarea {
     border-radius: 9999px;
     display: inline-block;
     font-size: var(--fs-2xs);
-    font-weight: 500;
-    padding: 1px var(--space-3xs);
+    font-weight: 600;
+    padding: var(--space-3xs);
+    text-box: trim-both cap alphabetic;
     vertical-align: middle;
   }
 

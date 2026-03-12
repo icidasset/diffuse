@@ -26,6 +26,9 @@ export function insertToggleButtons() {
 
       const uri = li.getAttribute("data-uri");
       const name = li.getAttribute("data-name");
+      const kind = li.getAttribute("data-kind") ?? undefined;
+      const description = li.getAttribute("data-description") ?? undefined;
+
       if (!uri || !name) return;
 
       const out = await foundation.orchestrator.output();
@@ -35,7 +38,9 @@ export function insertToggleButtons() {
       if (isActive) {
         out.facets.save(collection.filter((f) => f.uri !== uri));
       } else {
-        const facet = await facetFromURI({ name, uri }, { fetchHTML: false });
+        const facet = await facetFromURI({ description, kind, name, uri }, {
+          fetchHTML: false,
+        });
         out.facets.save([...collection, facet]);
       }
     });

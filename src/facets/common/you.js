@@ -87,6 +87,13 @@ function openAddFromURIModal() {
               />
             </div>
             <div>
+              <label>Kind</label>
+              <select id="add-uri-kind">
+                <option value="interactive">interface</option>
+                <option value="prelude">feature</option>
+              </select>
+            </div>
+            <div>
               <label>URI</label>
               <input
                 id="add-uri-uri"
@@ -118,17 +125,27 @@ function openAddFromURIModal() {
       "submit",
       async (e) => {
         e.preventDefault();
+
         const nameEl = /** @type {HTMLInputElement} */ (
           dialog?.querySelector("#add-uri-name")
         );
+
+        const kindEl = /** @type {HTMLSelectElement} */ (
+          dialog?.querySelector("#add-uri-kind")
+        );
+
         const uriEl = /** @type {HTMLInputElement} */ (
           dialog?.querySelector("#add-uri-uri")
         );
+
         const name = nameEl?.value.trim() ?? "";
+        const kind = kindEl?.value ?? "interactive";
         const uri = uriEl?.value.trim() ?? "";
         if (!name || !uri) return;
-        const facet = await facetFromURI({ name, uri }, { fetchHTML: false });
+
+        const facet = await facetFromURI({ kind, name, uri }, { fetchHTML: false });
         await saveFacet(facet);
+
         /** @type {HTMLDialogElement} */ (dialog).close();
       },
     );
@@ -137,10 +154,14 @@ function openAddFromURIModal() {
   const nameEl = /** @type {HTMLInputElement} */ (
     dialog.querySelector("#add-uri-name")
   );
+  const kindEl = /** @type {HTMLSelectElement} */ (
+    dialog.querySelector("#add-uri-kind")
+  );
   const uriEl = /** @type {HTMLInputElement} */ (
     dialog.querySelector("#add-uri-uri")
   );
   if (nameEl) nameEl.value = "";
+  if (kindEl) kindEl.value = "interactive";
   if (uriEl) uriEl.value = "";
 
   dialog.showModal();
