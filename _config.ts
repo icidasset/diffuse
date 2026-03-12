@@ -1,4 +1,6 @@
 import type { RequestHandler } from "lume/core/server.ts";
+
+import { builtinModules } from "node:module";
 import { dotenvRun } from "@dotenv-run/esbuild";
 import lume from "lume/mod.ts";
 
@@ -43,6 +45,7 @@ site.use(esbuild({
     external: ["./file-tree.json"],
     platform: "browser",
     plugins: [
+      // @ts-ignore
       dotenvRun({
         files: [".env"],
       }),
@@ -99,10 +102,12 @@ site.use(esbuild({
         },
       },
       nodeModulesPolyfillPlugin({
+        fallback: "empty",
         globals: {
           process: true,
           Buffer: true,
         },
+        modules: builtinModules.filter((a) => !["crypto", "fs"].includes(a)),
       }),
       wasmLoader(),
     ],
