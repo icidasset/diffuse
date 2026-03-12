@@ -109,12 +109,19 @@ class ProcessTracksOrchestrator extends BroadcastableDiffuseElement {
     // Process whenever tracks are initially loaded;
     // unless already done so (possibly through another instance of this element)
     if (this.hasAttribute("process-when-ready")) {
+      let unregistered = false;
+
       const unregister = this.effect(() => {
+        if (unregistered) {
+          unregister();
+          return;
+        }
+
         const col = output.tracks.collection();
         if (col.state !== "loaded") return;
 
         if (this.#performedInitialProcess.value) {
-          unregister();
+          unregistered = true;
           return;
         }
 
@@ -124,8 +131,8 @@ class ProcessTracksOrchestrator extends BroadcastableDiffuseElement {
           ?.DISABLE_AUTOMATIC_TRACKS_PROCESSING ?? false;
         if (skip) return;
 
+        unregistered = true;
         untracked(() => this.process());
-        unregister();
       });
     }
   }
