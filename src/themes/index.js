@@ -48,7 +48,7 @@ document.body.addEventListener(
       }
       case "save": {
         const theme = await themeFromURI({ name, uri }, { fetchHTML: false });
-        const out = foundation.orchestrator.output();
+        const out = await foundation.orchestrator.output();
 
         const col = out.themes.collection();
         out.themes.save([
@@ -71,7 +71,7 @@ if (!listEl) throw new Error("List element not found");
 
 listEl.innerHTML = "";
 
-const output = foundation.orchestrator.output();
+const output = await foundation.orchestrator.output();
 
 effect(() => {
   const themesCol = output.themes.collection();

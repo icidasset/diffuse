@@ -13,7 +13,7 @@ export function deleteFacet({ id }) {
     const c = confirm("Are you sure you want to delete this facet?");
     if (!c) return;
 
-    const output = foundation.orchestrator.output();
+    const output = await foundation.orchestrator.output();
     const col = await Output.data(output.facets);
 
     output.facets.save(col.filter((c) => !(c.id === id)));
@@ -24,7 +24,7 @@ export function deleteFacet({ id }) {
  * @param {Facet} facet
  */
 export async function saveFacet(facet) {
-  const output = foundation.orchestrator.output();
+  const output = await foundation.orchestrator.output();
   const col = await Output.data(output.facets);
   const colWithoutId = col.filter((c) => c.id !== facet.id);
   await output.facets.save([...colWithoutId, {

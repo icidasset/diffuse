@@ -6,10 +6,10 @@ import foundation from "~/common/facets/foundation.js";
  */
 
 // Setup
-foundation.features.processInputs();
+await foundation.features.processInputs();
 
-const favourites = foundation.orchestrator.favourites();
-const output = foundation.orchestrator.output();
+const favourites = await foundation.orchestrator.favourites();
+const output = await foundation.orchestrator.output();
 
 // Elements
 const fileInput =

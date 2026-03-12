@@ -3,7 +3,7 @@ import foundation from "~/common/facets/foundation.js";
 import { effect } from "~/common/signal.js";
 
 // Setup
-const output = foundation.orchestrator.output();
+const output = await foundation.orchestrator.output();
 
 // Elements
 const exportBtn =

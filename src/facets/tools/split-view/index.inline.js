@@ -424,7 +424,7 @@ ${scriptClose}`;
 }
 
 async function saveSimplifiedCopy() {
-  const output = foundation.orchestrator.output();
+  const output = await foundation.orchestrator.output();
   const id = crypto.randomUUID();
   const html = generateSimplifiedHTML(id);
   const now = new Date().toISOString();

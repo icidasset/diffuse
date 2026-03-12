@@ -5,12 +5,14 @@ import * as Playlist from "~/common/playlist.js";
 const ACTIVE_CLASS = "button--active";
 
 // Setup
-foundation.features.fillQueueAutomatically();
-foundation.features.processInputs();
+await foundation.features.fillQueueAutomatically();
+await foundation.features.processInputs();
 
-const repeatShuffle = foundation.engine.repeatShuffle();
-const scope = foundation.engine.scope();
-const output = foundation.orchestrator.output();
+const [repeatShuffle, scope, output] = await Promise.all([
+  foundation.engine.repeatShuffle(),
+  foundation.engine.scope(),
+  foundation.orchestrator.output(),
+]);
 
 // Elements
 const repeatBtn =

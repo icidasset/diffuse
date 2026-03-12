@@ -1,25 +1,6 @@
-import ArtworkProcessor from "~/components/processor/artwork/element.js";
-import AudioEngine from "~/components/engine/audio/element.js";
-import AutoQueueOrchestrator from "~/components/orchestrator/auto-queue/element.js";
-import Queue from "~/components/engine/queue/element.js";
-import InputOrchestrator from "~/components/orchestrator/input/element.js";
-import OutputOrchestrator from "~/components/orchestrator/output/element.js";
-import MetadataProcessor from "~/components/processor/metadata/element.js";
-import ProcessTracksOrchestrator from "~/components/orchestrator/process-tracks/element.js";
-import QueueAudioOrchestrator from "~/components/orchestrator/queue-audio/element.js";
-import RepeatShuffleEngine from "~/components/engine/repeat-shuffle/element.js";
-import SearchProcessor from "~/components/processor/search/element.js";
-import ScopeEngine from "~/components/engine/scope/element.js";
-import ScopedTracksOrchestrator from "~/components/orchestrator/scoped-tracks/element.js";
-import FavouritesOrchestrator from "~/components/orchestrator/favourites/element.js";
-import MediaSessionOrchestrator from "~/components/orchestrator/media-session/element.js";
-import ScrobbleAudioOrchestrator from "~/components/orchestrator/scrobble-audio/element.js";
-import SourcesOrchestrator from "~/components/orchestrator/sources/element.js";
-import ScrobblesConfigurator from "~/components/configurator/scrobbles/element.js";
-import LastFmScrobbler from "../../components/supplement/last.fm/element.js";
-
 /**
- * @import { DiffuseElement } from "@toko/diffuse/common/element.js";
+ * @import { DiffuseElement } from "~/common/element.js";
+ * @import { ScrobbleElement } from "~/components/supplement/types.d.ts";
  */
 
 const url = new URL(document.location.href);
@@ -71,63 +52,112 @@ export default config;
 
 // 📦️
 
-function fillQueueAutomatically() {
+async function fillQueueAutomatically() {
+  const [q, rs, sc, aq, i, o, st] = await Promise.all([
+    // engine
+    queue(),
+    repeatShuffle(),
+    scope(),
+
+    // orchestrator
+    autoQueue(),
+    input(),
+    output(),
+    scopedTracks(),
+  ]);
+
   return {
     engine: {
-      queue: queue(),
-      repeatShuffle: repeatShuffle(),
-      scope: scope(),
+      queue: q,
+      repeatShuffle: rs,
+      scope: sc,
     },
     orchestrator: {
-      autoQueue: autoQueue(),
-      input: input(),
-      output: output(),
-      scopedTracks: scopedTracks(),
+      autoQueue: aq,
+      input: i,
+      output: o,
+      scopedTracks: st,
     },
   };
 }
 
-function playAudioFromQueue() {
+async function playAudioFromQueue() {
+  const [sc, a, q, ms, qa, sca] = await Promise.all([
+    // configurator
+    scrobbles(),
+
+    // engine
+    audio(),
+    queue(),
+
+    // orchestrator
+    mediaSession(),
+    queueAudio(),
+    scrobbleAudio(),
+  ]);
+
   return {
     configurator: {
-      scrobbles: scrobbles(),
+      scrobbles: sc,
     },
     engine: {
-      audio: audio(),
-      queue: queue(),
+      audio: a,
+      queue: q,
     },
     orchestrator: {
-      mediaSession: mediaSession(),
-      queueAudio: queueAudio(),
-      scrobbleAudio: scrobbleAudio(),
+      mediaSession: ms,
+      queueAudio: qa,
+      scrobbleAudio: sca,
     },
   };
 }
 
-function processInputs() {
+async function processInputs() {
+  const [i, o, pt, m] = await Promise.all([
+    // orchestrator
+    input(),
+    output(),
+    processTracks(),
+
+    // processor
+    metadata(),
+  ]);
+
   return {
     orchestrator: {
-      input: input(),
-      output: output(),
-      processTracks: processTracks(),
+      input: i,
+      output: o,
+      processTracks: pt,
     },
     processor: {
-      metadata: metadata(),
+      metadata: m,
     },
   };
 }
 
-function searchThroughCollection() {
+async function searchThroughCollection() {
+  const [sc, o, st, s] = await Promise.all([
+    // engine
+    scope(),
+
+    // orchestrator
+    output(),
+    scopedTracks(),
+
+    // processor
+    search(),
+  ]);
+
   return {
     engine: {
-      scope: scope(),
+      scope: sc,
     },
     orchestrator: {
-      output: output(),
-      scopedTracks: scopedTracks(),
+      output: o,
+      scopedTracks: st,
     },
     processor: {
-      search: search(),
+      search: s,
     },
   };
 }
@@ -135,7 +165,17 @@ function searchThroughCollection() {
 // 🥡
 
 // Configurators
-function scrobbles() {
+
+/**
+ * @returns {Promise<ScrobbleElement>}
+ */
+async function scrobbles() {
+  const [{ default: ScrobblesConfigurator }, { default: LastFmScrobbler }] =
+    await Promise.all([
+      import("~/components/configurator/scrobbles/element.js"),
+      import("~/components/supplement/last.fm/element.js"),
+    ]);
+
   const sc = new ScrobblesConfigurator();
   sc.setAttribute("group", GROUP);
   sc.setAttribute("id", "scrobbles");
@@ -143,7 +183,7 @@ function scrobbles() {
   const existing = document.body.querySelector(sc.selector);
 
   if (existing) {
-    return /** @type {ScrobblesConfigurator} */ (existing);
+    return /** @type {ScrobbleElement} */ (existing);
   }
 
   const lastFm = new LastFmScrobbler();
@@ -152,32 +192,48 @@ function scrobbles() {
   sc.append(lastFm);
 
   document.body.append(sc);
-  return sc;
+  return /** @type {ScrobbleElement} */ (/** @type {unknown} */ (sc));
 }
 
 // Engines
-function audio() {
+async function audio() {
+  const { default: AudioEngine } = await import(
+    "~/components/engine/audio/element.js"
+  );
+
   const a = new AudioEngine();
   a.setAttribute("group", GROUP);
 
   return findExistingOrAdd(a);
 }
 
-function queue() {
+async function queue() {
+  const { default: Queue } = await import(
+    "~/components/engine/queue/element.js"
+  );
+
   const q = new Queue();
   q.setAttribute("group", GROUP);
 
   return findExistingOrAdd(q);
 }
 
-function repeatShuffle() {
+async function repeatShuffle() {
+  const { default: RepeatShuffleEngine } = await import(
+    "~/components/engine/repeat-shuffle/element.js"
+  );
+
   const r = new RepeatShuffleEngine();
   r.setAttribute("group", GROUP);
 
   return findExistingOrAdd(r);
 }
 
-function scope() {
+async function scope() {
+  const { default: ScopeEngine } = await import(
+    "~/components/engine/scope/element.js"
+  );
+
   const s = new ScopeEngine();
   s.setAttribute("group", GROUP);
 
@@ -185,21 +241,33 @@ function scope() {
 }
 
 // Processors
-function artwork() {
+async function artwork() {
+  const { default: ArtworkProcessor } = await import(
+    "~/components/processor/artwork/element.js"
+  );
+
   const a = new ArtworkProcessor();
   a.setAttribute("group", GROUP);
 
   return findExistingOrAdd(a);
 }
 
-function metadata() {
+async function metadata() {
+  const { default: MetadataProcessor } = await import(
+    "~/components/processor/metadata/element.js"
+  );
+
   const m = new MetadataProcessor();
   m.setAttribute("group", GROUP);
 
   return findExistingOrAdd(m);
 }
 
-function search() {
+async function search() {
+  const { default: SearchProcessor } = await import(
+    "~/components/processor/search/element.js"
+  );
+
   const s = new SearchProcessor();
   s.setAttribute("group", GROUP);
 
@@ -207,10 +275,13 @@ function search() {
 }
 
 // Orchestrators
-function autoQueue() {
-  const q = queue();
-  const r = repeatShuffle();
-  const t = scopedTracks();
+async function autoQueue() {
+  const [{ default: AutoQueueOrchestrator }, q, r, t] = await Promise.all([
+    import("~/components/orchestrator/auto-queue/element.js"),
+    queue(),
+    repeatShuffle(),
+    scopedTracks(),
+  ]);
 
   const aqo = new AutoQueueOrchestrator();
   aqo.setAttribute("group", GROUP);
@@ -221,8 +292,11 @@ function autoQueue() {
   return findExistingOrAdd(aqo);
 }
 
-function favourites() {
-  const o = output();
+async function favourites() {
+  const [{ default: FavouritesOrchestrator }, o] = await Promise.all([
+    import("~/components/orchestrator/favourites/element.js"),
+    output(),
+  ]);
 
   const fo = new FavouritesOrchestrator();
   fo.setAttribute("group", GROUP);
@@ -231,7 +305,11 @@ function favourites() {
   return findExistingOrAdd(fo);
 }
 
-function input() {
+async function input() {
+  const { default: InputOrchestrator } = await import(
+    "~/components/orchestrator/input/element.js"
+  );
+
   const i = new InputOrchestrator();
   i.setAttribute("group", GROUP);
   i.setAttribute("id", "input");
@@ -239,11 +317,15 @@ function input() {
   return findExistingOrAdd(i);
 }
 
-function mediaSession() {
-  const a = audio();
-  const aw = artwork();
-  const o = output();
-  const q = queue();
+async function mediaSession() {
+  const [{ default: MediaSessionOrchestrator }, a, aw, o, q] = await Promise
+    .all([
+      import("~/components/orchestrator/media-session/element.js"),
+      audio(),
+      artwork(),
+      output(),
+      queue(),
+    ]);
 
   const mso = new MediaSessionOrchestrator();
   mso.setAttribute("group", GROUP);
@@ -255,7 +337,11 @@ function mediaSession() {
   return findExistingOrAdd(mso);
 }
 
-function output() {
+async function output() {
+  const { default: OutputOrchestrator } = await import(
+    "~/components/orchestrator/output/element.js"
+  );
+
   const o = new OutputOrchestrator();
   o.setAttribute("group", GROUP);
   o.setAttribute("id", "output");
@@ -267,10 +353,13 @@ function output() {
  * @param {Object} opts - Options
  * @param {boolean} [opts.disableWhenReady] - Whether to disable processing when ready.
  */
-function processTracks(opts = { disableWhenReady: false }) {
-  const i = input();
-  const o = output();
-  const m = metadata();
+async function processTracks(opts = { disableWhenReady: false }) {
+  const [{ default: ProcessTracksOrchestrator }, i, o, m] = await Promise.all([
+    import("~/components/orchestrator/process-tracks/element.js"),
+    input(),
+    output(),
+    metadata(),
+  ]);
 
   const opt = new ProcessTracksOrchestrator();
   opt.setAttribute("group", GROUP);
@@ -285,12 +374,16 @@ function processTracks(opts = { disableWhenReady: false }) {
   return findExistingOrAdd(opt);
 }
 
-function queueAudio() {
-  const a = audio();
-  const i = input();
-  const o = output();
-  const q = queue();
-  const r = repeatShuffle();
+async function queueAudio() {
+  const [{ default: QueueAudioOrchestrator }, a, i, o, q, r] = await Promise
+    .all([
+      import("~/components/orchestrator/queue-audio/element.js"),
+      audio(),
+      input(),
+      output(),
+      queue(),
+      repeatShuffle(),
+    ]);
 
   const oqa = new QueueAudioOrchestrator();
   oqa.setAttribute("group", GROUP);
@@ -303,11 +396,16 @@ function queueAudio() {
   return findExistingOrAdd(oqa);
 }
 
-function scopedTracks() {
-  const i = input();
-  const o = output();
-  const e = scope();
-  const s = search();
+async function scopedTracks() {
+  const [{ default: ScopedTracksOrchestrator }, i, o, e, s] = await Promise.all(
+    [
+      import("~/components/orchestrator/scoped-tracks/element.js"),
+      input(),
+      output(),
+      scope(),
+      search(),
+    ],
+  );
 
   const sto = new ScopedTracksOrchestrator();
   sto.setAttribute("group", GROUP);
@@ -319,9 +417,12 @@ function scopedTracks() {
   return findExistingOrAdd(sto);
 }
 
-function scrobbleAudio() {
-  const a = audio();
-  const sc = scrobbles();
+async function scrobbleAudio() {
+  const [{ default: ScrobbleAudioOrchestrator }, a, sc] = await Promise.all([
+    import("~/components/orchestrator/scrobble-audio/element.js"),
+    audio(),
+    scrobbles(),
+  ]);
 
   const sao = new ScrobbleAudioOrchestrator();
   sao.setAttribute("group", GROUP);
@@ -331,9 +432,13 @@ function scrobbleAudio() {
   return findExistingOrAdd(sao);
 }
 
-function sources() {
-  const i = input();
-  const o = output();
+async function sources() {
+  const [{ default: SourcesOrchestrator }, i, o] = await Promise.all([
+    import("~/components/orchestrator/sources/element.js"),
+    input(),
+    output(),
+  ]);
+
   const so = new SourcesOrchestrator();
   so.setAttribute("group", GROUP);
   so.setAttribute("input-selector", i.selector);

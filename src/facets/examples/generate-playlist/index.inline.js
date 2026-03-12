@@ -1,7 +1,7 @@
 import foundation from "~/common/facets/foundation.js";
 
-const queue = foundation.engine.queue();
-const output = foundation.orchestrator.output();
+const output = await foundation.orchestrator.output();
+const queue = await foundation.engine.queue();
 
 /**
  * Playlist generator

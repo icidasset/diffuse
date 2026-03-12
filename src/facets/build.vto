@@ -61,23 +61,23 @@ examples:
         {{- echo -}}
           import foundation from "common/facets/foundation.js"
         {{ /echo }}
-{{ echo -}}foundation.engine.audio(){{- /echo }}
-{{ echo -}}foundation.engine.queue(){{- /echo }}
-{{ echo -}}foundation.engine.repeatShuffle(){{- /echo }}
-{{ echo -}}foundation.engine.scope(){{- /echo }}
+{{ echo -}}await foundation.engine.audio(){{- /echo }}
+{{ echo -}}await foundation.engine.queue(){{- /echo }}
+{{ echo -}}await foundation.engine.repeatShuffle(){{- /echo }}
+{{ echo -}}await foundation.engine.scope(){{- /echo }}
 
-{{ echo -}}foundation.orchestrator.autoQueue(){{- /echo }}
-{{ echo -}}foundation.orchestrator.favourites(){{- /echo }}
-{{ echo -}}foundation.orchestrator.input(){{- /echo }}
-{{ echo -}}foundation.orchestrator.output(){{- /echo }}
-{{ echo -}}foundation.orchestrator.queueAudio(){{- /echo }}
-{{ echo -}}foundation.orchestrator.processTracks(){{- /echo }}
-{{ echo -}}foundation.orchestrator.scopedTracks(){{- /echo }}
-{{ echo -}}foundation.orchestrator.sources(){{- /echo }}
+{{ echo -}}await foundation.orchestrator.autoQueue(){{- /echo }}
+{{ echo -}}await foundation.orchestrator.favourites(){{- /echo }}
+{{ echo -}}await foundation.orchestrator.input(){{- /echo }}
+{{ echo -}}await foundation.orchestrator.output(){{- /echo }}
+{{ echo -}}await foundation.orchestrator.queueAudio(){{- /echo }}
+{{ echo -}}await foundation.orchestrator.processTracks(){{- /echo }}
+{{ echo -}}await foundation.orchestrator.scopedTracks(){{- /echo }}
+{{ echo -}}await foundation.orchestrator.sources(){{- /echo }}
 
-{{ echo -}}foundation.processor.artwork(){{- /echo }}
-{{ echo -}}foundation.processor.metadata(){{- /echo }}
-{{ echo -}}foundation.processor.search(){{- /echo -}}
+{{ echo -}}await foundation.processor.artwork(){{- /echo }}
+{{ echo -}}await foundation.processor.metadata(){{- /echo }}
+{{ echo -}}await foundation.processor.search(){{- /echo -}}
       </code>
     </div>
 
@@ -88,25 +88,25 @@ examples:
       <li>
         <span>Fill the queue automatically <small>(infinite play)</small></span>
         <div class="list-description">
-          <code>foundation.features.fillQueueAutomatically()</code>
+          <code>await foundation.features.fillQueueAutomatically()</code>
         </div>
       </li>
       <li>
         <span>Play audio from the queue</span>
         <div class="list-description">
-          <code>foundation.features.playAudioFromQueue()</code>
+          <code>await foundation.features.playAudioFromQueue()</code>
         </div>
       </li>
       <li>
         <span>Process inputs <small>(into tracks, etc)</small></span>
         <div class="list-description">
-          <code>foundation.features.processInputs()</code>
+          <code>await foundation.features.processInputs()</code>
         </div>
       </li>
       <li>
         <span>Search through your collection</span>
         <div class="list-description" style="margin-bottom: 0;">
-          <code>foundation.features.searchThroughCollection()</code>
+          <code>await foundation.features.searchThroughCollection()</code>
         </div>
       </li>
     </ul>

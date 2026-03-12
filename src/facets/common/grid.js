@@ -28,7 +28,7 @@ export function insertToggleButtons() {
       const name = li.getAttribute("data-name");
       if (!uri || !name) return;
 
-      const out = foundation.orchestrator.output();
+      const out = await foundation.orchestrator.output();
       const collection = await Output.data(out.facets);
       const isActive = collection.some((f) => f.uri === uri);
 
@@ -53,7 +53,7 @@ let stopMonitor;
 
 export async function monitorToggleButtonStates() {
   if (stopMonitor) stopMonitor();
-  const out = foundation.orchestrator.output();
+  const out = await foundation.orchestrator.output();
 
   stopMonitor = effect(() => {
     const gridItems = /** @type {NodeListOf<HTMLLIElement>} */ (

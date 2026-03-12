@@ -1,13 +1,15 @@
 import foundation from "~/common/facets/foundation.js";
 import BrowserElement from "~/themes/webamp/browser/element.js";
 
-foundation.features.processInputs();
-foundation.features.searchThroughCollection();
+await foundation.features.processInputs();
+await foundation.features.searchThroughCollection();
 
-const out = foundation.orchestrator.output();
-const que = foundation.engine.queue();
-const scp = foundation.engine.scope();
-const trc = foundation.orchestrator.scopedTracks();
+const [out, que, scp, trc] = await Promise.all([
+  foundation.orchestrator.output(),
+  foundation.engine.queue(),
+  foundation.engine.scope(),
+  foundation.orchestrator.scopedTracks(),
+]);
 
 const el = new BrowserElement();
 el.setAttribute("output-selector", out.selector);

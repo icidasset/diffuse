@@ -2,13 +2,12 @@ import foundation from "~/common/facets/foundation.js";
 import * as CID from "~/common/cid.js";
 import { createLoader, renderError } from "~/common/loader.js";
 
+const output = await foundation.orchestrator.output();
+
 createLoader({
   $type: "sh.diffuse.output.facet",
   label: "Facet",
-  source: () => {
-    const output = foundation.orchestrator.output();
-    return output.facets;
-  },
+  source: () => output.facets,
   async render(facet) {
     const container = /** @type {HTMLDivElement} */ (
       document.querySelector("#container")

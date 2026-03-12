@@ -1,10 +1,12 @@
 import foundation from "~/common/facets/foundation.js";
 import InputConfigElement from "~/themes/webamp/configurators/input/element.js";
 
-const inp = foundation.orchestrator.input();
-const out = foundation.orchestrator.output();
-const pro = foundation.orchestrator.processTracks({ disableWhenReady: true });
-const sou = foundation.orchestrator.sources();
+const [inp, out, pro, sou] = await Promise.all([
+  foundation.orchestrator.input(),
+  foundation.orchestrator.output(),
+  foundation.orchestrator.processTracks({ disableWhenReady: true }),
+  foundation.orchestrator.sources(),
+]);
 
 const el = new InputConfigElement();
 el.setAttribute("input-selector", inp.selector);

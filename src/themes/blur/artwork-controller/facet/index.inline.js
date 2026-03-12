@@ -2,15 +2,17 @@ import foundation from "~/common/facets/foundation.js";
 import ArtworkController from "~/themes/blur/artwork-controller/element.js";
 
 // Setup the prerequisite elements
-foundation.features.playAudioFromQueue();
-foundation.features.processInputs();
+await foundation.features.playAudioFromQueue();
+await foundation.features.processInputs();
 
-const aud = foundation.engine.audio();
-const art = foundation.processor.artwork();
-const fav = foundation.orchestrator.favourites();
-const inp = foundation.orchestrator.input();
-const out = foundation.orchestrator.output();
-const que = foundation.engine.queue();
+const [aud, art, fav, inp, out, que] = await Promise.all([
+  foundation.engine.audio(),
+  foundation.processor.artwork(),
+  foundation.orchestrator.favourites(),
+  foundation.orchestrator.input(),
+  foundation.orchestrator.output(),
+  foundation.engine.queue(),
+]);
 
 // Controller
 const dac = new ArtworkController();

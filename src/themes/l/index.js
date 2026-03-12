@@ -2,13 +2,12 @@ import foundation from "~/common/facets/foundation.js";
 import * as CID from "~/common/cid.js";
 import { createLoader, renderError } from "~/common/loader.js";
 
+const output = await foundation.orchestrator.output();
+
 createLoader({
   $type: "sh.diffuse.output.theme",
   label: "Theme",
-  source: () => {
-    const output = foundation.orchestrator.output();
-    return output.themes;
-  },
+  source: () => output.themes,
   async render(theme) {
     if (theme.cid) {
       const valid = await CID.verify(

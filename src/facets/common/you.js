@@ -3,7 +3,6 @@ import { keyed } from "lit-html/directives/keyed.js";
 import { marked } from "marked";
 import { unsafeHTML } from "lit-html/directives/unsafe-html.js";
 
-import * as Output from "~/common/output.js";
 import foundation from "~/common/facets/foundation.js";
 import { effect } from "~/common/signal.js";
 import { facetFromURI } from "~/common/facets/utils.js";
@@ -166,7 +165,7 @@ export async function renderList() {
     listEl.removeAttribute("data-rendered");
   }
 
-  const output = foundation.orchestrator.output();
+  const output = await foundation.orchestrator.output();
 
   stopMonitor = effect(() => {
     _renderList(output, listEl);
