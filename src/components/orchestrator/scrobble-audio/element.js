@@ -34,10 +34,10 @@ class ScrobbleAudioOrchestrator extends BroadcastableDiffuseElement {
     this.audio = query(this, "audio-engine-selector");
 
     /** @type {ScrobbleElement} */
-    this.scrobbles = query(this, "scrobbles-selector");
+    this.scrobble = query(this, "scrobble-selector");
 
     await customElements.whenDefined(this.audio.localName);
-    await customElements.whenDefined(this.scrobbles.localName);
+    await customElements.whenDefined(this.scrobble.localName);
 
     this.effect(() => this.#monitorAudio());
   }
@@ -154,7 +154,7 @@ class ScrobbleAudioOrchestrator extends BroadcastableDiffuseElement {
     if (this.#trackId !== id || !this.#activeTrack) return;
 
     try {
-      await this.scrobbles?.nowPlaying(this.#activeTrack);
+      await this.scrobble?.nowPlaying(this.#activeTrack);
     } catch (err) {
       console.warn("scrobble: nowPlaying failed", err);
     }
@@ -184,7 +184,7 @@ class ScrobbleAudioOrchestrator extends BroadcastableDiffuseElement {
     const startedAt = this.#startedAt;
 
     try {
-      await this.scrobbles?.scrobble(track, startedAt);
+      await this.scrobble?.scrobble(track, startedAt);
     } catch (err) {
       console.warn("scrobble: scrobble failed", err);
       this.#scrobbled = false;

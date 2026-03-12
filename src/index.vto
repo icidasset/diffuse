@@ -23,7 +23,6 @@ configurators:
   - url: "components/configurator/scrobbles/element.js"
     title: "Scrobbles"
     desc: "Configure multiple scrobblers (music trackers)."
-    todo: true
 
 engines:
   - url: "components/engine/audio/element.js"
@@ -100,6 +99,9 @@ orchestrators:
   - url: "components/orchestrator/queue-audio/element.js"
     title: "Queue ⭤ Audio"
     desc: "Connects the given queue engine to the given audio engine."
+  - url: "components/orchestrator/scrobble-audio/element.js"
+    title: "Scrobble ⭤ Audio"
+    desc: "Connects the audio engine with a scrobbler element. Calls `nowPlaying` when a track starts playing and `scrobble` once the user has listened long enough."
   - url: "components/orchestrator/sources/element.js"
     title: "Sources"
     desc: "Monitor tracks from the given output to form a list of sources based on the input's sources return value."
@@ -132,8 +134,8 @@ processors:
     desc: "Provides a way to search through a collection of tracks, powered by orama.js"
 
 supplements:
-  - title: "Last.fm Scrobbler"
-    todo: true
+  - url: "components/supplement/last.fm/element.js"
+    title: "Last.fm Scrobbler"
   - title: "ListenBrainz Scrobbler"
     todo: true
   - title: "Rocksky Scrobbler"

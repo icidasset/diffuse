@@ -427,7 +427,7 @@ async function scrobbleAudio() {
   const sao = new ScrobbleAudioOrchestrator();
   sao.setAttribute("group", GROUP);
   sao.setAttribute("audio-engine-selector", a.selector);
-  sao.setAttribute("scrobbles-selector", sc.selector);
+  sao.setAttribute("scrobble-selector", sc.selector);
 
   return findExistingOrAdd(sao);
 }
