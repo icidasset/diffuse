@@ -288,7 +288,7 @@ class ArtworkController extends DiffuseElement {
   }
 
   /**
-   * @param {Temporal.Duration} duration
+   * @param {import("temporal-polyfill").Temporal.Duration} duration
    */
   #formatTime(duration) {
     return `${duration.hours > 0 ? duration.hours.toFixed(0) + ":" : ""}${
