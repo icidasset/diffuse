@@ -26,6 +26,8 @@ const site = lume({
   },
 });
 
+console.log(builtinModules);
+
 export default site;
 
 ////////////////////////////////////////////
@@ -40,8 +42,7 @@ site.use(esbuild({
     },
     bundle: true,
     format: "esm",
-    minify: false,
-    // outExtension: { ".js": ".min.js" },
+    minify: true,
     external: ["./file-tree.json"],
     platform: "browser",
     plugins: [
@@ -103,11 +104,7 @@ site.use(esbuild({
       },
       nodeModulesPolyfillPlugin({
         fallback: "empty",
-        globals: {
-          process: true,
-          Buffer: true,
-        },
-        modules: builtinModules.filter((a) => !["crypto", "fs"].includes(a)),
+        modules: [],
       }),
       wasmLoader(),
     ],
