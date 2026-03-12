@@ -1,5 +1,5 @@
 import { FastAverageColor } from "fast-average-color";
-import { Temporal } from "@js-temporal/polyfill";
+import { Temporal } from "~/common/temporal.js";
 import { cache } from "lit-html/directives/cache.js";
 import { debounce } from "throttle-debounce";
 import { xxh32r } from "xxh32/dist/raw.js";

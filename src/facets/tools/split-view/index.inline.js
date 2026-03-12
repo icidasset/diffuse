@@ -1,4 +1,4 @@
-import { Temporal } from "@js-temporal/polyfill";
+import { Temporal } from "~/common/temporal.js";
 
 import "@awesome.me/webawesome/dist/components/split-panel/split-panel.js";
 import "@awesome.me/webawesome/dist/components/dialog/dialog.js";

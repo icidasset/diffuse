@@ -1,4 +1,4 @@
-import { Temporal } from "@js-temporal/polyfill";
+import { Temporal } from "~/common/temporal.js";
 import { xxh32r } from "xxh32/dist/raw.js";
 
 /**
