@@ -3,6 +3,7 @@ import { DEFAULT_GROUP, DiffuseElement } from "~/common/element.js";
 
 import "~/components/configurator/output/element.js";
 import "~/components/transformer/output/refiner/default/element.js";
+import "~/components/transformer/output/refiner/initial-contents/element.js";
 
 /**
  * @import {RenderArg} from "~/common/element.d.ts"
@@ -208,9 +209,14 @@ class OutputOrchestrator extends DiffuseElement {
       </dc-output>
 
       <!-- ENTRY ⬆️ -->
+      <dtor-initial-contents
+        id="do-output__dtor-initial-contents"
+        output-selector="#do-output__dc-output"
+      ></dtor-initial-contents>
+
       <dtor-default
         id="do-output__output"
-        output-selector="#do-output__dc-output"
+        output-selector="#do-output__dtor-initial-contents"
       ></dtor-default>
     `;
   }
