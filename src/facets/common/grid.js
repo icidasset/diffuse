@@ -33,7 +33,9 @@ export function insertToggleButtons() {
 
       const out = await foundation.orchestrator.output();
       const collection = await Output.data(out.facets);
-      const isActive = collection.some((f) => f.uri === uri);
+      const isActive = collection.some((f) =>
+        f.uri === uri && f.html === undefined
+      );
 
       if (isActive) {
         out.facets.save(collection.filter((f) => f.uri !== uri));
@@ -67,7 +69,7 @@ export async function monitorToggleButtonStates() {
 
     const col = out.facets.collection();
     const collection = col.state === "loaded" ? col.data : [];
-    const activeURIs = new Set(collection.map((f) => f.uri));
+    const colMap = new Map(collection.map((f) => [f.uri, f]));
 
     for (const li of gridItems) {
       const uri = li.getAttribute("data-uri");
@@ -79,7 +81,9 @@ export async function monitorToggleButtonStates() {
 
       button.style.opacity = "revert-layer";
 
-      const isActive = activeURIs.has(uri);
+      const item = colMap.get(uri);
+      const isActive = item && item.html === undefined;
+
       button.title = isActive
         ? "Remove from your collection"
         : "Add to your collection";
