@@ -63,7 +63,7 @@ function navigateHandler(event) {
   const url = new URL(event.destination.url);
   if (url.origin !== location.origin) return;
 
-  // Only intercept /facets/[section]/ paths (not deeper sub-paths like /facets/tools/*)
+  // Only intercept /facets/[section]/ paths (not deeper sub-paths like /facets/misc/*)
   const relative = relativePathname(url.pathname);
   const parts = relative.split("/").filter(Boolean);
   if (parts[0] !== "facets") return;

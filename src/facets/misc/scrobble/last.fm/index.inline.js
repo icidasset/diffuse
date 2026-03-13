@@ -6,9 +6,8 @@ import "@awesome.me/webawesome/dist/components/icon/icon.js";
 
 import "~/common/webawesome/detect-dark.js";
 
-import LastFmScrobbler from "~/components/supplement/last.fm/element.js";
+import foundation from "~/common/facets/foundation.js";
 import { effect } from "~/common/signal.js";
-import { GROUP } from "~/common/facets/foundation.js";
 
 /**
  * @import { default as WaDrawer } from "@awesome.me/webawesome/dist/components/drawer/drawer.js"
@@ -30,23 +29,18 @@ function loadCredentials() {
   }
 }
 
-// Find existing or create new ds-lastfm element
-let lastFm = /** @type {LastFmScrobbler | null} */ (
-  document.body.querySelector("ds-lastfm-scrobbler")
-);
+const configurator = await foundation.configurator.scrobbles();
+const orchestrator = await foundation.orchestrator.scrobbleAudio();
 
-if (!lastFm) {
-  lastFm = new LastFmScrobbler();
-  lastFm.setAttribute("group", GROUP);
+/** @type {import("~/components/supplement/last.fm/element.js").CLASS | null} */
+const lastFm = configurator.querySelector("ds-lastfm-scrobbler");
+if (!lastFm) throw new Error("Last.fm scrobbler element not found");
 
-  const creds = loadCredentials();
-  if (creds) {
-    lastFm.setAttribute("api-key", creds.apiKey);
-    lastFm.setAttribute("api-secret", creds.apiSecret);
-  }
-
-  document.body.append(lastFm);
-}
+// const creds = loadCredentials();
+// if (creds) {
+//   lastFm.setAttribute("api-key", creds.apiKey);
+//   lastFm.setAttribute("api-secret", creds.apiSecret);
+// }
 
 await customElements.whenDefined(lastFm.localName);
 

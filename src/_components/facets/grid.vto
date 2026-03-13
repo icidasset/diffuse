@@ -25,9 +25,15 @@
     >
       <div class="grid-item__contents">
         <div class="grid-item__title">
-          <a href="{{ item.url |> facetLoaderURL }}" style="padding: var(--space-3xs) 0">
-            {{item.title}}
-          </a>
+          {{ if item.kind === "prelude" }}
+            <span style="padding: var(--space-3xs) 0">
+              {{item.title}}
+            </span>
+          {{ else }}
+            <a href="{{ item.url |> facetLoaderURL }}" style="padding: var(--space-3xs) 0">
+              {{item.title}}
+            </a>
+          {{ /if }}
           <span style="flex: 1"></span>
           <span class="grid-item__kind" style="color: {{ color }};">{{ kind }}</span>
         </div>

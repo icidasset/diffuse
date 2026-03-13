@@ -1,5 +1,8 @@
+import { signal } from "~/common/signal.js";
+
 /**
  * @import { DiffuseElement } from "~/common/element.js";
+ * @import { Signal } from "~/common/signal.d.ts";
  * @import { ScrobbleElement } from "~/components/supplement/types.d.ts";
  */
 
@@ -7,28 +10,94 @@ const url = new URL(document.location.href);
 export const GROUP = url.searchParams.get("group") ?? "facets";
 
 /**
+ * [PRIVATE] Signals.
+ */
+const signals = {
+  configurator: {
+    scrobbles: signal(
+      /** @type {import("~/components/configurator/scrobbles/element.js").CLASS | null} */ (null),
+    ),
+  },
+
+  engine: {
+    audio: signal(
+      /** @type {import("~/components/engine/audio/element.js").CLASS | null} */ (null),
+    ),
+    queue: signal(
+      /** @type {import("~/components/engine/queue/element.js").CLASS | null} */ (null),
+    ),
+    repeatShuffle: signal(
+      /** @type {import("~/components/engine/repeat-shuffle/element.js").CLASS | null} */ (null),
+    ),
+    scope: signal(
+      /** @type {import("~/components/engine/scope/element.js").CLASS | null} */ (null),
+    ),
+  },
+
+  orchestrator: {
+    autoQueue: signal(
+      /** @type {import("~/components/orchestrator/auto-queue/element.js").CLASS | null} */ (null),
+    ),
+    favourites: signal(
+      /** @type {import("~/components/orchestrator/favourites/element.js").CLASS | null} */ (null),
+    ),
+    input: signal(
+      /** @type {import("~/components/orchestrator/input/element.js").CLASS | null} */ (null),
+    ),
+    mediaSession: signal(
+      /** @type {import("~/components/orchestrator/media-session/element.js").CLASS | null} */ (null),
+    ),
+    output: signal(
+      /** @type {import("~/components/orchestrator/output/element.js").CLASS | null} */ (null),
+    ),
+    processTracks: signal(
+      /** @type {import("~/components/orchestrator/process-tracks/element.js").CLASS | null} */ (null),
+    ),
+    queueAudio: signal(
+      /** @type {import("~/components/orchestrator/queue-audio/element.js").CLASS | null} */ (null),
+    ),
+    scopedTracks: signal(
+      /** @type {import("~/components/orchestrator/scoped-tracks/element.js").CLASS | null} */ (null),
+    ),
+    scrobbleAudio: signal(
+      /** @type {import("~/components/orchestrator/scrobble-audio/element.js").CLASS | null} */ (null),
+    ),
+    sources: signal(
+      /** @type {import("~/components/orchestrator/sources/element.js").CLASS | null} */ (null),
+    ),
+  },
+
+  processor: {
+    artwork: signal(
+      /** @type {import("~/components/processor/artwork/element.js").CLASS | null} */ (null),
+    ),
+    metadata: signal(
+      /** @type {import("~/components/processor/metadata/element.js").CLASS | null} */ (null),
+    ),
+    search: signal(
+      /** @type {import("~/components/processor/search/element.js").CLASS | null} */ (null),
+    ),
+  },
+};
+
+/**
  * Default config for facets.
  */
 export const config = {
   GROUP,
 
-  features: {
-    fillQueueAutomatically,
-    playAudioFromQueue,
-    processInputs,
-    searchThroughCollection,
-  },
-
   // Elements
   configurator: {
     scrobbles,
   },
+
   engine: {
     audio,
     queue,
     repeatShuffle,
     scope,
   },
+
   orchestrator: {
     autoQueue,
     favourites,
@@ -36,123 +105,56 @@ export const config = {
     mediaSession,
     output,
     queueAudio,
+    // TODO: Path collections orchestrator
     processTracks,
     scopedTracks,
     scrobbleAudio,
     sources,
   },
+
   processor: {
     artwork,
     metadata,
     search,
   },
+
+  /**
+   * Element signals
+   */
+  signals: {
+    configurator: {
+      scrobbles: signals.configurator.scrobbles.get,
+    },
+
+    engine: {
+      audio: signals.engine.audio.get,
+      queue: signals.engine.queue.get,
+      repeatShuffle: signals.engine.repeatShuffle.get,
+      scope: signals.engine.scope.get,
+    },
+
+    orchestrator: {
+      autoQueue: signals.orchestrator.autoQueue.get,
+      favourites: signals.orchestrator.favourites.get,
+      input: signals.orchestrator.input.get,
+      mediaSession: signals.orchestrator.mediaSession.get,
+      output: signals.orchestrator.output.get,
+      processTracks: signals.orchestrator.processTracks.get,
+      queueAudio: signals.orchestrator.queueAudio.get,
+      scopedTracks: signals.orchestrator.scopedTracks.get,
+      scrobbleAudio: signals.orchestrator.scrobbleAudio.get,
+      sources: signals.orchestrator.sources.get,
+    },
+
+    processor: {
+      artwork: signals.processor.artwork.get,
+      metadata: signals.processor.metadata.get,
+      search: signals.processor.search.get,
+    },
+  },
 };
 
 export default config;
-
-// 📦️
-
-async function fillQueueAutomatically() {
-  const [q, rs, sc, aq, i, o, st] = await Promise.all([
-    // engine
-    queue(),
-    repeatShuffle(),
-    scope(),
-
-    // orchestrator
-    autoQueue(),
-    input(),
-    output(),
-    scopedTracks(),
-  ]);
-
-  return {
-    engine: {
-      queue: q,
-      repeatShuffle: rs,
-      scope: sc,
-    },
-    orchestrator: {
-      autoQueue: aq,
-      input: i,
-      output: o,
-      scopedTracks: st,
-    },
-  };
-}
-
-async function playAudioFromQueue() {
-  const [a, q, ms, qa] = await Promise.all([
-    // engine
-    audio(),
-    queue(),
-
-    // orchestrator
-    mediaSession(),
-    queueAudio(),
-  ]);
-
-  return {
-    engine: {
-      audio: a,
-      queue: q,
-    },
-    orchestrator: {
-      mediaSession: ms,
-      queueAudio: qa,
-    },
-  };
-}
-
-async function processInputs() {
-  const [i, o, pt, m] = await Promise.all([
-    // orchestrator
-    input(),
-    output(),
-    processTracks(),
-
-    // processor
-    metadata(),
-  ]);
-
-  return {
-    orchestrator: {
-      input: i,
-      output: o,
-      processTracks: pt,
-    },
-    processor: {
-      metadata: m,
-    },
-  };
-}
-
-async function searchThroughCollection() {
-  const [sc, o, st, s] = await Promise.all([
-    // engine
-    scope(),
-
-    // orchestrator
-    output(),
-    scopedTracks(),
-
-    // processor
-    search(),
-  ]);
-
-  return {
-    engine: {
-      scope: sc,
-    },
-    orchestrator: {
-      output: o,
-      scopedTracks: st,
-    },
-    processor: {
-      search: s,
-    },
-  };
-}
 
 // 🥡
 
@@ -196,7 +198,7 @@ async function audio() {
   const a = new AudioEngine();
   a.setAttribute("group", GROUP);
 
-  return findExistingOrAdd(a);
+  return findExistingOrAdd(a, signals.engine.audio);
 }
 
 async function queue() {
@@ -207,7 +209,7 @@ async function queue() {
   const q = new Queue();
   q.setAttribute("group", GROUP);
 
-  return findExistingOrAdd(q);
+  return findExistingOrAdd(q, signals.engine.queue);
 }
 
 async function repeatShuffle() {
@@ -218,7 +220,7 @@ async function repeatShuffle() {
   const r = new RepeatShuffleEngine();
   r.setAttribute("group", GROUP);
 
-  return findExistingOrAdd(r);
+  return findExistingOrAdd(r, signals.engine.repeatShuffle);
 }
 
 async function scope() {
@@ -229,7 +231,7 @@ async function scope() {
   const s = new ScopeEngine();
   s.setAttribute("group", GROUP);
 
-  return findExistingOrAdd(s);
+  return findExistingOrAdd(s, signals.engine.scope);
 }
 
 // Processors
@@ -241,7 +243,7 @@ async function artwork() {
   const a = new ArtworkProcessor();
   a.setAttribute("group", GROUP);
 
-  return findExistingOrAdd(a);
+  return findExistingOrAdd(a, signals.processor.artwork);
 }
 
 async function metadata() {
@@ -252,7 +254,7 @@ async function metadata() {
   const m = new MetadataProcessor();
   m.setAttribute("group", GROUP);
 
-  return findExistingOrAdd(m);
+  return findExistingOrAdd(m, signals.processor.metadata);
 }
 
 async function search() {
@@ -263,7 +265,7 @@ async function search() {
   const s = new SearchProcessor();
   s.setAttribute("group", GROUP);
 
-  return findExistingOrAdd(s);
+  return findExistingOrAdd(s, signals.processor.search);
 }
 
 // Orchestrators
@@ -281,7 +283,7 @@ async function autoQueue() {
   aqo.setAttribute("repeat-shuffle-engine-selector", r.selector);
   aqo.setAttribute("tracks-selector", t.selector);
 
-  return findExistingOrAdd(aqo);
+  return findExistingOrAdd(aqo, signals.orchestrator.autoQueue);
 }
 
 async function favourites() {
@@ -294,7 +296,7 @@ async function favourites() {
   fo.setAttribute("group", GROUP);
   fo.setAttribute("output-selector", o.selector);
 
-  return findExistingOrAdd(fo);
+  return findExistingOrAdd(fo, signals.orchestrator.favourites);
 }
 
 async function input() {
@@ -306,7 +308,7 @@ async function input() {
   i.setAttribute("group", GROUP);
   i.setAttribute("id", "input");
 
-  return findExistingOrAdd(i);
+  return findExistingOrAdd(i, signals.orchestrator.input);
 }
 
 async function mediaSession() {
@@ -326,7 +328,7 @@ async function mediaSession() {
   mso.setAttribute("output-selector", o.selector);
   mso.setAttribute("queue-engine-selector", q.selector);
 
-  return findExistingOrAdd(mso);
+  return findExistingOrAdd(mso, signals.orchestrator.mediaSession);
 }
 
 async function output() {
@@ -338,7 +340,7 @@ async function output() {
   o.setAttribute("group", GROUP);
   o.setAttribute("id", "output");
 
-  return findExistingOrAdd(o);
+  return findExistingOrAdd(o, signals.orchestrator.output);
 }
 
 /**
@@ -363,7 +365,7 @@ async function processTracks(opts = { disableWhenReady: false }) {
     opt.toggleAttribute("process-when-ready");
   }
 
-  return findExistingOrAdd(opt);
+  return findExistingOrAdd(opt, signals.orchestrator.processTracks);
 }
 
 async function queueAudio() {
@@ -385,7 +387,7 @@ async function queueAudio() {
   oqa.setAttribute("queue-engine-selector", q.selector);
   oqa.setAttribute("repeat-shuffle-engine-selector", r.selector);
 
-  return findExistingOrAdd(oqa);
+  return findExistingOrAdd(oqa, signals.orchestrator.queueAudio);
 }
 
 async function scopedTracks() {
@@ -406,7 +408,7 @@ async function scopedTracks() {
   sto.setAttribute("scope-engine-selector", e.selector);
   sto.setAttribute("search-processor-selector", s.selector);
 
-  return findExistingOrAdd(sto);
+  return findExistingOrAdd(sto, signals.orchestrator.scopedTracks);
 }
 
 async function scrobbleAudio() {
@@ -421,7 +423,7 @@ async function scrobbleAudio() {
   sao.setAttribute("audio-engine-selector", a.selector);
   sao.setAttribute("scrobble-selector", sc.selector);
 
-  return findExistingOrAdd(sao);
+  return findExistingOrAdd(sao, signals.orchestrator.scrobbleAudio);
 }
 
 async function sources() {
@@ -436,7 +438,7 @@ async function sources() {
   so.setAttribute("input-selector", i.selector);
   so.setAttribute("output-selector", o.selector);
 
-  return findExistingOrAdd(so);
+  return findExistingOrAdd(so, signals.orchestrator.sources);
 }
 
 // 🛠️
@@ -444,15 +446,19 @@ async function sources() {
 /**
  * @template {DiffuseElement} T
  * @param {T} element
+ * @param {Signal<T | null>} signal
  * @returns {T}
  */
-export function findExistingOrAdd(element) {
+export function findExistingOrAdd(element, signal) {
   /** @type {T | null} */
   const alreadyAdded = document.body.querySelector(element.selector);
+
   if (!alreadyAdded) {
     document.body.append(element);
+    signal.value = element;
     return element;
   }
 
+  signal.value = alreadyAdded;
   return alreadyAdded;
 }

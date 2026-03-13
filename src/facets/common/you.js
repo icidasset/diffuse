@@ -143,7 +143,9 @@ function openAddFromURIModal() {
         const uri = uriEl?.value.trim() ?? "";
         if (!name || !uri) return;
 
-        const facet = await facetFromURI({ kind, name, uri }, { fetchHTML: false });
+        const facet = await facetFromURI({ kind, name, uri }, {
+          fetchHTML: false,
+        });
         await saveFacet(facet);
 
         /** @type {HTMLDialogElement} */ (dialog).close();
@@ -228,19 +230,29 @@ function _renderList(output, listEl) {
           const color = FacetCategory.color(c);
           const kind = FacetCategory.name(c);
 
+          const title = c.kind === "prelude"
+            ? html`
+              <span style="display: inline-block; padding: var(--space-3xs) 0">
+                ${c.name}
+              </span>
+            `
+            : html`
+              <a
+                href="facets/l/?id=${c
+                  .id}"
+                style="display: inline-block; padding: var(--space-3xs) 0"
+              >
+                ${c.name}
+              </a>
+            `;
+
           return keyed(
             c.id,
             html`
               <li class="grid-item">
                 <div class="grid-item__contents">
                   <div class="grid-item__title">
-                    <a
-                      href="facets/l/?id=${c
-                        .id}"
-                      style="display: inline-block; padding: var(--space-3xs) 0"
-                    >
-                      ${c.name}
-                    </a>
+                    ${title}
                     <span class="grid-item__kind" style="color: ${color};"
                     >${kind}</span>
                   </div>

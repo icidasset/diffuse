@@ -26,7 +26,7 @@ import * as Output from "~/common/output.js";
  * @typedef {PaneNode | SplitNode} Node
  */
 
-const STORAGE_KEY = "diffuse/facets/tools/split-view/builder/layout";
+const STORAGE_KEY = "diffuse/facets/misc/split-view/builder/layout";
 
 // ─── State ───────────────────────────────────────────────────────────────────
 
@@ -407,7 +407,7 @@ ${generateNodeHTML(state, "  ")}
     layout.classList.remove("dragging");
   });
 
-  const POSITIONS_KEY = "diffuse/facets/tools/split-view/${id}/positions";
+  const POSITIONS_KEY = "diffuse/facets/misc/split-view/${id}/positions";
   const savedPositions = (() => {
     try { return JSON.parse(localStorage.getItem(POSITIONS_KEY) ?? "{}"); }
     catch { return {}; }

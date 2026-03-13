@@ -35,31 +35,12 @@ export function renderEditor() {
   const editor = new EditorView({
     parent: editorContainer,
     doc: `
-<main>
-  <h1 id="now-playing">
-    Waiting on tracks &amp; queue to load ...
-  </h1>
-</main>
-
 <style>
   @import "./styles/base.css";
-  @import "./styles/diffuse/page.css";
 </style>
 
 <script type="module">
   import foundation from "~/common/facets/foundation.js";
-  import { effect } from "~/common/signal.js";
-
-  const components = await foundation.features.fillQueueAutomatically();
-  const myHtmlElement = document.querySelector("#now-playing");
-
-  effect(() => {
-    const now = components.engine.queue.now();
-    const currentlyPlaying = now ? components.orchestrator.output.tracks.collection().find(t => t.id === now.id) : undefined;
-    if (currentlyPlaying && myHtmlElement) {
-      myHtmlElement.innerText = \`\$\{currentlyPlaying.tags.artist} - \$\{currentlyPlaying.tags.title}\`;
-    }
-  })
 </script>
     `.trim(),
     extensions: [

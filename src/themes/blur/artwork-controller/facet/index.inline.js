@@ -2,8 +2,8 @@ import foundation from "~/common/facets/foundation.js";
 import ArtworkController from "~/themes/blur/artwork-controller/element.js";
 
 // Setup the prerequisite elements
-await foundation.features.playAudioFromQueue();
-await foundation.features.processInputs();
+await foundation.orchestrator.queueAudio();
+await foundation.orchestrator.mediaSession();
 
 const [aud, art, fav, inp, out, que] = await Promise.all([
   foundation.engine.audio(),

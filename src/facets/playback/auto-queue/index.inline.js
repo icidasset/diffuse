@@ -5,8 +5,7 @@ import * as Playlist from "~/common/playlist.js";
 const ACTIVE_CLASS = "button--active";
 
 // Setup
-await foundation.features.fillQueueAutomatically();
-await foundation.features.processInputs();
+await foundation.orchestrator.autoQueue();
 
 const [repeatShuffle, scope, output] = await Promise.all([
   foundation.engine.repeatShuffle(),

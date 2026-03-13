@@ -1,9 +1,6 @@
 import foundation from "~/common/facets/foundation.js";
 import BrowserElement from "~/themes/webamp/browser/element.js";
 
-await foundation.features.processInputs();
-await foundation.features.searchThroughCollection();
-
 const [out, que, scp, trc] = await Promise.all([
   foundation.orchestrator.output(),
   foundation.engine.queue(),

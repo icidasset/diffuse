@@ -1,9 +1,6 @@
 import foundation from "~/common/facets/foundation.js";
 import { effect } from "~/common/signal.js";
 
-await foundation.features.processInputs();
-await foundation.features.fillQueueAutomatically();
-
 const output = await foundation.orchestrator.output();
 const queue = await foundation.engine.queue();
 
