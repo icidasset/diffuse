@@ -5,6 +5,9 @@ import "~/components/configurator/output/element.js";
 import "~/components/transformer/output/refiner/default/element.js";
 import "~/components/transformer/output/refiner/initial-contents/element.js";
 
+import "~/components/output/polymorphic/indexed-db/element.js";
+import "~/components/transformer/output/string/json/element.js";
+
 /**
  * @import {RenderArg} from "~/common/element.d.ts"
  * @import {OutputElement} from "~/components/output/types.d.ts"
@@ -22,54 +25,6 @@ import "~/components/transformer/output/refiner/initial-contents/element.js";
  */
 class OutputOrchestrator extends DiffuseElement {
   static NAME = "diffuse/orchestrator/output";
-
-  // LIFECYCLE
-
-  /**
-   * @override
-   */
-  async connectedCallback() {
-    super.connectedCallback();
-
-    /** @type {Set<string>} */
-    let previouslyActivated = new Set();
-
-    await customElements.whenDefined(this.outputConfigurator.localName);
-
-    this.effect(() => {
-      const set = this.activated();
-      const newlyActicated = set.difference(previouslyActivated);
-
-      newlyActicated.forEach((id) => {
-        switch (id) {
-          case "do-output__dc-output__local": {
-            import("~/components/output/polymorphic/indexed-db/element.js");
-            import("~/components/transformer/output/string/json/element.js");
-            break;
-          }
-          case "do-output__dc-output__atproto": {
-            import("~/components/output/raw/atproto/element.js");
-            import(
-              "~/components/transformer/output/raw/atproto-sync/element.js"
-            );
-            import(
-              "~/components/transformer/output/refiner/track-uri-passkey/element.js"
-            );
-            break;
-          }
-          case "do-output__dc-output__s3": {
-            import("~/components/output/bytes/s3/element.js");
-            import(
-              "~/components/transformer/output/bytes/dasl-sync/element.js"
-            );
-            break;
-          }
-        }
-      });
-
-      previouslyActivated = set;
-    });
-  }
 
   // ELEMENT GETTERS
 
@@ -132,6 +87,10 @@ class OutputOrchestrator extends DiffuseElement {
     return this.outputConfigurator.deselect;
   }
 
+  get loadSelected() {
+    return this.outputConfigurator.loadSelected;
+  }
+
   get options() {
     return this.outputConfigurator.options;
   }
@@ -159,53 +118,17 @@ class OutputOrchestrator extends DiffuseElement {
         group="${ifDefined(group)}"
       ></dop-indexed-db>
 
-      <!-- ⚙️ S3 -->
-      <dob-s3 id="do-output__dob-s3" group="${ifDefined(group)}"></dob-s3>
-
-      <!-- ⚙️ ATPROTO -->
-      <dtor-atproto-sync
-        id="do-output__dtor-atproto-sync"
-        namespace="atproto"
-        output-selector="#do-output__dor-atproto"
-        group="${ifDefined(group)}"
-      ></dtor-atproto-sync>
-
-      <dor-atproto
-        id="do-output__dor-atproto"
-        group="${ifDefined(group)}"
-      ></dor-atproto>
-
       <!-- OUTPUT CONFIGURATOR -->
       <dc-output
         id="do-output__dc-output"
         default="do-output__dc-output__local"
         group="${ifDefined(group)}"
       >
-        <!-- local -->
         <dtos-json
           id="do-output__dc-output__local"
           output-selector="#do-output__dop-indexed-db__json"
           label="Local"
         ></dtos-json>
-
-        <!-- atproto -->
-        <dtor-track-uri-passkey
-          id="do-output__dc-output__atproto"
-          namespace="atproto"
-          output-selector="#do-output__dtor-atproto-sync"
-          group="${ifDefined(group)}"
-          label="AT Protocol"
-        >
-        </dtor-track-uri-passkey>
-
-        <!-- s3 -->
-        <dtob-dasl-sync
-          id="do-output__dc-output__s3"
-          namespace="s3"
-          output-selector="#do-output__dob-s3"
-          group="${ifDefined(group)}"
-          label="S3"
-        ></dtob-dasl-sync>
       </dc-output>
 
       <!-- ENTRY ⬆️ -->

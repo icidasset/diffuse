@@ -315,6 +315,15 @@ class OutputConfigurator extends BroadcastableDiffuseElement {
     await this.#selectOutput(null);
   };
 
+  loadSelected = async () => {
+    const selectedOutputId = localStorage.getItem(
+      `${STORAGE_PREFIX}/selected/id`,
+    );
+
+    const selectedOutput = await this.#findOutput(selectedOutputId);
+    this.#selected.value = selectedOutput;
+  };
+
   options = async () => {
     const deps = this.dependencies();
     const entries = Object.entries(deps);
