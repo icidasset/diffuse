@@ -5,6 +5,8 @@ export type OutputConfiguratorElement<ElementType = OutputElement> =
   & OutputElement
   & {
     deselect: () => Promise<void>;
+    hasDefault: () => boolean;
+    hasSelected: () => boolean;
     loadSelected: () => Promise<void>;
     options: () => Promise<Array<OutputOption<ElementType>>>;
     select: (id: string) => Promise<void>;

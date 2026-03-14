@@ -87,6 +87,14 @@ class OutputOrchestrator extends DiffuseElement {
     return this.outputConfigurator.deselect;
   }
 
+  get hasDefault() {
+    return this.outputConfigurator.hasDefault;
+  }
+
+  get hasSelected() {
+    return this.outputConfigurator.hasSelected;
+  }
+
   get loadSelected() {
     return this.outputConfigurator.loadSelected;
   }

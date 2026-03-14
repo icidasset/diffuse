@@ -37,6 +37,7 @@ class OutputConfigurator extends BroadcastableDiffuseElement {
 
           const def = this.#defaultOutput.value;
           if (def) return def.facets.collection();
+          if (this.hasDefault()) return { state: "loading" };
 
           return this.#setupFinished.value
             ? { state: "loaded", data: this.#memory.facets.value }
@@ -68,6 +69,7 @@ class OutputConfigurator extends BroadcastableDiffuseElement {
 
           const def = this.#defaultOutput.value;
           if (def) return def.playlistItems.collection();
+          if (this.hasDefault()) return { state: "loading" };
 
           return this.#setupFinished.value
             ? { state: "loaded", data: this.#memory.playlistItems.value }
@@ -99,6 +101,7 @@ class OutputConfigurator extends BroadcastableDiffuseElement {
 
           const def = this.#defaultOutput.value;
           if (def) return def.themes.collection();
+          if (this.hasDefault()) return { state: "loading" };
 
           return this.#setupFinished.value
             ? { state: "loaded", data: this.#memory.themes.value }
@@ -130,6 +133,7 @@ class OutputConfigurator extends BroadcastableDiffuseElement {
 
           const def = this.#defaultOutput.value;
           if (def) return def.tracks.collection();
+          if (this.hasDefault()) return { state: "loading" };
 
           return this.#setupFinished.value
             ? { state: "loaded", data: this.#memory.tracks.value }
@@ -173,6 +177,60 @@ class OutputConfigurator extends BroadcastableDiffuseElement {
     this.themes = manager.themes;
     this.tracks = manager.tracks;
     this.ready = manager.ready;
+
+    // Effects
+
+    /**
+     * When there's a selected output and its collection changes,
+     * save it to the default output or memory.
+     */
+    this.effect(() => {
+      const out = this.#selected.value;
+      if (!out) return;
+
+      const col = out.facets.collection();
+      if (col.state !== "loaded") return;
+
+      const def = this.#defaultOutput.value;
+      if (def) def.facets.save(col.data);
+      else this.#memory.facets.set(col.data);
+    });
+
+    this.effect(() => {
+      const out = this.#selected.value;
+      if (!out) return;
+
+      const col = out.playlistItems.collection();
+      if (col.state !== "loaded") return;
+
+      const def = this.#defaultOutput.value;
+      if (def) def.playlistItems.save(col.data);
+      else this.#memory.playlistItems.set(col.data);
+    });
+
+    this.effect(() => {
+      const out = this.#selected.value;
+      if (!out) return;
+
+      const col = out.themes.collection();
+      if (col.state !== "loaded") return;
+
+      const def = this.#defaultOutput.value;
+      if (def) def.themes.save(col.data);
+      else this.#memory.themes.set(col.data);
+    });
+
+    this.effect(() => {
+      const out = this.#selected.value;
+      if (!out) return;
+
+      const col = out.tracks.collection();
+      if (col.state !== "loaded") return;
+
+      const def = this.#defaultOutput.value;
+      if (def) def.tracks.save(col.data);
+      else this.#memory.tracks.set(col.data);
+    });
   }
 
   // SIGNALS
@@ -226,9 +284,7 @@ class OutputConfigurator extends BroadcastableDiffuseElement {
 
     // Outputs
     const def_ault = this.getAttribute("default");
-    const selectedOutputId = localStorage.getItem(
-      `${STORAGE_PREFIX}/selected/id`,
-    );
+    const selectedOutputId = this.#selectedOutputId();
 
     batch(() => {
       /** @type {Set<string>} */
@@ -288,6 +344,10 @@ class OutputConfigurator extends BroadcastableDiffuseElement {
     this.#selected.value = await this.#findOutput(id);
   };
 
+  #selectedOutputId() {
+    return localStorage.getItem(`${STORAGE_PREFIX}/selected/id`);
+  }
+
   /**
    * @override
    */
@@ -315,12 +375,16 @@ class OutputConfigurator extends BroadcastableDiffuseElement {
     await this.#selectOutput(null);
   };
 
-  loadSelected = async () => {
-    const selectedOutputId = localStorage.getItem(
-      `${STORAGE_PREFIX}/selected/id`,
-    );
+  hasDefault() {
+    return this.hasAttribute("default");
+  }
 
-    const selectedOutput = await this.#findOutput(selectedOutputId);
+  hasSelected() {
+    return this.#selectedOutputId() !== null;
+  }
+
+  loadSelected = async () => {
+    const selectedOutput = await this.#findOutput(this.#selectedOutputId());
     this.#selected.value = selectedOutput;
   };
 

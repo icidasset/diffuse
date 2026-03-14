@@ -38,8 +38,6 @@ effect(() => {
   const set = output.activated();
   const newlyActicated = set.difference(previouslyActivated);
 
-  console.log("Activated", set);
-
   previouslyActivated = set;
 
   Array.from(newlyActicated).map((id) => {

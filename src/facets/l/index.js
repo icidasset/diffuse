@@ -1,7 +1,8 @@
 import foundation from "~/common/facets/foundation.js";
 import * as CID from "~/common/cid.js";
 import * as Output from "~/common/output.js";
-import { createLoader, loadURI, renderError } from "~/common/loader.js";
+import { createLoader, renderError } from "~/common/loader.js";
+import { insertPreludes } from "~/common/facets/prelude.js";
 
 // Output element
 const output = await foundation.orchestrator.output();
@@ -35,24 +36,16 @@ createLoader({
       }
     }
 
+    // Remove loading animation
     container.innerHTML = "";
 
+    // Execute all the prelude facets
+    await insertPreludes(facets, container);
+
+    // Execute main facet
     const range = document.createRange();
     range.selectNode(container);
     const documentFragment = range.createContextualFragment(facet.html ?? "");
-
-    const preludes = facets
-      .filter((f) => f.kind === "prelude")
-      .sort((a, b) => a.name.localeCompare(b.name));
-
-    for (const prelude of preludes) {
-      const html = prelude.html ??
-        (prelude.uri ? await loadURI(prelude.uri) : "");
-      if (!html) continue;
-      const preludeFragment = range.createContextualFragment(html);
-      container.append(preludeFragment);
-    }
-
     container.append(documentFragment);
   },
 });

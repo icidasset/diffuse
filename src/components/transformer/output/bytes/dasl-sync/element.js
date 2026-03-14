@@ -131,6 +131,9 @@ class DaslBytesSyncOutputTransformer extends OutputTransformer {
 
       return computed(() => {
         if (!isReady.get()) isReady.value = true;
+        if (kind === "facets") {
+          console.log("🫠", container.get());
+        }
         return container.get();
       });
     };
@@ -414,7 +417,11 @@ class DaslBytesSyncOutputTransformer extends OutputTransformer {
     return {
       collection: computed(() => {
         const c = container();
-        if (!c.cid) return { state: "loading" };
+
+        if (remote.collection().state === "loading") {
+          return { state: "loading" };
+        }
+
         return { state: "loaded", data: c.data };
       }),
       reload: remote.reload,

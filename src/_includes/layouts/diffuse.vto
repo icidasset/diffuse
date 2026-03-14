@@ -40,6 +40,19 @@ base: "./"
     <do-offline></do-offline>
     <script src="components/orchestrator/offline/element.js" type="module"></script>
 
+    <!-- Import map -->
+    <script type="importmap">
+      {
+        "imports": {
+          "~/": "./",
+
+          "@atcute/tid": "./vendor/@atcute/tid/index.js",
+          "@awesome.me/webawesome/dist/": "./vendor/@awesome.me/webawesome/",
+          "@awesome.me/webawesome/dist-cdn/": "./vendor/@awesome.me/webawesome/"
+        }
+      }
+    </script>
+
     <!-- Scripts -->
     {{ for url of scripts }}
       <script src="{{ url }}" type="module"></script>
