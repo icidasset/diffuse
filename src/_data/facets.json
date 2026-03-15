@@ -41,21 +41,19 @@
     "kind": "prelude",
     "category": "Data",
     "featured": true,
-    "desc": "Process all your audio inputs automatically when opening any interface facet."
+    "desc": "Process all your audio inputs automatically when opening any interface."
   },
   {
     "url": "facets/misc/scrobble/index.html",
     "title": "Scrobble",
     "kind": "prelude",
     "category": "Misc",
-    "featured": true,
     "desc": "Enable scrobbling, keep track of what you're listening to."
   },
   {
     "url": "facets/misc/scrobble/last.fm/index.html",
     "title": "Scrobble / Last.fm",
     "category": "Misc",
-    "featured": true,
     "desc": "Enable Last.fm scrobbling."
   },
   {

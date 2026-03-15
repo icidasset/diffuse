@@ -7,7 +7,7 @@ const BASE_PATHNAME = new URL(document.baseURI).pathname;
 
 /**
  * Strips the app's base path prefix from an absolute pathname,
- * returning a root-relative path like "/facets/build".
+ * returning a root-relative path like "/kitchen/build".
  *
  * @param {string} pathname
  */
@@ -29,13 +29,13 @@ async function initJsBasedOnPage(url) {
   await Grid.monitorToggleButtonStates();
 
   switch (path) {
-    case "/facets/build":
+    case "/kitchen/build":
       Build.renderEditor();
       Build.handleBuildFormSubmit();
       Build.listenForExamplesEdit();
       await Build.editFacetFromURL();
       break;
-    case "/facets/you":
+    case "/kitchen/you":
       await You.renderList();
       break;
     default:
@@ -45,7 +45,7 @@ async function initJsBasedOnPage(url) {
 
 initJsBasedOnPage(new URL(location.href));
 
-// Partial page updates for facets navigation using the Navigation API.
+// Partial page updates for kitchen navigation using the Navigation API.
 // Intercepts nav link clicks, fetches the new page, and swaps <main> content
 // instead of doing a full page load.
 
@@ -63,10 +63,10 @@ function navigateHandler(event) {
   const url = new URL(event.destination.url);
   if (url.origin !== location.origin) return;
 
-  // Only intercept /facets/[section]/ paths (not deeper sub-paths like /facets/misc/*)
+  // Only intercept /kitchen/[section]/ paths (not deeper sub-paths like /kitchen/misc/*)
   const relative = relativePathname(url.pathname);
   const parts = relative.split("/").filter(Boolean);
-  if (parts[0] !== "facets") return;
+  if (parts[0] !== "kitchen") return;
   if (parts.length > 2) return;
 
   // Skip the loader page

@@ -193,10 +193,6 @@ definitions:
     desc: >
       Used to track progress of (long) audio playback.
     todo: true
-  - title: "Output / Theme"
-    desc: >
-      Theme pointer or HTML snippet.
-    url: "definitions/output/theme.json"
   - title: "Output / Track"
     desc: >
       Represents audio that can be played, or a placeholder for a source of tracks. Contains a URI that will resolve to the audio.
@@ -235,7 +231,7 @@ links:
       Your audio<br />your data<br />your rules
     </p>
     <p>
-      Diffuse is a collection of components and software that make it possible to listen to audio from various sources on your devices and the web, and to create the ideal digital audio listening experience for you.
+      Diffuse is cooperative and malleable software that makes it possible to listen to audio from various sources on your devices and the web, and to create the ideal digital audio listening experience for you.
     </p>
     <p style="align-items: center; display: flex; gap: var(--space-2xs); opacity: 0.55;">
       <i class="ph-fill ph-crane"></i>
@@ -243,10 +239,7 @@ links:
     </p>
     <ul class="table-of-contents">
       <li><a href="#usage">Usage</a></li>
-      <li><a href="#themes">Themes</a></li>
-      <li><a href="#facets">Facets</a></li>
-      <li><a href="#agency">Agency</a></li>
-      <li><a href="#elements">Elements</a></li>
+      <li><a href="#developers">Developers</a></li>
       <li><a href="#definitions">Definitions</a></li>
       <li><a href="#links">Links</a></li>
     </ul>
@@ -264,17 +257,7 @@ links:
     <div class="columns">
       <div class="element">
         <p>
-          The easiest way to start is by exploring the software. If you prefer a traditional pre&shy;packaged application approach, you can check out <a href="themes/">themes</a>. Themes can look and function entirely different from each other, so make sure to explore!
-        </p>
-
-        <p>
-          Alternatively, there's <a href="facets/">facets</a> which allows you to use any component from any theme interchange&shy;ably, among pieces that are not in themes; each in a separate browser tab. Each tab talks to each other, so you can for example browse audio in one tab and play it in another.
-        </p>
-      </div>
-
-      <div class="element">
-        <p>
-          <strong style="color: var(--accent); font-weight: 700;">Diffuse is not your typical streaming service though, you have to add sources of audio.</strong> To start you can try out the demo by clicking the button below, or, go to a <a href="themes/">theme</a> or <a href="facets/">facet</a> that lets you add your audio input.
+          <strong style="color: var(--accent)">Diffuse is not exactly your typical streaming service, we have to add sources of audio so we have stuff to play.</strong> This button below adds some demo content, so you can experiment with the software right away.
         </p>
 
         <p>
@@ -283,125 +266,88 @@ links:
           </button>
         </p>
       </div>
+
+      <div class="element">
+        <p>
+          If you do already have a place where you keep your audio files and want to connect it first thing, browse through all the various services that can be connected to Diffuse.
+        </p>
+
+        <p><em>Look for "Connect ..."</em></p>
+
+        <p>
+          <a class="button" href="kitchen/data/" target="_blank">Discover integrations</a>
+        </p>
+      </div>
     </div>
-  </section>
 
-  <!-- THEMES & FACETS -->
-  <div class="columns">
-    <section>
-      <h2 id="themes">Themes</h2>
-
-      <p>
-        Themes each provide a traditional browser web application built on the Diffuse elements. They focus on delivering <strong>a great encompassing experience in a single window</strong>. They represent the opposite of facets, but can optionally delegate functionality to facets if they wish to do so.
-      </p>
-
-      <p>
-        <a class="button button--alt" href="themes/">Explore</a>
-      </p>
-    </section>
-
-    <section>
-      <h2 id="facets">Facets</h2>
-
-      <p>
-        Facets are various user interfaces, with their own logic, each loaded in their own web page. Every used Diffuse component is configured so that it operates in broadcast mode, making all the pages communicate with each other. <strong>You choose the features you want in your software.</strong>
-      </p>
-
-      <p>
-        <a class="button button--alt" href="facets/">Explore</a>
-      </p>
-    </section>
-  </div>
-
-  <!-- AGENCY -->
-  <section>
-    <h2 id="agency">Agency</h2>
-
-    <p>
-      The goal is for every user, no matter their knowledge level, to have agency over their data and their software. One can start with making small changes and gradually progress to making big changes.
-    </p>
-
-    <p>
-      You can store your user-data in various places, and easily export, import and sync it.
-    </p>
-
-    <h3>Take control</h3>
-
-    <ul class="columns">
+    <div class="columns" style="margin-top: var(--space-xl)">
       <div class="element">
-        <!-- 1 -->
-        <li>
-          <p>
-            <i class="ph-fill ph-storefront"></i> <strong>Level 1</strong>: Pick your restaurant, food comes in all shapes and sizes. The equivalent of choosing a Diffuse <a href="themes/">theme</a>.
-          </p>
-        </li>
-        <!-- 2 -->
-        <li>
-          <p>
-            <i class="ph-fill ph-basket"></i> <strong>Level 2</strong>: Take out food from various places, eg. cheese shop + bakery. You choose how you combine the foods and from where you order them. That's <a href="facets/">facets</a>.
-          </p>
-        </li>
-        <!-- 3 -->
-        <li>
-          <p>
-            <i class="ph-fill ph-pepper"></i> <strong>Level 3</strong>: Now that you know which food is good and how to make combinations, you might make a slight customization, add a little something of your own (eg. add some spice). However, you're not quite confident enough which spice to pick, so you hire some help.
-          </p>
-          <p>
-            This can be done using the <a href="facets/#builder">facets builder</a> which allows you to build on top of a familiar preconfigured foundation and load custom facets. People might share their own, or maybe you use an LLM to generate something for you (eg. an album art gallery).
-          </p>
-        </li>
-        <!-- 4 -->
-        <li>
-          <p>
-            <i class="ph-fill ph-knife"></i> <strong>Level 4</strong>: You learned a bit from watching and talking to the help you hired, so you decide to take things in your own hands.
-          </p>
-          <p>
-            You continue to use the <a href="facets/#builder">facets builder</a> but learn a bit of <a href="https://htmlforpeople.com">HTML</a>, <a href="https://javascript.info">Javascript</a> and <a href="https://htmlforpeople.com/css-basics/">CSS</a>; so you're able to write your own facet.
-          </p>
-        </li>
+        <p>
+          Great, one of the hardest parts is already done. Now we should explore what is possible with our audio. Because Diffuse is cooperative and malleable software, our interface can look like anything, and we can pick the features we like. That might sound overwhelming, so let's keep it simple for now.
+        </p>
       </div>
+
       <div class="element">
-        <!-- 5 -->
-        <li>
-          <p>
-            <i class="ph-fill ph-cooking-pot"></i> <strong>Level 5</strong>: At this point you're confident enough to make a meal from scratch. You can start very simple, eg. just throwing a steak in the pan with some butter and some salt to it. Then later add some baked potatoes and go from there.
-          </p>
-          <p>
-            A similar tool comes into play here, the <a href="themes/#builder">themes builder</a>. Same concept as the facets builder, but now you need to specify the foundation yourself. You can use the <a href="#elements">elements</a> listed below to do so. The code for these is available from this website or through the <a href="https://jsr.io/@toko/diffuse">Javascript package</a>.
-          </p>
-        </li>
-        <!-- 6 -->
-        <li>
-          <p>
-            <i class="ph-fill ph-storefront"></i> <strong>Level 6</strong>: You open your own restaurant.
-          </p>
-          <p>
-            You can host the theme you made on any web server, it's only HTML after all. Only difference is that you'll have to create the entire HTML tree, not just the body element, as is the case with the theme builder.
-          </p>
-        </li>
-        <!-- 7 -->
-        <li>
-          <p>
-            <i class="ph-fill ph-chef-hat"></i> <strong>Level 7</strong>: You got promoted to master chef. Time to open your own restaurant chain.
-          </p>
-          <p>
-            You can self-host Diffuse, it's <a href="https://tangled.org/tokono.ma/diffuse/blob/v4/">open-source</a>! Or you present your own collection of elements.
-          </p>
-        </li>
+        <p>
+          <strong>Let's pick an interface</strong> that automatically puts audio from our collection into the queue, and another to play what got put into the queue.
+        </p>
+
+        <p>
+          <span class="button-row">
+            <a class="button button--bg-twist-2" href="{{ ('facets/playback/auto-queue/index.html') |> facetLoaderURL }}" target="_blank">
+              <span class="with-icon">
+                <i class="ph-fill ph-number-circle-one"></i>
+                Fill up queue
+              </span>
+            </a>
+            <a class="button button--bg-twist-2" href="{{ ('themes/blur/artwork-controller/facet/index.html') |> facetLoaderURL }}" target="_blank">
+              <span class="with-icon">
+                <i class="ph-fill ph-number-circle-two"></i>
+                Play audio
+              </span>
+            </a>
+          </span>
+        </p>
       </div>
-    </ul>
+    </div>
+
+    <div class="columns" style="margin-top: var(--space-xl)">
+      <div class="element">
+        <p>
+          <em>So you said I could pick the features and interfaces that I liked, how does that work?</em>
+        </p>
+
+        <p>
+          To do that, we have to visit our <strong style="color: var(--accent-twist-4)">kitchen</strong>. There you'll be able to browse through all the features and interfaces that are provided by Diffuse. To use a feature, you click the toggle to enable it, this will add it to your software. Interfaces can be added too, but it's not required, you can try them out right away by clicking the link in their title.
+        </p>
+
+        <p>
+          <a class="button button--bg-twist-4" href="kitchen/" target="_blank">Explore the kitchen</a>
+        </p>
+      </div>
+
+      <div class="element">
+        <p>
+          <em>What is a feature exactly?</em>
+        </p>
+
+        <p>
+          A <strong style="color: var(--accent-twist-4)">feature</strong> is a piece of code that expands the capabilities of your software or that makes it behave in a certain kind of way. It runs each time you open an interface, but may not necessarily be activated.
+        </p>
+      </div>
+    </div>
   </section>
 
   <!-- ELEMENTS -->
   <section>
-    <h2 id="elements">Elements</h2>
+    <h2 id="developers">Developers</h2>
 
     <p>
-      The (web) components of the system. These custom elements are then recombined into an entire music player and browser, or whatever you want to build.
+      If you're a programmer, you can use the (web) components of the system. These custom elements can be combined into an entire music player and browser, or whatever you want to build.
     </p>
 
     <p>
-      Consume these using the facets <a href="facets/#builder">builder</a>, the Javascript <a href="https://jsr.io/@toko/diffuse">package</a>, or the linked Javascript files down below.
+      Consume these using the kitchen <a href="facets/#builder">build tool</a>, the Javascript <a href="https://jsr.io/@toko/diffuse">package</a>, or the linked Javascript files down below.
     </p>
 
     <div class="columns">

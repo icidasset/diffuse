@@ -179,7 +179,7 @@ site.add("/definitions");
 
 // HELPERS
 
-site.filter("facetOrThemeURI", (text) => {
+site.filter("facetURI", (text) => {
   if (text.includes("://")) {
     return text;
   } else {
@@ -194,17 +194,7 @@ site.filter("facetLoaderURL", (text) => {
     key = "uri";
   }
 
-  return `facets/l/?${key}=${encodeURIComponent(text)}`;
-});
-
-site.filter("themeLoaderURL", (text) => {
-  let key = "path";
-
-  if (text.includes("://")) {
-    key = "uri";
-  }
-
-  return `themes/l/?${key}=${encodeURIComponent(text)}`;
+  return `kitchen/l/?${key}=${encodeURIComponent(text)}`;
 });
 
 ////////////////////////////////////////////
