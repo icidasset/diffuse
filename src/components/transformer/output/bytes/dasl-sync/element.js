@@ -131,9 +131,6 @@ class DaslBytesSyncOutputTransformer extends OutputTransformer {
 
       return computed(() => {
         if (!isReady.get()) isReady.value = true;
-        if (kind === "facets") {
-          console.log("🫠", container.get());
-        }
         return container.get();
       });
     };

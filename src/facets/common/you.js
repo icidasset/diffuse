@@ -4,12 +4,12 @@ import { marked } from "marked";
 import { unsafeHTML } from "lit-html/directives/unsafe-html.js";
 
 import * as FacetCategory from "~/common/facets/category.js";
-import foundation from "~/common/facets/foundation.js";
 import { effect } from "~/common/signal.js";
 import { facetFromURI } from "~/common/facets/utils.js";
 import { nothing } from "~/common/element.js";
 
 import { deleteFacet, saveFacet } from "./crud.js";
+import { output } from "./output.js";
 
 /**
  * @import {OutputElement} from "~/components/output/types.d.ts";
@@ -189,10 +189,10 @@ export async function renderList() {
     listEl.removeAttribute("data-rendered");
   }
 
-  const output = await foundation.orchestrator.output();
+  const out = await output();
 
   stopMonitor = effect(() => {
-    _renderList(output, listEl);
+    _renderList(out, listEl);
   });
 }
 

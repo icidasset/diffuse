@@ -8,12 +8,12 @@ import * as TID from "@atcute/tid";
 
 import * as CID from "~/common/cid.js";
 import * as Output from "~/common/output.js";
-import foundation from "~/common/facets/foundation.js";
 import { facetFromURI } from "~/common/facets/utils.js";
 import { loadURI } from "~/common/loader.js";
 import { signal } from "~/common/signal.js";
 
 import { saveFacet } from "./crud.js";
+import { output } from "./output.js";
 
 /**
  * @import {Facet} from "~/definitions/types.d.ts"
@@ -21,7 +21,6 @@ import { saveFacet } from "./crud.js";
 
 const $editor = signal(/** @type {EditorView | null} */ (null));
 const $editingFacet = signal(/** @type {Facet | null} */ (null));
-const output = await foundation.orchestrator.output();
 
 ////////////////////////////////////////////
 // EDITOR
@@ -237,7 +236,8 @@ export async function editFacetFromURL() {
   const idParam = new URLSearchParams(location.search).get("id");
 
   if (idParam) {
-    const col = await Output.data(output.facets);
+    const out = await output();
+    const col = await Output.data(out.facets);
     const facet = col.find((f) => f.id === idParam);
     if (facet) await editFacet(facet);
   }

@@ -1,7 +1,8 @@
 import * as Output from "~/common/output.js";
-import foundation from "~/common/facets/foundation.js";
 import { facetFromURI } from "~/common/facets/utils.js";
 import { effect } from "~/common/signal.js";
+
+import { output } from "./output.js";
 
 ////////////////////////////////////////////
 // TOGGLE BUTTONS
@@ -31,7 +32,7 @@ export function insertToggleButtons() {
 
       if (!uri || !name) return;
 
-      const out = await foundation.orchestrator.output();
+      const out = await output();
       const collection = await Output.data(out.facets);
       const isActive = collection.some((f) =>
         f.uri === uri && f.html === undefined
@@ -60,7 +61,7 @@ let stopMonitor;
 
 export async function monitorToggleButtonStates() {
   if (stopMonitor) stopMonitor();
-  const out = await foundation.orchestrator.output();
+  const out = await output();
 
   stopMonitor = effect(() => {
     const gridItems = /** @type {NodeListOf<HTMLLIElement>} */ (

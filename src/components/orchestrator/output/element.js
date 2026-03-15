@@ -80,35 +80,35 @@ class OutputOrchestrator extends DiffuseElement {
   // PROXY ADDITIONAL OUTPUT CONFIGURATOR ACTIONS
 
   get activated() {
-    return this.outputConfigurator.activated;
+    return this.outputConfigurator.activated.bind(this.outputConfigurator);
   }
 
   get deselect() {
-    return this.outputConfigurator.deselect;
+    return this.outputConfigurator.deselect.bind(this.outputConfigurator);
   }
 
   get hasDefault() {
-    return this.outputConfigurator.hasDefault;
+    return this.outputConfigurator.hasDefault.bind(this.outputConfigurator);
   }
 
   get hasSelected() {
-    return this.outputConfigurator.hasSelected;
+    return this.outputConfigurator.hasSelected.bind(this.outputConfigurator);
   }
 
   get loadSelected() {
-    return this.outputConfigurator.loadSelected;
+    return this.outputConfigurator.loadSelected.bind(this.outputConfigurator);
   }
 
   get options() {
-    return this.outputConfigurator.options;
+    return this.outputConfigurator.options.bind(this.outputConfigurator);
   }
 
   get select() {
-    return this.outputConfigurator.select;
+    return this.outputConfigurator.select.bind(this.outputConfigurator);
   }
 
   get selected() {
-    return this.outputConfigurator.selected;
+    return this.outputConfigurator.selected.bind(this.outputConfigurator);
   }
 
   // RENDER
