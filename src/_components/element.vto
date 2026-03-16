@@ -1,5 +1,7 @@
 <div class="element">
-  <h3>{{title}}</h3>
+  {{ set slug = title.toLowerCase().replace(/\s+/g, '-') }}
+
+  <h3 id="{{slug}}">{{title}}</h3>
 
   <p>
     <em>{{content}}</em>

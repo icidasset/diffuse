@@ -194,7 +194,7 @@ site.filter("facetLoaderURL", (text) => {
     key = "uri";
   }
 
-  return `kitchen/l/?${key}=${encodeURIComponent(text)}`;
+  return `l/?${key}=${encodeURIComponent(text)}`;
 });
 
 ////////////////////////////////////////////

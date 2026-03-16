@@ -1,0 +1,84 @@
+---
+layout: layouts/kitchen.vto
+base: ../
+title: Guide | Diffuse
+---
+
+<h1 hidden>Guide</h1>
+
+<div class="columns">
+  <section>
+    <h3>Tutorial</h3>
+
+    <p>
+      <strong>Diffuse is not your typical streaming service, we have to add sources of audio so we have stuff to play.</strong> This button below adds some demo content, so you can experiment with the software right away.
+    </p>
+
+    <p>
+      <button id="add-sample-content" class="button--bg-twist-2">
+        <span>Add sample content</span>
+      </button>
+    </p>
+
+    <p>
+      Now we should explore what is possible with our audio. Because Diffuse is cooperative and malleable software, our interface can look like anything, and we can pick the features we like. That might sound overwhelming, so let's keep it simple for now.
+    </p>
+
+    <p>
+      <strong>Let's pick an interface</strong> that automatically puts audio from our collection into the queue, and another to play what got put into the queue.
+    </p>
+
+    <p>
+      <span class="button-row">
+        <a class="button button--bg-twist-2" href="{{ ('facets/playback/auto-queue/index.html') |> facetLoaderURL }}" target="_blank">
+          <span class="with-icon">
+            <i class="ph-fill ph-number-circle-one"></i>
+            Fill up queue
+          </span>
+        </a>
+        <a class="button button--bg-twist-2" href="{{ ('themes/blur/artwork-controller/facet/index.html') |> facetLoaderURL }}" target="_blank">
+          <span class="with-icon">
+            <i class="ph-fill ph-number-circle-two"></i>
+            Play audio
+          </span>
+        </a>
+      </span>
+    </p>
+
+    <p>
+      <em>So you said I could pick the features and interfaces that I liked, how does that work?</em>
+    </p>
+
+    <p>
+      To do that, we have to look at the other pages shown in the navigation here, such as the <a href="featured/">featured page</a>. There you'll be able to browse through all the features and interfaces that are provided by Diffuse.
+    </p>
+
+    <p>
+       <strong>To use a feature, you click the toggle to enable it</strong>, this will add it to your software. Interfaces can be added too, but it's not required, you can try them out right away by clicking the link in their title. For interfaces that are more like traditional web applications, delivering more encompassing experiences, look at <a href="themes/">themes</a>.
+    </p>
+
+    <p>
+      TODO: explain adding your own inputs, syncing user data, etc.
+    </p>
+  </section>
+
+  <section>
+    <h3>Concept</h3>
+
+    <p>
+      Diffuse is unlike traditional software; instead of combining several features into a single user interface and producing data output, we do the opposite, we start with the data and work our way up from there.
+    </p>
+
+    <p>
+      <strong>It provides every user the ability to choose which features and interfaces they want to layer on top of their data.</strong>
+    </p>
+
+    <p>
+      These features and interfaces are housed into units that we call "facets". They consist of <a href="elements/">Diffuse elements</a> that are connected, they broadcast their state and your data that has been updated.
+    </p>
+
+    <p>
+      Finally, facets are just regular web pages so they can live wherever. We save them to the user-data storage that's configured and give the user the option to share it. This means that you can load features and interfaces from other people, <strong>building software cooperatively</strong>.
+    </p>
+  </section>
+</div>

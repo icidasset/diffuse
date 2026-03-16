@@ -1,7 +1,7 @@
 ---
 layout: layouts/diffuse.vto
 base: ../../
-title: Facets | Diffuse
+title: Diffuse
 
 styles:
   - styles/base.css
@@ -11,7 +11,7 @@ styles:
   - vendor/@phosphor-icons/fill/style.css
 
 scripts:
-  - kitchen/common/ppr.js
+  - common/pages/ppr.js
   - common/pages/version-upgrade.js
 ---
 
@@ -22,22 +22,22 @@ scripts:
 </style>
 
 <header style="overflow: hidden">
-  <div style="min-width: var(--container-md)">
-    <div class="diffuse-logo-container">
+  <div>
+    <div class="diffuse-logo-container diffuse-logo-container--condensed">
       <a href="./" style="display: inline-block;">
         {{ await comp.diffuse.logo() }}
       </a>
+    </div>
+  </div>
+  <div class="dither-mask filler filler--bg-twist-2">
+    <div id="status--filler-container" style="color: var(--accent-twist-2)">
       {{ await comp.diffuse.status() }}
     </div>
-    <p class="construct dither-mask" style="margin-top: 0; max-width: none;">
-      Kitchen
-    </p>
   </div>
-  <div class="dither-mask filler filler--bg-twist-2"></div>
 </header>
 
 <main>
-  {{ await comp.facets.nav({ url, facets }) }}
+  {{ await comp.nav({ url, facets }) }}
 
   {{ content }}
 </main>

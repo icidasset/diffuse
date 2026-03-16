@@ -114,7 +114,7 @@ async (event) => {
       break;
     case "save+open":
       await saveFacet(facet);
-      globalThis.open(`./facets/l/?id=${facet.id}`, "blank");
+      globalThis.open(`./l/?id=${facet.id}`, "blank");
       break;
   }
 };

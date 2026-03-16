@@ -40,7 +40,7 @@ const EMPTY_FACETS_LIST = html`
   <p>
     <span>
       You haven't saved anything yet. Add a facet by browsing the <a
-        href="kitchen/"
+        href="featured/"
       >featured ones</a> or any of the other categories. You can click the toggle
       to quickly add or remove from your collection. Alternatively, add one using
       an URI:
@@ -207,7 +207,7 @@ function _renderList(output, listEl) {
     const loading = html`
       <div class="with-icon">
         <i class="ph-bold ph-spinner animate-spin"></i>
-        Loading items
+        Loading your software
       </div>
     `;
 
@@ -238,7 +238,7 @@ function _renderList(output, listEl) {
             `
             : html`
               <a
-                href="facets/l/?id=${c
+                href="l/?id=${c
                   .id}"
                 style="display: inline-block; padding: var(--space-3xs) 0"
               >
@@ -287,7 +287,7 @@ function _renderList(output, listEl) {
                   <a
                     class="button button--transparent"
                     title="Edit"
-                    href="kitchen/build/?id=${encodeURIComponent(c.id)}"
+                    href="build/?id=${encodeURIComponent(c.id)}"
                   >
                     <i class="ph-fill ph-code-block"></i>
                   </a>

@@ -459,6 +459,10 @@ a.button {
 
 small {
   font-size: var(--fs-xs);
+
+  a {
+    text-underline-offset: 3px;
+  }
 }
 
 .button-col {
@@ -576,6 +580,10 @@ ul li::marker {
       opacity: 0.25;
     }
   }
+
+  &.diffuse-logo-container--condensed {
+    margin-bottom: var(--space-lg);
+  }
 }
 
 /**
@@ -614,6 +622,11 @@ nav {
     text-decoration: none;
     transition-duration: 250ms;
     transition-property: opacity;
+
+    &:hover,
+    &:focus {
+      opacity: 1;
+    }
   }
 
   a.hidden {
@@ -625,6 +638,14 @@ nav {
     position: relative;
     top: 1px;
   }
+}
+
+#status--filler-container {
+  align-items: center;
+  display: flex;
+  height: 100%;
+  justify-content: end;
+  padding: 0 var(--space-lg);
 }
 
 /**

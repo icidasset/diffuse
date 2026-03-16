@@ -14,8 +14,8 @@ export default function* ({ facets }: { facets: Facet[] }) {
   for (const category of categories) {
     const slug = category.toLowerCase().replace(/\s+/g, "-");
     yield {
-      url: `/kitchen/${slug}/`,
-      title: `${category} | Kitchen | Diffuse`,
+      url: `/${slug}/`,
+      title: `${category} | Diffuse`,
       category,
       slug,
       categoryFacets: facets.filter((f) => f.category === category),

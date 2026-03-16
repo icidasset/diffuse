@@ -25,14 +25,9 @@ A lot of components will have a worker (located in `worker.js` besides the `elem
 `src/definitions/` are lexicons, JSON schemas that describe data in the system.
 
 
-## Themes
-
-Like orchestrator components, these are compositions of elements. Unlike orchestrators however, it doesn't compose by the use of selectors, instead we write the custom elements as HTML and use the DOM as the composition layer. Alternatively, custom elements can be created in Javascript and then added to the DOM from there.
-
-
 ## Other directories
 
 - `src/common`: Common Javascript code shared by various components and/or themes.
 - `src/styles`: Common CSS shared by themes, the index page or facets.
 - `src/favicons`, `src/fonts`, `src/images` are binary assets for themes and the index page (`src/index.vto`)
-- `src/_components` and `src/_includes` are templates used in `.vto` templates, again themes and index page.
+- `src/_components` and `src/_includes` are templates used in `.vto` templates.

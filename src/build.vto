@@ -1,7 +1,7 @@
 ---
 layout: layouts/kitchen.vto
-base: ../../
-title: Build | Kitchen | Diffuse
+base: ../
+title: Build | Diffuse
 
 examples:
   - url: "facets/examples/now-playing/index.html"
@@ -99,7 +99,7 @@ examples:
       Some simple examples to help you understand how to build your own facet. Click the edit button to load them into the code editor above.
     </p>
 
-    {{ await comp.facets.examples({ id: "examples", items: examples }) }}
+    {{ await comp.examples({ id: "examples", items: examples }) }}
 
     <h2 id="notes">Notes</h2>
     <p>

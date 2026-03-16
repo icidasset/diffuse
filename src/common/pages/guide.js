@@ -1,12 +1,11 @@
+import { insertPreludes } from "../facets/prelude.js";
+
 ////////////////////////////////////////////
 // DEMO
 ////////////////////////////////////////////
 
-import { insertPreludes } from "./common/facets/prelude.js";
-
-const addDemoBtn = document.querySelector("#add-sample-content");
-
 async function addSampleContent() {
+  const addDemoBtn = document.querySelector("#add-sample-content");
   if (!addDemoBtn) return;
 
   addDemoBtn.setAttribute("disabled", "");
@@ -60,4 +59,7 @@ async function addSampleContent() {
   </span>`;
 }
 
-addDemoBtn?.addEventListener("click", addSampleContent);
+export function setupSampleButton() {
+  const addDemoBtn = document.querySelector("#add-sample-content");
+  addDemoBtn?.addEventListener("click", addSampleContent);
+}

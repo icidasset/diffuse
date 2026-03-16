@@ -1,13 +1,14 @@
 import * as Build from "./build.js";
+import * as Dashboard from "./dashboard.js";
 import * as Grid from "./grid.js";
-import * as You from "./you.js";
+import * as Guide from "./guide.js";
 
 /** Base pathname of the app (e.g. "/" at root, "/diffuse/" in a subdirectory). */
 const BASE_PATHNAME = new URL(document.baseURI).pathname;
 
 /**
  * Strips the app's base path prefix from an absolute pathname,
- * returning a root-relative path like "/kitchen/build".
+ * returning a root-relative path like "/build".
  *
  * @param {string} pathname
  */
@@ -29,15 +30,17 @@ async function initJsBasedOnPage(url) {
   await Grid.monitorToggleButtonStates();
 
   switch (path) {
-    case "/kitchen/build":
+    case "/build":
       Build.renderEditor();
       Build.handleBuildFormSubmit();
       Build.listenForExamplesEdit();
       await Build.editFacetFromURL();
       break;
-    case "/kitchen/you":
-      await You.renderList();
+    case "/dashboard":
+      await Dashboard.renderList();
       break;
+    case "/guide":
+      Guide.setupSampleButton();
     default:
       break;
   }
@@ -63,10 +66,10 @@ function navigateHandler(event) {
   const url = new URL(event.destination.url);
   if (url.origin !== location.origin) return;
 
-  // Only intercept /kitchen/[section]/ paths (not deeper sub-paths like /kitchen/misc/*)
+  // Only intercept paths one level deep
   const relative = relativePathname(url.pathname);
   const parts = relative.split("/").filter(Boolean);
-  if (parts[0] !== "kitchen") return;
+  if (parts.length === 0) return;
   if (parts.length > 2) return;
 
   // Skip the loader page

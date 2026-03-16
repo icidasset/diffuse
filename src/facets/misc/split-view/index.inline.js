@@ -186,7 +186,7 @@ function renderNode(node, path, isRoot) {
     const uri = node.facet.includes("://")
       ? node.facet
       : `diffuse://${node.facet}`;
-    iframe.src = "facets/l/?uri=" + encodeURIComponent(uri);
+    iframe.src = "l/?uri=" + encodeURIComponent(uri);
     iframe.allow = "autoplay";
     pane.appendChild(iframe);
   }
@@ -359,7 +359,7 @@ ${indent}</wa-split-panel>`;
     const uri = node.facet.includes("://")
       ? node.facet
       : `diffuse://${node.facet}`;
-    const src = "facets/l/?uri=" + encodeURIComponent(uri);
+    const src = "l/?uri=" + encodeURIComponent(uri);
     return `${indent}<div class="pane">
 ${inner}<iframe src="${src}" allow="autoplay"></iframe>
 ${indent}</div>`;
