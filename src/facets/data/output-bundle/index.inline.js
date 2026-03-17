@@ -1,4 +1,4 @@
-import foundation from "~/common/facets/foundation.js";
+import foundation from "~/common/foundation.js";
 import { effect } from "~/common/signal.js";
 
 import { NAME as ATPROTO_OUTPUT_NAME } from "~/components/output/raw/atproto/element.js";

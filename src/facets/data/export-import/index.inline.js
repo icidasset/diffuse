@@ -1,5 +1,5 @@
 import * as Output from "~/common/output.js";
-import foundation from "~/common/facets/foundation.js";
+import foundation from "~/common/foundation.js";
 import { effect } from "~/common/signal.js";
 
 // Setup

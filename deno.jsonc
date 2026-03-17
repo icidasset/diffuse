@@ -77,7 +77,7 @@
   },
   "exports": {
     // .js
-    "./common/facets/foundation.js": "./src/common/facets/foundation.js",
+    "./common/foundation.js": "./src/common/foundation.js",
     "./common/facets/utils.js": "./src/common/facets/utils.js",
     "./common/element.js": "./src/common/element.js",
     "./common/signal.js": "./src/common/signal.js",

@@ -1,4 +1,4 @@
-import foundation from "~/common/facets/foundation.js";
+import foundation from "~/common/foundation.js";
 
 const output = await foundation.orchestrator.output();
 const queue = await foundation.engine.queue();

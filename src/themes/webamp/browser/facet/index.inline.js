@@ -1,4 +1,4 @@
-import foundation from "~/common/facets/foundation.js";
+import foundation from "~/common/foundation.js";
 import BrowserElement from "~/themes/webamp/browser/element.js";
 
 const [out, que, scp, trc] = await Promise.all([

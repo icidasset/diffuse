@@ -9,7 +9,7 @@ import "@awesome.me/webawesome/dist/components/select/select.js";
 import "@awesome.me/webawesome/dist/components/option/option.js";
 
 import "~/common/webawesome/detect-dark.js";
-import foundation from "~/common/facets/foundation.js";
+import foundation from "~/common/foundation.js";
 import * as Output from "~/common/output.js";
 
 /**

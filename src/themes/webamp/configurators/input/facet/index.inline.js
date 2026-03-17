@@ -1,4 +1,4 @@
-import foundation from "~/common/facets/foundation.js";
+import foundation from "~/common/foundation.js";
 import InputConfigElement from "~/themes/webamp/configurators/input/element.js";
 
 const [inp, out, pro, sou] = await Promise.all([

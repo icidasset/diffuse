@@ -1,6 +1,6 @@
 import { effect } from "~/common/signal.js";
 import { insertPreludes } from "~/common/facets/prelude.js";
-import foundation from "~/common/facets/foundation.js";
+import foundation from "~/common/foundation.js";
 
 const elements = document.createElement("div");
 elements.id = "elements-container";

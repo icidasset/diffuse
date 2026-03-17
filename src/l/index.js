@@ -1,4 +1,4 @@
-import foundation from "~/common/facets/foundation.js";
+import foundation from "~/common/foundation.js";
 import * as CID from "~/common/cid.js";
 import * as Output from "~/common/output.js";
 import { createLoader, renderError } from "~/common/loader.js";

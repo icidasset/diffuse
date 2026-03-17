@@ -39,7 +39,7 @@ export function renderEditor() {
 </style>
 
 <script type="module">
-  import foundation from "~/common/facets/foundation.js";
+  import foundation from "~/common/foundation.js";
 </script>
     `.trim(),
     extensions: [

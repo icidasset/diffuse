@@ -1,4 +1,4 @@
-import foundation from "~/common/facets/foundation.js";
+import foundation from "~/common/foundation.js";
 
 foundation.orchestrator.processTracks({
   disableWhenReady: false,

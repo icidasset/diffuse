@@ -1,5 +1,5 @@
 import * as TID from "@atcute/tid";
-import foundation from "~/common/facets/foundation.js";
+import foundation from "~/common/foundation.js";
 
 /**
  * @import {PlaylistItem, Track} from "~/definitions/types.d.ts"

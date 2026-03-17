@@ -1,4 +1,4 @@
-import foundation from "~/common/facets/foundation.js";
+import foundation from "~/common/foundation.js";
 import OutputConfigElement from "~/themes/webamp/configurators/output/element.js";
 
 const out = await foundation.orchestrator.output();

@@ -14,7 +14,7 @@ async function addSampleContent() {
     Loading dependencies
   </span>`;
 
-  const { default: foundation } = await import("~/common/facets/foundation.js");
+  const { default: foundation } = await import("~/common/foundation.js");
   const Output = await import("~/common/output.js");
 
   const output = await foundation.orchestrator.output();
