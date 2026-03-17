@@ -303,10 +303,7 @@ async function facetHtmlMiddleware(
   }
 
   let content = await response.text();
-  content = await inlineScriptSrc(
-    content,
-    path.join("./src", path.dirname(pathname)),
-  );
+  content = await inlineScriptSrc(content);
 
   const headers = new Headers(response.headers);
   headers.set("content-type", "text/plain; charset=utf-8");
@@ -318,13 +315,13 @@ async function facetHtmlMiddleware(
 }
 
 const SCRIPT_SRC_RE =
-  /<script type="module" src="\.\/([^"]+\.inline\.js)"><\/script>/;
+  /<script type="module" src="([^"]+\.inline\.js)"><\/script>/;
 
-async function inlineScriptSrc(content: string, dir: string): Promise<string> {
+async function inlineScriptSrc(content: string): Promise<string> {
   const match = SCRIPT_SRC_RE.exec(content);
   if (!match) return content;
 
-  const jsPath = path.join(dir, match[1]);
+  const jsPath = path.join("src", match[1]);
   try {
     return htmlWithInlineJs({ content, jsPath, match: match[0] });
   } catch {
