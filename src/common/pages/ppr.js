@@ -41,6 +41,7 @@ async function initJsBasedOnPage(url) {
       break;
     case "/guide":
       Guide.setupSampleButton();
+      break;
     default:
       break;
   }
@@ -73,7 +74,7 @@ function navigateHandler(event) {
   if (parts.length > 2) return;
 
   // Skip the loader page
-  if (parts[1] === "l") return;
+  if (parts[0] === "l") return;
 
   event.intercept({
     scroll: "manual",
