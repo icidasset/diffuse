@@ -67,6 +67,7 @@ examples:
         {{- echo -}}
           import foundation from "common/foundation.js"
         {{ /echo }}
+{{ echo -}}await foundation.configurator.input(){{- /echo }}
 {{ echo -}}await foundation.configurator.scrobbles(){{- /echo }}
 
 {{ echo -}}await foundation.engine.audio(){{- /echo }}
@@ -76,7 +77,6 @@ examples:
 
 {{ echo -}}await foundation.orchestrator.autoQueue(){{- /echo }}
 {{ echo -}}await foundation.orchestrator.favourites(){{- /echo }}
-{{ echo -}}await foundation.orchestrator.input(){{- /echo }}
 {{ echo -}}await foundation.orchestrator.mediaSession(){{- /echo }}
 {{ echo -}}await foundation.orchestrator.output(){{- /echo }}
 {{ echo -}}await foundation.orchestrator.queueAudio(){{- /echo }}

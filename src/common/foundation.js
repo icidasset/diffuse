@@ -14,6 +14,9 @@ export const GROUP = url.searchParams.get("group") ?? "facets";
  */
 const signals = {
   configurator: {
+    input: signal(
+      /** @type {import("~/components/configurator/input/element.js").CLASS | null} */ (null),
+    ),
     scrobbles: signal(
       /** @type {import("~/components/configurator/scrobbles/element.js").CLASS | null} */ (null),
     ),
@@ -40,9 +43,6 @@ const signals = {
     ),
     favourites: signal(
       /** @type {import("~/components/orchestrator/favourites/element.js").CLASS | null} */ (null),
-    ),
-    input: signal(
-      /** @type {import("~/components/orchestrator/input/element.js").CLASS | null} */ (null),
     ),
     mediaSession: signal(
       /** @type {import("~/components/orchestrator/media-session/element.js").CLASS | null} */ (null),
@@ -88,6 +88,7 @@ export const config = {
 
   // Elements
   configurator: {
+    input,
     scrobbles,
   },
 
@@ -101,7 +102,6 @@ export const config = {
   orchestrator: {
     autoQueue,
     favourites,
-    input,
     mediaSession,
     output,
     queueAudio,
@@ -123,6 +123,7 @@ export const config = {
    */
   signals: {
     configurator: {
+      input: signals.configurator.input.get,
       scrobbles: signals.configurator.scrobbles.get,
     },
 
@@ -136,7 +137,6 @@ export const config = {
     orchestrator: {
       autoQueue: signals.orchestrator.autoQueue.get,
       favourites: signals.orchestrator.favourites.get,
-      input: signals.orchestrator.input.get,
       mediaSession: signals.orchestrator.mediaSession.get,
       output: signals.orchestrator.output.get,
       processTracks: signals.orchestrator.processTracks.get,
@@ -159,6 +159,18 @@ export default config;
 // 🥡
 
 // Configurators
+
+async function input() {
+  const { default: InputConfigurator } = await import(
+    "~/components/configurator/input/element.js"
+  );
+
+  const i = new InputConfigurator();
+  i.setAttribute("group", GROUP);
+  i.setAttribute("id", "input");
+
+  return findExistingOrAdd(i, signals.configurator.input);
+}
 
 /**
  * @returns {Promise<ScrobbleElement>}
@@ -297,18 +309,6 @@ async function favourites() {
   fo.setAttribute("output-selector", o.selector);
 
   return findExistingOrAdd(fo, signals.orchestrator.favourites);
-}
-
-async function input() {
-  const { default: InputOrchestrator } = await import(
-    "~/components/orchestrator/input/element.js"
-  );
-
-  const i = new InputOrchestrator();
-  i.setAttribute("group", GROUP);
-  i.setAttribute("id", "input");
-
-  return findExistingOrAdd(i, signals.orchestrator.input);
 }
 
 async function mediaSession() {

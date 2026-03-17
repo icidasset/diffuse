@@ -9,7 +9,7 @@ import WebampElement from "~/themes/winamp/webamp/element.js";
  * @import {Track} from "~/definitions/types.d.ts"
  */
 
-const input = await foundation.orchestrator.input();
+const input = await foundation.configurator.input();
 const queue = await foundation.engine.queue();
 const scopedTracks = await foundation.orchestrator.scopedTracks();
 

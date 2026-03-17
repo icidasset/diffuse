@@ -9,7 +9,7 @@ const [aud, art, fav, inp, out, que] = await Promise.all([
   foundation.engine.audio(),
   foundation.processor.artwork(),
   foundation.orchestrator.favourites(),
-  foundation.orchestrator.input(),
+  foundation.configurator.input(),
   foundation.orchestrator.output(),
   foundation.engine.queue(),
 ]);

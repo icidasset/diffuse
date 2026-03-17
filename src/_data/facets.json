@@ -28,6 +28,14 @@
     "desc": "Export all data as a JSON snapshot, or restore from a previously exported file."
   },
   {
+    "url": "facets/data/input-bundle/index.html",
+    "title": "Default Input Bundle",
+    "kind": "prelude",
+    "category": "Data",
+    "featured": true,
+    "desc": "The default setup for audio input sources. Supports these services: HTTPS, Icecast, the local filesystem, OpenSubsonic, and S3-compatible storage."
+  },
+  {
     "url": "facets/data/output-bundle/index.html",
     "title": "Default Output Bundle",
     "kind": "prelude",

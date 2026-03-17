@@ -2,7 +2,7 @@ import foundation from "~/common/foundation.js";
 import InputConfigElement from "~/themes/winamp/configurators/input/element.js";
 
 const [inp, out, pro, sou] = await Promise.all([
-  foundation.orchestrator.input(),
+  foundation.configurator.input(),
   foundation.orchestrator.output(),
   foundation.orchestrator.processTracks({ disableWhenReady: true }),
   foundation.orchestrator.sources(),

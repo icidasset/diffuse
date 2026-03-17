@@ -175,18 +175,11 @@ export class DiffuseElement extends HTMLElement {
     return worker;
   }
 
-  /** */
+  /**
+   * @returns {Record<string, DiffuseElement> | null}
+   */
   dependencies() {
-    return Object.fromEntries(
-      Array.from(this.children).flatMap((element) => {
-        if ("identifier" in element === false) {
-          return [];
-        }
-
-        const d = /** @type {DiffuseElement} */ (element);
-        return [[d.localName, d]];
-      }),
-    );
+    return null;
   }
 
   worker() {
@@ -225,7 +218,7 @@ export class DiffuseElement extends HTMLElement {
 
     let toWorker;
 
-    if (Object.keys(deps).length) {
+    if (deps) {
       toWorker =
         /**
          * @param {any} msg

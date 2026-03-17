@@ -1,0 +1,81 @@
+import foundation from "~/common/foundation.js";
+import { effect } from "~/common/signal.js";
+
+import { NAME as HTTPS_NAME } from "~/components/input/https/element.js";
+import { NAME as ICECAST_NAME } from "~/components/input/icecast/element.js";
+import { NAME as LOCAL_NAME } from "~/components/input/local/element.js";
+import { NAME as OPENSUBSONIC_NAME } from "~/components/input/opensubsonic/element.js";
+import { NAME as S3_NAME } from "~/components/input/s3/element.js";
+
+/**
+ * @import InputConfigurator from "~/components/configurator/input/element.js"
+ */
+
+/**
+ * Setup DOM elements when needed.
+ */
+effect(() => {
+  const input = foundation.signals.configurator.input();
+  if (!input) return;
+
+  https(input);
+  icecast(input);
+  local(input);
+  opensubsonic(input);
+  s3(input);
+});
+
+////////////////////////////////////////////
+// HTTPS
+////////////////////////////////////////////
+
+/**
+ * @param {InputConfigurator} input
+ */
+export function https(input) {
+  input.append(document.createElement(HTTPS_NAME));
+}
+
+////////////////////////////////////////////
+// ICECAST
+////////////////////////////////////////////
+
+/**
+ * @param {InputConfigurator} input
+ */
+export function icecast(input) {
+  input.append(document.createElement(ICECAST_NAME));
+}
+
+////////////////////////////////////////////
+// LOCAL
+////////////////////////////////////////////
+
+/**
+ * @param {InputConfigurator} input
+ */
+export function local(input) {
+  input.append(document.createElement(LOCAL_NAME));
+}
+
+////////////////////////////////////////////
+// OPENSUBSONIC
+////////////////////////////////////////////
+
+/**
+ * @param {InputConfigurator} input
+ */
+export function opensubsonic(input) {
+  input.append(document.createElement(OPENSUBSONIC_NAME));
+}
+
+////////////////////////////////////////////
+// S3
+////////////////////////////////////////////
+
+/**
+ * @param {InputConfigurator} input
+ */
+export function s3(input) {
+  input.append(document.createElement(S3_NAME));
+}

@@ -17,8 +17,8 @@ async function addSampleContent() {
   const { default: foundation } = await import("~/common/foundation.js");
   const Output = await import("~/common/output.js");
 
+  const input = await foundation.configurator.input();
   const output = await foundation.orchestrator.output();
-  const input = await foundation.orchestrator.input();
   const pto = await foundation.orchestrator.processTracks({
     disableWhenReady: true,
   });
