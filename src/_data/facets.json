@@ -41,7 +41,7 @@
     "kind": "prelude",
     "category": "Data",
     "featured": true,
-    "desc": "Process all your audio inputs automatically when opening any interface."
+    "desc": "Process all your audio inputs automatically when opening any interface. Happens once every 10 minutes."
   },
   {
     "url": "facets/misc/scrobble/index.html",
