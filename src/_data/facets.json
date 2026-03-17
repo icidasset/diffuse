@@ -69,22 +69,29 @@
     "desc": "Import data from Diffuse v3."
   },
   {
-    "url": "themes/webamp/browser/facet/index.html",
-    "title": "Webamp / Browser",
+    "url": "themes/winamp/facet/index.html",
+    "title": "Winamp",
+    "category": "Themes",
+    "featured": true,
+    "desc": "Windows 98 inspired theme that uses the Webamp player  in combination with Diffuse."
+  },
+  {
+    "url": "themes/winamp/browser/facet/index.html",
+    "title": "Winamp / Browser",
     "category": "Browsing",
     "featured": true,
     "desc": "Collection browser and search."
   },
   {
-    "url": "themes/webamp/configurators/input/facet/index.html",
-    "title": "Webamp / Input Configurator",
+    "url": "themes/winamp/configurators/input/facet/index.html",
+    "title": "Winamp / Input Configurator",
     "category": "Data",
     "featured": true,
     "desc": "Add your audio sources."
   },
   {
-    "url": "themes/webamp/configurators/output/facet/index.html",
-    "title": "Webamp / Output Configurator",
+    "url": "themes/winamp/configurators/output/facet/index.html",
+    "title": "Winamp / Output Configurator",
     "category": "Data",
     "featured": true,
     "desc": "Manage your data storage."

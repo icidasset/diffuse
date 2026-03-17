@@ -318,10 +318,14 @@ class InputConfig extends DiffuseElement {
     };
 
     const existingTracksCol = this.$output.value?.tracks.collection();
-    const existingTracks = existingTracksCol?.state === "loaded" ? existingTracksCol.data : [];
+    const existingTracks = existingTracksCol?.state === "loaded"
+      ? existingTracksCol.data
+      : [];
+
     await this.$output.value?.tracks.save([...existingTracks, track]);
 
     this.$tab.value = "overview";
+    this.#processSources();
   }
 
   /**
@@ -340,10 +344,10 @@ class InputConfig extends DiffuseElement {
   render({ html }) {
     return html`
       <link rel="stylesheet" href="vendor/98.css" />
-      <link rel="stylesheet" href="themes/webamp/98-extra.css" />
+      <link rel="stylesheet" href="themes/winamp/98-extra.css" />
 
       <style>
-      @import "./themes/webamp/98-vars.css";
+      @import "./themes/winamp/98-vars.css";
 
       .button-row {
         display: inline-flex;

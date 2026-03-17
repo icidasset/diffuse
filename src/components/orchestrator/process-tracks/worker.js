@@ -60,7 +60,7 @@ export async function process({ data, ports }) {
     async (promise, track) => {
       const acc = await promise;
 
-      if (track.tags && track.stats) {
+      if ((track.tags && track.stats) || track.kind === "placeholder") {
         processed++;
         $progress.value = { processed, total: tracks.length };
         return [...acc, track];

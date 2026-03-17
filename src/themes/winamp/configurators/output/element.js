@@ -283,10 +283,10 @@ class OutputConfig extends DiffuseElement {
   render({ html }) {
     return html`
       <link rel="stylesheet" href="vendor/98.css" />
-      <link rel="stylesheet" href="themes/webamp/98-extra.css" />
+      <link rel="stylesheet" href="themes/winamp/98-extra.css" />
 
       <style>
-      @import "./themes/webamp/98-vars.css";
+      @import "./themes/winamp/98-vars.css";
 
       .button-row {
         display: inline-flex;

@@ -1,5 +1,5 @@
 import foundation from "~/common/foundation.js";
-import BrowserElement from "~/themes/webamp/browser/element.js";
+import BrowserElement from "~/themes/winamp/browser/element.js";
 
 const [out, que, scp, trc] = await Promise.all([
   foundation.orchestrator.output(),

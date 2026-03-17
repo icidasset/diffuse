@@ -1,5 +1,5 @@
 import foundation from "~/common/foundation.js";
-import InputConfigElement from "~/themes/webamp/configurators/input/element.js";
+import InputConfigElement from "~/themes/winamp/configurators/input/element.js";
 
 const [inp, out, pro, sou] = await Promise.all([
   foundation.orchestrator.input(),

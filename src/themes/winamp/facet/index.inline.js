@@ -1,37 +1,25 @@
-import "~/components/engine/scope/element.js";
-import "~/components/input/opensubsonic/element.js";
-import "~/components/input/s3/element.js";
-import "~/components/orchestrator/input/element.js";
-import "~/components/orchestrator/output/element.js";
-import "~/components/orchestrator/process-tracks/element.js";
-import "~/components/orchestrator/sources/element.js";
-import "~/components/processor/metadata/element.js";
-
-import * as Input from "~/components/configurator/input/element.js";
-import * as Queue from "~/components/engine/queue/element.js";
-import * as Search from "~/components/processor/search/element.js";
-import * as ScopedTracks from "~/components/orchestrator/scoped-tracks/element.js";
-
-import { component } from "~/common/element.js";
+import foundation from "~/common/foundation.js";
 import { effect, untracked } from "~/common/signal.js";
 
-import "./browser/element.js";
-import "./configurators/input/element.js";
-import "./configurators/output/element.js";
-import "./window/element.js";
-
-import WindowManager from "./window-manager/element.js";
-import WebampElement from "./webamp/element.js";
+import WindowManager from "~/themes/winamp/window-manager/element.js";
+import WebampElement from "~/themes/winamp/webamp/element.js";
 
 /**
  * @import {OutputElement} from "~/components/output/types.d.ts"
  * @import {Track} from "~/definitions/types.d.ts"
  */
 
-const input = component(Input);
-const queue = component(Queue);
-const search = component(Search);
-const scopedTracks = component(ScopedTracks);
+const input = await foundation.orchestrator.input();
+const queue = await foundation.engine.queue();
+const scopedTracks = await foundation.orchestrator.scopedTracks();
+
+await foundation.orchestrator.sources();
+await foundation.orchestrator.processTracks({ disableWhenReady: true });
+
+await import("~/themes/winamp/browser/element.js");
+await import("~/themes/winamp/configurators/input/element.js");
+await import("~/themes/winamp/configurators/output/element.js");
+await import("~/themes/winamp/window/element.js");
 
 /** @type {OutputElement | null} */
 const output = document.querySelector("#output");
@@ -144,8 +132,8 @@ effect(() => {
   const col = output.tracks.collection();
   if (col.state !== "loaded") return;
 
-  const fingerprintSearch = search.supplyFingerprint();
-  if (fingerprintSearch === undefined) return;
+  // const fingerprintSearch = search.supplyFingerprint();
+  // if (fingerprintSearch === undefined) return;
 
   const fingerprintQueue = queue.supplyFingerprint();
   if (fingerprintQueue === undefined) return;
