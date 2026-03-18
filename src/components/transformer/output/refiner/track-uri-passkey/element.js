@@ -51,7 +51,8 @@ class TrackUriPasskeyTransformer extends OutputTransformer {
     // Tracks
     this.#tracks = () => {
       const col = base.tracks.collection();
-      if (col.state === "loading") {
+
+      if (col?.state !== "loaded") {
         return { state: "loading", locked: [], unlocked: [] };
       }
 

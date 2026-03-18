@@ -1,8 +1,13 @@
 import { Client, ClientResponseError, ok } from "@atcute/client";
+import { encode } from "@atcute/cbor";
+import { xxh32r } from "xxh32/dist/raw.js";
+import * as Repo from "@atcute/repo";
+import * as IDB from "idb-keyval";
 import * as TID from "@atcute/tid";
 
 import { computed, signal } from "~/common/signal.js";
 import { BroadcastedOutputElement, outputManager } from "../../common.js";
+import * as Output from "~/common/output.js";
 
 import {
   clearStoredSession,
@@ -14,7 +19,7 @@ import {
 } from "./oauth.js";
 
 /**
- * @import {PlaylistItemBundle, TrackBundle} from "~/definitions/types.d.ts"
+ * @import {TrackBundle} from "~/definitions/types.d.ts"
  * @import {OutputManager} from "../../types.d.ts"
  * @import {ATProtoOutputElement} from "./types.d.ts"
  */
@@ -52,31 +57,8 @@ class ATProtoOutput extends BroadcastedOutputElement {
       },
       playlistItems: {
         empty: () => [],
-        get: async () => {
-          const bundles = await this.listRecords(
-            "sh.diffuse.output.playlistItemBundle",
-          );
-
-          return bundles.flatMap((bundle) => bundle.playlistItems ?? []);
-        },
-        put: (data) => {
-          /** @type {PlaylistItemBundle[]} */
-          const bundles = [];
-
-          for (let i = 0; i < data.length; i += 100) {
-            bundles.push({
-              $type: "sh.diffuse.output.playlistItemBundle",
-              id: TID.now(),
-              playlistItems: data.slice(i, i + 100),
-            });
-          }
-
-          return this.#putRecords(
-            "sh.diffuse.output.playlistItemBundle",
-            bundles,
-            { upsertBatchSize: 1 },
-          );
-        },
+        get: () => this.listRecords("sh.diffuse.output.playlistItem"),
+        put: (data) => this.#putRecords("sh.diffuse.output.playlistItem", data),
       },
       themes: {
         empty: () => [],
@@ -92,7 +74,15 @@ class ATProtoOutput extends BroadcastedOutputElement {
 
           return bundles.flatMap((bundle) => bundle.tracks ?? []);
         },
-        put: (data) => {
+        put: async (data) => {
+          const current = await Output.data(this.#manager.tracks);
+          const hashCurrent = xxh32r(encode(current));
+          const hashNew = xxh32r(encode(data));
+
+          if (hashCurrent === hashNew) {
+            return;
+          }
+
           /** @type {TrackBundle[]} */
           const bundles = [];
 
@@ -285,6 +275,39 @@ class ATProtoOutput extends BroadcastedOutputElement {
   }
 
   /**
+   * Fetch the full repo CAR for the authenticated user, cached in IDB by rev.
+   * Returns null if not authenticated or if the commit rev cannot be determined.
+   *
+   * @returns {Promise<Uint8Array | null>}
+   */
+  async #getRepoCar() {
+    const did = this.#did.value;
+    const rpc = this.#rpc;
+    if (!rpc || !did) return null;
+
+    const latestRev = await this.getLatestCommit();
+    if (!latestRev) return null;
+
+    const IDB_KEY = `diffuse/output/raw/atproto/repo/${did}`;
+    const cached =
+      /** @type {{ rev: string, bytes: Uint8Array } | undefined} */ (
+        await IDB.get(IDB_KEY)
+      );
+
+    if (cached?.rev === latestRev) {
+      return cached.bytes;
+    }
+
+    const bytes = await ok(rpc.get("com.atproto.sync.getRepo", {
+      params: { did },
+      as: "bytes",
+    }));
+
+    await IDB.set(IDB_KEY, { rev: latestRev, bytes });
+    return bytes;
+  }
+
+  /**
    * @template T
    * @param {string} collection
    * @param {string} [did]
@@ -293,28 +316,18 @@ class ATProtoOutput extends BroadcastedOutputElement {
   async listRecords(collection, did) {
     did ??= this.#did.value ?? undefined;
 
-    const rpc = this.#rpc;
-    if (!rpc || !did) return [];
+    if (!this.#rpc || !did) return [];
 
     try {
+      const bytes = await this.#getRepoCar();
+      if (!bytes) return [];
+
       const records = [];
-
-      /** @type {any} */
-      let cursor;
-
-      do {
-        const page = await ok(rpc.get(
-          "com.atproto.repo.listRecords",
-          { params: { repo: did, collection, limit: 100, cursor } },
-        ));
-
-        for (const record of (page?.records ?? [])) {
-          records.push(record.value);
+      for (const entry of Repo.fromUint8Array(bytes)) {
+        if (entry.collection === collection) {
+          records.push(/** @type {T} */ (entry.record));
         }
-
-        cursor = page?.cursor;
-      } while (cursor);
-
+      }
       return records;
     } catch (err) {
       if (this.#isSessionError(err)) {
@@ -344,24 +357,15 @@ class ATProtoOutput extends BroadcastedOutputElement {
       /** @type {Map<string, { rkey: string, value: unknown }>} */
       const existing = new Map();
 
-      /** @type {any} */
-      let cursor;
-
-      do {
-        const page = await ok(rpc.get(
-          "com.atproto.repo.listRecords",
-          {
-            params: { repo: this.#did.value, collection, limit: 100, cursor },
-          },
-        ));
-
-        for (const record of (page?.records ?? [])) {
-          const rkey = record.uri.split("/").pop();
-          existing.set(record.value.id, { rkey, value: record.value });
+      const repoBytes = await this.#getRepoCar();
+      if (repoBytes) {
+        for (const entry of Repo.fromUint8Array(repoBytes)) {
+          if (entry.collection === collection) {
+            const record = /** @type {any} */ (entry.record);
+            existing.set(record.id, { rkey: entry.rkey, value: record });
+          }
         }
-
-        cursor = page?.cursor;
-      } while (cursor);
+      }
 
       // 2. Build desired state
       const desired = new Map(
@@ -405,11 +409,70 @@ class ATProtoOutput extends BroadcastedOutputElement {
         }
       }
 
-      // 4. Apply in batches
-      const applyBatch = async (/** @type {unknown[]} */ batch) => {
+      // 4. Apply in batches, throttled to 1500 ops/hour via a persisted sliding window
+      const WINDOW_MS = 3_600_000;
+      const RATE_LIMIT = 1500;
+
+      const IDB_KEY = "diffuse/output/raw/atproto/writes";
+
+      /**
+       * Returns all record IDs written within the last hour, loaded from IDB.
+       *
+       * @returns {Promise<{ id: string, ts: number }[]>}
+       */
+      const loadWindow = async () => {
+        const now = Date.now();
+        const all = await IDB.get(IDB_KEY) ?? [];
+        return all.filter(
+          /**
+           * @param {{ id: string, ts: number }} entry
+           * @returns {boolean}
+           */
+          (entry) => now - entry.ts < WINDOW_MS,
+        );
+      };
+
+      /**
+       * Records IDs as written, pruning entries older than one hour.
+       *
+       * @param {string[]} ids
+       */
+      const recordWritten = async (ids) => {
+        const now = Date.now();
+        const window = await loadWindow();
+        await IDB.set(IDB_KEY, [
+          ...window,
+          ...ids.map((id) => ({ id, ts: now })),
+        ]);
+      };
+
+      const applyBatch = async (/** @type {any[]} */ batch) => {
+        // Wait until the sliding window has room for this batch
+        while (true) {
+          const window = await loadWindow();
+          const uniqueInWindow = new Set(window.map((e) => e.id));
+          const batchIds = batch.map((op) => op.rkey ?? op.value?.id).filter(
+            Boolean,
+          );
+          const newIds = batchIds.filter((id) => !uniqueInWindow.has(id));
+
+          if (uniqueInWindow.size + newIds.length <= RATE_LIMIT) break;
+
+          // Wait until the oldest entry in the window expires
+          const oldest = window.reduce((a, b) => a.ts < b.ts ? a : b);
+          const waitMs = WINDOW_MS - (Date.now() - oldest.ts) + 1;
+          await new Promise((resolve) => setTimeout(resolve, waitMs));
+        }
+
         const result = await ok(rpc.post("com.atproto.repo.applyWrites", {
           input: { repo: this.#did.value, writes: batch },
         }));
+
+        const writtenIds = batch.map((op) => op.rkey ?? op.value?.id).filter(
+          Boolean,
+        );
+
+        await recordWritten(writtenIds);
 
         if (result?.commit?.rev) {
           this.#rev.value = result.commit.rev;

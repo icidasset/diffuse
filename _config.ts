@@ -89,11 +89,29 @@ site.use(esbuild({
         name: "atcute-multibase-browser",
         setup(build) {
           build.onLoad(
-            { filter: /@atcute\+multibase.*-node\.js$/ },
+            { filter: /@atcute[+/]multibase.*-node\.js$/ },
             async (args) => {
               const browserPath = args.path.replace(
                 "-node.js",
                 "-web.js",
+              );
+              const contents = await Deno.readTextFile(browserPath);
+              return { contents, loader: "js" };
+            },
+          );
+        },
+      },
+      // nanoid ships a browser entry (index.browser.js) but esbuild resolves
+      // the default condition (index.js) which uses Buffer.allocUnsafe.
+      {
+        name: "nanoid-browser",
+        setup(build) {
+          build.onLoad(
+            { filter: /nanoid\/index\.js$/ },
+            async (args) => {
+              const browserPath = args.path.replace(
+                "index.js",
+                "index.browser.js",
               );
               const contents = await Deno.readTextFile(browserPath);
               return { contents, loader: "js" };

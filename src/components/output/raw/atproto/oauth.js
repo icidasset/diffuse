@@ -35,11 +35,7 @@ const SCOPE = metadata.scope;
 
 const location = globalThis.location;
 
-let redirect_uri = (location.origin + location.pathname + location.search)
-  .replace(
-    "://localhost",
-    "://127.0.0.1",
-  );
+let redirect_uri = location.origin + location.pathname + location.search;
 
 const isLocalDev = redirect_uri.startsWith("http://127.0.0.1");
 
@@ -83,12 +79,6 @@ configureOAuth({
  */
 export async function login(handle) {
   const location = globalThis.location;
-
-  if (location.origin.startsWith("http://localhost")) {
-    location.assign(
-      location.href.replace("http://localhost:", "http://127.0.0.1:"),
-    );
-  }
 
   sessionStorage.setItem(
     "diffuse/output/raw/atproto/oauth/redirect_path",

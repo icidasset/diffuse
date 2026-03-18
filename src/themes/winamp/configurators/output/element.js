@@ -103,6 +103,9 @@ class OutputConfig extends DiffuseElement {
     const atproto = this.$atproto.value;
     if (!atproto) return;
 
+    const output = this.$output.value;
+    if (!output || !("select" in output)) return;
+
     /** @type {HTMLButtonElement | null} */
     const button = this.root().querySelector("#atproto-submit");
     if (button) {
@@ -110,14 +113,22 @@ class OutputConfig extends DiffuseElement {
       button.textContent = "Loading ...";
     }
 
+    const option = (await output.options()).find((o) =>
+      o.label === "AT Protocol"
+    );
+
+    if (option) await output.select(option.id);
     this.$atprotoError.value = null;
 
     try {
       await atproto.login(handle);
     } catch (err) {
+      console.error(err);
+
       this.$atprotoError.value = err instanceof Error
         ? err.message
         : "login failed";
+
       if (button) {
         button.disabled = false;
         button.textContent = "Sign in";
@@ -189,6 +200,7 @@ class OutputConfig extends DiffuseElement {
     const option = (await output.options()).find((o) =>
       o.label === "AT Protocol"
     );
+
     if (option) await output.select(option.id);
   };
 
@@ -200,6 +212,9 @@ class OutputConfig extends DiffuseElement {
 
     const s3 = this.$s3.value;
     if (!s3) return;
+
+    const output = this.$output.value;
+    if (!output || !("select" in output)) return;
 
     /** @type {HTMLButtonElement | null} */
     const button = this.root().querySelector("#s3-submit");
@@ -244,6 +259,11 @@ class OutputConfig extends DiffuseElement {
 
     await s3.setBucket(bucket);
 
+    const option = (await output.options()).find((o) =>
+      o.label === "AT Protocol"
+    );
+
+    if (option) await output.select(option.id);
     if (button) button.disabled = false;
   };
 
@@ -287,6 +307,10 @@ class OutputConfig extends DiffuseElement {
 
       <style>
       @import "./themes/winamp/98-vars.css";
+
+      input, select, textarea {
+        color: rgb(34, 34, 34);
+      }
 
       .button-row {
         display: inline-flex;

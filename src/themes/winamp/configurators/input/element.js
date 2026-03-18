@@ -8,12 +8,12 @@ import {
 } from "~/common/element.js";
 import { signal } from "~/common/signal.js";
 
+import { buildURI as buildIcecastURI } from "~/components/input/icecast/common.js";
 import { buildURI as buildOpenSubsonicURI } from "~/components/input/opensubsonic/common.js";
 import { buildURI as buildS3URI } from "~/components/input/s3/common.js";
 import { isSupported as supportsLocalFsAccess } from "~/components/input/local/common.js";
 
 import { SCHEME as HTTPS_SCHEME } from "~/components/input/https/constants.js";
-import { buildURI as buildIcecastURI } from "~/components/input/icecast/common.js";
 import { SCHEME as ICECAST_SCHEME } from "~/components/input/icecast/constants.js";
 import { SCHEME as LOCAL_SCHEME } from "~/components/input/local/constants.js";
 import { SCHEME as OPENSUBSONIC_SCHEME } from "~/components/input/opensubsonic/constants.js";

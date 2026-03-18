@@ -52,7 +52,9 @@ class ATProtoOutputSyncTransformer extends OutputTransformer {
         collection: computed(() => {
           const l = local();
           if (!l) return { state: "loading" };
-          return l[name].collection();
+          const c = l[name].collection();
+          if (c.state === "loading") return c;
+          return { state: "loaded", data: c.data ?? [] };
         }),
         reload: async () => {
           await this.#sync();
