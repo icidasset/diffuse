@@ -590,18 +590,26 @@ ul li::marker {
  * Nav
  */
 
-nav {
+.nav-container {
   align-items: center;
   border-bottom: 1px solid var(--border-color);
   display: flex;
-  flex-wrap: wrap;
   gap: var(--space-xs);
   margin-top: var(--space-md);
   padding-bottom: var(--space-md);
+}
 
-  .button:not(:has(.with-icon)) {
+nav {
+  align-items: center;
+  display: flex;
+  flex: 1;
+  flex-wrap: nowrap;
+  gap: var(--space-xs);
+  overflow: hidden;
+
+  .button {
+    flex-shrink: 0;
     overflow: hidden;
-    text-overflow: ellipsis;
     white-space: nowrap;
   }
 }

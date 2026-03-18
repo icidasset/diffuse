@@ -2,6 +2,7 @@ import * as Build from "./build.js";
 import * as Dashboard from "./dashboard.js";
 import * as Grid from "./grid.js";
 import * as Guide from "./guide.js";
+import * as Nav from "./nav.js";
 
 /** Base pathname of the app (e.g. "/" at root, "/diffuse/" in a subdirectory). */
 const BASE_PATHNAME = new URL(document.baseURI).pathname;
@@ -25,6 +26,9 @@ function relativePathname(pathname) {
  */
 async function initJsBasedOnPage(url) {
   const path = relativePathname(url.pathname);
+
+  Nav.update();
+  Nav.watchResize();
 
   Grid.insertToggleButtons();
   await Grid.monitorToggleButtonStates();
