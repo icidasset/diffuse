@@ -37,11 +37,6 @@ class IndexedDBOutput extends BroadcastedOutputElement {
         get: () => this.#get("playlistItems"),
         put: (data) => this.#put("playlistItems", data),
       },
-      themes: {
-        empty: () => undefined,
-        get: () => this.#get("themes"),
-        put: (data) => this.#put("themes", data),
-      },
       tracks: {
         empty: () => undefined,
         get: () => this.#get("tracks"),
@@ -51,7 +46,6 @@ class IndexedDBOutput extends BroadcastedOutputElement {
 
     this.facets = this.#manager.facets;
     this.playlistItems = this.#manager.playlistItems;
-    this.themes = this.#manager.themes;
     this.tracks = this.#manager.tracks;
 
     this.ready = () => true;

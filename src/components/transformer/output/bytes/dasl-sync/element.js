@@ -158,16 +158,6 @@ class DaslBytesSyncOutputTransformer extends OutputTransformer {
       },
     );
 
-    const themes = state(
-      "themes",
-      computed(() => local()?.themes.collection() ?? { state: "loading" }),
-      remote.themes.collection,
-      {
-        saveLocal: async (v) => local()?.themes.save(v),
-        saveRemote: remote.themes.save,
-      },
-    );
-
     const tracks = state(
       "tracks",
       computed(() => local()?.tracks.collection() ?? { state: "loading" }),
@@ -189,12 +179,6 @@ class DaslBytesSyncOutputTransformer extends OutputTransformer {
       { save: async (v) => local()?.playlistItems.save(v) },
       remote.playlistItems,
       playlistItems,
-    );
-
-    this.themes = this.managerProp(
-      { save: async (v) => local()?.themes.save(v) },
-      remote.themes,
-      themes,
     );
 
     this.tracks = this.managerProp(

@@ -37,7 +37,6 @@ class PathCollectionsOrchestrator extends OutputTransformer {
         );
       },
     };
-    this.themes = base.themes;
     this.tracks = base.tracks;
 
     this.ready = base.ready;

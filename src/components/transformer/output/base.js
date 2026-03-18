@@ -70,20 +70,6 @@ export class OutputTransformer extends BroadcastableDiffuseElement {
           await this.output.signal()?.playlistItems.save(newPlaylistItems);
         },
       },
-      themes: {
-        collection: computed(() => {
-          return this.output.signal()?.themes?.collection() ??
-            { state: "loading" };
-        }),
-        reload: () => {
-          return this.output.signal()?.themes?.reload() ??
-            Promise.resolve();
-        },
-        save: async (newThemes) => {
-          await this.output.whenDefined;
-          await this.output.signal()?.themes.save(newThemes);
-        },
-      },
       tracks: {
         collection: computed(() => {
           return this.output.signal()?.tracks?.collection() ??

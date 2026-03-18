@@ -13,7 +13,6 @@ import { OutputTransformer } from "../../base.js";
 import {
   INITIAL_FACETS_DOCUMENT,
   INITIAL_PLAYLIST_ITEMS_DOCUMENT,
-  INITIAL_THEMES_DOCUMENT,
   INITIAL_TRACKS_DOCUMENT,
 } from "./constants.js";
 
@@ -104,12 +103,6 @@ class AutomergeBytesOutputTransformer extends OutputTransformer {
       INITIAL_PLAYLIST_ITEMS_DOCUMENT,
     );
 
-    const themes = state(
-      computed(() => local()?.themes?.collection() ?? { state: "loading" }),
-      remote.themes.collection,
-      INITIAL_THEMES_DOCUMENT,
-    );
-
     const tracks = state(
       computed(() => local()?.tracks?.collection() ?? { state: "loading" }),
       remote.tracks.collection,
@@ -129,15 +122,6 @@ class AutomergeBytesOutputTransformer extends OutputTransformer {
       computed(() => local()?.playlistItems),
       remote.playlistItems,
       computed(() => playlistItems().doc),
-    );
-
-    this.themes = automergeEntry(
-      computed(() => local()?.themes),
-      remote.themes,
-      computed(() => themes().doc),
-      {
-        stripUndefined: true,
-      },
     );
 
     this.tracks = automergeEntry(
@@ -170,16 +154,6 @@ class AutomergeBytesOutputTransformer extends OutputTransformer {
           const bytes = Automerge.save(s.doc);
           if (l && s.local) l.playlistItems.save(bytes);
           if (s.remote) remote.playlistItems.save(bytes);
-        }
-      });
-
-      this.effect(() => {
-        if (!themes().remoteLoaded) return;
-        const s = themes();
-        if (s.diverged) {
-          const bytes = Automerge.save(s.doc);
-          if (l && s.local) l.themes.save(bytes);
-          if (s.remote) remote.themes.save(bytes);
         }
       });
 

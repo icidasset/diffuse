@@ -33,7 +33,6 @@ import {
 const WATCHED_COLLECTIONS = new Set([
   "sh.diffuse.output.facet",
   "sh.diffuse.output.playlistItem",
-  "sh.diffuse.output.theme",
   "sh.diffuse.output.trackBundle",
 ]);
 
@@ -76,11 +75,6 @@ class ATProtoOutput extends BroadcastedOutputElement {
         get: () => this.listRecords("sh.diffuse.output.playlistItem"),
         put: (data) => this.#putRecords("sh.diffuse.output.playlistItem", data),
       },
-      themes: {
-        empty: () => [],
-        get: () => this.listRecords("sh.diffuse.output.theme"),
-        put: (data) => this.#putRecords("sh.diffuse.output.theme", data),
-      },
       tracks: {
         empty: () => [],
         get: async () => {
@@ -119,7 +113,6 @@ class ATProtoOutput extends BroadcastedOutputElement {
 
     this.facets = this.#manager.facets;
     this.playlistItems = this.#manager.playlistItems;
-    this.themes = this.#manager.themes;
     this.tracks = this.#manager.tracks;
   }
 
@@ -330,7 +323,6 @@ class ATProtoOutput extends BroadcastedOutputElement {
     if (touched.has("sh.diffuse.output.playlistItem")) {
       this.#manager.playlistItems.reload();
     }
-    if (touched.has("sh.diffuse.output.theme")) this.#manager.themes.reload();
     if (touched.has("sh.diffuse.output.trackBundle")) {
       this.#manager.tracks.reload();
     }

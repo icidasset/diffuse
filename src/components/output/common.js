@@ -3,7 +3,7 @@ import { batch, computed, signal, untracked } from "~/common/signal.js";
 import { strictEquality } from "~/common/compare.js";
 
 /**
- * @import {Facet, PlaylistItem, Theme, Track} from "~/definitions/types.d.ts"
+ * @import {Facet, PlaylistItem, Track} from "~/definitions/types.d.ts"
  * @import {SignalWriter} from "~/common/signal.d.ts";
  * @import {OutputManager, OutputManagerProperties} from "./types.d.ts"
  */
@@ -33,7 +33,6 @@ export class BroadcastedOutputElement extends BroadcastableDiffuseElement {
 
     const ogFacetsSave = manager.facets.save.bind(this);
     const ogPlaylistItemsSave = manager.playlistItems.save.bind(this);
-    const ogThemesSave = manager.themes.save.bind(this);
     const ogTracksSave = manager.tracks.save.bind(this);
 
     const actions = this.broadcast(this.identifier, {
@@ -48,10 +47,6 @@ export class BroadcastedOutputElement extends BroadcastableDiffuseElement {
           set: manager.signals.playlistItems.set,
         }),
       },
-      saveThemes: {
-        strategy: "replicate",
-        fn: fn({ save: ogThemesSave, set: manager.signals.themes.set }),
-      },
       saveTracks: {
         strategy: "replicate",
         fn: fn({ save: ogTracksSave, set: manager.signals.tracks.set }),
@@ -61,7 +56,6 @@ export class BroadcastedOutputElement extends BroadcastableDiffuseElement {
     if (actions) {
       manager.facets.save = actions.saveFacets;
       manager.playlistItems.save = actions.savePlaylistItems;
-      manager.themes.save = actions.saveThemes;
       manager.tracks.save = actions.saveTracks;
     }
   }
@@ -73,7 +67,7 @@ export class BroadcastedOutputElement extends BroadcastableDiffuseElement {
  * @returns {OutputManager<Encoding>}
  */
 export function outputManager(
-  { init, facets, playlistItems, themes, tracks },
+  { init, facets, playlistItems, tracks },
 ) {
   const c = signal(
     /** @type {Encoding extends null ? Facet[] : Encoding} */ (facets
@@ -89,14 +83,6 @@ export function outputManager(
       .empty()),
   );
   const pls = signal(
-    /** @type {"loading" | "loaded" | "sleeping"} */ ("sleeping"),
-    { compare: strictEquality },
-  );
-
-  const th = signal(
-    /** @type {Encoding extends null ? Theme[] : Encoding} */ (themes.empty()),
-  );
-  const ths = signal(
     /** @type {"loading" | "loaded" | "sleeping"} */ ("sleeping"),
     { compare: strictEquality },
   );
@@ -121,13 +107,6 @@ export function outputManager(
     pls.value = "loading";
     pl.value = await playlistItems.get();
     pls.value = "loaded";
-  }
-
-  async function loadThemes() {
-    if (init && (await init()) === false) return;
-    ths.value = "loading";
-    th.value = await themes.get();
-    ths.value = "loaded";
   }
 
   async function loadTracks() {
@@ -170,22 +149,6 @@ export function outputManager(
         await playlistItems.put(newPlaylistItems);
       },
     },
-    themes: {
-      collection: computed(() => {
-        if (untracked(() => ths.value === "sleeping")) loadThemes();
-        return ths.value === "loaded"
-          ? { state: "loaded", data: th.value }
-          : { state: "loading" };
-      }),
-      reload: loadThemes,
-      save: async (newThemes) => {
-        batch(() => {
-          if (untracked(() => ths.value === "sleeping")) ths.value = "loaded";
-          th.value = newThemes;
-        });
-        await themes.put(newThemes);
-      },
-    },
     tracks: {
       collection: computed(() => {
         if (untracked(() => ts.value === "sleeping")) loadTracks();
@@ -205,7 +168,6 @@ export function outputManager(
     signals: {
       facets: c,
       playlistItems: pl,
-      themes: th,
       tracks: t,
     },
   };

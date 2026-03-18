@@ -74,14 +74,6 @@ class DefaultOutputRefinerTransformer extends OutputTransformer {
           await base.playlistItems.save(filtered);
         },
       },
-      themes: {
-        ...base.themes,
-        collection: computed(() => {
-          const col = base.themes.collection();
-          if (col.state !== "loaded") return col;
-          return { state: "loaded", data: col.data };
-        }),
-      },
       tracks: {
         ...base.tracks,
         collection: computed(() => {
@@ -119,7 +111,6 @@ class DefaultOutputRefinerTransformer extends OutputTransformer {
     // Assign manager properties to class
     this.facets = manager.facets;
     this.playlistItems = manager.playlistItems;
-    this.themes = manager.themes;
     this.tracks = manager.tracks;
     this.ready = manager.ready;
   }

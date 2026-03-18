@@ -45,7 +45,6 @@ class TrackUriPasskeyTransformer extends OutputTransformer {
 
     this.facets = base.facets;
     this.playlistItems = base.playlistItems;
-    this.themes = base.themes;
     this.ready = this.#keyReady.get;
 
     // Tracks

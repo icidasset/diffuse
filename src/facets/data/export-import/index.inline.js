@@ -18,8 +18,6 @@ const importPlaylistItemsBtn =
   ));
 const importFacetsBtn =
   /** @type {HTMLButtonElement} */ (document.querySelector("#import-facets"));
-const importThemesBtn =
-  /** @type {HTMLButtonElement} */ (document.querySelector("#import-themes"));
 const statusEl = /** @type {HTMLElement} */ (document.querySelector("#status"));
 
 /** @type {Record<string, any> | null} */
@@ -45,14 +43,12 @@ effect(() => {
 exportBtn.onclick = async () => {
   const facets = await Output.data(output.facets);
   const playlistItems = await Output.data(output.playlistItems);
-  const themes = await Output.data(output.themes);
   const tracks = await Output.data(output.tracks);
 
   const data = {
     exportedAt: new Date().toISOString(),
     facets,
     playlistItems,
-    themes,
     tracks,
   };
 
@@ -80,7 +76,6 @@ fileInput.onchange = async () => {
   importTracksBtn.disabled = true;
   importPlaylistItemsBtn.disabled = true;
   importFacetsBtn.disabled = true;
-  importThemesBtn.disabled = true;
 
   if (!file) return;
 
@@ -105,10 +100,6 @@ fileInput.onchange = async () => {
 
   if (Array.isArray(json?.facets) && json.facets.length > 0) {
     importFacetsBtn.disabled = false;
-  }
-
-  if (Array.isArray(json?.themes) && json.themes.length > 0) {
-    importThemesBtn.disabled = false;
   }
 };
 
@@ -158,17 +149,3 @@ importFacetsBtn.onclick = async () => {
   }
 };
 
-// Import themes
-importThemesBtn.onclick = async () => {
-  /** @type {any[]} */
-  const themes = json?.themes;
-  if (!Array.isArray(themes) || themes.length === 0) return;
-
-  try {
-    await output.themes.save(themes);
-    showStatus(`Imported ${themes.length} theme(s).`, "success");
-  } catch (err) {
-    console.error("Import failed:", err);
-    showStatus(`Import failed: ${/** @type {Error} */ (err).message}`, "error");
-  }
-};

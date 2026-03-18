@@ -2,7 +2,7 @@ import * as Automerge from "@automerge/automerge";
 import { base64 } from "iso-base/rfc4648";
 
 /**
- * @import { FacetsDocument, PlaylistItemsDocument, ThemesDocument, TracksDocument } from "./types.d.ts";
+ * @import { FacetsDocument, PlaylistItemsDocument, TracksDocument } from "./types.d.ts";
  */
 
 /** @type {Automerge.Doc<FacetsDocument>} */
@@ -16,13 +16,6 @@ export const INITIAL_FACETS_DOCUMENT = Automerge.load(
 export const INITIAL_PLAYLIST_ITEMS_DOCUMENT = Automerge.load(
   base64.decode(
     "hW9Kg5IPZcsAeAEQIyp0LRYp0l9bpZKWJXTPlgGtUD/lrIatFjiIwoUdtJhh/sBQFIcpPppxduoIp1ArXwYBAgMCEwIjBkACVgIHFQwhAiMCNAFCAlYCgAECfwB/AX8Bf8eTqcwGfwB/B38KY29sbGVjdGlvbn8AfwEBfwJ/AH8AAA",
-  ),
-);
-
-/** @type {Automerge.Doc<ThemesDocument>} */
-export const INITIAL_THEMES_DOCUMENT = Automerge.load(
-  base64.decode(
-    "hW9Kgw5i4LcAeAEQzljXzJAwgqwMkIT3CseCywF4jHbKg9Q2XqVU26bSDj0GtjkQq1HyriZedXU+vUt5wAYBAgMCEwIjBkACVgIHFQwhAiMCNAFCAlYCgAECfwB/AX8Bf8iTqcwGfwB/B38KY29sbGVjdGlvbn8AfwEBfwJ/AH8AAA",
   ),
 );
 

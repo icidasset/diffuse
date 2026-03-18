@@ -27,7 +27,7 @@ A lot of components will have a worker (located in `worker.js` besides the `elem
 
 ## Other directories
 
-- `src/common`: Common Javascript code shared by various components and/or themes.
-- `src/styles`: Common CSS shared by themes, the index page or facets.
-- `src/favicons`, `src/fonts`, `src/images` are binary assets for themes and the index page (`src/index.vto`)
+- `src/common`: Common Javascript code shared by various components and/or pages.
+- `src/styles`: Common CSS shared by pages or facets.
+- `src/favicons`, `src/fonts`, `src/images` are binary assets for facets and pages.
 - `src/_components` and `src/_includes` are templates used in `.vto` templates.
