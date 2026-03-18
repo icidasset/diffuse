@@ -355,8 +355,7 @@ site.addEventListener("afterBuild", async () => {
     const match = SCRIPT_SRC_RE.exec(content);
     if (!match) continue;
 
-    const srcDir = path.dirname(f.path).replace(/^dist\//, "src/");
-    const jsPath = path.join(srcDir, match[1]);
+    const jsPath = path.join("src", match[1]);
 
     try {
       const newContent = htmlWithInlineJs({ content, jsPath, match: match[0] });
