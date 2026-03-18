@@ -36,10 +36,6 @@ base: "./"
   <body>
     {{ content }}
 
-    <!-- Make every touched URL available offline -->
-    <do-offline></do-offline>
-    <script src="components/orchestrator/offline/element.js" type="module"></script>
-
     <!-- Import map -->
     <script type="importmap">
       {
@@ -52,6 +48,10 @@ base: "./"
         }
       }
     </script>
+
+    <!-- Make every touched URL available offline -->
+    <do-offline></do-offline>
+    <script src="components/orchestrator/offline/element.js" type="module"></script>
 
     <!-- Scripts -->
     {{ for url of scripts }}
