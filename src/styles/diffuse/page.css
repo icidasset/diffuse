@@ -643,9 +643,13 @@ nav {
 #status--filler-container {
   align-items: center;
   display: flex;
-  height: 100%;
+  height: var(--space-xl);
   justify-content: end;
   padding: 0 var(--space-lg);
+
+  @media (min-width: 42rem) {
+    height: 100%;
+  }
 }
 
 /**

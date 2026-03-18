@@ -4,6 +4,7 @@ import "~/components/output/polymorphic/indexed-db/element.js";
 
 import { computed, signal } from "~/common/signal.js";
 import { OutputTransformer } from "../../base.js";
+import * as Output from "~/common/output.js";
 
 /**
  * @import { RenderArg } from "~/common/element.d.ts"
@@ -65,9 +66,10 @@ class ATProtoOutputSyncTransformer extends OutputTransformer {
 
           // Track deletions: any id present in local but absent in
           // newData has been deleted by the user.
-          const oldCol = l[name].collection();
-          if (oldCol.state === "loaded" && Array.isArray(oldCol.data)) {
+          const oldCol = await Output.data(l[name]);
+          if (Array.isArray(oldCol.data)) {
             const newIds = new Set(newData.map((/** @type {any} */ r) => r.id));
+
             for (const record of oldCol.data) {
               if (!newIds.has(record.id)) {
                 this.#addTombstone(name, record.id);
