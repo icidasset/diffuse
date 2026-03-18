@@ -1,4 +1,5 @@
 import { Client, ClientResponseError, ok } from "@atcute/client";
+import { ComAtprotoSyncSubscribeRepos } from "@atcute/atproto";
 import { encode } from "@atcute/cbor";
 import { xxh32r } from "xxh32/dist/raw.js";
 import * as Repo from "@atcute/repo";
@@ -28,6 +29,14 @@ import {
 // ELEMENT
 ////////////////////////////////////////////
 
+/** @type {Set<string>} */
+const WATCHED_COLLECTIONS = new Set([
+  "sh.diffuse.output.facet",
+  "sh.diffuse.output.playlistItem",
+  "sh.diffuse.output.theme",
+  "sh.diffuse.output.trackBundle",
+]);
+
 /**
  * @implements {ATProtoOutputElement}
  */
@@ -44,6 +53,13 @@ class ATProtoOutput extends BroadcastedOutputElement {
 
   /** @type {OAuthUserAgent | null} */
   #agent = null;
+
+  /** @type {string | null} */
+  #pdsUrl = null;
+
+  /** @type {AsyncIterator<any> | null} */
+  #firehoseIterator = null;
+  #firehoseGen = 0;
 
   constructor() {
     super();
@@ -109,7 +125,7 @@ class ATProtoOutput extends BroadcastedOutputElement {
 
   // SIGNALS
 
-  #did = signal(/** @type {string | null} */ (null));
+  #did = signal(/** @type {`did:${string}:${string}` | null} */ (null));
   #isOnline = signal(navigator.onLine);
   #rev = signal(/** @type {string | null} */ (null));
 
@@ -136,6 +152,7 @@ class ATProtoOutput extends BroadcastedOutputElement {
 
   /** @override */
   disconnectedCallback() {
+    this.#stopFirehose();
     globalThis.removeEventListener("online", this.#online);
     globalThis.removeEventListener("offline", this.#offline);
   }
@@ -160,10 +177,12 @@ class ATProtoOutput extends BroadcastedOutputElement {
    */
   async logout() {
     if (this.#agent) {
+      this.#stopFirehose();
       await logout(this.#agent);
       this.#agent = null;
       this.#authenticated = Promise.withResolvers();
       this.#did.value = null;
+      this.#pdsUrl = null;
       this.#rpc = null;
     }
   }
@@ -173,9 +192,11 @@ class ATProtoOutput extends BroadcastedOutputElement {
    * Used when the session has already been revoked.
    */
   #clearSession() {
+    this.#stopFirehose();
     this.#agent = null;
     this.#authenticated = Promise.withResolvers();
     this.#did.value = null;
+    this.#pdsUrl = null;
     this.#rpc = null;
 
     clearStoredSession();
@@ -239,7 +260,80 @@ class ATProtoOutput extends BroadcastedOutputElement {
     this.#agent = agent;
     this.#rpc = new Client({ handler: agent });
     this.#did.value = session.info.sub;
+    this.#pdsUrl = session.info.aud;
     this.#authenticated.resolve();
+    this.#startFirehose();
+  }
+
+  // FIREHOSE
+
+  #stopFirehose() {
+    const iter = this.#firehoseIterator;
+    this.#firehoseIterator = null;
+    iter?.return?.();
+  }
+
+  async #startFirehose() {
+    this.#stopFirehose();
+
+    const gen = ++this.#firehoseGen;
+    const pdsUrl = this.#pdsUrl;
+    if (!pdsUrl) return;
+
+    const wssUrl = pdsUrl.replace(
+      /^https?:\/\//,
+      (m) => m === "https://" ? "wss://" : "ws://",
+    );
+
+    const { FirehoseSubscription } = await import("@atcute/firehose");
+
+    // Abort if superseded while awaiting the import
+    if (this.#firehoseGen !== gen) return;
+
+    const subscription = new FirehoseSubscription({
+      service: wssUrl,
+      nsid: ComAtprotoSyncSubscribeRepos.mainSchema,
+      validateMessages: false,
+    });
+
+    const iter = subscription[Symbol.asyncIterator]();
+    this.#firehoseIterator = iter;
+
+    try {
+      for await (const message of iter) {
+        this.#handleFirehoseCommit(message);
+      }
+    } catch {
+      // Non-fatal; partysocket handles reconnection automatically
+    }
+  }
+
+  /**
+   * @param {any} message
+   */
+  #handleFirehoseCommit(message) {
+    if (message.$type !== "com.atproto.sync.subscribeRepos#commit") return;
+    if (message.repo !== this.#did.value) return;
+
+    // Skip commits we made ourselves (rev already reflects current state)
+    if (message.rev === this.#rev.value) return;
+
+    const touched = new Set(
+      (message.ops ?? [])
+        .map((/** @type {any} */ op) => op.path?.split("/")[0])
+        .filter((/** @type {string} */ c) => WATCHED_COLLECTIONS.has(c)),
+    );
+
+    if (touched.size === 0) return;
+
+    if (touched.has("sh.diffuse.output.facet")) this.#manager.facets.reload();
+    if (touched.has("sh.diffuse.output.playlistItem")) {
+      this.#manager.playlistItems.reload();
+    }
+    if (touched.has("sh.diffuse.output.theme")) this.#manager.themes.reload();
+    if (touched.has("sh.diffuse.output.trackBundle")) {
+      this.#manager.tracks.reload();
+    }
   }
 
   // RECORDS
@@ -350,7 +444,9 @@ class ATProtoOutput extends BroadcastedOutputElement {
     { deleteBatchSize = 100, upsertBatchSize = deleteBatchSize } = {},
   ) {
     const rpc = this.#rpc;
-    if (!rpc || !this.#did.value) return;
+    const did = this.#did.value;
+
+    if (!rpc || !did) return;
 
     try {
       // 1. Fetch current state
@@ -465,7 +561,7 @@ class ATProtoOutput extends BroadcastedOutputElement {
         }
 
         const result = await ok(rpc.post("com.atproto.repo.applyWrites", {
-          input: { repo: this.#did.value, writes: batch },
+          input: { repo: did, writes: batch },
         }));
 
         const writtenIds = batch.map((op) => op.rkey ?? op.value?.id).filter(
