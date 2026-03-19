@@ -5,6 +5,7 @@ import "@awesome.me/webawesome/dist/components/input/input.js";
 import "@awesome.me/webawesome/dist/components/icon/icon.js";
 
 import "~/common/webawesome/detect-dark.js";
+import "~/common/webawesome/phosphor/bold.js";
 
 import foundation from "~/common/foundation.js";
 import { effect } from "~/common/signal.js";

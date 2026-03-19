@@ -42,7 +42,7 @@ site.use(esbuild({
     bundle: true,
     format: "esm",
     minify: true,
-    external: ["./file-tree.json"],
+    external: ["./file-tree.json", "@awesome.me/webawesome/*"],
     platform: "browser",
     plugins: [
       // @ts-ignore
@@ -221,23 +221,22 @@ site.filter("facetLoaderURL", (text) => {
 
 function phosphor(path: string) {
   site.remoteFile(
-    `vendor/@phosphor-icons/${path}`,
+    `vendor/@phosphor-icons/web/${path}`,
     import.meta.resolve(`./node_modules/@phosphor-icons/web/src/${path}`),
   );
 
-  site.add(`vendor/@phosphor-icons/${path}`);
+  site.add(`vendor/@phosphor-icons/web/${path}`);
 }
 
-phosphor("fill/style.css");
-phosphor("fill/Phosphor-Fill.svg");
-phosphor("fill/Phosphor-Fill.ttf");
-phosphor("fill/Phosphor-Fill.woff");
-phosphor("fill/Phosphor-Fill.woff2");
-phosphor("bold/style.css");
-phosphor("bold/Phosphor-Bold.svg");
-phosphor("bold/Phosphor-Bold.ttf");
-phosphor("bold/Phosphor-Bold.woff");
-phosphor("bold/Phosphor-Bold.woff2");
+["bold", "duotone", "fill", "light", "regular", "light"].forEach((v) => {
+  const f = v === "regular" ? "" : `-${v[0].toUpperCase()}${v.slice(1)}`;
+  phosphor(`${v}/selection.json`);
+  phosphor(`${v}/style.css`);
+  phosphor(`${v}/Phosphor${f}.svg`);
+  phosphor(`${v}/Phosphor${f}.ttf`);
+  phosphor(`${v}/Phosphor${f}.woff`);
+  phosphor(`${v}/Phosphor${f}.woff2`);
+});
 
 ////////////////////////////////////////////
 // WEB AWESOME

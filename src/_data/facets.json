@@ -30,6 +30,13 @@
     "desc": "Store tracks locally for offline usage automatically after they've been playing for a while."
   },
   {
+    "url": "facets/connect/s3/index.html",
+    "title": "Connect to S3",
+    "category": "Data",
+    "featured": true,
+    "desc": "Connect to an S3-compatible storage for audio input or user-data storage."
+  },
+  {
     "url": "facets/data/export-import/index.html",
     "title": "Export & Import",
     "category": "Data",

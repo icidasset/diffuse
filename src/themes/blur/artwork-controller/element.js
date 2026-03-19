@@ -427,8 +427,8 @@ class ArtworkController extends DiffuseElement {
     });
 
     return html`
-      <link rel="stylesheet" href="vendor/@phosphor-icons/bold/style.css" />
-      <link rel="stylesheet" href="vendor/@phosphor-icons/fill/style.css" />
+      <link rel="stylesheet" href="vendor/@phosphor-icons/web/bold/style.css" />
+      <link rel="stylesheet" href="vendor/@phosphor-icons/web/fill/style.css" />
       <link rel="stylesheet" href="styles/animations.css" />
       <link rel="stylesheet" href="themes/blur/artwork-controller/element.css" />
 
