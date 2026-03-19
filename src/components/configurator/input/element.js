@@ -2,7 +2,8 @@ import { DiffuseElement } from "~/common/element.js";
 
 /**
  * @import {ProxiedActions, Tunnel} from "~/common/worker.d.ts"
- * @import {InputActions, InputElement} from "~/components/input/types.d.ts"
+ * @import {InputElement} from "~/components/input/types.d.ts"
+ * @import {Actions} from "./types.d.ts"
  */
 
 /**
@@ -14,7 +15,7 @@ import { DiffuseElement } from "~/common/element.js";
 ////////////////////////////////////////////
 
 /**
- * @implements {ProxiedActions<InputActions>}
+ * @implements {ProxiedActions<Actions>}
  */
 class InputConfigurator extends DiffuseElement {
   static NAME = "diffuse/configurator/input";
@@ -23,7 +24,7 @@ class InputConfigurator extends DiffuseElement {
   constructor() {
     super();
 
-    /** @type {ProxiedActions<InputActions>} */
+    /** @type {ProxiedActions<Actions>} */
     const proxy = this.workerProxy();
 
     this.consult = proxy.consult;
@@ -31,6 +32,10 @@ class InputConfigurator extends DiffuseElement {
     this.groupConsult = proxy.groupConsult;
     this.list = proxy.list;
     this.resolve = proxy.resolve;
+
+    this.cache = proxy.cache;
+    this.listCached = proxy.listCached;
+    this.removeFromCache = proxy.removeFromCache;
   }
 
   // WORKERS

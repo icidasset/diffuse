@@ -22,6 +22,14 @@
     "desc": "Audio playback controller with an artwork display. Play audio from the queue, add tracks to your favourites, control the queue and volume."
   },
   {
+    "url": "facets/data/cache-tracks/index.html",
+    "title": "Cache tracks",
+    "kind": "prelude",
+    "category": "Data",
+    "featured": true,
+    "desc": "Store tracks locally for offline usage automatically after they've been playing for a while."
+  },
+  {
     "url": "facets/data/export-import/index.html",
     "title": "Export & Import",
     "category": "Data",

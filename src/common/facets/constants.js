@@ -20,23 +20,19 @@ export const STARTING_SET = facets.flatMap((facet) => {
     uri: "diffuse://" + facet.url,
   };
 
-  switch (facet.url) {
-    case "facets/data/input-bundle/index.html":
-      return [{
-        ...properties,
-        id: "defaults/input-bundle",
-      }];
-    case "facets/data/output-bundle/index.html":
-      return [{
-        ...properties,
-        id: "defaults/output-bundle",
-      }];
-    case "facets/data/process-tracks/index.html":
-      return [{
-        ...properties,
-        id: "defaults/process-tracks",
-      }];
-    default:
-      return [];
+  if (
+    [
+      "facets/data/input-bundle/index.html",
+      "facets/data/output-bundle/index.html",
+      "facets/data/process-tracks/index.html",
+    ].includes(facet.url)
+  ) {
+    return [{
+      ...properties,
+      id: "defaults/" +
+        facet.url.replace(/^\facets\/\w+\//, "").replace(/\/index.html/, ""),
+    }];
   }
+
+  return [];
 });

@@ -1,0 +1,7 @@
+import type {InputActions} from "~/components/input/types.d.ts"
+
+export type Actions = InputActions & {
+  cache(uris: string[]): Promise<void>
+  listCached(): Promise<string[]>
+  removeFromCache(uris: string[]): Promise<void>
+};

@@ -1,3 +1,4 @@
+import * as IDB from "idb-keyval";
 import * as URI from "fast-uri";
 
 import { groupTracksPerScheme, groupUrisPerScheme } from "~/common/utils.js";
@@ -7,14 +8,24 @@ import { ostiary, rpc, workerProxy } from "~/common/worker.js";
  * @import {Track} from "~/definitions/types.d.ts";
  * @import {GroupConsult, InputActions} from "~/components/input/types.d.ts"
  * @import {ActionsWithTunnel, ProxiedActions} from "~/common/worker.d.ts"
+ * @import {Actions} from "./types.d.ts"
  */
+
+////////////////////////////////////////////
+// LOCAL CACHE
+////////////////////////////////////////////
+
+const CACHE_KEY_PREFIX = "diffuse/components/configurator/input/cache/";
+
+/** @type {Map<string, string>} */
+const blobUrls = new Map();
 
 ////////////////////////////////////////////
 // INPUT ACTIONS
 ////////////////////////////////////////////
 
 /**
- * @type {ActionsWithTunnel<InputActions>['consult']}
+ * @type {ActionsWithTunnel<Actions>['consult']}
  */
 export async function consult({ data, ports }) {
   const fileUriOrScheme = data;
@@ -32,7 +43,7 @@ export async function consult({ data, ports }) {
 }
 
 /**
- * @type {ActionsWithTunnel<InputActions>['detach']}
+ * @type {ActionsWithTunnel<Actions>['detach']}
  */
 export async function detach({ data, ports }) {
   const cachedTracks = data.tracks;
@@ -62,7 +73,7 @@ export async function detach({ data, ports }) {
 }
 
 /**
- * @type {ActionsWithTunnel<InputActions>['groupConsult']}
+ * @type {ActionsWithTunnel<Actions>['groupConsult']}
  */
 export async function groupConsult({ data, ports }) {
   const uris = data;
@@ -94,7 +105,7 @@ export async function groupConsult({ data, ports }) {
 }
 
 /**
- * @type {ActionsWithTunnel<InputActions>['list']}
+ * @type {ActionsWithTunnel<Actions>['list']}
  */
 export async function list({ data, ports }) {
   const tracks = data;
@@ -126,16 +137,78 @@ export async function list({ data, ports }) {
 }
 
 /**
- * @type {ActionsWithTunnel<InputActions>['resolve']}
+ * @type {ActionsWithTunnel<Actions>['resolve']}
  */
 export async function resolve({ data, ports }) {
   const uri = data.uri;
+
+  const cachedBlob =
+    /** @type {Blob | undefined} */ (await IDB.get(CACHE_KEY_PREFIX + uri));
+  if (cachedBlob) {
+    let blobUrl = blobUrls.get(uri);
+
+    if (!blobUrl) {
+      blobUrl = URL.createObjectURL(cachedBlob);
+      blobUrls.set(uri, blobUrl);
+    }
+
+    return { expiresAt: Infinity, url: blobUrl };
+  }
+
   const scheme = uri.split(":", 1)[0];
   const input = grabInput(scheme, ports);
   if (!input) return undefined;
 
-  const result = await input.resolve(data);
-  return result;
+  return await input.resolve(data);
+}
+
+////////////////////////////////////////////
+// ADDITIONAL ACTIONS
+////////////////////////////////////////////
+
+/**
+ * @type {ActionsWithTunnel<Actions>['cache']}
+ */
+export async function cache({ data, ports }) {
+  const uris = data;
+
+  await Promise.all(uris.map(async (uri) => {
+    if (await IDB.get(CACHE_KEY_PREFIX + uri) !== undefined) return;
+
+    const resolved = await resolve({ data: { uri }, ports });
+    if (!resolved || "stream" in resolved) return;
+
+    const response = await fetch(resolved.url);
+    if (!response.ok) return;
+
+    await IDB.set(CACHE_KEY_PREFIX + uri, await response.blob());
+  }));
+}
+
+/**
+ * @type {ActionsWithTunnel<Actions>['listCached']}
+ */
+export async function listCached() {
+  const keys = /** @type {string[]} */ (await IDB.keys());
+  return keys
+    .filter((k) => k.startsWith(CACHE_KEY_PREFIX))
+    .map((k) => k.slice(CACHE_KEY_PREFIX.length));
+}
+
+/**
+ * @type {ActionsWithTunnel<Actions>['removeFromCache']}
+ */
+export async function removeFromCache({ data }) {
+  const uris = data;
+
+  await Promise.all(uris.map(async (uri) => {
+    const blobUrl = blobUrls.get(uri);
+    if (blobUrl) {
+      URL.revokeObjectURL(blobUrl);
+      blobUrls.delete(uri);
+    }
+    await IDB.del(CACHE_KEY_PREFIX + uri);
+  }));
 }
 
 ////////////////////////////////////////////
@@ -149,6 +222,10 @@ ostiary((context) => {
     groupConsult,
     list,
     resolve,
+
+    cache,
+    listCached,
+    removeFromCache,
   });
 });
 
