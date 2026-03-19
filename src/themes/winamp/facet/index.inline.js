@@ -12,6 +12,7 @@ import WebampElement from "~/themes/winamp/webamp/element.js";
 const input = await foundation.configurator.input();
 const queue = await foundation.engine.queue();
 const scopedTracks = await foundation.orchestrator.scopedTracks();
+const search = await foundation.processor.search();
 
 await foundation.orchestrator.sources();
 await foundation.orchestrator.processTracks({ disableWhenReady: true });
@@ -132,8 +133,8 @@ effect(() => {
   const col = output.tracks.collection();
   if (col.state !== "loaded") return;
 
-  // const fingerprintSearch = search.supplyFingerprint();
-  // if (fingerprintSearch === undefined) return;
+  const fingerprintSearch = search.supplyFingerprint();
+  if (fingerprintSearch === undefined) return;
 
   const fingerprintQueue = queue.supplyFingerprint();
   if (fingerprintQueue === undefined) return;
