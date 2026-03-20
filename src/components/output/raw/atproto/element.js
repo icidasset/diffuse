@@ -8,7 +8,6 @@ import * as TID from "@atcute/tid";
 
 import { computed, signal } from "~/common/signal.js";
 import { BroadcastedOutputElement, outputManager } from "../../common.js";
-import * as Output from "~/common/output.js";
 
 import {
   clearStoredSession,
@@ -20,7 +19,7 @@ import {
 } from "./oauth.js";
 
 /**
- * @import {TrackBundle} from "~/definitions/types.d.ts"
+ * @import {Track, TrackBundle} from "~/definitions/types.d.ts"
  * @import {OutputManager} from "../../types.d.ts"
  * @import {ATProtoOutputElement} from "./types.d.ts"
  */
@@ -63,6 +62,9 @@ class ATProtoOutput extends BroadcastedOutputElement {
   constructor() {
     super();
 
+    /** @type {Track[] | null} */
+    let lastPersistedTracks = null;
+
     /** @type {OutputManager} */
     this.#manager = outputManager({
       facets: {
@@ -82,11 +84,13 @@ class ATProtoOutput extends BroadcastedOutputElement {
             "sh.diffuse.output.trackBundle",
           );
 
-          return bundles.flatMap((bundle) => bundle.tracks ?? []);
+          const tracks = bundles.flatMap((bundle) => bundle.tracks ?? []);
+          lastPersistedTracks = tracks;
+
+          return tracks;
         },
         put: async (data) => {
-          const current = await Output.data(this.#manager.tracks);
-          const hashCurrent = xxh32r(encode(current));
+          const hashCurrent = xxh32r(encode(lastPersistedTracks ?? []));
           const hashNew = xxh32r(encode(data));
 
           if (hashCurrent === hashNew) {
@@ -104,9 +108,11 @@ class ATProtoOutput extends BroadcastedOutputElement {
             });
           }
 
-          return this.#putRecords("sh.diffuse.output.trackBundle", bundles, {
+          await this.#putRecords("sh.diffuse.output.trackBundle", bundles, {
             upsertBatchSize: 1,
           });
+
+          lastPersistedTracks = data;
         },
       },
     });
