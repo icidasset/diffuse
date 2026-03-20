@@ -1,8 +1,16 @@
-<ul class="grid" style="margin-top: var(--space-lg);">
+<div class="grid-filter">
+  <span class="grid-filter--label">Filter by</span>
+
+  <button class="button--border button--tiny button--bg-neutral" data-filter="all">All</button>
+  <button class="button--border button--tiny button--tr-accent button--transparent" data-filter="prelude">Features</button>
+  <button class="button--border button--tiny button--bg-twist-2 button--tr-twist-2 button--transparent" data-filter="interface">Interfaces</button>
+</div>
+
+<ul class="grid" style="margin-top: var(--space-xs);">
   {{ for index, item of items }}
     {{ set color = (() => {
       switch (item.kind) {
-        case "prelude": return "var(--accent-twist-4)";
+        case "prelude": return "var(--accent)";
         default: return "var(--accent-twist-2)";
       }
     })() }}

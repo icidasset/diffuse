@@ -18,7 +18,7 @@ import { output } from "./output.js";
 const ADD_FROM_URI_ITEM = html`
   <li
     class="grid-item"
-    style="background: oklch(from var(--accent-twist-2) l c h / 0.0625);"
+    style="background: oklch(from var(--accent) l c h / 0.0625);"
   >
     <div
       class="grid-item__contents"
@@ -26,7 +26,7 @@ const ADD_FROM_URI_ITEM = html`
     >
       <button
         class="button--transparent with-icon"
-        style="color: var(--accent-twist-2); font-size: var(--fs-sm); font-weight: 600;"
+        style="color: var(--accent); font-size: var(--fs-sm); font-weight: 600;"
         @click="${openAddFromURIModal}"
       >
         <i class="ph-fill ph-plus-circle"></i>
@@ -105,7 +105,7 @@ function openAddFromURIModal() {
             </div>
           </div>
           <div style="display: flex; gap: var(--space-xs); margin-top: var(--space-sm)">
-            <button class="button--bg-twist-2" type="submit">Add</button>
+            <button type="submit">Add</button>
             <button class="button--bg-neutral" type="button" id="add-uri-cancel">
               Cancel
             </button>

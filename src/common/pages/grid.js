@@ -5,6 +5,38 @@ import { effect } from "~/common/signal.js";
 import { output } from "./output.js";
 
 ////////////////////////////////////////////
+// FILTER
+////////////////////////////////////////////
+
+export function setupFilter() {
+  /** @type {NodeListOf<HTMLElement>} */
+  const buttons = document.querySelectorAll(".grid-filter button");
+
+  /** @type {NodeListOf<HTMLElement>} */
+  const items = document.querySelectorAll(".grid-item");
+
+  buttons.forEach((b) => {
+    b.addEventListener("click", () => {
+      buttons.forEach((b) => b.classList.add("button--transparent"));
+      b.classList.remove("button--transparent");
+
+      const filter = b.dataset.filter;
+
+      items.forEach((item) => {
+        const kind = item.dataset.kind;
+        const show = filter === "all" || kind === filter;
+        item.hidden = !show;
+
+        /** @type {HTMLElement | null} */
+        const kindEl = item.querySelector(".grid-item__kind");
+        if (!kindEl) return;
+        kindEl.hidden = filter !== "all";
+      });
+    });
+  });
+}
+
+////////////////////////////////////////////
 // TOGGLE BUTTONS
 ////////////////////////////////////////////
 
@@ -19,7 +51,8 @@ export function insertToggleButtons() {
 
     const button = document.createElement("button");
     button.className = "button--transparent";
-    button.style.cssText = "font-size: var(--fs-md); opacity: 0; padding: 0;";
+    button.style.cssText =
+      `color: oklch(from currentColor l c h / 0.4); font-size: var(--fs-md); opacity: 0; padding: 0;`;
     button.innerHTML = `<i class="ph-fill ph-toggle-left"></i>`;
 
     button.addEventListener("click", async (event) => {
@@ -92,7 +125,7 @@ export async function monitorToggleButtonStates() {
         ? "ph-fill ph-toggle-right"
         : "ph-fill ph-toggle-left";
       /** @type {HTMLElement} */ (icon).style.color = isActive
-        ? li.getAttribute("data-active-color") ?? "var(--accent-twist-2)"
+        ? li.dataset.activeColor ?? "var(--accent-twist-2)"
         : "";
     }
   });

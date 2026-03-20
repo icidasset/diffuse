@@ -120,6 +120,10 @@ ul.columns {
   &.filler--bg-twist-5 {
     background-color: oklch(from var(--accent-twist-5) l c h / 0.2);
   }
+
+  &.filler--bg-neutral {
+    background-color: oklch(from currentColor l c h / 0.2);
+  }
 }
 
 .flex {
@@ -266,6 +270,10 @@ textarea {
     border: 1px solid var(--border-color);
     border-radius: var(--radius-md);
     display: flex;
+
+    &[hidden] {
+      display: none;
+    }
   }
 
   .grid-item__contents {
@@ -308,12 +316,31 @@ textarea {
     padding: var(--space-3xs);
     text-box: trim-both cap alphabetic;
     vertical-align: middle;
+
+    &[hidden] {
+      display: none;
+    }
   }
 
   .grid-item__title {
     align-items: center;
     display: flex;
     gap: var(--space-2xs);
+  }
+}
+
+.grid-filter {
+  align-items: center;
+  display: flex;
+  gap: var(--space-2xs);
+  margin-bottom: var(--space-md);
+  margin-top: var(--space-md);
+
+  .grid-filter--label {
+    font-size: var(--fs-xs);
+    font-weight: 600;
+    margin-right: var(--space-2xs);
+    opacity: 0.4;
   }
 }
 
@@ -426,11 +453,43 @@ a.button {
   }
 
   &.button--bg-neutral {
-    background-color: oklch(from var(--text-color) l c h / calc(0.35 * var(--button-bg-opacity)));
+    background-color: oklch(from var(--text-color) l c h / calc(0.5 * var(--button-bg-opacity)));
   }
 
   &.button--border {
     border: 2px solid transparent;
+  }
+
+  &.button--small {
+    font-size: var(--fs-sm);
+    padding: var(--space-2xs);
+    text-box: trim-both cap alphabetic;
+  }
+
+  &.button--subtle {
+    --button-bg-opacity: 0.3;
+  }
+
+  &.button--tag {
+    font-size: var(--fs-2xs);
+    font-weight: 600;
+    padding: var(--space-3xs);
+    text-box: trim-both cap alphabetic;
+    vertical-align: middle;
+
+    &.button--border {
+      border-width: 1.5px;
+    }
+
+    &.button--tag-alt {
+      padding: calc((var(--space-2xs) + var(--space-3xs)) / 2) var(--space-2xs);
+    }
+  }
+
+  &.button--tiny {
+    font-size: var(--fs-xs);
+    line-height: 1;
+    padding: var(--space-3xs) calc((var(--space-2xs) + var(--space-3xs)) / 2);
   }
 
   &.button--transparent {
@@ -441,16 +500,30 @@ a.button {
     &.button--border {
       border-color: oklch(from currentColor l c h / var(--button-bg-opacity));
     }
-  }
 
-  &.button--small {
-    font-size: var(--fs-xs);
-    line-height: 1;
-    padding: var(--space-3xs) var(--space-2xs);
-  }
+    &.button--tr-accent {
+      color: var(--accent);
+    }
 
-  &.button--subtle {
-    --button-bg-opacity: 0.3;
+    &.button--tr-twist-1 {
+      color: var(--accent-twist-1);
+    }
+
+    &.button--tr-twist-2 {
+      color: var(--accent-twist-2);
+    }
+
+    &.button--tr-twist-3 {
+      color: var(--accent-twist-3);
+    }
+
+    &.button--tr-twist-4 {
+      color: var(--accent-twist-4);
+    }
+
+    &.button--tr-twist-5 {
+      color: var(--accent-twist-5);
+    }
   }
 
   & > span {

@@ -27,7 +27,7 @@
   }
 
   .cm-activeLineGutter {
-    background: var(--accent-twist-2);
+    background: var(--accent);
     color: var(--bg-color);
   }
 

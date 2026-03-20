@@ -30,6 +30,7 @@ async function initJsBasedOnPage(url) {
   Nav.update();
   Nav.watchResize();
 
+  Grid.setupFilter();
   Grid.insertToggleButtons();
   await Grid.monitorToggleButtonStates();
 
