@@ -79,6 +79,7 @@ function navigateHandler(event) {
 
   // Skip the loader page
   if (parts[0] === "l") return;
+  if (parts.includes("chronicle")) return;
 
   event.intercept({
     scroll: "manual",

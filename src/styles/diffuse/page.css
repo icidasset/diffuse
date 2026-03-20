@@ -371,6 +371,10 @@ a {
   }
 }
 
+abbr {
+  text-underline-offset: 6px;
+}
+
 button,
 a.button {
   --button-bg-opacity: 0.6;
