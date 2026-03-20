@@ -1,15 +1,9 @@
-import "@awesome.me/webawesome/dist/components/badge/badge.js";
-import "@awesome.me/webawesome/dist/components/button/button.js";
-import "@awesome.me/webawesome/dist/components/card/card.js";
-import "@awesome.me/webawesome/dist/components/dialog/dialog.js";
-import "@awesome.me/webawesome/dist/components/divider/divider.js";
-import "@awesome.me/webawesome/dist/components/icon/icon.js";
 import "@awesome.me/webawesome/dist/components/input/input.js";
 
 import "~/common/webawesome/detect-dark.js";
 import "~/common/webawesome/phosphor/bold.js";
 
-import { html, nothing, render } from "lit-html";
+import { html } from "lit-html";
 
 import * as IDB from "idb-keyval";
 import * as TID from "@atcute/tid";
@@ -19,10 +13,11 @@ import { SCHEME as S3_SCHEME } from "~/components/input/s3/constants.js";
 import foundation from "~/common/foundation.js";
 import { effect, signal } from "~/common/signal.js";
 
+import { setup } from "~/facets/connect/common.js";
+
 document.title = "Connect S3 | Diffuse";
 
 /**
- * @import { default as WaDialog } from "@awesome.me/webawesome/dist/components/dialog/dialog.js"
  * @import { default as WaInput } from "@awesome.me/webawesome/dist/components/input/input.js"
  * @import { Bucket } from "~/components/input/s3/types.d.ts"
  */
@@ -46,50 +41,64 @@ await Promise.all([
   customElements.whenDefined(sourcesOrchestrator.localName),
 ]);
 
-////////////////////////////////////////////
-// STATE
-////////////////////////////////////////////
-
-/** @type {'input' | 'output'} */
-let dialogMode = "input";
-
 const $outputBucket = signal(
   /** @type {Bucket | undefined} */ (await IDB.get(OUTPUT_IDB_KEY)),
 );
 
 ////////////////////////////////////////////
-// ELEMENTS
+// UI
 ////////////////////////////////////////////
 
-const bucketDialog = /** @type {WaDialog} */ (
-  document.querySelector("#bucket-dialog")
-);
+const { setItems } = setup({
+  title: "S3",
 
-const hostInput = /** @type {WaInput} */ (document.querySelector("#host-input"));
-const bucketNameInput = /** @type {WaInput} */ (
-  document.querySelector("#bucket-name-input")
-);
-const regionInput = /** @type {WaInput} */ (
-  document.querySelector("#region-input")
-);
-const accessKeyInput = /** @type {WaInput} */ (
-  document.querySelector("#access-key-input")
-);
-const secretKeyInput = /** @type {WaInput} */ (
-  document.querySelector("#secret-key-input")
-);
-const pathInput = /** @type {WaInput} */ (document.querySelector("#path-input"));
+  description: html`
+    <p>
+      Connect to an S3-compatible storage to use it as audio input or user-data
+      storage.
+    </p>
+    <p class="wa-caption-xs">
+      A custom syncing strategy is used for the user-data storage, tracking what was
+      added and removed so conflicts can be resolved.
+    </p>
+  `,
 
-const bucketsDivider = /** @type {HTMLElement} */ (
-  document.querySelector("#buckets-divider")
-);
+  formFields: html`
+    <wa-input id="s3-access-key" label="Access key" required></wa-input>
+    <wa-input
+      id="s3-secret-key"
+      label="Secret key"
+      type="password"
+      required
+    ></wa-input>
+    <wa-input
+      id="s3-bucket-name"
+      label="Bucket name"
+      placeholder="my-bucket"
+      required
+    ></wa-input>
+    <wa-input id="s3-host" label="Host" placeholder="s3.amazonaws.com"></wa-input>
+    <wa-input id="s3-region" label="Region" placeholder="us-east-1"></wa-input>
+    <wa-input id="s3-path" label="Path" placeholder="/"></wa-input>
+    <p class="wa-caption-xs">* Required fields</p>
+  `,
 
-const bucketsList = /** @type {HTMLElement} */ (
-  document.querySelector("#buckets-list")
-);
+  onSubmit: (mode) => addBucket(mode),
+});
+
+const accessKeyInput =
+  /** @type {WaInput} */ (document.querySelector("#s3-access-key"));
+const secretKeyInput =
+  /** @type {WaInput} */ (document.querySelector("#s3-secret-key"));
+const bucketNameInput =
+  /** @type {WaInput} */ (document.querySelector("#s3-bucket-name"));
+const hostInput = /** @type {WaInput} */ (document.querySelector("#s3-host"));
+const regionInput =
+  /** @type {WaInput} */ (document.querySelector("#s3-region"));
+const pathInput = /** @type {WaInput} */ (document.querySelector("#s3-path"));
 
 ////////////////////////////////////////////
-// RENDER
+// REACTIVE LIST
 ////////////////////////////////////////////
 
 effect(() => {
@@ -130,60 +139,20 @@ effect(() => {
     }
   }
 
-  const hasAny = allBuckets.size > 0;
-  bucketsDivider.hidden = !hasAny;
-  bucketsList.hidden = !hasAny;
-
-  render(
-    html`
-      ${[...allBuckets.entries()].map(
-        ([id, { name, host, uri, isInput, isOutput }]) => html`
-          <li class="bucket-item">
-            <div class="bucket-info">
-              <span class="bucket-name">${name}</span>
-              <span class="bucket-host">${host}</span>
-            </div>
-            <div class="bucket-tags">
-              ${isInput
-                ? html`<wa-badge appearance="outlined" variant="brand">Input</wa-badge>`
-                : nothing}
-              ${isOutput
-                ? html`<wa-badge appearance="outlined" variant="neutral">Output</wa-badge>`
-                : nothing}
-            </div>
-            <wa-button
-              appearance="plain"
-              size="small"
-              aria-label="Remove"
-              @click="${() => removeBucket(uri, isOutput)}"
-            >
-              <wa-icon library="phosphor/bold" name="x"></wa-icon>
-            </wa-button>
-          </li>
-        `,
-      )}
-    `,
-    bucketsList,
+  setItems(
+    [...allBuckets.values()].map(({ name, host, uri, isInput, isOutput }) => ({
+      name,
+      detail: host,
+      isInput,
+      isOutput,
+      onRemove: () => removeBucket(uri, isOutput),
+    })),
   );
 });
 
 ////////////////////////////////////////////
 // ACTIONS
 ////////////////////////////////////////////
-
-/** @param {'input' | 'output'} mode */
-function openDialog(mode) {
-  dialogMode = mode;
-  bucketDialog.label =
-    mode === "input" ? "Add audio input" : "Use as userdata storage";
-  hostInput.value = "";
-  bucketNameInput.value = "";
-  regionInput.value = "";
-  accessKeyInput.value = "";
-  secretKeyInput.value = "";
-  pathInput.value = "";
-  bucketDialog.open = true;
-}
 
 /**
  * @param {string | undefined} uri
@@ -208,20 +177,24 @@ async function removeBucket(uri, isOutput) {
   }
 }
 
-async function addBucket() {
-  const host = hostInput.value?.trim();
-  const bucketName = bucketNameInput.value?.trim();
-  const region = regionInput.value?.trim() || "us-east-1";
+/** @param {'input' | 'output'} mode */
+async function addBucket(mode) {
   const accessKey = accessKeyInput.value?.trim();
   const secretKey = secretKeyInput.value?.trim();
+  const bucketName = bucketNameInput.value?.trim();
+  const rawHost = hostInput.value?.trim();
+  const host = rawHost?.length
+    ? rawHost.replace(/^\w+:\/\//, "")
+    : "s3.amazonaws.com";
+  const region = regionInput.value?.trim() || "us-east-1";
   const path = pathInput.value?.trim() || "/";
 
-  if (!host || !bucketName || !accessKey || !secretKey) return;
+  if (!accessKey || !secretKey || !bucketName) return;
 
   /** @type {Bucket} */
   const bucket = { accessKey, bucketName, host, path, region, secretKey };
 
-  if (dialogMode === "input") {
+  if (mode === "input") {
     const now = new Date().toISOString();
     const uri = buildURI(bucket);
 
@@ -248,24 +221,4 @@ async function addBucket() {
     );
     if (option) await outputOrchestrator.select(option.id);
   }
-
-  bucketDialog.open = false;
 }
-
-////////////////////////////////////////////
-// EVENT LISTENERS
-////////////////////////////////////////////
-
-document
-  .querySelector("#add-input-btn")
-  ?.addEventListener("click", () => openDialog("input"));
-
-document
-  .querySelector("#add-output-btn")
-  ?.addEventListener("click", () => openDialog("output"));
-
-document.querySelector("#cancel-btn")?.addEventListener("click", () => {
-  bucketDialog.open = false;
-});
-
-document.querySelector("#confirm-btn")?.addEventListener("click", addBucket);
