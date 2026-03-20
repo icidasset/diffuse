@@ -3,15 +3,15 @@ import "@awesome.me/webawesome/dist/components/input/input.js";
 import "~/common/webawesome/detect-dark.js";
 import "~/common/webawesome/phosphor/bold.js";
 
+import * as TID from "@atcute/tid";
 import { html } from "lit-html";
 
-import * as IDB from "idb-keyval";
-import * as TID from "@atcute/tid";
-
-import { bucketId, buildURI, parseURI } from "~/components/input/s3/common.js";
+import * as Output from "~/common/output.js";
+import { NAME as S3_NAME } from "~/components/output/bytes/s3/element.js";
 import { SCHEME as S3_SCHEME } from "~/components/input/s3/constants.js";
+import { bucketId, buildURI, parseURI } from "~/components/input/s3/common.js";
+import { effect } from "~/common/signal.js";
 import foundation from "~/common/foundation.js";
-import { effect, signal } from "~/common/signal.js";
 
 import { setup } from "~/facets/connect/common.js";
 
@@ -20,9 +20,8 @@ document.title = "Connect S3 | Diffuse";
 /**
  * @import { default as WaInput } from "@awesome.me/webawesome/dist/components/input/input.js"
  * @import { Bucket } from "~/components/input/s3/types.d.ts"
+ * @import { S3OutputElement } from "~/components/output/bytes/s3/types.d.ts"
  */
-
-const OUTPUT_IDB_KEY = "diffuse/output/bytes/s3/bucket";
 
 ////////////////////////////////////////////
 // SETUP
@@ -41,9 +40,19 @@ await Promise.all([
   customElements.whenDefined(sourcesOrchestrator.localName),
 ]);
 
-const $outputBucket = signal(
-  /** @type {Bucket | undefined} */ (await IDB.get(OUTPUT_IDB_KEY)),
+const s3Option = (await outputOrchestrator.options()).find(
+  (o) => o.label === "S3",
 );
+
+const s3El = /** @type {S3OutputElement | undefined} */ (
+  outputOrchestrator.root().querySelector(S3_NAME)
+);
+
+if (!s3Option) {
+  throw new Error("S3 output was not enabled!");
+}
+
+const OUTPUT_S3_ID = s3Option?.id;
 
 ////////////////////////////////////////////
 // UI
@@ -84,6 +93,10 @@ const { setItems } = setup({
   `,
 
   onSubmit: (mode) => addBucket(mode),
+
+  onOutputActivate: async () => {
+    await outputOrchestrator.select(OUTPUT_S3_ID);
+  },
 });
 
 const accessKeyInput =
@@ -103,7 +116,8 @@ const pathInput = /** @type {WaInput} */ (document.querySelector("#s3-path"));
 
 effect(() => {
   const inputSources = sourcesOrchestrator.sources()[S3_SCHEME] ?? [];
-  const outputBucket = $outputBucket.value;
+  const outputBucket = s3El?.bucket();
+  const isSelectedOutput = outputOrchestrator.selected()?.id === OUTPUT_S3_ID;
 
   /** @type {Map<string, { name: string; host: string; uri?: string; isInput: boolean; isOutput: boolean }>} */
   const allBuckets = new Map();
@@ -145,6 +159,7 @@ effect(() => {
       detail: host,
       isInput,
       isOutput,
+      isSelectedOutput: isOutput && isSelectedOutput,
       onRemove: () => removeBucket(uri, isOutput),
     })),
   );
@@ -160,9 +175,7 @@ effect(() => {
  */
 async function removeBucket(uri, isOutput) {
   if (uri) {
-    const tracksCol = outputOrchestrator.tracks.collection();
-    const tracks = tracksCol.state === "loaded" ? tracksCol.data : [];
-
+    const tracks = await Output.data(outputOrchestrator.tracks);
     const detachedTracks = await inputConfigurator.detach({
       fileUriOrScheme: uri,
       tracks,
@@ -172,8 +185,7 @@ async function removeBucket(uri, isOutput) {
   }
 
   if (isOutput) {
-    $outputBucket.value = undefined;
-    await IDB.del(OUTPUT_IDB_KEY);
+    await s3El?.unsetBucket();
   }
 }
 
@@ -213,12 +225,7 @@ async function addBucket(mode) {
       },
     ]);
   } else {
-    $outputBucket.value = bucket;
-    await IDB.set(OUTPUT_IDB_KEY, bucket);
-
-    const option = (await outputOrchestrator.options()).find(
-      (o) => o.label === "S3",
-    );
-    if (option) await outputOrchestrator.select(option.id);
+    await s3El?.setBucket(bucket);
+    await outputOrchestrator.select(OUTPUT_S3_ID);
   }
 }

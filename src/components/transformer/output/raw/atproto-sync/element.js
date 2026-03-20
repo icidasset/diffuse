@@ -66,7 +66,7 @@ class ATProtoOutputSyncTransformer extends OutputTransformer {
           // Track deletions: any id present in local but absent in
           // newData has been deleted by the user.
           const oldCol = await Output.data(l[name]);
-          if (Array.isArray(oldCol.data)) {
+          if (oldCol && Array.isArray(oldCol.data)) {
             const newIds = new Set(newData.map((/** @type {any} */ r) => r.id));
 
             for (const record of oldCol.data) {

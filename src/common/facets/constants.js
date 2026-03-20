@@ -1,3 +1,4 @@
+import * as TID from "@atcute/tid";
 import facets from "../../_data/facets.json" with {
   type: "json",
 };
@@ -29,8 +30,7 @@ export const STARTING_SET = facets.flatMap((facet) => {
   ) {
     return [{
       ...properties,
-      id: "defaults/" +
-        facet.url.replace(/^\facets\/\w+\//, "").replace(/\/index.html/, ""),
+      id: TID.now(),
     }];
   }
 

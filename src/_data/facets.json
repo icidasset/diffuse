@@ -30,8 +30,15 @@
     "desc": "Store tracks locally for offline usage automatically after they've been playing for a while."
   },
   {
+    "url": "facets/connect/atproto/index.html",
+    "title": "Connect / AT Protocol",
+    "category": "Data",
+    "featured": true,
+    "desc": "Use your AT Protocol identity for user-data storage."
+  },
+  {
     "url": "facets/connect/s3/index.html",
-    "title": "Connect to S3",
+    "title": "Connect / S3",
     "category": "Data",
     "featured": true,
     "desc": "Connect to an S3-compatible storage for audio input or user-data storage."
@@ -48,7 +55,7 @@
     "kind": "prelude",
     "category": "Data",
     "featured": true,
-    "desc": "The default setup for audio input sources. Supports these services: HTTPS, Icecast, the local filesystem, OpenSubsonic, and S3-compatible storage."
+    "desc": "The default setup for audio input sources. Adds support for: HTTPS, Icecast, the local filesystem, OpenSubsonic, and S3-compatible storage."
   },
   {
     "url": "facets/data/output-bundle/index.html",
@@ -56,7 +63,7 @@
     "kind": "prelude",
     "category": "Data",
     "featured": true,
-    "desc": "The default setup for user-data storage output. Supports these services: AT Protocol and S3-compatible storage. For both of these a custom local-first syncing algorithm is used."
+    "desc": "The default setup for user-data storage output. Adds support for: AT Protocol and S3-compatible storage. For both of these a custom local-first syncing algorithm is used."
   },
   {
     "url": "facets/data/process-tracks/index.html",
@@ -109,14 +116,12 @@
     "url": "themes/winamp/configurators/input/facet/index.html",
     "title": "Winamp / Input",
     "category": "Data",
-    "featured": true,
     "desc": "Add your audio sources."
   },
   {
     "url": "themes/winamp/configurators/output/facet/index.html",
     "title": "Winamp / Output",
     "category": "Data",
-    "featured": true,
     "desc": "Manage your data storage."
   }
 ]

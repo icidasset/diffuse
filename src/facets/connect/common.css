@@ -59,6 +59,7 @@ wa-card {
   display: flex;
   align-items: center;
   gap: var(--wa-space-s);
+  margin-left: 0;
 }
 
 .connect-item__info {
