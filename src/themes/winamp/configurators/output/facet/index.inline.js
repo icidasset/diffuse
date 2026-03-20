@@ -1,6 +1,9 @@
 import foundation from "~/common/foundation.js";
 import OutputConfigElement from "~/themes/winamp/configurators/output/element.js";
 
+// Set doc title
+document.title = "Output | Winamp | Diffuse";
+
 const out = await foundation.orchestrator.output();
 
 const el = new OutputConfigElement();

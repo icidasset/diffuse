@@ -1,6 +1,9 @@
 import foundation from "~/common/foundation.js";
 import BrowserElement from "~/themes/winamp/browser/element.js";
 
+// Set doc title
+document.title = "Browser | Winamp | Diffuse";
+
 const [out, que, scp, trc] = await Promise.all([
   foundation.orchestrator.output(),
   foundation.engine.queue(),

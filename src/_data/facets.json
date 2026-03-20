@@ -107,14 +107,14 @@
   },
   {
     "url": "themes/winamp/configurators/input/facet/index.html",
-    "title": "Winamp / Input Configurator",
+    "title": "Winamp / Input",
     "category": "Data",
     "featured": true,
     "desc": "Add your audio sources."
   },
   {
     "url": "themes/winamp/configurators/output/facet/index.html",
-    "title": "Winamp / Output Configurator",
+    "title": "Winamp / Output",
     "category": "Data",
     "featured": true,
     "desc": "Manage your data storage."

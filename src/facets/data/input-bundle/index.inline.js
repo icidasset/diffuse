@@ -7,6 +7,7 @@ import { NAME as LOCAL_NAME } from "~/components/input/local/element.js";
 import { NAME as OPENSUBSONIC_NAME } from "~/components/input/opensubsonic/element.js";
 import { NAME as S3_NAME } from "~/components/input/s3/element.js";
 
+
 /**
  * @import InputConfigurator from "~/components/configurator/input/element.js"
  */

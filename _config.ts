@@ -132,6 +132,10 @@ site.use(esbuild({
 
 site.add([".js"]);
 
+// *.inline.js files are inlined into their companion HTML at build/serve time.
+// Exclude them from the regular build so esbuild doesn't try to bundle them.
+site.ignore((p) => p.endsWith(".inline.js"));
+
 ////////////////////////////////////////////
 // CSS
 ////////////////////////////////////////////
@@ -273,10 +277,6 @@ site.add([".json"]);
 
 site.use(brotli());
 site.use(sourceMaps());
-
-// *.inline.js files are inlined into their companion HTML at build/serve time.
-// Exclude them from the regular build so esbuild doesn't try to bundle them.
-site.ignore((p) => p.endsWith(".inline.js"));
 
 site.script("copy-type-defs", () => {
   for (

@@ -1,6 +1,9 @@
 import foundation from "~/common/foundation.js";
 import InputConfigElement from "~/themes/winamp/configurators/input/element.js";
 
+// Set doc title
+document.title = "Input | Winamp | Diffuse";
+
 const [inp, out, pro, sou] = await Promise.all([
   foundation.configurator.input(),
   foundation.orchestrator.output(),

@@ -2,6 +2,9 @@ import * as Output from "~/common/output.js";
 import foundation from "~/common/foundation.js";
 import { effect } from "~/common/signal.js";
 
+// Set doc title
+document.title = "Export & Import | Diffuse";
+
 // Setup
 const output = await foundation.orchestrator.output();
 

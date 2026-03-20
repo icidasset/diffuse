@@ -2,6 +2,9 @@ import foundation from "~/common/foundation.js";
 import { effect } from "~/common/signal.js";
 import * as Playlist from "~/common/playlist.js";
 
+// Set doc title
+document.title = "Automatic Queue | Diffuse";
+
 const ACTIVE_CLASS = "button--active";
 
 // Setup

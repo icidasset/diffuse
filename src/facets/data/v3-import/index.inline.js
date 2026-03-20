@@ -1,6 +1,8 @@
 import * as TID from "@atcute/tid";
 import foundation from "~/common/foundation.js";
 
+document.title = "V3.x Import | Diffuse";
+
 /**
  * @import {PlaylistItem, Track} from "~/definitions/types.d.ts"
  */

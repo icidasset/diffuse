@@ -4,6 +4,9 @@ import { effect, untracked } from "~/common/signal.js";
 import WindowManager from "~/themes/winamp/window-manager/element.js";
 import WebampElement from "~/themes/winamp/webamp/element.js";
 
+// Set doc title
+document.title = "Winamp | Diffuse";
+
 /**
  * @import {OutputElement} from "~/components/output/types.d.ts"
  * @import {Track} from "~/definitions/types.d.ts"

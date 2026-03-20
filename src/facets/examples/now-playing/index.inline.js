@@ -1,6 +1,9 @@
 import foundation from "~/common/foundation.js";
 import { effect } from "~/common/signal.js";
 
+// Set doc title
+document.title = "Now Playing | Diffuse";
+
 const output = await foundation.orchestrator.output();
 const queue = await foundation.engine.queue();
 

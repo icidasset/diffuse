@@ -10,6 +10,9 @@ import "~/common/webawesome/phosphor/bold.js";
 import foundation from "~/common/foundation.js";
 import { effect } from "~/common/signal.js";
 
+// Set doc title
+document.title = "Last.fm | Scrobble | Diffuse";
+
 /**
  * @import { default as WaDrawer } from "@awesome.me/webawesome/dist/components/drawer/drawer.js"
  * @import { default as WaInput } from "@awesome.me/webawesome/dist/components/input/input.js"

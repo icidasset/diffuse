@@ -12,6 +12,9 @@ import "~/common/webawesome/detect-dark.js";
 import foundation from "~/common/foundation.js";
 import * as Output from "~/common/output.js";
 
+// Set doc title
+document.title = "Split View | Diffuse";
+
 /**
  * @import { default as WaSplitPanel } from "@awesome.me/webawesome/dist/components/split-panel/split-panel.js"
  * @import { default as WaDialog } from "@awesome.me/webawesome/dist/components/dialog/dialog.js"

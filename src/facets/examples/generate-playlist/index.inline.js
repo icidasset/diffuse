@@ -1,5 +1,8 @@
 import foundation from "~/common/foundation.js";
 
+// Set doc title
+document.title = "Generate Playlist | Diffuse";
+
 const output = await foundation.orchestrator.output();
 const queue = await foundation.engine.queue();
 
