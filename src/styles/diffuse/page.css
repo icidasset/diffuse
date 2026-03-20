@@ -308,17 +308,25 @@ textarea {
   }
 
   .grid-item__kind {
-    border: 1.5px solid currentColor;
+    border: 1.5px solid transparent;
     border-radius: 9999px;
+    color: var(--bg-color);
     display: inline-block;
     font-size: var(--fs-2xs);
     font-weight: 600;
+    opacity: 0.6;
     padding: var(--space-3xs);
     text-box: trim-both cap alphabetic;
     vertical-align: middle;
 
     &[hidden] {
       display: none;
+    }
+
+    &[title] {
+      height: 16px;
+      padding: 0;
+      width: 6px;
     }
   }
 

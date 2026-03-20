@@ -4,49 +4,58 @@ import { marked } from "marked";
 import { unsafeHTML } from "lit-html/directives/unsafe-html.js";
 
 import * as FacetCategory from "~/common/facets/category.js";
-import { effect } from "~/common/signal.js";
+import { effect, signal } from "~/common/signal.js";
 import { facetFromURI } from "~/common/facets/utils.js";
 import { nothing } from "~/common/element.js";
 
 import { deleteFacet, saveFacet } from "./crud.js";
 import { output } from "./output.js";
 
+// Signals
+const activeFilter = signal("all");
+
 /**
  * @import {OutputElement} from "~/components/output/types.d.ts";
  */
 
-const ADD_FROM_URI_ITEM = html`
-  <li
-    class="grid-item"
-    style="background: oklch(from var(--accent) l c h / 0.0625);"
-  >
-    <div
-      class="grid-item__contents"
-      style="display: flex; align-items: center; justify-content: center;"
+const addFromUri = () =>
+  html`
+    <li
+      class="grid-item"
+      style="color: ${activeFilter.value === "all"
+        ? "inherit"
+        : FacetCategory.color(
+          /** @type {any} */ ({ kind: activeFilter.value }),
+        )}; background: oklch(from currentColor l c h / 0.0625);"
     >
-      <button
-        class="button--transparent with-icon"
-        style="color: var(--accent); font-size: var(--fs-sm); font-weight: 600;"
-        @click="${openAddFromURIModal}"
+      <div
+        class="grid-item__contents"
+        style="display: flex; align-items: center; justify-content: center;"
       >
-        <i class="ph-fill ph-plus-circle"></i>
-        Add from URI
-      </button>
-    </div>
-  </li>
-`;
+        <button
+          class="button--transparent with-icon"
+          style="color: inherit; font-size: var(--fs-sm); font-weight: 600;"
+          @click="${openAddFromURIModal}"
+        >
+          <i class="ph-fill ph-plus-circle"></i>
+          Add from URI
+        </button>
+      </div>
+    </li>
+  `;
 
-const EMPTY_FACETS_LIST = html`
-  <p>
-    <span>
-      You haven't saved anything yet. Add a facet by browsing the <a
-        href="featured/"
-      >featured ones</a> or any of the other categories. You can click the toggle
-      to quickly add or remove from your collection. Alternatively, add one using
-      an URI:
-    </span>
-  </p>
-`;
+const emptyFacetsList = () =>
+  html`
+    <p>
+      <span>
+        You haven't saved anything yet. Add a facet by browsing the <a
+          href="featured/"
+        >featured ones</a> or any of the other categories. You can click the toggle
+        to quickly add or remove from your collection. Alternatively, add one using
+        an URI:
+      </span>
+    </p>
+  `;
 
 ////////////////////////////////////////////
 // DIALOG
@@ -215,16 +224,56 @@ function _renderList(output, listEl) {
     return;
   }
 
+  const filter = activeFilter.get();
+
   const col = facetsCol.state === "loaded"
-    ? [...facetsCol.data].sort((a, b) => {
-      return a.name.toLocaleLowerCase().localeCompare(
-        b.name.toLocaleLowerCase(),
-      );
-    })
+    ? [...facetsCol.data]
+      .filter((c) =>
+        filter === "all" ||
+        (filter === "prelude" ? c.kind === "prelude" : c.kind !== "prelude")
+      )
+      .sort((a, b) => {
+        return a.name.toLocaleLowerCase().localeCompare(
+          b.name.toLocaleLowerCase(),
+        );
+      })
     : [];
 
-  const h = col.length
+  const filterBar = html`
+    <div class="grid-filter">
+      <span class="grid-filter--label">Filter by</span>
+      <button
+        class="button--border button--tiny button--bg-neutral ${filter === "all"
+          ? ""
+          : "button--transparent"}"
+        @click="${() => activeFilter.set("all")}"
+      >
+        All
+      </button>
+      <button
+        class="button--border button--tiny button--tr-accent ${filter ===
+            "prelude"
+          ? ""
+          : "button--transparent"}"
+        @click="${() => activeFilter.set("prelude")}"
+      >
+        Features
+      </button>
+      <button
+        class="button--border button--tiny button--bg-twist-2 button--tr-twist-2 ${filter ===
+            "interface"
+          ? ""
+          : "button--transparent"}"
+        @click="${() => activeFilter.set("interface")}"
+      >
+        Interfaces
+      </button>
+    </div>
+  `;
+
+  const h = col.length || filter !== "all"
     ? html`
+      ${filterBar}
       <ul class="grid" style="margin: 0">
         ${col.map((c, index) => {
           const color = FacetCategory.color(c);
@@ -253,7 +302,7 @@ function _renderList(output, listEl) {
                 <div class="grid-item__contents">
                   <div class="grid-item__title">
                     ${title}
-                    <span class="grid-item__kind" style="color: ${color};"
+                    <span class="grid-item__kind" style="background-color: ${color};"
                     >${kind}</span>
                   </div>
                   <div class="list-description">
@@ -303,13 +352,13 @@ function _renderList(output, listEl) {
               </li>
             `,
           );
-        })} ${ADD_FROM_URI_ITEM}
+        })} ${addFromUri()}
       </ul>
     `
     : html`
-      ${EMPTY_FACETS_LIST}
+      ${filterBar} ${emptyFacetsList()}
       <ul class="grid" style="margin: var(--space-sm) 0 0">
-        ${ADD_FROM_URI_ITEM}
+        ${addFromUri()}
       </ul>
     `;
 
