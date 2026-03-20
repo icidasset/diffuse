@@ -1,1 +1,1 @@
-export const OBJECT_PREFIX = "diffuse/output/bytes/s3/";
+export const OBJECT_PREFIX = "";
