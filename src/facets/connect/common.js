@@ -32,6 +32,7 @@ import { html, nothing, render as litRender } from "lit-html";
  * @param {TemplateResult} config.formFields - Form body content (inputs, footnotes, etc.)
  * @param {(mode: 'input' | 'output') => Promise<void>} config.onSubmit
  * @param {boolean} [config.hasInput] - Whether to show the "Add audio input" button (default: true)
+ * @param {boolean} [config.hasOutput] - Whether to show the "Use as userdata storage" button (default: true)
  * @param {() => Promise<void>} [config.onOutputActivate] - Called instead of opening the dialog when output is already configured but inactive
  *
  * @returns {{ setItems: (items: ConnectItem[]) => void, setError: (message: string | null) => void }}
@@ -43,6 +44,7 @@ export function setup(
     formFields,
     onSubmit,
     hasInput = true,
+    hasOutput = true,
     onOutputActivate,
   },
 ) {
@@ -66,14 +68,18 @@ export function setup(
                 </wa-button>
               `
               : nothing}
-            <wa-button
-              id="connect-add-output-btn"
-              variant="brand"
-              appearance="filled"
-            >
-              <wa-icon slot="start" library="phosphor/fill" name="person"></wa-icon>
-              Use as userdata storage
-            </wa-button>
+            ${hasOutput
+              ? html`
+                <wa-button
+                  id="connect-add-output-btn"
+                  variant="brand"
+                  appearance="filled"
+                >
+                  <wa-icon slot="start" library="phosphor/fill" name="person"></wa-icon>
+                  Use as userdata storage
+                </wa-button>
+              `
+              : nothing}
           </div>
           <wa-callout id="connect-card-error" variant="danger" hidden></wa-callout>
           <wa-divider id="connect-divider" hidden></wa-divider>
@@ -201,7 +207,7 @@ export function setup(
       currentItems = items;
       divider.hidden = items.length === 0;
       list.hidden = items.length === 0;
-      outputBtn.hidden = items.some((i) => i.isOutput && i.isSelectedOutput);
+      if (outputBtn) outputBtn.hidden = items.some((i) => i.isOutput && i.isSelectedOutput);
       litRender(
         html`
           ${items.map(

@@ -37,6 +37,13 @@
     "desc": "Use your AT Protocol identity for user-data storage."
   },
   {
+    "url": "facets/connect/opensubsonic/index.html",
+    "title": "Connect / OpenSubsonic",
+    "category": "Data",
+    "featured": true,
+    "desc": "Connect to an OpenSubsonic server for audio input."
+  },
+  {
     "url": "facets/connect/s3/index.html",
     "title": "Connect / S3",
     "category": "Data",
