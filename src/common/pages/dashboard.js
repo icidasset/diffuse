@@ -115,7 +115,7 @@ function openAddFromURIModal() {
           </div>
           <div style="display: flex; gap: var(--space-xs); margin-top: var(--space-sm)">
             <button type="submit">Add</button>
-            <button class="button--bg-neutral" type="button" id="add-uri-cancel">
+            <button type="button" id="add-uri-cancel">
               Cancel
             </button>
           </div>
@@ -243,7 +243,7 @@ function _renderList(output, listEl) {
     <div class="grid-filter">
       <span class="grid-filter--label">Filter by</span>
       <button
-        class="button--border button--tiny button--bg-neutral ${filter === "all"
+        class="button--border button--tiny ${filter === "all"
           ? ""
           : "button--transparent"}"
         @click="${() => activeFilter.set("all")}"
@@ -251,7 +251,7 @@ function _renderList(output, listEl) {
         All
       </button>
       <button
-        class="button--border button--tiny button--tr-accent ${filter ===
+        class="button--border button--tiny button--bg-accent button--tr-accent ${filter ===
             "prelude"
           ? ""
           : "button--transparent"}"

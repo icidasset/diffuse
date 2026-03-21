@@ -98,8 +98,12 @@ ul.columns {
 }
 
 .filler {
-  background: oklch(from var(--accent) l c h / 0.2);
+  background: oklch(from var(--text-color) l c h / 0.2);
   flex: 1;
+
+  &.filler--bg-accent {
+    background-color: oklch(from var(--accent) l c h / 0.2);
+  }
 
   &.filler--bg-twist-1 {
     background-color: oklch(from var(--accent-twist-1) l c h / 0.2);
@@ -119,10 +123,6 @@ ul.columns {
 
   &.filler--bg-twist-5 {
     background-color: oklch(from var(--accent-twist-5) l c h / 0.2);
-  }
-
-  &.filler--bg-neutral {
-    background-color: oklch(from currentColor l c h / 0.2);
   }
 }
 
@@ -371,8 +371,6 @@ textarea {
 
 h2 {
   /* color: oklch(from var(--bg-color) calc(l - 0.25) c h); */
-  color: var(--accent);
-
   font-size: var(--fs-xl);
   font-weight: 900;
   letter-spacing: -0.0125em;
@@ -413,7 +411,7 @@ abbr {
 button,
 a.button {
   --button-bg-opacity: 0.6;
-  background: oklch(from var(--accent) l c h / var(--button-bg-opacity));
+  background: oklch(from var(--text-color) l c h / var(--button-bg-opacity));
   border: 0;
   border-radius: 999px;
   color: var(--bg-color);
@@ -440,6 +438,10 @@ a.button {
     --button-bg-opacity: 1;
   }
 
+  &.button--bg-accent {
+    background-color: oklch(from var(--accent) l c h / var(--button-bg-opacity));
+  }
+
   &.button--bg-twist-1 {
     background-color: oklch(from var(--accent-twist-1) l c h / var(--button-bg-opacity));
   }
@@ -458,10 +460,6 @@ a.button {
 
   &.button--bg-twist-5 {
     background-color: oklch(from var(--accent-twist-5) l c h / var(--button-bg-opacity));
-  }
-
-  &.button--bg-neutral {
-    background-color: oklch(from var(--text-color) l c h / calc(0.5 * var(--button-bg-opacity)));
   }
 
   &.button--border {
