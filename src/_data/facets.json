@@ -37,6 +37,27 @@
     "desc": "Use your AT Protocol identity for user-data storage."
   },
   {
+    "url": "facets/connect/https/index.html",
+    "title": "Connect / HTTPS",
+    "category": "Data",
+    "featured": true,
+    "desc": "Add HTTPS audio files as input."
+  },
+  {
+    "url": "facets/connect/icecast/index.html",
+    "title": "Connect / Icecast",
+    "category": "Data",
+    "featured": true,
+    "desc": "Add an Icecast stream as audio input."
+  },
+  {
+    "url": "facets/connect/local/index.html",
+    "title": "Connect / Local",
+    "category": "Data",
+    "featured": true,
+    "desc": "Add local directories or files as audio input."
+  },
+  {
     "url": "facets/connect/opensubsonic/index.html",
     "title": "Connect / OpenSubsonic",
     "category": "Data",

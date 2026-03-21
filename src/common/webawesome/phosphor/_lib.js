@@ -7,7 +7,9 @@ export function buildIconMap(selection) {
   for (const icon of selection.icons) {
     const { name } = icon.properties;
     // Strip weight suffix to get base name (e.g. "gear-bold" → "gear")
-    const baseName = name.replace(/-(?:bold|fill|light|thin|regular|duotone)$/, "");
+    // Take only the primary name before any comma-separated aliases
+    const primaryName = name.split(",")[0].trim();
+    const baseName = primaryName.replace(/-(?:bold|fill|light|thin|regular|duotone)$/, "");
     map.set(baseName, { paths: icon.icon.paths, attrs: icon.icon.attrs });
   }
   return map;

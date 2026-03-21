@@ -1,0 +1,15 @@
+<style>
+  @import "./vendor/@awesome.me/webawesome/styles/webawesome.css" layer(wa);
+  @import "./facets/connect/common.css" layer(connect);
+
+  @layer base, diffuse, wa;
+</style>
+
+<main class="wa-theme-default"></main>
+
+<script type="module" src="facets/connect/local/index.inline.js"></script>
+
+<script type="module">
+  await customElements.whenDefined("wa-card");
+  document.querySelector("main")?.classList.add("has-loaded");
+</script>
