@@ -1,8 +1,5 @@
 import "@awesome.me/webawesome/dist/components/input/input.js";
 
-import "~/common/webawesome/detect-dark.js";
-import "~/common/webawesome/phosphor/bold.js";
-
 import * as TID from "@atcute/tid";
 import { html } from "lit-html";
 
@@ -58,7 +55,7 @@ const OUTPUT_S3_ID = s3Option?.id;
 // UI
 ////////////////////////////////////////////
 
-const { setItems } = setup({
+const { setItems, setError } = setup({
   title: "S3",
 
   description: html`
@@ -174,18 +171,23 @@ effect(() => {
  * @param {boolean} isOutput
  */
 async function removeBucket(uri, isOutput) {
-  if (uri) {
-    const tracks = await Output.data(outputOrchestrator.tracks);
-    const detachedTracks = await inputConfigurator.detach({
-      fileUriOrScheme: uri,
-      tracks,
-    });
+  setError(null);
+  try {
+    if (uri) {
+      const tracks = await Output.data(outputOrchestrator.tracks);
+      const detachedTracks = await inputConfigurator.detach({
+        fileUriOrScheme: uri,
+        tracks,
+      });
 
-    if (detachedTracks) await outputOrchestrator.tracks.save(detachedTracks);
-  }
+      if (detachedTracks) await outputOrchestrator.tracks.save(detachedTracks);
+    }
 
-  if (isOutput) {
-    await s3El?.unsetBucket();
+    if (isOutput) {
+      await s3El?.unsetBucket();
+    }
+  } catch (err) {
+    setError(err instanceof Error ? err.message : "Failed to remove bucket");
   }
 }
 
