@@ -33,6 +33,7 @@ async function initJsBasedOnPage(url) {
   Grid.setupFilter();
   Grid.insertToggleButtons();
   await Grid.monitorToggleButtonStates();
+  await Grid.setupOutputIndicator();
 
   switch (path) {
     case "/build":

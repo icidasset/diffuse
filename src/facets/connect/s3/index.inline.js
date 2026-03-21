@@ -184,6 +184,7 @@ async function removeBucket(uri, isOutput) {
     }
 
     if (isOutput) {
+      await outputOrchestrator.deselect();
       await s3El?.unsetBucket();
     }
   } catch (err) {

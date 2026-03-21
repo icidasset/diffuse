@@ -350,6 +350,17 @@ textarea {
     margin-right: var(--space-2xs);
     opacity: 0.4;
   }
+
+  .grid-filter--output {
+    font-size: var(--fs-xs);
+    font-weight: 700;
+  }
+
+  .grid-filter--label-output,
+  .grid-filter--output {
+    opacity: 0;
+    transition: opacity 250ms;
+  }
 }
 
 /**

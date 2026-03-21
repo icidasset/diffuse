@@ -37,6 +37,42 @@ export function setupFilter() {
 }
 
 ////////////////////////////////////////////
+// OUTPUT INDICATOR
+////////////////////////////////////////////
+
+/** @type {() => void | undefined} */
+let stopOutputIndicator;
+
+export async function setupOutputIndicator() {
+  if (stopOutputIndicator) stopOutputIndicator();
+
+  const filterEl = document.querySelector(".grid-filter");
+  if (!filterEl) return;
+
+  const out = await output();
+
+  /** @type {HTMLElement | null} */
+  const indicator = filterEl.querySelector(".grid-filter--output");
+  if (!indicator) return;
+
+  /** @type {HTMLElement | null} */
+  const label = filterEl.querySelector(".grid-filter--label-output");
+  if (!label) return;
+
+  setTimeout(() => {
+    indicator.style.opacity = "1";
+    label.style.opacity = "0.4";
+  }, 250);
+
+  stopOutputIndicator = effect(() => {
+    const selected = out.selected();
+    const label = selected?.label ?? selected?.getAttribute?.("label") ??
+      "Local";
+    indicator.textContent = label;
+  });
+}
+
+////////////////////////////////////////////
 // TOGGLE BUTTONS
 ////////////////////////////////////////////
 

@@ -219,6 +219,7 @@ async function connect() {
 }
 
 async function disconnect() {
+  await outputOrchestrator.deselect();
   await atprotoEl?.logout();
 }
 

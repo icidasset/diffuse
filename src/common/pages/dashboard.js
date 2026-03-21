@@ -10,6 +10,7 @@ import { nothing } from "~/common/element.js";
 
 import { deleteFacet, saveFacet } from "./crud.js";
 import { output } from "./output.js";
+import OutputOrchestrator from "@toko/diffuse/components/orchestrator/output/element.js";
 
 // Signals
 const activeFilter = signal("all");
@@ -206,7 +207,7 @@ export async function renderList() {
 }
 
 /**
- * @param {OutputElement} output
+ * @param {OutputOrchestrator} output
  * @param {HTMLElement} listEl
  */
 function _renderList(output, listEl) {
@@ -239,6 +240,10 @@ function _renderList(output, listEl) {
       })
     : [];
 
+  const selected = output.selected();
+  const outputLabel = selected?.label ?? selected?.getAttribute?.("label") ??
+    "Local";
+
   const filterBar = html`
     <div class="grid-filter">
       <span class="grid-filter--label">Filter by</span>
@@ -268,6 +273,12 @@ function _renderList(output, listEl) {
       >
         Interfaces
       </button>
+
+      <div style="flex: 1"></div>
+
+      <span class="grid-filter--label grid-filter--label-output"
+      >Userdata from</span>
+      <span class="grid-filter--output">${outputLabel}</span>
     </div>
   `;
 
@@ -363,4 +374,17 @@ function _renderList(output, listEl) {
     `;
 
   render(h, listEl);
+
+  setTimeout(() => {
+    /** @type {HTMLElement | null} */
+    const l = listEl.querySelector(".grid-filter--label-output");
+
+    /** @type {HTMLElement | null} */
+    const o = listEl.querySelector(".grid-filter--output");
+
+    if (o && l) {
+      l.style.opacity = "0.4";
+      o.style.opacity = "1";
+    }
+  }, 250);
 }
