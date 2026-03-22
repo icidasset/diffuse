@@ -4,6 +4,7 @@ main {
   justify-content: center;
   min-height: 100dvh;
   opacity: 0;
+  padding: var(--wa-space-m);
   pointer-events: none;
   transition: opacity 750ms;
 

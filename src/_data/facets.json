@@ -30,44 +30,46 @@
     "desc": "Store tracks locally for offline usage automatically after they've been playing for a little while."
   },
   {
+    "url": "facets/connect/index.html",
+    "title": "Connect",
+    "category": "Data",
+    "featured": true,
+    "desc": "A listing of some of the options available to use as an audio source, or as a user-data storage method."
+  },
+  {
     "url": "facets/connect/atproto/index.html",
     "title": "Connect / AT Protocol",
     "category": "Data",
-    "featured": true,
     "desc": "Use your AT Protocol identity for user-data storage."
   },
   {
     "url": "facets/connect/https/index.html",
     "title": "Connect / HTTPS",
     "category": "Data",
-    "desc": "Add HTTPS URLs as input."
+    "desc": "Add HTTPS URLs as audio sources."
   },
   {
     "url": "facets/connect/icecast/index.html",
     "title": "Connect / Icecast",
     "category": "Data",
-    "featured": true,
-    "desc": "Add an Icecast stream as audio input."
+    "desc": "Add an Icecast stream as an audio source."
   },
   {
     "url": "facets/connect/local/index.html",
     "title": "Connect / Local",
     "category": "Data",
-    "featured": true,
-    "desc": "Add local directories or files as audio input."
+    "desc": "Add local directories or files as audio sources."
   },
   {
     "url": "facets/connect/opensubsonic/index.html",
     "title": "Connect / OpenSubsonic",
     "category": "Data",
-    "featured": true,
     "desc": "Connect to an OpenSubsonic server for audio input."
   },
   {
     "url": "facets/connect/s3/index.html",
     "title": "Connect / S3",
     "category": "Data",
-    "featured": true,
     "desc": "Connect to an S3-compatible storage for audio input or user-data storage."
   },
   {

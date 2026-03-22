@@ -43,7 +43,7 @@ const { setItems, setError } = setup({
   hasOutput: false,
 
   description: html`
-    <p>Add HTTPS urls as input.</p>
+    <p>Add HTTPS urls as audio sources.</p>
   `,
 
   formFields: html`
