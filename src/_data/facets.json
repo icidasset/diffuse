@@ -95,12 +95,19 @@
     "desc": "The default setup for user-data storage output. Adds support for: AT Protocol and S3-compatible storage. For both of these a custom local-first syncing algorithm is used."
   },
   {
-    "url": "facets/data/process-tracks/index.html",
+    "url": "facets/data/process-tracks/prelude/index.html",
     "title": "Process Tracks",
     "kind": "prelude",
     "category": "Data",
     "featured": true,
     "desc": "Process all your audio inputs automatically into tracks when opening any interface. Only happens once every 10 minutes, if the processing was completed."
+  },
+  {
+    "url": "facets/data/process-tracks/index.html",
+    "title": "Process Tracks",
+    "category": "Data",
+    "featured": true,
+    "desc": "Process all your audio sources into tracks. Shows a progress bar when processing is occuring."
   },
   {
     "url": "facets/misc/scrobble/index.html",

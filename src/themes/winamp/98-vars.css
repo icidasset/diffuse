@@ -1,4 +1,5 @@
-:host {
+:host,
+:root {
   /* Color */
   --text-color: #222222;
   --surface: #c0c0c0;
