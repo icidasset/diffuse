@@ -41,7 +41,7 @@
     "title": "Connect / HTTPS",
     "category": "Data",
     "featured": true,
-    "desc": "Add HTTPS audio files as input."
+    "desc": "Add HTTPS URLs as input."
   },
   {
     "url": "facets/connect/icecast/index.html",
