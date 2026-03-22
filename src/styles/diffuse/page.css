@@ -62,7 +62,11 @@ header,
 main {
   margin: var(--space-md) auto;
   max-width: var(--container-7xl);
-  padding: 0 var(--space-lg);
+  padding: 0 var(--space-md);
+
+  @media (min-width: 42rem) {
+    padding: 0 var(--space-lg);
+  }
 }
 
 main {
@@ -345,10 +349,15 @@ textarea {
   margin-top: var(--space-md);
 
   .grid-filter--label {
+    display: none;
     font-size: var(--fs-xs);
     font-weight: 600;
     margin-right: var(--space-2xs);
     opacity: 0.4;
+
+    @media (min-width: 31.5rem) {
+      display: block;
+    }
   }
 
   .grid-filter--output {

@@ -242,7 +242,7 @@ function _renderList(output, listEl) {
 
   const selected = output.selected();
   const outputLabel = selected?.label ?? selected?.getAttribute?.("label") ??
-    "Local";
+    "Local storage";
 
   const filterBar = html`
     <div class="grid-filter">

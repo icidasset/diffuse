@@ -27,7 +27,7 @@
     "kind": "prelude",
     "category": "Data",
     "featured": true,
-    "desc": "Store tracks locally for offline usage automatically after they've been playing for a while."
+    "desc": "Store tracks locally for offline usage automatically after they've been playing for a little while."
   },
   {
     "url": "facets/connect/atproto/index.html",
@@ -40,7 +40,6 @@
     "url": "facets/connect/https/index.html",
     "title": "Connect / HTTPS",
     "category": "Data",
-    "featured": true,
     "desc": "Add HTTPS URLs as input."
   },
   {

@@ -67,7 +67,7 @@ export async function setupOutputIndicator() {
   stopOutputIndicator = effect(() => {
     const selected = out.selected();
     const label = selected?.label ?? selected?.getAttribute?.("label") ??
-      "Local";
+      "Local storage";
     indicator.textContent = label;
   });
 }
