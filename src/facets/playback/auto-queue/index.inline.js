@@ -2,10 +2,14 @@ import foundation from "~/common/foundation.js";
 import { effect } from "~/common/signal.js";
 import * as Playlist from "~/common/playlist.js";
 
+const ACTIVE_CLASS = "button--active";
+
 // Set doc title
 document.title = "Automatic Queue | Diffuse";
 
-const ACTIVE_CLASS = "button--active";
+// Doc load
+const main = /** @type {HTMLElement} */ (document.querySelector("main"));
+main.classList.add("has-loaded");
 
 // Setup
 await foundation.orchestrator.autoQueue();

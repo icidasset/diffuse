@@ -3,6 +3,9 @@ import foundation from "~/common/foundation.js";
 
 document.title = "V3.x Import | Diffuse";
 
+const main = /** @type {HTMLElement} */ (document.querySelector("main"));
+main.classList.add("has-loaded");
+
 /**
  * @import {PlaylistItem, Track} from "~/definitions/types.d.ts"
  */

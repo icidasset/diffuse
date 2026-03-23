@@ -4,6 +4,10 @@ import BrowserElement from "~/themes/winamp/browser/element.js";
 // Set doc title
 document.title = "Browser | Winamp | Diffuse";
 
+// Doc loader
+const window = /** @type {HTMLElement} */ (document.querySelector(".window"));
+window.classList.add("has-loaded");
+
 const [out, que, scp, trc] = await Promise.all([
   foundation.orchestrator.output(),
   foundation.engine.queue(),

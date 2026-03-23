@@ -28,6 +28,11 @@ base: "./"
     <meta name="msapplication-TileColor" content="#8a90a9" />
     <meta name="theme-color" content="#8a90a9" />
 
+    <!-- Preloads -->
+    {{ for url of (preloads ?? []) }}
+      <link rel="preload" href="{{ url.href }}" as="{{ url.as }}" type="{{ url.type }}" crossorigin />
+    {{ /for }}
+
     <!-- Styles -->
     {{ for url of styles }}
       <link rel="stylesheet" href="{{ url }}" />

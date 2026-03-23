@@ -3,6 +3,9 @@ import { html, render as litRender } from "lit-html";
 import { effect } from "~/common/signal.js";
 import foundation from "~/common/foundation.js";
 
+const main = /** @type {HTMLElement} */ (document.querySelector("main"));
+main.classList.add("has-loaded");
+
 const orchestrator = await foundation.orchestrator.processTracks({
   disableWhenReady: true,
 });

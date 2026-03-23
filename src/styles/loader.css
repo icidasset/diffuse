@@ -9,6 +9,7 @@ body {
     font-size: var(--fs-base);
     font-weight: 500;
     left: 50%;
+    pointer-events: none;
     position: absolute;
     top: 50%;
     transform: translate(-50%, -50%);
@@ -25,5 +26,15 @@ body {
     font-size: var(--fs-md);
     letter-spacing: var(--leading-loose);
     text-transform: uppercase;
+    transition: opacity 500ms ease;
+
+    &.loaded {
+      opacity: 0;
+    }
+
+    svg {
+      height: var(--fs-md);
+      width: var(--fs-md);
+    }
   }
 }

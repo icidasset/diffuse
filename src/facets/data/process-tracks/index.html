@@ -1,4 +1,4 @@
-<div id="container">
+<main>
   <div class="window" style="height: auto">
     <div class="title-bar">
       <div class="title-bar-icon">
@@ -13,7 +13,7 @@
       <div id="placeholder"></div>
     </div>
   </div>
-</div>
+</main>
 
 <style>
   @import "./styles/variables.css";
@@ -23,6 +23,16 @@
   @import "./vendor/98.css";
   @import "./themes/winamp/98-vars.css";
   @import "./themes/winamp/98-extra.css";
+
+  main {
+    opacity: 0;
+    pointer-events: none;
+
+    &.has-loaded {
+      opacity: 1;
+      pointer-events: auto;
+    }
+  }
 </style>
 
 <script type="module" src="facets/data/process-tracks/index.inline.js"></script>

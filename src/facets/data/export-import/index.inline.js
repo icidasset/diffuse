@@ -5,6 +5,10 @@ import { effect } from "~/common/signal.js";
 // Set doc title
 document.title = "Export & Import | Diffuse";
 
+// Doc loader
+const main = /** @type {HTMLElement} */ (document.querySelector("main"));
+main.classList.add("has-loaded");
+
 // Setup
 const output = await foundation.orchestrator.output();
 
@@ -151,4 +155,3 @@ importFacetsBtn.onclick = async () => {
     showStatus(`Import failed: ${/** @type {Error} */ (err).message}`, "error");
   }
 };
-
