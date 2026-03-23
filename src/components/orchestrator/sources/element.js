@@ -1,3 +1,5 @@
+import deepDiff from "@fry69/deep-diff";
+
 import { BroadcastableDiffuseElement, query } from "~/common/element.js";
 import { groupTracksPerScheme } from "~/common/utils.js";
 import { signal } from "~/common/signal.js";
@@ -74,7 +76,9 @@ class Sources extends BroadcastableDiffuseElement {
         record[scheme] = sources;
       });
 
-      this.#sources.value = record;
+      if (deepDiff(this.#sources.value, record)) {
+        this.#sources.value = record;
+      }
     });
   }
 }

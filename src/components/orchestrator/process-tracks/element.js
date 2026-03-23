@@ -63,17 +63,29 @@ class ProcessTracksOrchestrator extends BroadcastableDiffuseElement {
           strategy: "replicate",
           fn: this.#performedInitialProcess.set,
         },
+        getIsProcessing: {
+          strategy: "leaderOnly",
+          fn: this.#isProcessing.get,
+        },
+        setIsProcessing: {
+          strategy: "replicate",
+          fn: this.#isProcessing.set,
+        },
         process: { strategy: "leaderOnly", fn: this.process },
       });
 
       if (!actions) return;
 
       this.process = actions.process;
-      this.#isProcessing.set = actions.setPerfInit;
+      this.#isProcessing.set = actions.setIsProcessing;
 
-      // Sync #performedInitialProcess with leader
+      // Sync #performedInitialProcess and #isProcessing with leader
       actions.getPerfInit().then((val) => {
         this.#performedInitialProcess.value = val;
+      });
+
+      actions.getIsProcessing().then((val) => {
+        this.#isProcessing.value = val;
       });
     }
 
@@ -161,7 +173,7 @@ class ProcessTracksOrchestrator extends BroadcastableDiffuseElement {
     if (this.#isProcessing.value) return;
 
     // Start
-    this.#isProcessing.value = true;
+    this.#isProcessing.set(true);
     console.log("🪵 Processing initiated");
 
     const tracksCol = this.output.tracks.collection();
@@ -173,7 +185,7 @@ class ProcessTracksOrchestrator extends BroadcastableDiffuseElement {
 
     // Fin
     console.log("🪵 Processing completed");
-    this.#isProcessing.value = false;
+    this.#isProcessing.set(false);
   }
 }
 

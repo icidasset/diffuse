@@ -5,7 +5,7 @@
     "kind": "prelude",
     "category": "Playback",
     "featured": true,
-    "desc": "Automatically put tracks into the queue. **Always on.**"
+    "desc": "Automatically put tracks into the queue. **Always on.** These tracks will always be located after the ones you've added manually."
   },
   {
     "url": "facets/playback/auto-queue/index.html",

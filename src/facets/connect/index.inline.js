@@ -49,8 +49,7 @@ litRender(
       <div class="card-body">
         <p>
           These are some of the options available to add as an audio source, or to
-          use as user-data storage. Some offer both, the remainder offers only one
-          or the other.
+          use as user-data storage. Some offer both.
         </p>
         <wa-divider></wa-divider>
         <ul class="connect-list">
