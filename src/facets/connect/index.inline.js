@@ -12,7 +12,7 @@ import { data as facetsData } from "~/facets/index.js";
 document.title = "Connect | Diffuse";
 
 /** @param {string} path */
-const loaderHref = (path) => `../../l/?path=${encodeURIComponent(path)}`;
+const loaderHref = (path) => `l/?path=${encodeURIComponent(path)}`;
 
 /** @type {Record<string, string>} */
 const icons = {
