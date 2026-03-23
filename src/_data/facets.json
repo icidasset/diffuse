@@ -114,13 +114,13 @@
     "title": "Scrobble",
     "kind": "prelude",
     "category": "Misc",
-    "desc": "Enable scrobbling, keep track of what you're listening to."
+    "desc": "Enable scrobbling, keep track of what you're listening to. Adds support for these scrobblers: Last.fm"
   },
   {
     "url": "facets/misc/scrobble/last.fm/index.html",
     "title": "Scrobble / Last.fm",
     "category": "Misc",
-    "desc": "Enable Last.fm scrobbling."
+    "desc": "Connect to Last.fm to setup the Last.fm scrobbler."
   },
   {
     "url": "facets/misc/split-view/index.html",

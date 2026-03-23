@@ -176,11 +176,9 @@ async function input() {
  * @returns {Promise<ScrobbleElement>}
  */
 async function scrobbles() {
-  const [{ default: ScrobblesConfigurator }, { default: LastFmScrobbler }] =
-    await Promise.all([
-      import("~/components/configurator/scrobbles/element.js"),
-      import("~/components/supplement/last.fm/element.js"),
-    ]);
+  const { default: ScrobblesConfigurator } = await import(
+    "~/components/configurator/scrobbles/element.js"
+  );
 
   const sc = new ScrobblesConfigurator();
   sc.setAttribute("group", GROUP);
@@ -191,11 +189,6 @@ async function scrobbles() {
   if (existing) {
     return /** @type {ScrobbleElement} */ (existing);
   }
-
-  const lastFm = new LastFmScrobbler();
-  lastFm.setAttribute("group", GROUP);
-
-  sc.append(lastFm);
 
   document.body.append(sc);
   return /** @type {ScrobbleElement} */ (/** @type {unknown} */ (sc));
