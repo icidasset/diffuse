@@ -256,7 +256,7 @@ function _renderList(output, listEl) {
         All
       </button>
       <button
-        class="button--border button--tiny button--bg-accent button--tr-accent ${filter ===
+        class="button--border button--tiny button--bg-twist-4 button--tr-twist-4 ${filter ===
             "prelude"
           ? ""
           : "button--transparent"}"

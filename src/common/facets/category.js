@@ -9,7 +9,7 @@
 export function color(facet) {
   switch (facet.kind) {
     case "prelude":
-      return "var(--accent)";
+      return "var(--accent-twist-4)";
     default:
       return "var(--accent-twist-2)";
   }

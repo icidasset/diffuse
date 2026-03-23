@@ -2,7 +2,7 @@
   <span class="grid-filter--label">Filter by</span>
 
   <button class="button--border button--tiny" data-filter="all">All</button>
-  <button class="button--border button--tiny button--bg-accent button--tr-accent button--transparent" data-filter="prelude">Features</button>
+  <button class="button--border button--tiny button--bg-twist-4 button--tr-twist-4 button--transparent" data-filter="prelude">Features</button>
   <button class="button--border button--tiny button--bg-twist-2 button--tr-twist-2 button--transparent" data-filter="interface">Interfaces</button>
 
   <div style="flex: 1"></div>
@@ -15,7 +15,7 @@
   {{ for index, item of items }}
     {{ set color = (() => {
       switch (item.kind) {
-        case "prelude": return "var(--accent)";
+        case "prelude": return "var(--accent-twist-4)";
         default: return "var(--accent-twist-2)";
       }
     })() }}

@@ -318,6 +318,7 @@ textarea {
     display: inline-block;
     font-size: var(--fs-2xs);
     font-weight: 600;
+    line-height: 0.75;
     opacity: 0.6;
     padding: var(--space-3xs);
     text-box: trim-both cap alphabetic;
@@ -488,6 +489,7 @@ a.button {
 
   &.button--small {
     font-size: var(--fs-sm);
+    line-height: 0.75;
     padding: var(--space-2xs);
     text-box: trim-both cap alphabetic;
   }
@@ -499,6 +501,7 @@ a.button {
   &.button--tag {
     font-size: var(--fs-2xs);
     font-weight: 600;
+    line-height: 0.75;
     padding: var(--space-3xs);
     text-box: trim-both cap alphabetic;
     vertical-align: middle;
