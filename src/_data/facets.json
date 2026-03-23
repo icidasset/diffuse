@@ -147,17 +147,5 @@
     "category": "Browsing",
     "featured": true,
     "desc": "Collection browser and search."
-  },
-  {
-    "url": "themes/winamp/configurators/input/facet/index.html",
-    "title": "Winamp / Input",
-    "category": "Data",
-    "desc": "Add your audio sources."
-  },
-  {
-    "url": "themes/winamp/configurators/output/facet/index.html",
-    "title": "Winamp / Output",
-    "category": "Data",
-    "desc": "Manage your data storage."
   }
 ]

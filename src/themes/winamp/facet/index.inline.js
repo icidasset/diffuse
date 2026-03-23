@@ -7,6 +7,10 @@ import WebampElement from "~/themes/winamp/webamp/element.js";
 // Set doc title
 document.title = "Winamp | Diffuse";
 
+// Doc loader
+const main = /** @type {HTMLElement} */ (document.querySelector("main"));
+main.classList.add("has-loaded");
+
 /**
  * @import {OutputElement} from "~/components/output/types.d.ts"
  * @import {Track} from "~/definitions/types.d.ts"
@@ -21,8 +25,6 @@ await foundation.orchestrator.sources();
 await foundation.orchestrator.processTracks({ disableWhenReady: true });
 
 await import("~/themes/winamp/browser/element.js");
-await import("~/themes/winamp/configurators/input/element.js");
-await import("~/themes/winamp/configurators/output/element.js");
 await import("~/themes/winamp/window/element.js");
 
 /** @type {OutputElement | null} */
