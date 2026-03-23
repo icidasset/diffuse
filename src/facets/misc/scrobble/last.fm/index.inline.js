@@ -37,8 +37,16 @@ const configurator = await foundation.configurator.scrobbles();
 const orchestrator = await foundation.orchestrator.scrobbleAudio();
 
 /** @type {import("~/components/supplement/last.fm/element.js").CLASS | null} */
-const lastFm = configurator.querySelector("ds-lastfm-scrobbler");
-if (!lastFm) throw new Error("Last.fm scrobbler element not found");
+let lastFm = configurator.querySelector("ds-lastfm-scrobbler");
+if (!lastFm) {
+  const { default: LastFmScrobbler } = await import(
+    "~/components/supplement/last.fm/element.js"
+  );
+
+  lastFm = new LastFmScrobbler();
+  lastFm.setAttribute("group", foundation.GROUP);
+  configurator.append(lastFm);
+}
 
 // const creds = loadCredentials();
 // if (creds) {
