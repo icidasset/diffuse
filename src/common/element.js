@@ -166,7 +166,7 @@ export class DiffuseElement extends HTMLElement {
 
     let worker;
 
-    if (this.hasAttribute("group")) {
+    if (this.hasAttribute("group") && typeof SharedWorker !== "undefined") {
       worker = new SharedWorker(url, { name, type: "module" });
     } else {
       worker = new Worker(url, { name, type: "module" });

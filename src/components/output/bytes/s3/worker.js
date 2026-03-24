@@ -23,7 +23,8 @@ export async function get({ bucket, name }) {
 
   try {
     const response = await client.getObject(key);
-    return await response.bytes();
+    const buffer = await response.arrayBuffer();
+    return new Uint8Array(buffer);
   } catch (err) {
     // Object doesn't exist yet, return undefined
     return undefined;

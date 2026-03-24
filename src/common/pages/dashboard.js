@@ -10,13 +10,12 @@ import { nothing } from "~/common/element.js";
 
 import { deleteFacet, saveFacet } from "./crud.js";
 import { output } from "./output.js";
-import OutputOrchestrator from "@toko/diffuse/components/orchestrator/output/element.js";
 
 // Signals
 const activeFilter = signal("all");
 
 /**
- * @import {OutputElement} from "~/components/output/types.d.ts";
+ * @import OutputOrchestrator from "~/components/orchestrator/output/element.js";
  */
 
 const addFromUri = () =>
