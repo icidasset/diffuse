@@ -19,31 +19,25 @@ class WebampElement extends HTMLElement {
       __butterchurnOptions: {
         importButterchurn: () => import("butterchurn"),
         async getPresets() {
-          const { default: presets } = await import(
-            "butterchurn-presets/dist/all"
+          const { default: raw } = await import(
+            // @ts-ignore
+            "butterchurn-presets/dist/base.js"
           );
 
-          return Object.entries(presets).map(([name, preset]) => {
-            // Some presets have shapes/waves with null baseVals which
-            // causes butterchurn's overrideDefaultVars to throw.
-            const p = /** @type {any} */ (preset);
-            const fix = (arr) =>
-              (arr ?? []).map((e) => ({
-                ...e,
-                baseVals: e.baseVals ?? {},
-              }));
-            return {
-              name,
-              butterchurnPresetObject: {
-                ...p,
-                baseVals: p.baseVals ?? {},
-                shapes: fix(p.shapes),
-                waves: fix(p.waves),
-              },
-            };
-          });
+          // In some environments (e.g. Deno's CJS interop), the CJS module.exports
+          // is surfaced as the default export, so the actual presets collection is
+          // nested under .default.  Unwrap one level if needed.
+          const presets =
+            typeof raw?.default === "object" && raw.default !== null
+              ? raw.default
+              : raw;
+
+          return Object.entries(presets ?? {}).map(([name, preset]) => ({
+            name,
+            butterchurnPresetObject: preset,
+          }));
         },
-        butterchurnOpen: false,
+        butterchurnOpen: true,
       },
       windowLayout: {
         main: { position: { top: 0, left: 0 } },
