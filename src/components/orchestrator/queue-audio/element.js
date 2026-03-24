@@ -150,17 +150,10 @@ class QueueAudioOrchestrator extends BroadcastableDiffuseElement {
     const aud = now ? this.audio.state(now.id) : undefined;
 
     if (aud?.hasEnded() && (await this.isLeader())) {
-      // NOTE: Not sure yet if this is the best way to approach this.
-      //       The idea is that scrobblers would more easily pick this up,
-      //       as opposed to just resetting the audio.
-      if (this.repeatShuffle?.repeat()) {
-        const now = this.queue.now();
-        if (now) {
-          await this.queue.add({
-            inFront: true,
-            trackIds: [now.id],
-          });
-        }
+      if (this.repeatShuffle?.repeat() && now) {
+        this.audio.seek({ audioId: now.id, currentTime: 0 });
+        this.audio.play({ audioId: now.id });
+        return;
       }
 
       await this.queue.shift();

@@ -66,6 +66,9 @@ class ScrobbleAudioOrchestrator extends BroadcastableDiffuseElement {
   /** Whether `scrobble` has been called for the current track. */
   #scrobbled = false;
 
+  /** Whether the current track has ended (used to detect restarts, e.g. repeat). */
+  #hadEnded = false;
+
   // TIMER STATE
   // Accumulates actual listening time (pauses don't count).
 
@@ -100,11 +103,25 @@ class ScrobbleAudioOrchestrator extends BroadcastableDiffuseElement {
       this.#nowPlayingSent = false;
       this.#scrobbled = false;
       this.#listenedMs = 0;
+      this.#hadEnded = false;
     }
 
     if (!id) return;
 
     const isPlaying = this.audio.state(id)?.isPlaying() ?? false;
+    const hasEnded = this.audio.state(id)?.hasEnded() ?? false;
+
+    // Detect same-track restart (e.g. repeat): the track ended and now plays again.
+    if (this.#hadEnded && !hasEnded && isPlaying) {
+      this.#stopTimer();
+      this.#startedAt = Date.now();
+      this.#nowPlayingSent = false;
+      this.#scrobbled = false;
+      this.#listenedMs = 0;
+      this.#hadEnded = false;
+    }
+
+    if (hasEnded) this.#hadEnded = true;
 
     if (isPlaying) {
       this.#startTimer();
@@ -186,7 +203,7 @@ class ScrobbleAudioOrchestrator extends BroadcastableDiffuseElement {
     try {
       await this.scrobble?.scrobble(track, startedAt);
     } catch (err) {
-      console.warn("scrobble: scrobble failed", err);
+      console.warn("Scrobble failed", err);
       this.#scrobbled = false;
     }
   }
