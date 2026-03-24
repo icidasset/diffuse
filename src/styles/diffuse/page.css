@@ -49,6 +49,25 @@ ol {
   max-width: var(--container-sm);
 }
 
+footer nav {
+  align-items: center;
+  display: flex;
+  font-size: var(--fs-base);
+  gap: var(--space-sm);
+  margin-top: var(--space-md);
+
+  a {
+    opacity: 0.3;
+    text-decoration: none;
+    transition: opacity 250ms;
+  }
+
+  a:focus,
+  a:hover {
+    opacity: 0.6;
+  }
+}
+
 header {
   display: block;
 
@@ -442,7 +461,7 @@ a.button {
   font-weight: 500;
   line-height: var(--leading-tight);
   padding: var(--space-2xs) calc((var(--space-xs) + var(--space-sm)) / 2);
-  transition-duration: 500ms;
+  transition-duration: 250ms;
   transition-property: background-color, border-color, opacity;
 
   & * {
