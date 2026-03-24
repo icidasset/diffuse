@@ -1,14 +1,55 @@
 import Webamp from "webamp/lazy";
+
+import { batch, effect, signal } from "~/common/signal.js";
+import { diff, strictEquality } from "~/common/compare.js";
 import DiffuseMedia from "./media.js";
 
 /**
  * @import {Track} from "~/definitions/types.d.ts"
  */
+
+const UI_STATE_KEY = "diffuse/themes/winamp/webamp/ui";
+
+/** @returns {{ milkdropOpen: boolean, eqOpen: boolean, playlistOpen: boolean, eqOn: boolean, eqSliders: Record<string, number> | null }} */
+function loadUiState() {
+  try {
+    return {
+      milkdropOpen: true,
+      eqOpen: true,
+      playlistOpen: true,
+      eqOn: false,
+      eqSliders: null,
+      ...JSON.parse(localStorage.getItem(UI_STATE_KEY) ?? "{}"),
+    };
+  } catch {
+    return {
+      milkdropOpen: true,
+      eqOpen: true,
+      playlistOpen: true,
+      eqOn: false,
+      eqSliders: null,
+    };
+  }
+}
+
+/** @param {Record<string, unknown>} partial */
+function saveUiState(partial) {
+  try {
+    const current = JSON.parse(localStorage.getItem(UI_STATE_KEY) ?? "{}");
+    localStorage.setItem(
+      UI_STATE_KEY,
+      JSON.stringify({ ...current, ...partial }),
+    );
+  } catch { /* ignore */ }
+}
+
 class WebampElement extends HTMLElement {
   constructor() {
     super();
 
     // ⚡
+
+    const ui = loadUiState();
 
     /** @type {import("webamp/lazy").default} */
     this.amp = new /** @type {any} */ (Webamp)({
@@ -37,14 +78,15 @@ class WebampElement extends HTMLElement {
             butterchurnPresetObject: preset,
           }));
         },
-        butterchurnOpen: true,
+        butterchurnOpen: ui.milkdropOpen,
       },
       windowLayout: {
         main: { position: { top: 0, left: 0 } },
-        equalizer: { position: { top: 116, left: 0 } },
+        equalizer: { position: { top: 116, left: 0 }, closed: !ui.eqOpen },
         playlist: {
           position: { top: 232, left: 0 },
           size: { extraHeight: 4, extraWidth: 0 },
+          closed: !ui.playlistOpen,
         },
         milkdrop: {
           position: { top: 0, left: 275 },
@@ -137,7 +179,69 @@ class WebampElement extends HTMLElement {
 
     this.shadowRoot?.appendChild(ampNode);
 
-    return await this.amp.renderWhenReady(ampNode);
+    await this.amp.renderWhenReady(ampNode);
+
+    // Restore EQ settings
+    const ui = loadUiState();
+    if (ui.eqSliders != null) {
+      for (const [band, value] of Object.entries(ui.eqSliders)) {
+        // @ts-ignore
+        this.amp.store.dispatch({ type: "SET_BAND_VALUE", band, value });
+      }
+    }
+
+    this.amp.store.dispatch({ type: ui.eqOn ? "SET_EQ_ON" : "SET_EQ_OFF" });
+
+    // Signals for each piece of persisted UI state
+    const milkdropOpenSig = signal(ui.milkdropOpen, {
+      compare: strictEquality,
+    });
+
+    const playlistOpenSig = signal(ui.playlistOpen, {
+      compare: strictEquality,
+    });
+
+    const eqOnSig = signal(ui.eqOn, { compare: strictEquality });
+    const eqOpenSig = signal(ui.eqOpen, { compare: strictEquality });
+    const eqSlidersSig = signal(ui.eqSliders, { compare: diff });
+
+    // Update signals in batch on every store change
+    this.amp.store.subscribe(() => {
+      const state = this.amp.store.getState();
+      batch(() => {
+        milkdropOpenSig.set(state.windows?.genWindows?.milkdrop?.open ?? true);
+        eqOpenSig.set(state.windows?.genWindows?.equalizer?.open ?? true);
+        playlistOpenSig.set(state.windows?.genWindows?.playlist?.open ?? true);
+        eqOnSig.set(state.equalizer?.on ?? false);
+        eqSlidersSig.set(state.equalizer?.sliders ?? null);
+      });
+    });
+
+    // Save to localStorage when any signal changes (debounced)
+    let saveTimer = /** @type {ReturnType<typeof setTimeout> | null} */ (null);
+    let initialized = false;
+
+    effect(() => {
+      const snapshot = {
+        milkdropOpen: milkdropOpenSig.value,
+        eqOpen: eqOpenSig.value,
+        playlistOpen: playlistOpenSig.value,
+        eqOn: eqOnSig.value,
+        eqSliders: eqSlidersSig.value,
+      };
+
+      if (!initialized) {
+        initialized = true;
+        return;
+      }
+
+      if (saveTimer != null) clearTimeout(saveTimer);
+
+      saveTimer = setTimeout(() => {
+        saveTimer = null;
+        saveUiState(snapshot);
+      }, 5000);
+    });
   }
 }
 

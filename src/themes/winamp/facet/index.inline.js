@@ -3,7 +3,10 @@ import { effect } from "~/common/signal.js";
 
 import WindowManager from "~/themes/winamp/window-manager/element.js";
 import WebampElement from "~/themes/winamp/webamp/element.js";
-import { setAudioEngine, setCurrentTrackIdResolver } from "~/themes/winamp/webamp/media.js";
+import {
+  setAudioEngine,
+  setCurrentTrackIdResolver,
+} from "~/themes/winamp/webamp/media.js";
 
 // Set doc title
 document.title = "Winamp | Diffuse";
@@ -17,7 +20,6 @@ main.classList.add("has-loaded");
  * @import {Track} from "~/definitions/types.d.ts"
  */
 
-const input = await foundation.configurator.input();
 const audio = await foundation.engine.audio();
 const queue = await foundation.engine.queue();
 const repeatShuffle = await foundation.engine.repeatShuffle();
@@ -62,7 +64,10 @@ const amp = ampElement.amp;
 
 // Sync audio engine volume → webamp
 effect(() => {
-  amp.store.dispatch({ type: "SET_VOLUME", volume: Math.round(audio.volume() * 100) });
+  amp.store.dispatch({
+    type: "SET_VOLUME",
+    volume: Math.round(audio.volume() * 100),
+  });
 });
 
 // Sync Diffuse repeat → webamp
