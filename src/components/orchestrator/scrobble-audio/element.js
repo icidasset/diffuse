@@ -168,10 +168,10 @@ class ScrobbleAudioOrchestrator extends BroadcastableDiffuseElement {
 
     const durationSec = this.audio?.state(id)?.duration() ?? 0;
 
-    // last.fm: track must be at least 30 seconds
+    // Track must be at least 30 seconds
     if (durationSec < 30) return;
 
-    // last.fm: must have listened to min(half the track, 4 minutes)
+    // Must have listened to at least half the track or 4 minutes
     const listenedSec = this.#totalListenedMs() / 1000;
     if (listenedSec < Math.min(durationSec / 2, 240)) return;
 

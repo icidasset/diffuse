@@ -1,8 +1,9 @@
 import foundation from "~/common/foundation.js";
-import { effect, untracked } from "~/common/signal.js";
+import { effect } from "~/common/signal.js";
 
 import WindowManager from "~/themes/winamp/window-manager/element.js";
 import WebampElement from "~/themes/winamp/webamp/element.js";
+import { setAudioEngine, setCurrentTrackIdResolver } from "~/themes/winamp/webamp/media.js";
 
 // Set doc title
 document.title = "Winamp | Diffuse";
@@ -17,12 +18,15 @@ main.classList.add("has-loaded");
  */
 
 const input = await foundation.configurator.input();
+const audio = await foundation.engine.audio();
 const queue = await foundation.engine.queue();
+const repeatShuffle = await foundation.engine.repeatShuffle();
 const scopedTracks = await foundation.orchestrator.scopedTracks();
 const search = await foundation.processor.search();
 
 await foundation.orchestrator.sources();
 await foundation.orchestrator.processTracks({ disableWhenReady: true });
+await foundation.orchestrator.queueAudio();
 
 await import("~/themes/winamp/browser/element.js");
 await import("~/themes/winamp/window/element.js");
@@ -34,15 +38,12 @@ if (!output) throw new Error("Missing output element");
 globalThis.queue = queue;
 globalThis.output = output;
 
-////////////////////////////////////////////
-// 📡
-////////////////////////////////////////////
-
-/** @type {Record<string, number>} */
-const index = {};
-
-/** @type {boolean} */
-let initiatedPlaylist = false;
+// Provide refs to the media class
+setAudioEngine(audio);
+setCurrentTrackIdResolver(() => {
+  const idx = amp.store.getState().playlist?.currentTrack;
+  return idx != null ? webampIndexToTrackId.get(idx) : undefined;
+});
 
 ////////////////////////////////////////////
 // ⚡️
@@ -55,78 +56,109 @@ if (ampElement instanceof WebampElement === false) {
 
 const amp = ampElement.amp;
 
-// Override track loader
-const loadFromUrl = amp.media.loadFromUrl.bind(amp.media);
-
-/**
- * @param {string} uri
- * @param {boolean} autoPlay
- */
-async function loadOverride(uri, autoPlay) {
-  if (uri.startsWith("blob:")) {
-    return await loadFromUrl(uri, autoPlay);
-  }
-
-  const resp = await input.resolve({ method: "GET", uri });
-  if (!resp) throw new Error("Failed to resolve URI");
-  if (resp && "stream" in resp) {
-    throw new Error("Webamp does not support playing streams.");
-  }
-
-  return await loadFromUrl(resp.url, autoPlay);
-}
-
-amp.media.loadFromUrl = loadOverride.bind(amp.media);
-
 ////////////////////////////////////////////
 // 📡
 ////////////////////////////////////////////
 
-/**
- * Whenever the queue changes update the playlist.
- */
+// Sync audio engine volume → webamp
 effect(() => {
-  const past = untracked(() => queue.past());
-  const now = untracked(() => queue.now());
-  const future = queue.future();
-  const list = [...past, ...(now ? [now] : []), ...future];
+  amp.store.dispatch({ type: "SET_VOLUME", volume: Math.round(audio.volume() * 100) });
+});
 
-  /** @type {Record<string, number>} */
-  const newIdx = {};
-
-  list.forEach((item) => {
-    newIdx[item.id] = (newIdx[item.id] ?? 0) + 1;
-  });
-
-  /** @type {Track[]} */
-  const tracksToAdd = [];
-
-  const tracksCol = output.tracks.collection();
-  const tracksList = tracksCol.state === "loaded" ? tracksCol.data : [];
-
-  Object.entries(newIdx).forEach(([id, n]) => {
-    const x = index[id] ?? 0;
-    if (n > x) {
-      const track = tracksList.find((t) => t.id === id);
-      if (track) tracksToAdd.push(track);
-      index[id] = x + 1;
-    }
-  });
-
-  tracksToAdd.forEach((t) => ampElement.addTrack(t));
-
-  if (!initiatedPlaylist && tracksToAdd.length) {
-    initiatedPlaylist = true;
-    amp.store.dispatch({ type: "BUFFER_TRACK", id: 0 });
+// Sync Diffuse repeat → webamp
+effect(() => {
+  const repeat = repeatShuffle.repeat();
+  if (amp.store.getState().media.repeat !== repeat) {
+    amp.store.dispatch({ type: "TOGGLE_REPEAT" });
   }
 });
 
+/** Maps webamp playlist index → Diffuse track ID */
+/** @type {Map<number, string>} */
+const webampIndexToTrackId = new Map();
+
 /**
- * Fill queue supply with available tracks.
+ * Set when we are pushing changes to webamp so the store subscriber
+ * doesn't try to sync the queue back in response.
+ */
+let isWebampUpdate = false;
+
+/**
+ * Rebuild the webamp playlist to exactly match the Diffuse queue.
  */
 effect(() => {
-  const tracks = scopedTracks.tracks();
-  queue.supply({ trackIds: tracks.map((t) => t.id) });
+  const past = queue.past();
+  const now = queue.now();
+  const future = queue.future();
+  const list = [...past, ...(now ? [now] : []), ...future];
+
+  const tracksCol = output.tracks.collection();
+  if (tracksCol.state !== "loaded") return;
+  const tracksList = tracksCol.data;
+
+  const existing = amp.getPlaylistTracks();
+
+  isWebampUpdate = true;
+
+  amp.store.dispatch(
+    /**
+     * @param {any} dispatch
+     */
+    (dispatch) => {
+      // Remove all current tracks
+      if (existing.length > 0) {
+        dispatch({ type: "REMOVE_TRACKS", ids: existing.map((t) => t.id) });
+      }
+
+      webampIndexToTrackId.clear();
+
+      // Re-add every queue item in order
+      list.forEach((item, idx) => {
+        const track = tracksList.find((t) => t.id === item.id);
+        if (!track) return;
+
+        dispatch({
+          type: "ADD_TRACK_FROM_URL",
+          url: track.uri,
+          duration: track.stats?.duration != null
+            ? track.stats.duration / 1000
+            : undefined,
+          defaultName: undefined,
+          id: idx,
+          atIndex: idx,
+        });
+
+        dispatch({
+          type: "SET_MEDIA_DURATION",
+          duration: track.stats?.duration != null
+            ? track.stats.duration / 1000
+            : undefined,
+          id: idx,
+        });
+
+        dispatch({
+          type: "SET_MEDIA_TAGS",
+          artist: track.tags?.artist,
+          title: track.tags?.title,
+          album: track.tags?.album,
+          sampleRate: track.stats?.sampleRate ?? 44000,
+          bitrate: track.stats?.bitrate ?? 192000,
+          numberOfChannels: 2,
+          id: idx,
+        });
+
+        webampIndexToTrackId.set(idx, item.id);
+      });
+
+      // Point webamp at the current queue item
+      const nowIdx = now ? list.findIndex((item) => item.id === now.id) : -1;
+      if (nowIdx !== -1) {
+        dispatch({ type: "BUFFER_TRACK", id: nowIdx });
+      }
+    },
+  );
+
+  isWebampUpdate = false;
 });
 
 /**
@@ -145,6 +177,65 @@ effect(() => {
   if (fingerprintQueue === undefined) return;
 
   tracksPromise.resolve("loaded");
+});
+
+/**
+ * Keep Diffuse's queue in sync when webamp's active track changes.
+ */
+let prevWebampTrack = /** @type {number | null} */ (null);
+let prevWebampRepeat = amp.store.getState().media.repeat;
+let milkdropRandomized = false;
+
+amp.store.subscribe(() => {
+  // Pick a random milkdrop preset the first time presets load
+  if (!milkdropRandomized) {
+    const presets = amp.store.getState().milkdrop?.presets;
+    if (presets?.length > 0) {
+      milkdropRandomized = true;
+      amp.store.dispatch({
+        type: "SELECT_PRESET_AT_INDEX",
+        index: Math.floor(Math.random() * presets.length),
+        transitionType: 0,
+      });
+    }
+  }
+
+  if (isWebampUpdate) return;
+
+  // Sync webamp repeat → Diffuse
+  const currentRepeat = amp.store.getState().media.repeat;
+  if (currentRepeat !== prevWebampRepeat) {
+    prevWebampRepeat = currentRepeat;
+    repeatShuffle.setRepeat(currentRepeat);
+  }
+
+  const currentTrack = amp.store.getState().playlist?.currentTrack;
+  if (currentTrack === prevWebampTrack) return;
+  prevWebampTrack = currentTrack;
+  if (currentTrack == null) return;
+
+  const targetId = webampIndexToTrackId.get(currentTrack);
+  if (!targetId || queue.now()?.id === targetId) return;
+
+  const past = queue.past();
+  const future = queue.future();
+
+  const pastIdx = past.findLastIndex((item) => item.id === targetId);
+  if (pastIdx !== -1) {
+    const steps = past.length - pastIdx;
+    for (let i = 0; i < steps; i++) queue.unshift();
+    return;
+  }
+
+  const futureIdx = future.findIndex((item) => item.id === targetId);
+  if (futureIdx !== -1) {
+    for (let i = 0; i <= futureIdx; i++) queue.shift();
+    // return;
+  }
+
+  // Track not in queue navigation — insert at front and make it current
+  // queue.add({ trackIds: [targetId], inFront: true });
+  // queue.shift();
 });
 
 ////////////////////////////////////////////

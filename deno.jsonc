@@ -50,6 +50,8 @@
     "temporal-polyfill": "npm:temporal-polyfill@^0.3.2",
     "throttle-debounce": "npm:throttle-debounce@^5.0.2",
     "xxh32": "npm:xxh32@^2.0.5",
+    "butterchurn": "npm:butterchurn@3.0.0-beta.5",
+    "butterchurn-presets": "npm:butterchurn-presets@3.0.0-beta.4",
     "webamp": "npm:webamp@^2.2.0",
 
     // music-metadata

@@ -34,7 +34,6 @@ function loadCredentials() {
 }
 
 const configurator = await foundation.configurator.scrobbles();
-const orchestrator = await foundation.orchestrator.scrobbleAudio();
 
 /** @type {import("~/components/supplement/last.fm/element.js").CLASS | null} */
 let lastFm = configurator.querySelector("ds-lastfm-scrobbler");
