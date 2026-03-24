@@ -15,6 +15,7 @@ const container = /** @type {HTMLDivElement} */ (
 
 // Preludes
 const facets = await Output.data(output.facets);
+let preludesInserted = false;
 
 // Load
 createLoader({
@@ -37,7 +38,10 @@ createLoader({
       }
     }
 
-    await insertPreludes(facets, document.body);
+    if (!preludesInserted) {
+      preludesInserted = true;
+      await insertPreludes(facets, document.body);
+    }
 
     const range = document.createRange();
     range.selectNode(container);

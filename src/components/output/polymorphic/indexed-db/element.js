@@ -84,4 +84,4 @@ export default IndexedDBOutput;
 export const CLASS = IndexedDBOutput;
 export const NAME = "dop-indexed-db";
 
-customElements.define(NAME, IndexedDBOutput);
+if (!customElements.get(NAME)) customElements.define(NAME, IndexedDBOutput);

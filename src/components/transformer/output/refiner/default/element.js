@@ -125,4 +125,4 @@ export default DefaultOutputRefinerTransformer;
 export const CLASS = DefaultOutputRefinerTransformer;
 export const NAME = "dtor-default";
 
-customElements.define(NAME, CLASS);
+if (!customElements.get(NAME)) customElements.define(NAME, CLASS);
