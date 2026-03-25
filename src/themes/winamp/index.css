@@ -17,10 +17,6 @@ body {
   isolation: isolate;
 }
 
-#webamp #eject {
-  pointer-events: none;
-}
-
 #webamp-context-menu {
   z-index: 10000 !important;
 }

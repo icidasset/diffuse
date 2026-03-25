@@ -172,8 +172,8 @@ class DiffuseMedia {
 
         const rawTime = state.currentTime();
 
-        // Clear seek target once the signal has caught up
-        if (this._seekTarget !== null && Math.abs(rawTime - this._seekTarget) < 0.5) {
+        // Clear seek target once the signal has caught up or passed the target
+        if (this._seekTarget !== null && rawTime > this._seekTarget - 0.5) {
           this._seekTarget = null;
         }
 

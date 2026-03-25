@@ -96,18 +96,13 @@ class WebampElement extends HTMLElement {
 
       /** */
       handleLoadListEvent: async () => {
-        // TODO
-        return [
-          /* Array of Tracks */
-        ];
+        return [];
       },
 
       /**
        * @param {any} tracks
        */
-      handleSaveListEvent: (tracks) => {
-        // TODO
-      },
+      handleSaveListEvent: (tracks) => {},
     });
   }
 

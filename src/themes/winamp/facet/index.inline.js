@@ -17,7 +17,6 @@ main.classList.add("has-loaded");
 
 /**
  * @import {OutputElement} from "~/components/output/types.d.ts"
- * @import {Track} from "~/definitions/types.d.ts"
  */
 
 const audio = await foundation.engine.audio();
@@ -75,6 +74,14 @@ effect(() => {
   const repeat = repeatShuffle.repeat();
   if (amp.store.getState().media.repeat !== repeat) {
     amp.store.dispatch({ type: "TOGGLE_REPEAT" });
+  }
+});
+
+// Sync Diffuse shuffle → webamp
+effect(() => {
+  const shuffle = repeatShuffle.shuffle();
+  if (amp.store.getState().media.shuffle !== shuffle) {
+    amp.store.dispatch({ type: "TOGGLE_SHUFFLE" });
   }
 });
 
@@ -189,6 +196,7 @@ effect(() => {
  */
 let prevWebampTrack = /** @type {number | null} */ (null);
 let prevWebampRepeat = amp.store.getState().media.repeat;
+let prevWebampShuffle = amp.store.getState().media.shuffle;
 let milkdropRandomized = false;
 
 amp.store.subscribe(() => {
@@ -212,6 +220,13 @@ amp.store.subscribe(() => {
   if (currentRepeat !== prevWebampRepeat) {
     prevWebampRepeat = currentRepeat;
     repeatShuffle.setRepeat(currentRepeat);
+  }
+
+  // Sync webamp shuffle → Diffuse
+  const currentShuffle = amp.store.getState().media.shuffle;
+  if (currentShuffle !== prevWebampShuffle) {
+    prevWebampShuffle = currentShuffle;
+    repeatShuffle.setShuffle(currentShuffle);
   }
 
   const currentTrack = amp.store.getState().playlist?.currentTrack;
@@ -247,6 +262,24 @@ amp.store.subscribe(() => {
 // DESKTOP
 ////////////////////////////////////////////
 
+// Intercept Webamp's "load file" or "load dir" behaviours.
+// These trigger a hidden <input type="file">.click() internally, so event
+// propagation interception alone isn't reliable. Override the prototype
+// method to catch it before the file dialog opens.
+const _origInputClick = HTMLInputElement.prototype.click;
+
+HTMLInputElement.prototype.click = function () {
+  if (this.type === "file") {
+    window.open(
+      "l/?path=facets%2Fconnect%2Flocal%2Findex.html",
+      "_blank",
+    );
+    return;
+  }
+
+  return _origInputClick.call(this);
+};
+
 // Open associated window when click desktop items
 document.body.querySelectorAll(".desktop__item").forEach((element) => {
   if (element instanceof HTMLElement) {
@@ -261,6 +294,10 @@ document.body.querySelectorAll(".desktop__item").forEach((element) => {
 document.body.querySelector("#desktop-batch")?.addEventListener(
   "dblclick",
   () => {
+    if (!queue.supplyFingerprint()) {
+      queue.supply({ trackIds: scopedTracks.tracks().map((t) => t.id) });
+    }
+
     tracksPromise.promise.then(() => {
       addBatch();
     });
