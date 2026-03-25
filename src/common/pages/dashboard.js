@@ -309,11 +309,12 @@ function _renderList(output, listEl) {
             c.id,
             html`
               <li class="grid-item">
-                <div class="grid-item__contents">
-                  <div class="grid-item__title">
+                <div
+                  class="grid-item__contents"
+                  style="--grid-item-gradient: linear-gradient(to bottom, oklch(from ${color} l c h / 0.075), transparent 65%)"
+                >
+                  <div class="grid-item__title" style="color: ${color}">
                     ${title}
-                    <span class="grid-item__kind" style="background-color: ${color};"
-                    >${kind}</span>
                   </div>
                   <div class="list-description">
                     <div>
@@ -362,7 +363,7 @@ function _renderList(output, listEl) {
               </li>
             `,
           );
-        })} ${addFromUri()}
+        })}
       </ul>
     `
     : html`

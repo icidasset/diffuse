@@ -26,11 +26,6 @@ export function setupFilter() {
         const kind = item.dataset.kind;
         const show = filter === "all" || kind === filter;
         item.hidden = !show;
-
-        /** @type {HTMLElement | null} */
-        const kindEl = item.querySelector(".grid-item__kind");
-        if (!kindEl) return;
-        kindEl.hidden = filter !== "all";
       });
     });
   });
