@@ -35,7 +35,7 @@ class AudioEngine extends BroadcastableDiffuseElement {
   // SIGNALS
 
   #items = signal(/** @type {AudioUrl[]} */ ([]));
-  #volume = signal(0.5);
+  #volume = signal(0.75);
 
   /** @type {Map<string, ReadableStream>} Streams pending MediaSource setup */
   #streams = new Map();
