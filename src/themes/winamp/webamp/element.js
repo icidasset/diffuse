@@ -8,7 +8,7 @@ import DiffuseMedia from "./media.js";
  * @import {Track} from "~/definitions/types.d.ts"
  */
 
-const UI_STATE_KEY = "diffuse/themes/winamp/webamp/ui";
+const UI_STATE_KEY = "themes/winamp/webamp/ui";
 
 /** @returns {{ milkdropOpen: boolean, eqOpen: boolean, playlistOpen: boolean, eqOn: boolean, eqSliders: Record<string, number> | null }} */
 function loadUiState() {

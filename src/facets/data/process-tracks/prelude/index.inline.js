@@ -22,7 +22,7 @@ const orchestrator = await foundation.orchestrator.processTracks({
   disableWhenReady: true,
 });
 
-if (diff >= MAX_TIME_DIFF && await orchestrator.isLeader()) {
+if (diff >= MAX_TIME_DIFF) {
   // Wait until we're actually done processing, only then set the timestamp
   await orchestrator.process();
   localStorage.setItem(KEY, JSON.stringify(now));
@@ -40,7 +40,7 @@ const debounced = debounce(
   /** @param {import("~/components/input/types.d.ts").Source} _sources */ async (
     _sources,
   ) => {
-    if (initialised && await orchestrator.isLeader()) orchestrator.process();
+    if (initialised) orchestrator.process();
     else initialised = true;
   },
   { atBegin: false },
