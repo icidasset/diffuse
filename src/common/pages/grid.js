@@ -10,25 +10,36 @@ import { output } from "./output.js";
 
 export function setupFilter() {
   /** @type {NodeListOf<HTMLElement>} */
-  const buttons = document.querySelectorAll(".grid-filter button");
+  const buttons = document.querySelectorAll(".grid-filter button[data-filter]");
 
   /** @type {NodeListOf<HTMLElement>} */
   const items = document.querySelectorAll(".grid-item");
 
+  function applyFilter(filter) {
+    buttons.forEach((b) => {
+      if (b.dataset.filter === filter) b.classList.remove("button--transparent");
+      else b.classList.add("button--transparent");
+    });
+    items.forEach((item) => {
+      const kind = item.dataset.kind;
+      const show = filter === "all" || kind === filter;
+      item.hidden = !show;
+    });
+  }
+
   buttons.forEach((b) => {
     b.addEventListener("click", () => {
-      buttons.forEach((b) => b.classList.add("button--transparent"));
-      b.classList.remove("button--transparent");
-
-      const filter = b.dataset.filter;
-
-      items.forEach((item) => {
-        const kind = item.dataset.kind;
-        const show = filter === "all" || kind === filter;
-        item.hidden = !show;
-      });
+      const filter = b.dataset.filter ?? "all";
+      const url = new URL(location.href);
+      if (filter === "all") url.searchParams.delete("filter");
+      else url.searchParams.set("filter", filter);
+      history.replaceState(null, "", url);
+      applyFilter(filter);
     });
   });
+
+  const initial = new URL(location.href).searchParams.get("filter") ?? "all";
+  applyFilter(initial);
 }
 
 ////////////////////////////////////////////

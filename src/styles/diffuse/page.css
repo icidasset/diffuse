@@ -20,7 +20,7 @@ code {
   background: var(--code-color);
   border-radius: var(--radius-sm);
   color: var(--text-color);
-  font-size: var(--fs-sm);
+  font-size: 86%;
   padding: var(--space-3xs);
 }
 
@@ -610,8 +610,8 @@ small {
 }
 
 .divider {
+  align-self: stretch;
   background-color: var(--border-color);
-  height: 2.5em;
   width: 1px;
 }
 
@@ -658,10 +658,6 @@ ul li::marker {
 
   a {
     text-underline-offset: 3px;
-  }
-
-  code {
-    font-size: var(--fs-xs);
   }
 }
 
@@ -737,6 +733,7 @@ nav {
   display: flex;
   flex: 1;
   flex-wrap: nowrap;
+  font-size: var(--fs-sm);
   gap: var(--space-xs);
   overflow: hidden;
 

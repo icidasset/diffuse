@@ -23,7 +23,7 @@ const site = lume({
   src: "./src",
   server: {
     debugBar: false,
-    middlewares: [], // [facetHtmlMiddleware],
+    middlewares: [facetHtmlMiddleware],
   },
 });
 

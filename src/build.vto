@@ -20,12 +20,12 @@ examples:
 <!-- BUILD -->
 <section style="margin-top: var(--space-lg);">
   <form id="build-form" class="columns">
-    <div class="flex">
+    <div class="flex" style="flex-basis: 35%">
       <div id="html-input-container" class="code-editor monospace-font">
       </div>
     </div>
 
-    <div style="flex: 1; max-width: var(--container-sm)">
+    <div style="flex: 1; font-size: var(--fs-sm); max-width: var(--container-sm)">
       <p style="margin-top: 0">
         Your code here builds on the <a href="#foundation">foundation</a> listed below, and will be injected into a <span style="white-space: nowrap"><code>&lt;div id="container"&gt;</code></span> element in the body.
       </p>
@@ -57,10 +57,13 @@ examples:
     <h2 id="foundation">Foundation</h2>
 
     <p>
-      Diffuse comes with a foundation that preconfigures all elements so you don't have to set them up yourself, along with a combination of elements for certain features. It internally tracks the DOM addition of the custom elements, so no need to worry about setting up an element multiple times.
+      <strong>Diffuse comes with a foundation that preconfigures a lot of elements so you don't have to set them up yourself</strong>, along with a combination of elements for certain features. It internally tracks the DOM addition of the custom elements, so no need to worry about setting up an element multiple times. It also provides signals which can be used to track element creations. An example of this can be found in the "scrobbles" feature.
     </p>
     <p>
-      <small><i class="ph-fill ph-info"></i> Refer to the <a href="#elements">elements index</a> to find out what each element does.</small>
+      That said, you are not required not use this! You can, for example, setup a Diffuse audio engine element yourself that's in a different group so that it doesn't communicate with the default one; in case you want to make a dj-deck, or something like that, which would have multiple audio items playing at the same time. This does mean you will need to pay attention to more things, such as, how does this interact with other features the user has enabled.
+    </p>
+    <p>
+      <small><i class="ph-fill ph-info"></i> Refer to the <a href="elements/">elements index</a> to find out what each element does.</small>
     </p>
     <div class="code-block">
       <code>

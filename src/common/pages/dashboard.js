@@ -5,11 +5,12 @@ import { unsafeHTML } from "lit-html/directives/unsafe-html.js";
 
 import * as FacetCategory from "~/common/facets/category.js";
 import { effect, signal } from "~/common/signal.js";
-import { facetFromURI } from "~/common/facets/utils.js";
+
 import { nothing } from "~/common/element.js";
 
-import { deleteFacet, saveFacet } from "./crud.js";
+import { deleteFacet } from "./crud.js";
 import { output } from "./output.js";
+import { openAddFromURIModal } from "./from-uri.js";
 
 // Signals
 const activeFilter = signal("all");
@@ -17,32 +18,6 @@ const activeFilter = signal("all");
 /**
  * @import OutputOrchestrator from "~/components/orchestrator/output/element.js";
  */
-
-const addFromUri = () =>
-  html`
-    <li
-      class="grid-item"
-      style="color: ${activeFilter.value === "all"
-        ? "inherit"
-        : FacetCategory.color(
-          /** @type {any} */ ({ kind: activeFilter.value }),
-        )}; background: oklch(from currentColor l c h / 0.0625);"
-    >
-      <div
-        class="grid-item__contents"
-        style="display: flex; align-items: center; justify-content: center;"
-      >
-        <button
-          class="button--transparent with-icon"
-          style="color: inherit; font-size: var(--fs-sm); font-weight: 600;"
-          @click="${openAddFromURIModal}"
-        >
-          <i class="ph-fill ph-plus-circle"></i>
-          Add from URI
-        </button>
-      </div>
-    </li>
-  `;
 
 const emptyFacetsList = () =>
   html`
@@ -56,127 +31,6 @@ const emptyFacetsList = () =>
       </span>
     </p>
   `;
-
-////////////////////////////////////////////
-// DIALOG
-////////////////////////////////////////////
-
-function openAddFromURIModal() {
-  let dialog = /** @type {HTMLDialogElement | null} */ (
-    document.getElementById("add-from-uri-dialog")
-  );
-
-  if (!dialog) {
-    dialog = /** @type {HTMLDialogElement} */ (
-      document.createElement("dialog")
-    );
-
-    dialog.id = "add-from-uri-dialog";
-    dialog.style.cssText =
-      "position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%); margin: 0;";
-
-    render(
-      html`
-        <form id="add-from-uri-form">
-          <p>
-            <strong>Load a facet from a URI.</strong> Currently supported URI schemes:
-            <code>https</code>, <code>at</code> (AT Protocol) and <code>diffuse</code>
-            (references internal facets).
-          </p>
-
-          <div style="display: flex; flex-direction: column; gap: var(--space-xs)">
-            <div>
-              <label>Name</label>
-              <input
-                id="add-uri-name"
-                type="text"
-                placeholder="My Feature Name"
-                required
-                autocomplete="off"
-              />
-            </div>
-            <div>
-              <label>Kind</label>
-              <select id="add-uri-kind">
-                <option value="interactive">interface</option>
-                <option value="prelude">feature</option>
-              </select>
-            </div>
-            <div>
-              <label>URI</label>
-              <input
-                id="add-uri-uri"
-                type="url"
-                placeholder="at://..."
-                required
-                autocomplete="off"
-              />
-            </div>
-          </div>
-          <div style="display: flex; gap: var(--space-xs); margin-top: var(--space-sm)">
-            <button type="submit">Add</button>
-            <button type="button" id="add-uri-cancel">
-              Cancel
-            </button>
-          </div>
-        </form>
-      `,
-      dialog,
-    );
-
-    document.body.appendChild(dialog);
-
-    dialog.querySelector("#add-uri-cancel")?.addEventListener("click", () => {
-      /** @type {HTMLDialogElement} */ (dialog).close();
-    });
-
-    dialog.querySelector("#add-from-uri-form")?.addEventListener(
-      "submit",
-      async (e) => {
-        e.preventDefault();
-
-        const nameEl = /** @type {HTMLInputElement} */ (
-          dialog?.querySelector("#add-uri-name")
-        );
-
-        const kindEl = /** @type {HTMLSelectElement} */ (
-          dialog?.querySelector("#add-uri-kind")
-        );
-
-        const uriEl = /** @type {HTMLInputElement} */ (
-          dialog?.querySelector("#add-uri-uri")
-        );
-
-        const name = nameEl?.value.trim() ?? "";
-        const kind = kindEl?.value ?? "interactive";
-        const uri = uriEl?.value.trim() ?? "";
-        if (!name || !uri) return;
-
-        const facet = await facetFromURI({ kind, name, uri }, {
-          fetchHTML: false,
-        });
-        await saveFacet(facet);
-
-        /** @type {HTMLDialogElement} */ (dialog).close();
-      },
-    );
-  }
-
-  const nameEl = /** @type {HTMLInputElement} */ (
-    dialog.querySelector("#add-uri-name")
-  );
-  const kindEl = /** @type {HTMLSelectElement} */ (
-    dialog.querySelector("#add-uri-kind")
-  );
-  const uriEl = /** @type {HTMLInputElement} */ (
-    dialog.querySelector("#add-uri-uri")
-  );
-  if (nameEl) nameEl.value = "";
-  if (kindEl) kindEl.value = "interactive";
-  if (uriEl) uriEl.value = "";
-
-  dialog.showModal();
-}
 
 ////////////////////////////////////////////
 // LIST
@@ -271,6 +125,16 @@ function _renderList(output, listEl) {
         @click="${() => activeFilter.set("interface")}"
       >
         Interfaces
+      </button>
+
+      <span class="divider"></span>
+
+      <button
+        class="button--border button--tiny button--bg-accent button--tr-accent button--transparent with-icon"
+        @click="${() => openAddFromURIModal()}"
+      >
+        <i class="ph-fill ph-plus-circle"></i>
+        Add from URI
       </button>
 
       <div style="flex: 1"></div>
@@ -368,9 +232,6 @@ function _renderList(output, listEl) {
     `
     : html`
       ${filterBar} ${emptyFacetsList()}
-      <ul class="grid" style="margin: var(--space-sm) 0 0">
-        ${addFromUri()}
-      </ul>
     `;
 
   render(h, listEl);
