@@ -6,12 +6,6 @@ title: Guide | Diffuse
 
 <h1 hidden>Guide</h1>
 
-<style>
-  strong {
-    font-weight: 600;
-  }
-</style>
-
 <div class="columns">
   <section>
     <h3>Concept</h3>
@@ -44,31 +38,31 @@ title: Guide | Diffuse
       <!-- 1 -->
       <li class="with-icon" style="gap: var(--space-sm)">
         <i class="ph-fill ph-file-audio" style="opacity: 0.4"></i>
-        <span><strong>Add some audio files or streams.</strong> The <a href="{{ ('facets/data/connect/index.html') |> facetLoaderURL }}">connect</a> interfaces can be used for this, or use the demo from the tutorial below.</span>
+        <span><strong>Add some audio files or streams.</strong> The wide range of <a href="{{ ('facets/connect/index.html') |> facetLoaderURL }}">connect interfaces</a> can be used for this, or use the demo from the tutorial below.</span>
       </li>
 
       <!-- 2 -->
       <li class="with-icon" style="gap: var(--space-sm)">
         <i class="ph-fill ph-gear-six" style="opacity: 0.4"></i>
-        <span><strong>Wait until the processing of audio sources into tracks is completed.</strong> The demo button will show you the status or you can monitor it using this <a href="{{ ('facets/data/process-tracks/index.html') |> facetLoaderURL }}">interface</a>.</span>
+        <span><strong>Wait until the processing of audio sources into tracks is completed.</strong> You can monitor it using this <a href="{{ ('facets/data/process-tracks/index.html') |> facetLoaderURL }}">interface</a>. The tutorial demo will show it directly.</span>
       </li>
 
       <!-- 3 -->
       <li class="with-icon" style="gap: var(--space-sm)">
         <i class="ph-fill ph-paint-brush" style="opacity: 0.4"></i>
-        <span><strong style="color: var(--accent-twist-2)">Explore the interfaces that can be used.</strong> Check out the <a href="featured/?filter=interface">featured interfaces</a>.</span>
+        <span><strong style="color: var(--accent-twist-2)">Explore the interfaces that can be used to play and manage your audio.</strong> Check out the <a href="featured/?filter=interface">featured interfaces</a>.</span>
       </li>
 
       <!-- 4 -->
       <li class="with-icon" style="gap: var(--space-sm)">
         <i class="ph-fill ph-sparkle" style="opacity: 0.4"></i>
-        <span><strong style="color: var(--accent-twist-4)">Continue exploring, enable some additional features</strong>, such as making played audio available offline automatically.</span>
+        <span><strong style="color: var(--accent-twist-4)">Continue exploring, enable some additional features</strong> such as making played audio available offline automatically.</span>
       </li>
 
       <!-- 5 -->
       <li class="with-icon" style="gap: var(--space-sm)">
         <i class="ph-fill ph-person" style="opacity: 0.4"></i>
-        <span><strong>Sync your user-data with your other devices.</strong> Or share your data with other people.</span>
+        <span><strong>Sync your configuration and playlists with your other devices.</strong> Or share it with other people.</span>
       </li>
     </ul>
   </section>
@@ -78,7 +72,7 @@ title: Guide | Diffuse
   <h3 id="tutorial">Tutorial</h3>
 
   <p>
-    <strong>Diffuse is not your typical streaming service, we have to add sources of audio so we have stuff to play.</strong> This button below adds some demo content, so you can experiment with the software right away.
+    <strong>Diffuse is not your typical streaming service, you have to add sources of audio so you have stuff to play.</strong> This button below adds some demo content, so you can experiment with the software right away.
   </p>
 
   <p>
@@ -92,24 +86,13 @@ title: Guide | Diffuse
   </p>
 
   <p>
-    <strong>Let's pick an interface</strong> that automatically puts audio from our collection into the queue, and another to play what got put into the queue.
+    By default a feature is enabled which puts audio in the queue automatically. <strong>Let's pick an interface</strong> to play what got put into the queue for us.
   </p>
 
   <p>
-    <span class="button-row">
-      <a class="button button--bg-accent" href="{{ ('facets/playback/auto-queue/index.html') |> facetLoaderURL }}" target="_blank">
-        <span class="with-icon">
-          <i class="ph-fill ph-number-circle-one"></i>
-          Fill up queue
-        </span>
-      </a>
-      <a class="button button--bg-accent" href="{{ ('themes/blur/artwork-controller/facet/index.html') |> facetLoaderURL }}" target="_blank">
-        <span class="with-icon">
-          <i class="ph-fill ph-number-circle-two"></i>
-          Play audio
-        </span>
-      </a>
-    </span>
+    <a class="button button--bg-accent" href="{{ ('themes/blur/artwork-controller/facet/index.html') |> facetLoaderURL }}" target="_blank">
+      Play audio
+    </a>
   </p>
 
   <p>
@@ -125,6 +108,6 @@ title: Guide | Diffuse
   </p>
 
   <p>
-    TODO: explain adding your own inputs, syncing user data, etc.
+    TODO: explain adding your own inputs, syncing user data, editing/forking facets, creating your own facet, etc.
   </p>
 </section>

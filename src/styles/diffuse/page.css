@@ -165,7 +165,7 @@ ul.columns {
 
 dialog {
   background: var(--bg-color);
-  border: 2px solid var(--border-color);
+  border: 0;
   border-radius: var(--radius-md);
   padding: var(--space-lg);
   min-width: min(87.5dvw, var(--container-sm));
@@ -390,7 +390,10 @@ textarea {
 
   .grid-filter--output {
     font-size: var(--fs-xs);
-    font-weight: 700;
+    font-weight: 600;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
   }
 
   .grid-filter--label-output,
@@ -582,6 +585,14 @@ a.button {
     }
   }
 
+  .button__supplementary-text {
+    display: none;
+
+    @media (min-width: 42rem) {
+      display: inline-flex;
+    }
+  }
+
   & > span {
     align-items: center;
     display: inline-flex;
@@ -596,6 +607,10 @@ small {
   a {
     text-underline-offset: 3px;
   }
+}
+
+strong {
+  font-weight: 600;
 }
 
 .button-col {

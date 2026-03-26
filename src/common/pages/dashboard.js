@@ -13,7 +13,17 @@ import { output } from "./output.js";
 import { openAddFromURIModal } from "./from-uri.js";
 
 // Signals
-const activeFilter = signal("all");
+const FILTER_STORAGE_KEY = "diffuse/dashboard/filter";
+const storedFilter = localStorage.getItem(FILTER_STORAGE_KEY);
+const activeFilter = signal(
+  storedFilter === "prelude" || storedFilter === "interface"
+    ? storedFilter
+    : "all",
+);
+
+effect(() => {
+  localStorage.setItem(FILTER_STORAGE_KEY, activeFilter.get());
+});
 
 /**
  * @import OutputOrchestrator from "~/components/orchestrator/output/element.js";
@@ -134,7 +144,7 @@ function _renderList(output, listEl) {
         @click="${() => openAddFromURIModal()}"
       >
         <i class="ph-fill ph-plus-circle"></i>
-        Add from URI
+        <span class="button__supplementary-text">Add from URI</span>
       </button>
 
       <div style="flex: 1"></div>
