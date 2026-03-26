@@ -32,9 +32,11 @@
   <wa-dialog id="facet-picker" label="Choose a facet" style="--width: 360px">
     <div class="wa-stack wa-gap-s">
       <wa-select id="facet-select" placeholder="Built-in facets…">
-        {{ for item of facets }}{{ if item.url !== "facets/misc/split-view/index.html" }}
-        <wa-option value="{{ item.url }}">{{ item.title }}</wa-option>
-        {{ /if }}{{ /for }}
+        {{ for item of facets }}
+          {{ if item.url !== "facets/misc/split-view/index.html" && item.kind !== "prelude" }}
+            <wa-option value="{{ item.url }}">{{ item.title }}</wa-option>
+          {{ /if }}
+        {{ /for }}
       </wa-select>
       <wa-input
         id="custom-path"
