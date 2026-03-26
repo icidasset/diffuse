@@ -26,6 +26,7 @@ export const STARTING_SET = facets.flatMap((facet) => {
       "facets/data/input-bundle/index.html",
       "facets/data/output-bundle/index.html",
       "facets/data/process-tracks/prelude/index.html",
+      "facets/playback/auto-queue/prelude/index.html",
     ].includes(facet.url)
   ) {
     return [{
