@@ -23,6 +23,36 @@ const $editor = signal(/** @type {EditorView | null} */ (null));
 const $editingFacet = signal(/** @type {Facet | null} */ (null));
 
 ////////////////////////////////////////////
+// LOADING
+////////////////////////////////////////////
+
+const LOADING_EL_ID = "editor-loading";
+
+/**
+ * @param {boolean} loading
+ */
+function setEditorLoading(loading) {
+  const container = /** @type {HTMLElement | null} */ (
+    document.querySelector("#html-input-container")
+  );
+  if (!container) return;
+
+  if (loading) {
+    if (document.getElementById(LOADING_EL_ID)) return;
+    const el = document.createElement("div");
+    el.id = LOADING_EL_ID;
+    el.className = "with-icon";
+    el.style.fontSize = "var(--fs-sm)";
+    el.innerHTML = '<i class="ph-bold ph-spinner animate-spin"></i> Loading…';
+    container.before(el);
+    container.hidden = true;
+  } else {
+    document.getElementById(LOADING_EL_ID)?.remove();
+    container.hidden = false;
+  }
+}
+
+////////////////////////////////////////////
 // EDITOR
 ////////////////////////////////////////////
 
@@ -152,8 +182,10 @@ async function editFacet(ogFacet) {
 
   // Make sure HTML is loaded
   if (!facet.html && facet.uri) {
+    setEditorLoading(true);
     const html = await loadURI(facet.uri);
     const cid = await CID.create(0x55, new TextEncoder().encode(html));
+    setEditorLoading(false);
 
     facet.html = html;
     facet.cid = cid;
@@ -216,9 +248,11 @@ export function listenForExamplesEdit() {
 
       switch (rel) {
         case "edit": {
+          setEditorLoading(true);
           const facet = await facetFromURI({ kind, name, uri }, {
             fetchHTML: true,
           });
+          setEditorLoading(false);
           editFacet(facet);
           document.querySelector("#build")?.scrollIntoView();
           break;
@@ -236,9 +270,14 @@ export async function editFacetFromURL() {
   const idParam = new URLSearchParams(location.search).get("id");
 
   if (idParam) {
-    const out = await output();
-    const col = await Output.data(out.facets);
-    const facet = col.find((f) => f.id === idParam);
-    if (facet) await editFacet(facet);
+    setEditorLoading(true);
+    try {
+      const out = await output();
+      const col = await Output.data(out.facets);
+      const facet = col.find((f) => f.id === idParam);
+      if (facet) await editFacet(facet);
+    } finally {
+      setEditorLoading(false);
+    }
   }
 }

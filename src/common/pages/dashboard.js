@@ -78,7 +78,7 @@ function _renderList(output, listEl) {
 
   if (facetsCol.state !== "loaded") {
     const loading = html`
-      <div class="with-icon">
+      <div class="with-icon" style="font-size: var(--fs-sm)">
         <i class="ph-bold ph-spinner animate-spin"></i>
         Loading your software
       </div>
