@@ -38,10 +38,10 @@ class WindowManager extends DiffuseElement {
     this.root().addEventListener("mousedown", this.focusOnWindow);
     this.root().addEventListener("dtw-window-start-move", this.windowMoveStart);
 
-    // Webamp stuff
+    // Winamp stuff
     document.body.addEventListener(
       "mousedown",
-      this.bringWebampToFront.bind(this),
+      this.bringWinampToFront.bind(this),
     );
 
     // React to active window changing
@@ -65,19 +65,19 @@ class WindowManager extends DiffuseElement {
 
     document.body.removeEventListener(
       "mousedown",
-      this.bringWebampToFront.bind(this),
+      this.bringWinampToFront.bind(this),
     );
   }
 
   /**
    * @param {MouseEvent} event
    */
-  bringWebampToFront(event) {
+  bringWinampToFront(event) {
     if (event.target instanceof HTMLElement) {
-      const webamp = event.target?.closest("#webamp");
-      if (webamp instanceof HTMLElement) {
+      const winamp = event.target?.closest("dtw-winamp");
+      if (winamp instanceof HTMLElement) {
         this.#lastZindex++;
-        webamp.style.zIndex = this.#lastZindex.toString();
+        winamp.style.zIndex = this.#lastZindex.toString();
       }
     }
   }

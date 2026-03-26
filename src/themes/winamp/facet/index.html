@@ -86,6 +86,14 @@
           tracks-selector="do-scoped-tracks"
         ></dtw-browser>
       </dtw-window>
+
+      <!-- ⚡️ -->
+      <dtw-winamp
+        audio-engine-selector="de-audio"
+        output-selector="#output"
+        queue-engine-selector="de-queue"
+        repeat-shuffle-engine-selector="de-repeat-shuffle"
+      ></dtw-winamp>
     </dtw-window-manager>
   </section>
 
@@ -121,9 +129,6 @@
       <label>Add shuffled batch</label>
     </a>
   </section>
-
-  <!-- ⚡️ -->
-  <dtw-webamp></dtw-webamp>
 </main>
 
 <script type="module" src="themes/winamp/facet/index.inline.js"></script>

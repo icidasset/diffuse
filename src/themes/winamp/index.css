@@ -13,14 +13,6 @@ body {
   overflow: hidden;
 }
 
-#webamp {
-  isolation: isolate;
-}
-
-#webamp-context-menu {
-  z-index: 10000 !important;
-}
-
 main > section {
   inset: 0;
   position: absolute;

@@ -2,7 +2,7 @@ import foundation from "~/common/foundation.js";
 import BrowserElement from "~/themes/winamp/browser/element.js";
 
 // Set doc title
-document.title = "Browser | Winamp | Diffuse";
+foundation.setup({ title: "Browser | Winamp | Diffuse" });
 
 // Doc loader
 const window = /** @type {HTMLElement} */ (document.querySelector(".window"));
