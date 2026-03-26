@@ -29,7 +29,7 @@ document.title = "Split View | Diffuse";
  * @typedef {PaneNode | SplitNode} Node
  */
 
-const STORAGE_KEY = "diffuse/facets/misc/split-view/builder/layout";
+const STORAGE_KEY = "facets/misc/split-view/builder/layout";
 
 // ─── State ───────────────────────────────────────────────────────────────────
 
@@ -410,7 +410,7 @@ ${generateNodeHTML(state, "  ")}
     layout.classList.remove("dragging");
   });
 
-  const POSITIONS_KEY = "diffuse/facets/misc/split-view/${id}/positions";
+  const POSITIONS_KEY = "facets/misc/split-view/${id}/positions";
   const savedPositions = (() => {
     try { return JSON.parse(localStorage.getItem(POSITIONS_KEY) ?? "{}"); }
     catch { return {}; }

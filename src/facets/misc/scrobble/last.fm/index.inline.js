@@ -22,7 +22,7 @@ document.title = "Last.fm | Scrobble | Diffuse";
 // SETUP
 ////////////////////////////////////////////
 
-const CREDS_KEY = "diffuse/supplement/last.fm/credentials";
+const CREDS_KEY = "facets/misc/scrobble/last.fm/credentials";
 
 /** @returns {{ apiKey: string, apiSecret: string } | null} */
 function loadCredentials() {

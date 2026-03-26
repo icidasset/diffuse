@@ -1,4 +1,4 @@
-const prefix = "diffuse/output/raw/atproto/oauth";
+const prefix = "oauth/callback";
 const redirect_path = sessionStorage.getItem(`${prefix}/redirect_path`) ?? "/";
 
 sessionStorage.removeItem(`${prefix}/redirect_path`);
