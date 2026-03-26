@@ -2,7 +2,7 @@ import foundation from "~/common/foundation.js";
 import ArtworkController from "~/themes/blur/artwork-controller/element.js";
 
 // Set doc title
-document.title = "Artwork controller | Blur | Diffuse";
+foundation.setup({ title: "Artwork controller | Blur | Diffuse" });
 
 // Setup the prerequisite elements
 await foundation.orchestrator.queueAudio();

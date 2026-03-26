@@ -23,7 +23,7 @@ import { setup } from "~/facets/connect/common.js";
  * @import { Server } from "~/components/input/opensubsonic/types.d.ts"
  */
 
-document.title = "Connect OpenSubsonic | Diffuse";
+foundation.setup({ title: "Connect OpenSubsonic | Diffuse" });
 
 ////////////////////////////////////////////
 // SETUP

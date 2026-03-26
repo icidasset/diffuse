@@ -12,7 +12,7 @@ import foundation from "~/common/foundation.js";
 
 import { setup } from "~/facets/connect/common.js";
 
-document.title = "Connect S3 | Diffuse";
+foundation.setup({ title: "Connect S3 | Diffuse" });
 
 /**
  * @import { default as WaInput } from "@awesome.me/webawesome/dist/components/input/input.js"

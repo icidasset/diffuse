@@ -5,7 +5,7 @@ import * as Playlist from "~/common/playlist.js";
 const ACTIVE_CLASS = "button--active";
 
 // Set doc title
-document.title = "Automatic Queue | Diffuse";
+foundation.setup({ title: "Automatic Queue | Diffuse" });
 
 // Doc load
 const main = /** @type {HTMLElement} */ (document.querySelector("main"));

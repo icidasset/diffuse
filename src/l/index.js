@@ -3,7 +3,6 @@ import * as CID from "~/common/cid.js";
 import * as Output from "~/common/output.js";
 import { createLoader, renderError } from "~/common/loader.js";
 import { insertPreludes } from "~/common/facets/prelude.js";
-import { removeLoader } from "~/common/facets/loader.js";
 
 // Output element
 const output = await foundation.orchestrator.output();
@@ -47,7 +46,5 @@ createLoader({
     range.selectNode(container);
     const documentFragment = range.createContextualFragment(facet.html ?? "");
     container.append(documentFragment);
-
-    removeLoader();
   },
 });

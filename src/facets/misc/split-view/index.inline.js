@@ -13,7 +13,7 @@ import foundation from "~/common/foundation.js";
 import * as Output from "~/common/output.js";
 
 // Set doc title
-document.title = "Split View | Diffuse";
+foundation.setup({ title: "Split View | Diffuse" });
 
 /**
  * @import { default as WaSplitPanel } from "@awesome.me/webawesome/dist/components/split-panel/split-panel.js"

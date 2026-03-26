@@ -8,8 +8,9 @@ import "~/common/webawesome/detect-dark.js";
 import "~/common/webawesome/phosphor/fill.js";
 
 import { data as facetsData } from "~/facets/index.js";
+import foundation from "~/common/foundation.js";
 
-document.title = "Connect | Diffuse";
+foundation.setup({ title: "Connect | Diffuse" });
 
 /** @param {string} path */
 const loaderHref = (path) => `l/?path=${encodeURIComponent(path)}`;

@@ -10,7 +10,7 @@ import foundation from "~/common/foundation.js";
 
 import { setup } from "~/facets/connect/common.js";
 
-document.title = "Connect AT Protocol | Diffuse";
+foundation.setup({ title: "Connect AT Protocol | Diffuse" });
 
 /**
  * @import { default as WaInput } from "@awesome.me/webawesome/dist/components/input/input.js"
@@ -23,7 +23,6 @@ document.title = "Connect AT Protocol | Diffuse";
 ////////////////////////////////////////////
 
 const outputOrchestrator = await foundation.orchestrator.output();
-
 await customElements.whenDefined(outputOrchestrator.localName);
 
 const atprotoOption = (await outputOrchestrator.options()).find(

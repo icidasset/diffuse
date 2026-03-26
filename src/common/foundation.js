@@ -152,6 +152,32 @@ export const config = {
       search: signals.processor.search.get,
     },
   },
+
+  // Utilities
+
+  container: () => {
+    return document.body.querySelector("#container");
+  },
+
+  hideLoader: () => {
+    const loader = document.querySelector("#diffuse-loader");
+
+    if (loader) {
+      loader.classList.add("loaded");
+      setTimeout(() => {
+        loader.remove();
+        loader.parentElement?.remove();
+      }, 750);
+    }
+  },
+
+  /**
+   * @param {{ title: string }} options
+   */
+  setup: ({ title }) => {
+    document.title = title;
+    config.hideLoader();
+  },
 };
 
 export default config;

@@ -11,7 +11,7 @@ import foundation from "~/common/foundation.js";
 import { effect } from "~/common/signal.js";
 
 // Set doc title
-document.title = "Last.fm | Scrobble | Diffuse";
+foundation.setup({ title: "Last.fm | Scrobble | Diffuse" });
 
 /**
  * @import { default as WaDrawer } from "@awesome.me/webawesome/dist/components/drawer/drawer.js"

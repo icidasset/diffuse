@@ -15,7 +15,7 @@ import { setup } from "~/facets/connect/common.js";
  * @import { default as WaInput } from "@awesome.me/webawesome/dist/components/input/input.js"
  */
 
-document.title = "Connect HTTPS | Diffuse";
+foundation.setup({ title: "Connect HTTPS | Diffuse" });
 
 ////////////////////////////////////////////
 // SETUP
