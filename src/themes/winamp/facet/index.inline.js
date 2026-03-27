@@ -2,6 +2,7 @@ import foundation from "~/common/foundation.js";
 import { effect } from "~/common/signal.js";
 
 import WindowManager from "~/themes/winamp/window-manager/element.js";
+import WinampElement from "~/themes/winamp/winamp/element.js";
 
 // Set doc title
 foundation.setup({ title: "Winamp | Diffuse" });
