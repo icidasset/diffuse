@@ -24,7 +24,7 @@ export function openAddFromURIModal() {
     render(
       html`
         <form id="add-from-uri-form">
-          <p>
+          <p style="font-size: var(--fs-sm)">
             <strong>Load a facet from a URI.</strong> Currently supported URI schemes:
             <code>https</code>, <code>at</code> (AT Protocol) and <code>diffuse</code>
             (references internal facets).

@@ -233,9 +233,12 @@ dialog {
 
 label {
   display: block;
-  font-size: var(--fs-sm);
-  font-weight: 500;
+  font-size: var(--fs-xs);
+  font-weight: 600;
+  letter-spacing: var(--tracking-wide);
   margin-bottom: var(--space-3xs);
+  opacity: 0.6;
+  text-transform: uppercase;
 }
 
 input,
