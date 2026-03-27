@@ -2,7 +2,6 @@ import foundation from "~/common/foundation.js";
 import { effect } from "~/common/signal.js";
 
 import WindowManager from "~/themes/winamp/window-manager/element.js";
-import WinampElement from "~/themes/winamp/winamp/element.js";
 
 // Set doc title
 foundation.setup({ title: "Winamp | Diffuse" });
@@ -25,8 +24,11 @@ await foundation.orchestrator.processTracks({ disableWhenReady: true });
 await foundation.orchestrator.queueAudio();
 
 await import("~/themes/winamp/browser/element.js");
-await import("~/themes/winamp/winamp/element.js");
 await import("~/themes/winamp/window/element.js");
+
+const { default: WinampElement } = await import(
+  "~/themes/winamp/winamp/element.js"
+);
 
 /** @type {OutputElement | null} */
 const output = document.querySelector("#output");
@@ -43,6 +45,11 @@ globalThis.output = output;
 document.body.querySelectorAll(".desktop__item").forEach((element) => {
   if (element instanceof HTMLElement) {
     element.addEventListener("dblclick", () => {
+      if (element.id === "desktop-winamp") {
+        const w = document.body.querySelector("dtw-winamp");
+        if (w instanceof WinampElement) w.open();
+        return;
+      }
       const f = element.querySelector("label")?.getAttribute("for");
       if (f) return windowManager()?.toggleWindow(f);
     });

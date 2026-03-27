@@ -20,21 +20,24 @@ import { computed, signal, untracked } from "~/common/signal.js";
 
 const UI_STATE_KEY = "themes/winamp/winamp/ui";
 
-/** @returns {{ eqOpen: boolean, playlistOpen: boolean, eqOn: boolean, eqSliders: Record<string, number> | null, mainShade: boolean, eqShade: boolean, playlistShade: boolean }} */
+/** @returns {{ eqOpen: boolean, playlistOpen: boolean, milkdropOpen: boolean, eqOn: boolean, eqSliders: Record<string, number> | null, mainShade: boolean, eqShade: boolean, playlistShade: boolean, positions: Record<string, {x:number,y:number}> | null, sizes: Record<string, {width:number,height:number}> | null }} */
 function loadUiState() {
   try {
     return {
       eqOpen: true,
       playlistOpen: true,
+      milkdropOpen: true,
       eqOn: false,
       eqSliders: null,
       mainShade: false,
       eqShade: false,
       playlistShade: false,
+      positions: null,
+      sizes: null,
       ...JSON.parse(localStorage.getItem(UI_STATE_KEY) ?? "{}"),
     };
   } catch {
-    return { eqOpen: true, playlistOpen: true, eqOn: false, eqSliders: null, mainShade: false, eqShade: false, playlistShade: false };
+    return { eqOpen: true, playlistOpen: true, milkdropOpen: true, eqOn: false, eqSliders: null, mainShade: false, eqShade: false, playlistShade: false, positions: null, sizes: null };
   }
 }
 
@@ -203,8 +206,9 @@ class WinampElement extends DiffuseElement {
   #balance = signal(0);
   #stopped = signal(false);
   #seekingProgress = signal(/** @type {number | null} */ (null));
-  #focusedWindow = signal(/** @type {"main" | "eq" | "playlist"} */ ("main"));
+  #focusedWindow = signal(/** @type {"main" | "eq" | "playlist" | "milkdrop"} */ ("main"));
   #playlistOpen = signal(true);
+  #milkdropOpen = signal(true);
 
   // Window positions — plain objects (not signals) so dragging doesn't
   // trigger re-renders, but the current value is always read on each render.
@@ -212,6 +216,18 @@ class WinampElement extends DiffuseElement {
   #eqPos = { x: 0, y: 116 };
   #playlistPos = { x: 0, y: 232 };
   #playlistSize = { width: 275, height: 232 };
+  #milkdropPos = { x: 275, y: 0 };
+  #milkdropSize = { width: 275, height: 232 };
+
+  // Butterchurn
+  /** @type {any} */
+  #butterchurn = null;
+  /** @type {number | undefined} */
+  #butterchurnRAF = undefined;
+  /** @type {ReturnType<typeof setInterval> | undefined} */
+  #butterchurnCycleInterval = undefined;
+  /** @type {Array<any>} */
+  #butterchurnPresetList = [];
 
   // SIGNALS - DEPENDENCIES
 
@@ -307,6 +323,7 @@ class WinampElement extends DiffuseElement {
     this.#eqShade.value = ui.eqShade;
     this.#playlistShade.value = ui.playlistShade;
     this.#playlistOpen.value = ui.playlistOpen;
+    this.#milkdropOpen.value = ui.milkdropOpen;
     if (ui.eqSliders) {
       const s = ui.eqSliders;
       this.#eqSliders.value = {
@@ -315,16 +332,51 @@ class WinampElement extends DiffuseElement {
       };
     }
 
-    // Center the windows on startup
-    const totalH = 116 + 116 + this.#playlistSize.height;
-    const cx = Math.round((window.innerWidth - 275) / 2);
-    const cy = Math.round((window.innerHeight - totalH) / 2);
-    this.#mainPos.x = cx;
-    this.#mainPos.y = cy;
-    this.#eqPos.x = cx;
-    this.#eqPos.y = cy + 116;
-    this.#playlistPos.x = cx;
-    this.#playlistPos.y = cy + 232;
+    if (ui.sizes) {
+      if (ui.sizes.playlist) Object.assign(this.#playlistSize, ui.sizes.playlist);
+      if (ui.sizes.milkdrop) Object.assign(this.#milkdropSize, ui.sizes.milkdrop);
+    }
+
+    if (ui.positions) {
+      if (ui.positions.main) Object.assign(this.#mainPos, ui.positions.main);
+      if (ui.positions.eq) Object.assign(this.#eqPos, ui.positions.eq);
+      if (ui.positions.playlist) Object.assign(this.#playlistPos, ui.positions.playlist);
+      if (ui.positions.milkdrop) Object.assign(this.#milkdropPos, ui.positions.milkdrop);
+    } else {
+      // Center the windows on startup
+      const leftColH = 116 + 116 + this.#playlistSize.height;
+      const milkdropOpen = this.#milkdropOpen.value;
+      const totalW = milkdropOpen ? 275 + this.#milkdropSize.width : 275;
+      const totalH = milkdropOpen ? Math.max(leftColH, this.#milkdropSize.height) : leftColH;
+      const cx = Math.round((window.innerWidth - totalW) / 2);
+      const cy = Math.round((window.innerHeight - totalH) / 2);
+      this.#mainPos.x = cx;
+      this.#mainPos.y = cy;
+      this.#eqPos.x = cx;
+      this.#eqPos.y = cy + 116;
+      this.#playlistPos.x = cx;
+      this.#playlistPos.y = cy + 232;
+      this.#milkdropPos.x = cx + 275;
+      this.#milkdropPos.y = cy;
+    }
+
+    this.effect(() => {
+      if (!this.#milkdropOpen.value) {
+        untracked(() => this.#stopButterchurn());
+        return;
+      }
+      untracked(() => {
+        requestAnimationFrame(() => {
+          const canvas = this.root().querySelector("#milkdrop-canvas");
+          if (!(canvas instanceof HTMLCanvasElement)) return;
+          if (!this.#butterchurn) {
+            this.#initButterchurn(canvas);
+          } else {
+            this.#startButterchurn();
+          }
+        });
+      });
+    });
 
     this.forceRender();
     this.#marqueeScroller = this.root().querySelector("#marquee > div");
@@ -397,10 +449,11 @@ class WinampElement extends DiffuseElement {
     this.root().addEventListener("pointerdown", (e) => {
       if (!(e.target instanceof HTMLElement)) return;
       // Window focus
-      const win = e.target.closest("#main-window, #equalizer-window, #playlist-window, #playlist-window-shade");
+      const win = e.target.closest("#main-window, #equalizer-window, #playlist-window, #playlist-window-shade, #milkdrop-window");
       if (win instanceof HTMLElement) {
         if (win.id === "main-window") this.#focusedWindow.value = "main";
         else if (win.id === "equalizer-window") this.#focusedWindow.value = "eq";
+        else if (win.id === "milkdrop-window") this.#focusedWindow.value = "milkdrop";
         else this.#focusedWindow.value = "playlist";
       }
       // Press feedback
@@ -425,6 +478,7 @@ class WinampElement extends DiffuseElement {
       cancelAnimationFrame(this.#visRAF);
       this.#visRAF = undefined;
     }
+    this.#stopButterchurn();
   }
 
   // WINDOW SNAPPING — ported from webamp/js/snapUtils.ts
@@ -516,11 +570,15 @@ class WinampElement extends DiffuseElement {
       this.#onPlaylistResizeStart(e);
       return;
     }
+    if (e.target.id === "gen-resize-target") {
+      this.#onMilkdropResizeStart(e);
+      return;
+    }
 
     const draggable = e.target.closest(".draggable");
     if (!draggable) return;
     const win = draggable.closest(
-      "#main-window, #equalizer-window, #playlist-window",
+      "#main-window, #equalizer-window, #playlist-window, #milkdrop-window",
     );
     if (!(win instanceof HTMLElement)) return;
 
@@ -586,6 +644,8 @@ class WinampElement extends DiffuseElement {
     const onUp = () => {
       document.removeEventListener("mousemove", onMove);
       document.removeEventListener("mouseup", onUp);
+      this.forceRender();
+      this.#saveLayout();
     };
 
     document.addEventListener("mousemove", onMove);
@@ -593,6 +653,52 @@ class WinampElement extends DiffuseElement {
   };
 
   /** @param {MouseEvent} e */
+  #onMilkdropResizeStart = (e) => {
+    e.preventDefault();
+
+    const milkdropEl = this.root().querySelector("#milkdrop-window");
+    if (!(milkdropEl instanceof HTMLElement)) return;
+
+    const startMouseX = e.clientX;
+    const startMouseY = e.clientY;
+    const startWidth = this.#milkdropSize.width;
+    const startHeight = this.#milkdropSize.height;
+    const STEP_W = 25, STEP_H = 29, MIN_W = 275, MIN_H = 116;
+
+    /** @param {MouseEvent} mv */
+    const onMove = (mv) => {
+      const newWidth = Math.max(
+        MIN_W,
+        startWidth + Math.round((mv.clientX - startMouseX) / STEP_W) * STEP_W,
+      );
+      const newHeight = Math.max(
+        MIN_H,
+        startHeight + Math.round((mv.clientY - startMouseY) / STEP_H) * STEP_H,
+      );
+      this.#milkdropSize.width = newWidth;
+      this.#milkdropSize.height = newHeight;
+      milkdropEl.style.width = `${newWidth}px`;
+      milkdropEl.style.height = `${newHeight}px`;
+      const canvas = this.root().querySelector("#milkdrop-canvas");
+      if (canvas instanceof HTMLCanvasElement) {
+        const cw = canvas.clientWidth;
+        const ch = canvas.clientHeight;
+        canvas.width = cw;
+        canvas.height = ch;
+        this.#butterchurn?.setRendererSize(cw, ch);
+      }
+    };
+
+    const onUp = () => {
+      document.removeEventListener("mousemove", onMove);
+      document.removeEventListener("mouseup", onUp);
+      this.#saveLayout();
+    };
+
+    document.addEventListener("mousemove", onMove);
+    document.addEventListener("mouseup", onUp);
+  };
+
   #onPlaylistResizeStart = (e) => {
     e.preventDefault();
 
@@ -626,6 +732,7 @@ class WinampElement extends DiffuseElement {
     const onUp = () => {
       document.removeEventListener("mousemove", onMove);
       document.removeEventListener("mouseup", onUp);
+      this.#saveLayout();
     };
 
     document.addEventListener("mousemove", onMove);
@@ -671,7 +778,12 @@ class WinampElement extends DiffuseElement {
         pos: this.#playlistPos,
         box: () => ({ x: this.#playlistPos.x, y: this.#playlistPos.y, width: ps.width, height: ps.height }),
       },
-    ];
+      {
+        el: /** @type {HTMLElement} */ (root.querySelector("#milkdrop-window")),
+        pos: this.#milkdropPos,
+        box: () => ({ x: this.#milkdropPos.x, y: this.#milkdropPos.y, width: this.#milkdropSize.width, height: this.#milkdropSize.height }),
+      },
+    ].filter((e) => e.el != null);
   }
 
   // MARQUEE
@@ -1087,7 +1199,7 @@ class WinampElement extends DiffuseElement {
   };
 
   #openConnect = () => {
-    window.open("l/?path", "_blank");
+    window.open("l/?path=facets%2Fconnect%2Findex.html", "_blank");
   };
 
   #next = () => {
@@ -1108,7 +1220,100 @@ class WinampElement extends DiffuseElement {
     if (rs) rs.setRepeat(!rs.repeat());
   };
 
+  #centerWindows = () => {
+    const leftColH = 116 + 116 + this.#playlistSize.height;
+    const milkdropOpen = this.#milkdropOpen.value;
+    const totalW = milkdropOpen ? 275 + this.#milkdropSize.width : 275;
+    const totalH = milkdropOpen ? Math.max(leftColH, this.#milkdropSize.height) : leftColH;
+    const cx = Math.round((window.innerWidth - totalW) / 2);
+    const cy = Math.round((window.innerHeight - totalH) / 2);
+    this.#mainPos.x = cx;     this.#mainPos.y = cy;
+    this.#eqPos.x = cx;       this.#eqPos.y = cy + 116;
+    this.#playlistPos.x = cx; this.#playlistPos.y = cy + 232;
+    this.#milkdropPos.x = cx + 275; this.#milkdropPos.y = cy;
+    this.forceRender();
+    this.#saveLayout();
+  };
+
+  #saveLayout = () => {
+    const ui = loadUiState();
+    localStorage.setItem(UI_STATE_KEY, JSON.stringify({
+      ...ui,
+      positions: {
+        main: { ...this.#mainPos },
+        eq: { ...this.#eqPos },
+        playlist: { ...this.#playlistPos },
+        milkdrop: { ...this.#milkdropPos },
+      },
+      sizes: {
+        playlist: { ...this.#playlistSize },
+        milkdrop: { ...this.#milkdropSize },
+      },
+    }));
+  };
+
+  #toggleMilkdrop = () => {
+    this.#milkdropOpen.value = !this.#milkdropOpen.value;
+    const ui = loadUiState();
+    localStorage.setItem(UI_STATE_KEY, JSON.stringify({ ...ui, milkdropOpen: this.#milkdropOpen.value }));
+  };
+
+  /** @param {HTMLCanvasElement} canvas */
+  #initButterchurn = async (canvas) => {
+    this.#ensureAnalyser();
+    if (!this.#audioCtx || !this.#analyser) return;
+
+    const { default: butterchurn } = await import("butterchurn");
+    const w = canvas.clientWidth || canvas.offsetWidth || this.#milkdropSize.width;
+    const h = canvas.clientHeight || canvas.offsetHeight || (this.#milkdropSize.height - 34);
+    canvas.width = w;
+    canvas.height = h;
+    this.#butterchurn = butterchurn.createVisualizer(this.#audioCtx, canvas, { width: w, height: h });
+    this.#butterchurn.connectAudio(this.#analyser);
+
+    const { default: raw } = await import("butterchurn-presets/dist/base.js");
+    const presets = typeof raw?.default === "object" && raw.default !== null ? raw.default : raw;
+    this.#butterchurnPresetList = Object.values(presets ?? {});
+    this.#cyclePreset(0);
+
+    this.#butterchurnCycleInterval = setInterval(() => this.#cyclePreset(5.7), 15000);
+    this.#startButterchurn();
+  };
+
+  #startButterchurn = () => {
+    if (this.#butterchurnRAF !== undefined) return;
+    const step = () => {
+      this.#butterchurnRAF = requestAnimationFrame(step);
+      if (this.isPlaying()) this.#butterchurn?.render();
+    };
+    step();
+    if (this.#butterchurnCycleInterval === undefined && this.#butterchurnPresetList.length) {
+      this.#butterchurnCycleInterval = setInterval(() => this.#cyclePreset(5.7), 15000);
+    }
+  };
+
+  /** @param {number} transitionSecs */
+  #cyclePreset = (transitionSecs) => {
+    const list = this.#butterchurnPresetList;
+    if (!list.length) return;
+    const preset = list[Math.floor(Math.random() * list.length)];
+    this.#butterchurn?.loadPreset(preset, transitionSecs);
+  };
+
+  #stopButterchurn = () => {
+    if (this.#butterchurnRAF !== undefined) {
+      cancelAnimationFrame(this.#butterchurnRAF);
+      this.#butterchurnRAF = undefined;
+    }
+    if (this.#butterchurnCycleInterval !== undefined) {
+      clearInterval(this.#butterchurnCycleInterval);
+      this.#butterchurnCycleInterval = undefined;
+    }
+  };
+
   #closeMain = () => {
+    const audioId = this.$queue.value?.now()?.id;
+    if (audioId && this.isPlaying()) this.$audio.value?.pause({ audioId });
     this.#mainOpen.value = false;
   };
 
@@ -1343,6 +1548,7 @@ class WinampElement extends DiffuseElement {
     return html`
       <style>
       @import "./themes/winamp/vendor/webamp.css";
+      @import "./themes/winamp/vendor/gen-window.css";
 
       #webamp .playlist-track-titles > div {
         padding-left: 3px;
@@ -1381,16 +1587,27 @@ class WinampElement extends DiffuseElement {
         left: 72px;
         right: auto;
       }
+      #webamp .gen-top-title {
+        margin-top: 4px;
+      }
+      #webamp .gen-middle-left,
+      #webamp .gen-middle-right,
+      #webamp .gen-bottom {
+        position: relative;
+      }
+      #webamp #milkdrop-window .gen-middle-center {
+        overflow: hidden;
+      }
       </style>
 
-      <div id="webamp">
+      <div id="webamp" style="display: ${this.#mainOpen.value ? "block" : "none"}">
         <div
           id="main-window"
-          class="window ${this.#stopped.value ? "stop" : this.isPlaying() ? "play" : audio ? "pause" : "stop"}${this.#mainShade.value ? " shade" : ""}"
-          style="position: absolute; top: ${this.#mainPos.y}px; left: ${this.#mainPos.x}px; display: ${this.#mainOpen.value ? "block" : "none"};"
+          class="window ${this.#stopped.value ? "stop" : this.isPlaying() ? "play" : audio ? "pause" : "stop"}${this.#mainShade.value ? " shade" : ""}${focused === "main" ? " selected" : ""}"
+          style="position: absolute; top: ${this.#mainPos.y}px; left: ${this.#mainPos.x}px;"
         >
-          <div id="title-bar" class="${focused === "main" ? "selected " : ""}draggable" @dblclick="${this.#toggleMainShade}">
-            <div id="option-context"><div id="option"></div></div>
+          <div id="title-bar" class="draggable" @dblclick="${this.#toggleMainShade}">
+            <div id="option-context" @click="${this.#toggleMilkdrop}"><div id="option"></div></div>
             <div id="minimize"></div>
             <div id="shade" @click="${this.#toggleMainShade}"></div>
             ${this.#mainShade.value ? html`<div class="mini-time${isPaused ? " blinking" : ""}">${miniTimeChars}</div>` : ""}
@@ -1398,7 +1615,7 @@ class WinampElement extends DiffuseElement {
           </div>
           <div class="webamp-status">
             <div id="clutter-bar">
-              <div id="button-o"></div>
+              <div id="button-o" @click="${this.#centerWindows}"></div>
               <div id="button-a"></div>
               <div id="button-i"></div>
               <div id="button-d"></div>
@@ -1484,7 +1701,7 @@ class WinampElement extends DiffuseElement {
 
         <div
           id="equalizer-window"
-          class="window${this.#eqShade.value ? " shade" : ""}"
+          class="window${this.#eqShade.value ? " shade" : ""}${focused === "eq" ? " selected" : ""}"
           style="position: absolute; top: ${this.#eqPos.y}px; left: ${this.#eqPos.x}px; display: ${this.#eqOpen.value ? "block" : "none"};"
         >
           ${this.#eqShade.value ? html`
@@ -1495,7 +1712,7 @@ class WinampElement extends DiffuseElement {
               <input type="range" id="equalizer-balance" class="${balanceClass}" min="-100" max="100" value="${balance}" @input="${this.#onBalanceInput}">
             </div>
           ` : html`
-            <div class="equalizer-top title-bar${focused === "eq" ? " selected" : ""} draggable" @dblclick="${this.#toggleEqShade}">
+            <div class="equalizer-top title-bar draggable" @dblclick="${this.#toggleEqShade}">
               <div id="equalizer-shade" @click="${this.#toggleEqShade}"></div>
               <div id="equalizer-close" @click="${this.#toggleEq}"></div>
             </div>
@@ -1613,6 +1830,44 @@ class WinampElement extends DiffuseElement {
             </div>
           </div>
         </div>
+
+        <div
+          id="milkdrop-window"
+          class="window gen-window${this.#focusedWindow.value === "milkdrop" ? " selected" : ""}"
+          style="position: absolute; top: ${this.#milkdropPos.y}px; left: ${this.#milkdropPos.x}px; width: ${this.#milkdropSize.width}px; height: ${this.#milkdropSize.height}px; display: ${this.#milkdropOpen.value ? "flex" : "none"};"
+        >
+          <div class="gen-top draggable">
+            <div class="gen-top-left draggable"></div>
+            <div class="gen-top-left-fill draggable"></div>
+            <div class="gen-top-left-end draggable"></div>
+            <div class="gen-top-title draggable">
+              ${"MILKDROP".split("").map((c) => html`<div class="draggable gen-text-letter gen-text-${c.toLowerCase()}"></div>`)}
+            </div>
+            <div class="gen-top-right-end draggable"></div>
+            <div class="gen-top-right-fill draggable"></div>
+            <div class="gen-top-right draggable">
+              <div class="gen-close selected" @click="${this.#toggleMilkdrop}"></div>
+            </div>
+          </div>
+          <div class="gen-middle">
+            <div class="gen-middle-left draggable">
+              <div class="gen-middle-left-bottom draggable"></div>
+            </div>
+            <div class="gen-middle-center" style="background: #000;">
+              <canvas id="milkdrop-canvas" style="position: absolute; inset: 0; width: 100%; height: 100%;"></canvas>
+            </div>
+            <div class="gen-middle-right draggable">
+              <div class="gen-middle-right-bottom draggable"></div>
+            </div>
+          </div>
+          <div class="gen-bottom draggable">
+            <div class="gen-bottom-left draggable"></div>
+            <div class="gen-bottom-right draggable">
+              <div id="gen-resize-target"></div>
+            </div>
+          </div>
+        </div>
+
       </div>
     `;
   }
