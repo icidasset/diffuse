@@ -83,7 +83,6 @@
     "title": "Default Input Bundle",
     "kind": "prelude",
     "category": "Data",
-    "featured": true,
     "desc": "The default setup for audio input sources. Adds support for: HTTPS, Icecast, the local filesystem, OpenSubsonic, and S3-compatible storage."
   },
   {
@@ -91,7 +90,6 @@
     "title": "Default Output Bundle",
     "kind": "prelude",
     "category": "Data",
-    "featured": true,
     "desc": "The default setup for user-data storage output. Adds support for: AT Protocol and S3-compatible storage. For both of these a custom local-first syncing algorithm is used."
   },
   {
@@ -100,7 +98,7 @@
     "kind": "prelude",
     "category": "Data",
     "featured": true,
-    "desc": "Process all your audio inputs automatically into tracks when opening any interface. Only happens once every 10 minutes, if the processing was completed."
+    "desc": "Process all your audio inputs into tracks automatically when opening any interface. Only happens once every 10 minutes, if the processing was completed."
   },
   {
     "url": "facets/data/process-tracks/index.html",
@@ -139,7 +137,7 @@
     "title": "Winamp",
     "category": "Themes",
     "featured": true,
-    "desc": "Windows 98 inspired theme that uses the Webamp player  in combination with Diffuse."
+    "desc": "Windows 98 inspired theme with a classic Winamp skin for the audio player. The Winamp playlist is a combination of the queue's history, the track that's currently playing and the future queue items."
   },
   {
     "url": "themes/winamp/browser/facet/index.html",
