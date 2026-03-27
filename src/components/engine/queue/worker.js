@@ -197,8 +197,9 @@ export function unshift() {
   if (p.length === 0) return;
 
   const n = $now.value;
-  const [last] = p.splice(p.length - 1, 1);
+  const last = p[p.length - 1];
 
+  $past.value = p.slice(0, p.length - 1);
   $now.value = last ?? null;
   if (n) $future.value = [n, ...$future.value];
 }
@@ -392,26 +393,56 @@ export function fillSequentially(fillAmount, future) {
  *
  * if (result.length !== 4) throw new Error("expected 4 total items (2 existing + 2 new)");
  * ```
+ *
+ * @example Does not add tracks that have already played or are now playing
+ * ```js
+ * import { fillShuffle, $lake, $past, $now } from "~/components/engine/queue/worker.js";
+ *
+ * $lake.value = ["a", "b", "c", "d"];
+ * $past.value = [{ id: "a", manualEntry: false }];
+ * $now.value = { id: "b", manualEntry: false };
+ *
+ * const result = fillShuffle(4, [], 0);
+ *
+ * if (result.some((i) => i.id === "a" || i.id === "b")) throw new Error("past and now tracks should be excluded");
+ * ```
+ *
+ * @example Falls back to full lake when everything has been played
+ * ```js
+ * import { fillShuffle, $lake, $past } from "~/components/engine/queue/worker.js";
+ *
+ * $lake.value = ["a", "b"];
+ * $past.value = [{ id: "a", manualEntry: false }, { id: "b", manualEntry: false }];
+ *
+ * const result = fillShuffle(2, [], 0);
+ *
+ * if (result.length !== 2) throw new Error("expected 2 items from full lake fallback");
+ * ```
  */
 export function fillShuffle(fillAmount, future, autoFutureCount) {
-  // Determine pool of available queue items
-  /** @type {Item[]} */
-  const pool = [];
+  const excludeIds = new Set($past.value.map((i) => i.id));
+  if ($now.value) excludeIds.add($now.value.id);
+  future.forEach((i) => excludeIds.add(i.id));
 
-  const pastSet = new Set($past.value.map((i) => i.id));
-  let reducedPool = pool;
+  let pool = $lake.value
+    .filter((id) => !excludeIds.has(id))
+    .map((id) => ({ id, manualEntry: false }));
 
-  $lake.value.forEach((id) => {
-    if (pastSet.delete(id) === false) {
-      pool.push({ id, manualEntry: false });
-    }
-  });
-
-  if (reducedPool.length === 0) {
-    reducedPool = $lake.value.map((id) => ({ id, manualEntry: false }));
+  // Fallback: if everything has been played/is playing/is queued, use tracks not in past or now
+  if (pool.length === 0) {
+    const pastAndNowIds = new Set($past.value.map((i) => i.id));
+    if ($now.value) pastAndNowIds.add($now.value.id);
+    pool = $lake.value
+      .filter((id) => !pastAndNowIds.has(id))
+      .map((id) => ({ id, manualEntry: false }));
   }
 
-  const poolSelection = arrayShuffle(reducedPool).slice(
+  // Final fallback: everything has been played, use the full lake
+  if (pool.length === 0) {
+    pool = $lake.value.map((id) => ({ id, manualEntry: false }));
+  }
+
+  const poolSelection = arrayShuffle(pool).slice(
     0,
     Math.max(0, fillAmount - autoFutureCount),
   );

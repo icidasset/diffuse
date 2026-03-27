@@ -195,7 +195,7 @@ class WinampElement extends DiffuseElement {
   /** @type {ReturnType<typeof setInterval> | undefined} */
   #marqueeStepInterval = undefined;
   #marqueeText = signal("");
-  #selectedTrackId = signal(/** @type {string | null} */ (null));
+  #selectedIndex = signal(/** @type {number | null} */ (null));
   #mainOpen = signal(true);
   #eqOpen = signal(true);
   #mainShade = signal(false);
@@ -1360,31 +1360,26 @@ class WinampElement extends DiffuseElement {
     );
   };
 
-  /** @param {string} id */
-  #selectTrack = (id) => {
-    this.#selectedTrackId.value = id;
+  /** @param {number} idx */
+  #selectTrack = (idx) => {
+    this.#selectedIndex.value = idx;
   };
 
-  /** @param {string} id */
-  #playTrack = (id) => {
-    this.#selectedTrackId.value = id;
+  /** @param {number} idx */
+  #playTrack = (idx) => {
+    this.#selectedIndex.value = idx;
     const queue = this.$queue.value;
     if (!queue) return;
     const past = queue.past();
-    const now = queue.now();
-    const future = queue.future();
-    if (now?.id === id) return;
-    const pastIdx = past.findIndex((i) => i.id === id);
-    if (pastIdx !== -1) {
-      const stepsBack = past.length - pastIdx;
+    const pastLen = past.length;
+    if (idx === pastLen) return;
+    if (idx < pastLen) {
+      const stepsBack = pastLen - idx;
       for (let i = 0; i < stepsBack; i++) queue.unshift();
       return;
     }
-    const futureIdx = future.findIndex((i) => i.id === id);
-    if (futureIdx !== -1) {
-      const stepsForward = futureIdx + 1;
-      for (let i = 0; i < stepsForward; i++) queue.shift();
-    }
+    const stepsForward = idx - pastLen;
+    for (let i = 0; i < stepsForward; i++) queue.shift();
   };
 
   // RENDER
@@ -1472,11 +1467,12 @@ class WinampElement extends DiffuseElement {
     const trackMap = col?.state === "loaded"
       ? new Map(col.data.map((t) => [t.id, t]))
       : new Map();
-    const selectedId = this.#selectedTrackId.value;
+    const selectedIdx = this.#selectedIndex.value;
+    const nowIdx = nowItem ? (queueEl?.past().length ?? 0) : -1;
     const playlistRows = allItems.map((item, i) => {
       const track = trackMap.get(item.id);
-      const isCurrent = nowItem?.id === item.id;
-      const isSelected = selectedId === item.id;
+      const isCurrent = i === nowIdx;
+      const isSelected = selectedIdx === i;
       const artist = track?.tags?.artist ?? "";
       const title = track?.tags?.title ?? "";
       const label = artist ? `${artist} - ${title}` : title;
@@ -1488,7 +1484,7 @@ class WinampElement extends DiffuseElement {
         : "";
       const color = isCurrent ? "#FFFFFF" : "#00FF00";
       const bg = isSelected && !isCurrent ? "#0000FF" : "transparent";
-      return { id: item.id, n: i + 1, label, dur, color, bg };
+      return { idx: i, n: i + 1, label, dur, color, bg };
     });
 
     // Playlist running time display: currentTrackDuration/totalPlaylistDuration
@@ -1776,8 +1772,8 @@ class WinampElement extends DiffuseElement {
                       <div
                         class="track-cell"
                         style="color: ${r.color}; background-color: ${r.bg};"
-                        @click="${() => this.#selectTrack(r.id)}"
-                        @dblclick="${() => this.#playTrack(r.id)}"
+                        @click="${() => this.#selectTrack(r.idx)}"
+                        @dblclick="${() => this.#playTrack(r.idx)}"
                       >
                         ${r.n}. ${r.label}
                       </div>
@@ -1790,8 +1786,8 @@ class WinampElement extends DiffuseElement {
                       <div
                         class="track-cell"
                         style="color: ${r.color}; background-color: ${r.bg};"
-                        @click="${() => this.#selectTrack(r.id)}"
-                        @dblclick="${() => this.#playTrack(r.id)}"
+                        @click="${() => this.#selectTrack(r.idx)}"
+                        @dblclick="${() => this.#playTrack(r.idx)}"
                       >
                         ${r.dur}
                       </div>
