@@ -109,6 +109,7 @@ examples:
       While you have the ability to do whatever you want in a custom facet, the existing facets are designed to work a certain way; so here's some things to keep in mind:
     </p>
     <ul>
+      <li><span>Prelude (feature) facets are loaded in alphabetical order by the facet loader.</span></li>
       <li><span>Most elements are configured in broadcast mode so they communicate across tabs. There are a few exceptions such as inputs, where we prefer parallelisation.</span></li>
       <li><span>All URLs in a facet are relative to the root of Diffuse (not the root of the server) due to the base element in the header of the facet loader.</span></li>
     </ul>

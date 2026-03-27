@@ -185,7 +185,7 @@ function _renderList(output, listEl) {
               <li class="grid-item">
                 <div
                   class="grid-item__contents"
-                  style="--grid-item-gradient: linear-gradient(to bottom, oklch(from ${color} l c h / 0.075), transparent 65%)"
+                  style="--grid-item-color: ${color}"
                 >
                   <div class="grid-item__title" style="color: ${color}">
                     ${title}

@@ -307,8 +307,18 @@ textarea {
     padding: var(--space-md);
     position: relative;
 
+    --grid-item-gradient-opacity: 0.125;
+
+    @media (prefers-color-scheme: dark) {
+      --grid-item-gradient-opacity: 0.075;
+    }
+
     &::before {
-      background: var(--grid-item-gradient, none);
+      background: linear-gradient(
+        to bottom,
+        oklch(from var(--grid-item-color, transparent) l c h / var(--grid-item-gradient-opacity)),
+        transparent 65%
+      );
       content: "";
       inset: 0;
       pointer-events: none;
