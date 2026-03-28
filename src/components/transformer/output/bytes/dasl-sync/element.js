@@ -174,18 +174,21 @@ class DaslBytesSyncOutputTransformer extends OutputTransformer {
     this.facets = this.managerProp(
       { save: async (v) => local()?.facets.save(v) },
       remote.facets,
+      remote.ready,
       facets,
     );
 
     this.playlistItems = this.managerProp(
       { save: async (v) => local()?.playlistItems.save(v) },
       remote.playlistItems,
+      remote.ready,
       playlistItems,
     );
 
     this.tracks = this.managerProp(
       { save: async (v) => local()?.tracks.save(v) },
       remote.tracks,
+      remote.ready,
       tracks,
     );
 
@@ -393,15 +396,16 @@ class DaslBytesSyncOutputTransformer extends OutputTransformer {
    * @template {{ id: string; updatedAt: string }} T
    * @param {{ save: (bytes: Uint8Array) => Promise<void> | void }} local
    * @param {{ collection: SignalReader<{ state: "loading" } | { state: "loaded"; data: Uint8Array | undefined }>, reload: () => Promise<void>, save: (bytes: Uint8Array) => Promise<void> }} remote
+   * @param {SignalReader<boolean>} remoteReady
    * @param {SignalReader<Container<T>>} container
    * @returns {{ collection: SignalReader<{ state: "loading" } | { state: "loaded"; data: T[] }>, reload: () => Promise<void>, save: (items: T[]) => Promise<void> }}
    */
-  managerProp(local, remote, container) {
+  managerProp(local, remote, remoteReady, container) {
     return {
       collection: computed(() => {
         const c = container();
 
-        if (remote.collection().state === "loading") {
+        if (remoteReady() && remote.collection().state === "loading") {
           return { state: "loading" };
         }
 
