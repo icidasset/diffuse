@@ -86,6 +86,32 @@ function navigateHandler(event) {
   event.intercept({
     scroll: "manual",
     async handler() {
+      const navLinks = /** @type {HTMLAnchorElement[]} */ ([
+        ...document.querySelectorAll("#diffuse-nav a, #nav-overflow-menu a"),
+      ]);
+      const stripSlash = (/** @type {string} */ p) => p.replace(/^\//, "");
+      const navLink = navLinks.find(
+        (a) =>
+          stripSlash(new URL(a.href).pathname) === stripSlash(url.pathname),
+      );
+
+      const icon = navLink?.querySelector("i");
+      const originalIconClass = icon?.className;
+      let addedSpinner = /** @type {HTMLElement | undefined} */ (undefined);
+
+      const loadingTimer = navLink
+        ? setTimeout(() => {
+            if (icon) {
+              icon.className = "ph-bold ph-spinner animate-spin";
+            } else {
+              addedSpinner = document.createElement("i");
+              addedSpinner.className = "ph-bold ph-spinner animate-spin";
+              const span = navLink.querySelector("span");
+              (span ?? navLink).prepend(addedSpinner);
+            }
+          }, 250)
+        : undefined;
+
       let html;
 
       try {
@@ -93,8 +119,15 @@ function navigateHandler(event) {
         if (!response.ok) throw new Error(`${response.status}`);
         html = await response.text();
       } catch {
+        clearTimeout(loadingTimer);
+        if (icon && originalIconClass !== undefined) icon.className = originalIconClass;
+        addedSpinner?.remove();
         location.href = url.href;
         return;
+      } finally {
+        clearTimeout(loadingTimer);
+        if (icon && originalIconClass !== undefined) icon.className = originalIconClass;
+        addedSpinner?.remove();
       }
 
       const parser = new DOMParser();
