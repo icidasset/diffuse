@@ -405,7 +405,7 @@ class DaslBytesSyncOutputTransformer extends OutputTransformer {
       collection: computed(() => {
         const c = container();
 
-        if (remoteReady() && remote.collection().state === "loading") {
+        if (c.cid === undefined && remoteReady() && remote.collection().state === "loading") {
           return { state: "loading" };
         }
 
