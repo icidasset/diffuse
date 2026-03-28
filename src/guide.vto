@@ -30,10 +30,6 @@ title: Guide | Diffuse
   <section>
     <h3>Getting started</h3>
 
-    <p>
-      <small><i class="ph-fill ph-info"></i> <em>There's a <a href="guide/#tutorial">tutorial</a> below if you prefer a long-form introduction.</em></small>
-    </p>
-
     <ul style="display: flex; flex-direction: column; gap: var(--space-md); margin-top: var(--space-md); padding-left: 0">
       <!-- 1 -->
       <li class="with-icon" style="gap: var(--space-sm)">
@@ -68,46 +64,62 @@ title: Guide | Diffuse
   </section>
 </div>
 
-<section>
-  <h3 id="tutorial">Tutorial</h3>
+<section id="tutorial">
+  <h3>Tutorial</h3>
 
-  <p>
-    <strong>Diffuse is not your typical streaming service, you have to add sources of audio so you have stuff to play.</strong> This button below adds some demo content, so you can experiment with the software right away.
-  </p>
+  <div class="columns">
+    <div>
+      <p>
+        <strong>Diffuse is not your typical streaming service, you have to add sources of audio so you have stuff to play.</strong> This button below adds some demo content, so you can experiment with the software right away. Wait until processing is completed.
+      </p>
 
-  <p>
-    <button id="add-sample-content" class="button--bg-accent">
-      <span>Add sample content</span>
-    </button>
-  </p>
+      <p>
+        <button id="add-sample-content" class="button--bg-accent">
+          <span>Add sample content</span>
+        </button>
+      </p>
 
-  <p>
-    Now we should explore what is possible with our audio. Because Diffuse is cooperative and malleable software, our interface can look like anything, and we can pick the features we like. That might sound overwhelming, so let's keep it simple for now.
-  </p>
+      <p>
+        Now we should explore what is possible with our audio. Because Diffuse is cooperative and malleable software, our interface can look like anything, and we can pick the features we like. That might sound overwhelming, so we'll start with a simple example.
+      </p>
 
-  <p>
-    By default a feature is enabled which puts audio in the queue automatically. <strong>Let's pick an interface</strong> to play what got put into the queue for us.
-  </p>
+      <p>
+        By default a feature is enabled which puts audio in the queue automatically. <strong>Let's pick an interface</strong> to play what got put into the queue for us.
+      </p>
 
-  <p>
-    <a class="button button--bg-accent" href="{{ ('themes/blur/artwork-controller/facet/index.html') |> facetLoaderURL }}" target="_blank">
-      Play audio
-    </a>
-  </p>
+      <p>
+        <a class="button button--bg-accent" href="{{ ('themes/blur/artwork-controller/facet/index.html') |> facetLoaderURL }}" target="_blank">
+          Play audio
+        </a>
+      </p>
 
-  <p>
-    <em>So you said I could pick the features and interfaces that I liked, how does that work?</em>
-  </p>
+      <p>
+        You can disable the "Automatic Queue" feature on <a href="./dashboard/">your dashboard</a> by deleting that item, or toggling it off on the <a href="./playback/">playback category page</a>. Next, reload the interface that plays your audio; now there won't be anything in the queue.
+      </p>
+    </div>
 
-  <p>
-    To do that, we have to look at the other pages shown in the navigation here, such as the <a href="featured/">featured page</a>. There you'll be able to browse through all the features and interfaces that are provided by Diffuse.
-  </p>
+    <div>
+      <p>
+        Interfaces can also be added to your dashboard, but it's not required, you can try them out right away by clicking the link in their title. For interfaces that are more like traditional web applications, delivering more encompassing experiences, look at <a href="themes/">themes</a>.
+      </p>
 
-  <p>
-     <strong>To use a feature, you click the toggle to enable it</strong>, this will add it to your software. Interfaces can be added too, but it's not required, you can try them out right away by clicking the link in their title. For interfaces that are more like traditional web applications, delivering more encompassing experiences, look at <a href="themes/">themes</a>.
-  </p>
+      <p>
+        When you're ready to add your own audio, a useful place to start is the "Connect" interface which summarises which inputs you can add. For more, check out the "Input &amp; Output" category.
+      </p>
 
-  <p>
-    TODO: explain adding your own inputs, syncing user data, editing/forking facets, creating your own facet, etc.
-  </p>
+      <p>
+        <a class="button button--bg-accent" href="{{ ('facets/connect/index.html') |> facetLoaderURL }}" target="_blank">
+          Add audio input
+        </a>
+      </p>
+
+      <p>
+        The connect interface also shows some options that can be used for syncing your user-data, that's your playlists, configured audio inputs, etc. By default everything is saved in your browser.
+      </p>
+
+      <p>
+        Lastly, don't forget that you can create, edit and share both features + interfaces. LLMs (AI) can also be used to create or edit them. To edit something, you first add it to your dashboard and then click the edit button, which will load it in the editor on the build page. The build page has some examples and documentation of how that system works.
+      </p>
+    </div>
+  </div>
 </section>
