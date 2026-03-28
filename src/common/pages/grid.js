@@ -15,6 +15,7 @@ export function setupFilter() {
   /** @type {NodeListOf<HTMLElement>} */
   const items = document.querySelectorAll(".grid-item");
 
+  /** @param {string} filter */
   function applyFilter(filter) {
     buttons.forEach((b) => {
       if (b.dataset.filter === filter) b.classList.remove("button--transparent");

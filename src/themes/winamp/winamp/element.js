@@ -79,6 +79,7 @@ class WinampFFT {
   /** @type {Float32Array} */ #temp1;
   /** @type {Float32Array} */ #temp2;
 
+  /** @param {number} NFREQ */
   #initBitRev(NFREQ) {
     const t = Array.from({ length: NFREQ }, (_, i) => i);
     for (let i = 0, j = 0; i < NFREQ; i++) {
@@ -90,6 +91,7 @@ class WinampFFT {
     return t;
   }
 
+  /** @param {number} NFREQ */
   #initCosSin(NFREQ) {
     const table = [];
     let d = 2;
@@ -101,6 +103,7 @@ class WinampFFT {
     return table;
   }
 
+  /** @param {number} n @param {number} power */
   #initEnvelope(n, power) {
     const mult = (1.0 / n) * WinampFFT.#TWO_PI;
     return Float32Array.from({ length: n }, (_, i) =>
@@ -108,6 +111,7 @@ class WinampFFT {
     );
   }
 
+  /** @param {number} NFREQ */
   #initEqualize(NFREQ) {
     const eq = new Float32Array(NFREQ / 2);
     let bias = 0.04;
@@ -406,6 +410,7 @@ class WinampElement extends DiffuseElement {
         const startY = e.clientY;
         const startTop = parseFloat(playlistHandle.style.top) || 0;
         const maxScroll = playlistContent.scrollHeight - playlistContent.clientHeight;
+        /** @param {MouseEvent} mv */
         const onMove = (mv) => {
           const newTop = Math.max(0, Math.min(range, startTop + mv.clientY - startY));
           const rawScroll = (newTop / range) * maxScroll;
@@ -468,12 +473,13 @@ class WinampElement extends DiffuseElement {
     });
 
     // Window dragging
-    this.root().addEventListener("mousedown", this.#onWindowDragStart);
+    this.root().addEventListener("mousedown", /** @type {EventListener} */ (this.#onWindowDragStart));
   }
 
+  /** @override */
   disconnectedCallback() {
     clearInterval(this.#marqueeStepInterval);
-    this.root().removeEventListener("mousedown", this.#onWindowDragStart);
+    this.root().removeEventListener("mousedown", /** @type {EventListener} */ (this.#onWindowDragStart));
     if (this.#visRAF !== undefined) {
       cancelAnimationFrame(this.#visRAF);
       this.#visRAF = undefined;
@@ -699,6 +705,7 @@ class WinampElement extends DiffuseElement {
     document.addEventListener("mouseup", onUp);
   };
 
+  /** @param {MouseEvent} e */
   #onPlaylistResizeStart = (e) => {
     e.preventDefault();
 
@@ -792,10 +799,12 @@ class WinampElement extends DiffuseElement {
   static #MARQUEE_SEPARATOR = "  ***  ";
   static #CHAR_WIDTH = 5;
 
+  /** @param {number} n @param {number} m */
   static #marqueeMod(n, m) {
     return ((n % m) + m) % m;
   }
 
+  /** @param {string} text */
   static #marqueeLoopText(text) {
     const MAX = WinampElement.#MARQUEE_MAX_LENGTH;
     return text.length >= MAX
@@ -1496,6 +1505,7 @@ class WinampElement extends DiffuseElement {
       const d = trackMap.get(item.id)?.stats?.duration;
       return sum + (d ? d / 1000 : 0);
     }, 0);
+    /** @param {number} s */
     const fmtDur = (s) => {
       const h = Math.floor(s / 3600);
       const m = Math.floor((s % 3600) / 60);
