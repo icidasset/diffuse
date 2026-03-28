@@ -29,7 +29,6 @@
 #webamp .gen-top-title {
   line-height: 7px;
   margin-top: 2px;
-  /* TODO: This should be a conciquence of the repeating tiles, not hard coded */
   padding: 0 3px 0 4px;
 }
 

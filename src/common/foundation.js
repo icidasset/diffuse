@@ -50,6 +50,9 @@ const signals = {
     output: signal(
       /** @type {import("~/components/orchestrator/output/element.js").CLASS | null} */ (null),
     ),
+    pathCollections: signal(
+      /** @type {import("~/components/orchestrator/path-collections/element.js").CLASS | null} */ (null),
+    ),
     processTracks: signal(
       /** @type {import("~/components/orchestrator/process-tracks/element.js").CLASS | null} */ (null),
     ),
@@ -104,9 +107,9 @@ export const config = {
     favourites,
     mediaSession,
     output,
-    queueAudio,
-    // TODO: Path collections orchestrator
+    pathCollections,
     processTracks,
+    queueAudio,
     scopedTracks,
     scrobbleAudio,
     sources,
@@ -139,6 +142,7 @@ export const config = {
       favourites: signals.orchestrator.favourites.get,
       mediaSession: signals.orchestrator.mediaSession.get,
       output: signals.orchestrator.output.get,
+      pathCollections: signals.orchestrator.pathCollections.get,
       processTracks: signals.orchestrator.processTracks.get,
       queueAudio: signals.orchestrator.queueAudio.get,
       scopedTracks: signals.orchestrator.scopedTracks.get,
@@ -443,6 +447,19 @@ async function scrobbleAudio() {
   sao.setAttribute("scrobble-selector", sc.selector);
 
   return findExistingOrAdd(sao, signals.orchestrator.scrobbleAudio);
+}
+
+async function pathCollections() {
+  const [{ default: PathCollectionsOrchestrator }, o] = await Promise.all([
+    import("~/components/orchestrator/path-collections/element.js"),
+    output(),
+  ]);
+
+  const pco = new PathCollectionsOrchestrator();
+  pco.setAttribute("group", GROUP);
+  pco.setAttribute("output-selector", o.selector);
+
+  return findExistingOrAdd(pco, signals.orchestrator.pathCollections);
 }
 
 async function sources() {
