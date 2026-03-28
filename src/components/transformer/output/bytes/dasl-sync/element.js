@@ -107,21 +107,23 @@ class DaslBytesSyncOutputTransformer extends OutputTransformer {
             merging.value = { isBusy: true, lastCID: merging.value.lastCID };
 
             this.merge(l, r).then(async (c) => {
-              container.value = c;
+              try {
+                container.value = c;
 
-              if (c.cid === merging.value.lastCID) return;
+                if (c.cid === merging.value.lastCID) return;
 
-              const bytes = this.save(c);
+                const bytes = this.save(c);
 
-              if (c.cid !== l.cid) {
-                await saveLocal(bytes);
+                if (c.cid !== l.cid) {
+                  await saveLocal(bytes);
+                }
+
+                if (remote.ready() && rs === "loaded" && c.cid !== r.cid) {
+                  await saveRemote(bytes);
+                }
+              } finally {
+                merging.value = { isBusy: false, lastCID: c.cid ?? "" };
               }
-
-              if (remote.ready() && rs === "loaded" && c.cid !== r.cid) {
-                await saveRemote(bytes);
-              }
-
-              merging.value = { isBusy: false, lastCID: c.cid ?? "" };
             });
           });
         } else {
