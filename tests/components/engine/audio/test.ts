@@ -53,14 +53,24 @@ describe("components/engine/audio", () => {
   it("supply with URL items updates the items signal", async () => {
     const result = await testWeb(async () => {
       const mod = await import("~/components/engine/audio/element.js");
-      const { trackA, trackB } = await import("~/testing/sample/tracks.js");
+      const { trackA } = await import("~/testing/sample/tracks.js");
       const engine = new mod.CLASS();
       document.body.append(engine);
 
       engine.supply({
         audio: [
-          { id: "audio-a", url: trackA.uri, isPreload: false, track: trackA },
-          { id: "audio-b", url: trackB.uri, isPreload: false, track: trackB },
+          {
+            id: "audio-a",
+            url: "/testing/sample/audio.mp3",
+            isPreload: false,
+            track: trackA,
+          },
+          {
+            id: "audio-b",
+            url: "/testing/sample/audio.mp3",
+            isPreload: false,
+            track: trackA,
+          },
         ],
       });
 
@@ -77,7 +87,12 @@ describe("components/engine/audio", () => {
       const engine = new mod.CLASS();
       document.body.append(engine);
 
-      const item = { id: "audio-a", url: trackA.uri, isPreload: false, track: trackA };
+      const item = {
+        id: "audio-a",
+        url: "/testing/sample/audio.mp3",
+        isPreload: false,
+        track: trackA,
+      };
 
       engine.supply({ audio: [item] });
       const itemsAfterFirst = engine.items();
@@ -95,20 +110,26 @@ describe("components/engine/audio", () => {
   it("supply replaces items when IDs change", async () => {
     const result = await testWeb(async () => {
       const mod = await import("~/components/engine/audio/element.js");
-      const { trackA, trackB } = await import("~/testing/sample/tracks.js");
+      const { trackA } = await import("~/testing/sample/tracks.js");
       const engine = new mod.CLASS();
       document.body.append(engine);
 
       engine.supply({
-        audio: [
-          { id: "audio-a", url: trackA.uri, isPreload: false, track: trackA },
-        ],
+        audio: [{
+          id: "audio-a",
+          url: "/testing/sample/audio.mp3",
+          isPreload: false,
+          track: trackA,
+        }],
       });
 
       engine.supply({
-        audio: [
-          { id: "audio-b", url: trackB.uri, isPreload: false, track: trackB },
-        ],
+        audio: [{
+          id: "audio-b",
+          url: "/testing/sample/audio.mp3",
+          isPreload: false,
+          track: trackA,
+        }],
       });
 
       return engine.items().map((i) => i.id);
@@ -125,15 +146,21 @@ describe("components/engine/audio", () => {
       document.body.append(engine);
 
       engine.supply({
-        audio: [
-          { id: "audio-a", url: trackA.uri, isPreload: true, track: trackA },
-        ],
+        audio: [{
+          id: "audio-a",
+          url: "/testing/sample/audio.mp3",
+          isPreload: true,
+          track: trackA,
+        }],
       });
 
       engine.supply({
-        audio: [
-          { id: "audio-a", url: trackA.uri, isPreload: false, track: trackA },
-        ],
+        audio: [{
+          id: "audio-a",
+          url: "/testing/sample/audio.mp3",
+          isPreload: false,
+          track: trackA,
+        }],
       });
 
       return engine.items()[0]?.isPreload;

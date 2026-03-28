@@ -163,6 +163,7 @@ site.remoteFile(
 site.add("/favicons", "/");
 site.add("/fonts");
 site.add("/images");
+site.add("/testing");
 site.add([".woff2"]);
 
 site.remoteFile(
