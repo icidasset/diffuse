@@ -120,10 +120,21 @@ describe("components/transformer/output/refiner/track-uri-passkey", () => {
 
   it("ready becomes true after connectedCallback resolves the IDB key check", async () => {
     const result = await testWeb(async () => {
+      const idbMod = await import(
+        "~/components/output/polymorphic/indexed-db/element.js"
+      );
       const mod = await import(
         "~/components/transformer/output/refiner/track-uri-passkey/element.js"
       );
+
+      // connectedCallback calls super.connectedCallback() which requires
+      // an output-selector attribute pointing to a real output element
+      const output = new idbMod.CLASS();
+      output.id = "test-idb-passkey";
+      document.body.append(output);
+
       const t = new mod.CLASS();
+      t.setAttribute("output-selector", "#test-idb-passkey");
       document.body.append(t);
 
       // ready() starts false; connectedCallback loads the key from IDB
