@@ -1,8 +1,13 @@
 import * as IDB from "idb-keyval";
+import { xxh32r } from "xxh32/dist/raw.js";
 
 import { batch, computed, signal, untracked } from "~/common/signal.js";
 import { OutputTransformer } from "../../base.js";
-import { STARTING_SET } from "~/common/facets/constants.js";
+
+import { STARTING_SET_URIS, TYPE } from "~/common/facets/constants.js";
+import facets from "~/_data/facets.json" with {
+  type: "json",
+};
 
 /**
  * @import {OutputManagerDeputy} from "~/components/output/types.d.ts"
@@ -57,6 +62,7 @@ class InitialContentsTransformer extends OutputTransformer {
               this.#initialized.value = true;
               IDB.set(IDB_KEY, true); // fire-and-forget
             }
+
             return { state: "loaded", data: col.data };
           }
 
@@ -66,7 +72,25 @@ class InitialContentsTransformer extends OutputTransformer {
             return { state: "loaded", data: col.data };
           }
 
-          return { state: "loaded", data: STARTING_SET };
+          // Determine starting set
+          const data = facets.flatMap((facet) => {
+            if (STARTING_SET_URIS.includes(facet.url)) {
+              return [{
+                $type: TYPE,
+                id: uriToRkey("diffuse://" + facet.url),
+                description: facet.desc,
+                kind: facet.kind === "prelude"
+                  ? /** @type {const} */ ("prelude")
+                  : /** @type {const} */ ("interactive"),
+                name: facet.title,
+                uri: "diffuse://" + facet.url,
+              }];
+            }
+
+            return [];
+          });
+
+          return { state: "loaded", data };
         }),
 
         save: async (newFacets) => {
@@ -76,6 +100,7 @@ class InitialContentsTransformer extends OutputTransformer {
             this.#initialized.value = true;
             IDB.set(IDB_KEY, true); // fire-and-forget
           }
+
           await base.facets.save(newFacets);
         },
       },
@@ -93,6 +118,11 @@ class InitialContentsTransformer extends OutputTransformer {
 }
 
 export default InitialContentsTransformer;
+
+/** @param {string} uri */
+function uriToRkey(uri) {
+  return xxh32r(new TextEncoder().encode(uri)).toString(16).padStart(8, "0");
+}
 
 ////////////////////////////////////////////
 // REGISTER

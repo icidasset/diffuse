@@ -1,3 +1,10 @@
+@import "./variables.css" layer(base.variables);
+@import "./animations.css" layer(base.animations);
+
+@import "./diffuse/colors.css" layer(diffuse.colors);
+@import "./diffuse/font-faces.css" layer(diffuse.font-faces);
+@import "./diffuse/fonts.css" layer(diffuse.fonts);
+
 body {
   background: var(--bg-color);
   color: var(--text-color);
@@ -8,7 +15,6 @@ body {
     color: var(--text-color);
     font-size: var(--fs-md);
     left: 50%;
-    pointer-events: none;
     position: absolute;
     top: 50%;
     transform: translate(-50%, -50%);
@@ -22,6 +28,7 @@ body {
   }
 
   #diffuse-loader {
+    pointer-events: none;
     transition: opacity 500ms ease;
 
     &.loaded {
