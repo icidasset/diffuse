@@ -1,4 +1,3 @@
-import { Temporal } from "~/common/temporal.js";
 import { xxh32r } from "xxh32/dist/raw.js";
 
 /**
@@ -34,16 +33,6 @@ export function boolAttr(value) {
   return value === "";
 }
 
-/**
- * @param {string} a
- * @param {string} b
- */
-export function compareTimestamps(a, b) {
-  return Temporal.Instant.compare(
-    Temporal.Instant.from(a),
-    Temporal.Instant.from(b),
-  );
-}
 
 /**
  * @param {any} object

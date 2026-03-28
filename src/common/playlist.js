@@ -2,7 +2,7 @@
  * @import {PlaylistItem, Track} from "~/definitions/types.d.ts"
  */
 
-import { compareTimestamps } from "~/common/utils.js";
+import { compareTimestamps } from "~/common/temporal.js";
 
 /**
  * Filter tracks by playlist membership using an indexed lookup.

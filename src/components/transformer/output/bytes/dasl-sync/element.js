@@ -7,7 +7,7 @@ import "~/components/output/polymorphic/indexed-db/element.js";
 import * as CID from "~/common/cid.js";
 import { diff, strictEquality } from "~/common/compare.js";
 import { computed, signal } from "~/common/signal.js";
-import { compareTimestamps } from "~/common/utils.js";
+import { compareTimestamps } from "~/common/temporal.js";
 import { OutputTransformer } from "../../base.js";
 
 /**

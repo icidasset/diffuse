@@ -10,6 +10,38 @@ export { getTransferables } from "@okikio/transferables";
  * @import {Announcement, MessengerRealm, ProxiedActions, Tunnel} from "./worker.d.ts"
  */
 
+// Early message buffer for regular Workers.
+//
+// If a Worker module (or its dependencies) contains a top-level `await`, the
+// browser can deliver queued incoming messages to `globalThis` while the module
+// evaluation is paused — before `ostiary`/`rpc()` has had a chance to register
+// a handler. Those messages would otherwise be silently dropped.
+//
+// This buffer captures such messages the moment this module is imported (which
+// happens before any top-level `await` pause) and replays them once `ostiary`
+// sets up the real handler.
+//
+// Detection: regular Workers have `globalThis.onmessage === null`; the main
+// thread and SharedWorkers do not.
+
+/** @type {MessageEvent[]} */
+const _earlyMessages = [];
+
+/** @type {null | (() => void)} */
+let _flushEarlyMessages = null;
+
+if (/** @type {any} */ (globalThis).onmessage === null) {
+  const handler = /** @type {EventListener} */ ((event) => {
+    _earlyMessages.push(/** @type {MessageEvent} */ (event));
+  });
+
+  globalThis.addEventListener("message", handler);
+
+  _flushEarlyMessages = () => {
+    globalThis.removeEventListener("message", handler);
+  };
+}
+
 ////////////////////////////////////////////
 // MISC
 ////////////////////////////////////////////
@@ -27,7 +59,21 @@ export function ostiary(
   context = /** @type {T} */ (/** @type {unknown} */ (globalThis)),
 ) {
   if (/** @type {any} */ (context).onmessage === null) {
-    return callback(context, true, crypto.randomUUID());
+    callback(context, true, crypto.randomUUID());
+
+    // Replay any messages that arrived before the handler was registered.
+    if (_flushEarlyMessages) {
+      _flushEarlyMessages();
+      _flushEarlyMessages = null;
+      const ctx = /** @type {EventTarget} */ (/** @type {unknown} */ (context));
+      _earlyMessages.splice(0).forEach((e) => {
+        ctx.dispatchEvent(
+          new MessageEvent("message", { data: e.data, ports: [...e.ports] }),
+        );
+      });
+    }
+
+    return;
   }
 
   const c = /** @type {any} */ (context);
