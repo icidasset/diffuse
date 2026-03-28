@@ -345,7 +345,7 @@ class DaslBytesSyncOutputTransformer extends OutputTransformer {
         /** @type {T} */
         const mergedItem = { ...oldItem };
 
-        deepDiff.applyDiff(newestItem, mergedItem);
+        deepDiff.applyDiff(mergedItem, newestItem);
 
         data.push(mergedItem);
 
