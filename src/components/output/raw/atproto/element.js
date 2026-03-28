@@ -70,12 +70,12 @@ class ATProtoOutput extends BroadcastedOutputElement {
       facets: {
         empty: () => [],
         get: () => this.listRecords("sh.diffuse.output.facet"),
-        put: (data) => this.#putRecords("sh.diffuse.output.facet", data),
+        put: (data) => this.putRecords("sh.diffuse.output.facet", data),
       },
       playlistItems: {
         empty: () => [],
         get: () => this.listRecords("sh.diffuse.output.playlistItem"),
-        put: (data) => this.#putRecords("sh.diffuse.output.playlistItem", data),
+        put: (data) => this.putRecords("sh.diffuse.output.playlistItem", data),
       },
       tracks: {
         empty: () => [],
@@ -108,7 +108,7 @@ class ATProtoOutput extends BroadcastedOutputElement {
             });
           }
 
-          await this.#putRecords("sh.diffuse.output.trackBundle", bundles, {
+          await this.putRecords("sh.diffuse.output.trackBundle", bundles, {
             upsertBatchSize: 1,
           });
 
@@ -436,7 +436,7 @@ class ATProtoOutput extends BroadcastedOutputElement {
    * @param {Array<{ id: string }>} data
    * @param {{ deleteBatchSize?: number, upsertBatchSize?: number }} [options]
    */
-  async #putRecords(
+  async putRecords(
     collection,
     data,
     { deleteBatchSize = 100, upsertBatchSize = deleteBatchSize } = {},
