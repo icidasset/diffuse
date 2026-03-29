@@ -205,4 +205,363 @@ describe("components/engine/audio", () => {
 
     expect(result).toBe(0.4);
   });
+
+  // Sample audio tests
+
+  it("state returns undefined for unknown audio id", async () => {
+    const result = await testWeb(async () => {
+      const mod = await import("~/components/engine/audio/element.js");
+      const { trackA } = await import("~/testing/sample/tracks.js");
+      const engine = new mod.CLASS();
+      document.body.append(engine);
+
+      engine.supply({
+        audio: [{
+          id: "audio-a",
+          url: "/testing/sample/audio.mp3",
+          isPreload: false,
+          track: trackA,
+        }],
+      });
+
+      return engine.state("no-such-id");
+    });
+
+    expect(result).toBeUndefined();
+  });
+
+  it("state has initial loadingState of loading before audio loads", async () => {
+    const result = await testWeb(async () => {
+      const mod = await import("~/components/engine/audio/element.js");
+      const { trackA } = await import("~/testing/sample/tracks.js");
+      const engine = new mod.CLASS();
+      document.body.append(engine);
+
+      engine.supply({
+        audio: [{
+          id: "audio-a",
+          url: "/testing/sample/audio.mp3",
+          isPreload: false,
+          track: trackA,
+        }],
+      });
+
+      const st = engine.state("audio-a");
+      return {
+        loadingState: st?.loadingState(),
+        currentTime: st?.currentTime(),
+        isPlaying: st?.isPlaying(),
+        hasEnded: st?.hasEnded(),
+      };
+    });
+
+    expect(result.loadingState).toBe("loading");
+    expect(result.currentTime).toBe(0);
+    expect(result.isPlaying).toBe(false);
+    expect(result.hasEnded).toBe(false);
+  });
+
+  it("loadingState becomes loaded after audio loads", async () => {
+    const result = await testWeb(async () => {
+      const mod = await import("~/components/engine/audio/element.js");
+      const { trackA } = await import("~/testing/sample/tracks.js");
+      const engine = new mod.CLASS();
+      document.body.append(engine);
+
+      engine.supply({
+        audio: [{
+          id: "audio-a",
+          url: "/testing/sample/audio.mp3",
+          isPreload: false,
+          track: trackA,
+        }],
+      });
+
+      const audioEl = engine.querySelector(
+        'de-audio-item[id="audio-a"]:not([preload]) audio',
+      ) as HTMLAudioElement;
+
+      await new Promise<void>((resolve, reject) => {
+        const st = engine.state("audio-a");
+        if (st?.loadingState() === "loaded") { resolve(); return; }
+        const timer = setTimeout(
+          () => reject(new Error("timeout waiting for audio load")),
+          10000,
+        );
+        const done = () => { clearTimeout(timer); resolve(); };
+        audioEl.addEventListener("canplay", done, { once: true });
+        audioEl.addEventListener("suspend", done, { once: true });
+        audioEl.addEventListener(
+          "error",
+          () => { clearTimeout(timer); reject(new Error("audio load error")); },
+          { once: true },
+        );
+      });
+
+      return engine.state("audio-a")?.loadingState();
+    });
+
+    expect(result).toBe("loaded");
+  });
+
+  it("duration is positive after audio loads", async () => {
+    const result = await testWeb(async () => {
+      const mod = await import("~/components/engine/audio/element.js");
+      const { trackA } = await import("~/testing/sample/tracks.js");
+      const engine = new mod.CLASS();
+      document.body.append(engine);
+
+      engine.supply({
+        audio: [{
+          id: "audio-a",
+          url: "/testing/sample/audio.mp3",
+          isPreload: false,
+          track: trackA,
+        }],
+      });
+
+      const audioEl = engine.querySelector(
+        'de-audio-item[id="audio-a"]:not([preload]) audio',
+      ) as HTMLAudioElement;
+
+      await new Promise<void>((resolve, reject) => {
+        if (audioEl.duration > 0 && isFinite(audioEl.duration)) {
+          resolve();
+          return;
+        }
+        const timer = setTimeout(
+          () => reject(new Error("timeout waiting for duration")),
+          10000,
+        );
+        const done = () => { clearTimeout(timer); resolve(); };
+        audioEl.addEventListener("durationchange", done, { once: true });
+        audioEl.addEventListener(
+          "error",
+          () => { clearTimeout(timer); reject(new Error("audio load error")); },
+          { once: true },
+        );
+      });
+
+      return engine.state("audio-a")?.duration();
+    });
+
+    expect(result).toBeGreaterThan(0);
+  });
+
+  it("currentTime is 0 before seek", async () => {
+    const result = await testWeb(async () => {
+      const mod = await import("~/components/engine/audio/element.js");
+      const { trackA } = await import("~/testing/sample/tracks.js");
+      const engine = new mod.CLASS();
+      document.body.append(engine);
+
+      engine.supply({
+        audio: [{
+          id: "audio-a",
+          url: "/testing/sample/audio.mp3",
+          isPreload: false,
+          track: trackA,
+        }],
+      });
+
+      const audioEl = engine.querySelector(
+        'de-audio-item[id="audio-a"]:not([preload]) audio',
+      ) as HTMLAudioElement;
+
+      await new Promise<void>((resolve, reject) => {
+        const st = engine.state("audio-a");
+        if (st?.loadingState() === "loaded") { resolve(); return; }
+        const timer = setTimeout(
+          () => reject(new Error("timeout")),
+          10000,
+        );
+        const done = () => { clearTimeout(timer); resolve(); };
+        audioEl.addEventListener("canplay", done, { once: true });
+        audioEl.addEventListener("suspend", done, { once: true });
+        audioEl.addEventListener(
+          "error",
+          () => { clearTimeout(timer); reject(new Error("audio load error")); },
+          { once: true },
+        );
+      });
+
+      return engine.state("audio-a")?.currentTime();
+    });
+
+    expect(result).toBe(0);
+  });
+
+  it("seek by currentTime updates audio element currentTime", async () => {
+    const result = await testWeb(async () => {
+      const mod = await import("~/components/engine/audio/element.js");
+      const { trackA } = await import("~/testing/sample/tracks.js");
+      const engine = new mod.CLASS();
+      document.body.append(engine);
+
+      engine.supply({
+        audio: [{
+          id: "audio-a",
+          url: "/testing/sample/audio.mp3",
+          isPreload: false,
+          track: trackA,
+        }],
+      });
+
+      const audioEl = engine.querySelector(
+        'de-audio-item[id="audio-a"]:not([preload]) audio',
+      ) as HTMLAudioElement;
+
+      await new Promise<void>((resolve, reject) => {
+        const st = engine.state("audio-a");
+        if (st?.loadingState() === "loaded") { resolve(); return; }
+        const timer = setTimeout(() => reject(new Error("timeout")), 10000);
+        const done = () => { clearTimeout(timer); resolve(); };
+        audioEl.addEventListener("canplay", done, { once: true });
+        audioEl.addEventListener("suspend", done, { once: true });
+        audioEl.addEventListener(
+          "error",
+          () => { clearTimeout(timer); reject(new Error("audio load error")); },
+          { once: true },
+        );
+      });
+
+      engine.seek({ audioId: "audio-a", currentTime: 1 });
+
+      return audioEl.currentTime;
+    });
+
+    expect(result).toBe(1);
+  });
+
+  it("seek by percentage updates audio element currentTime proportionally", async () => {
+    const result = await testWeb(async () => {
+      const mod = await import("~/components/engine/audio/element.js");
+      const { trackA } = await import("~/testing/sample/tracks.js");
+      const engine = new mod.CLASS();
+      document.body.append(engine);
+
+      engine.supply({
+        audio: [{
+          id: "audio-a",
+          url: "/testing/sample/audio.mp3",
+          isPreload: false,
+          track: trackA,
+        }],
+      });
+
+      const audioEl = engine.querySelector(
+        'de-audio-item[id="audio-a"]:not([preload]) audio',
+      ) as HTMLAudioElement;
+
+      await new Promise<void>((resolve, reject) => {
+        if (audioEl.duration > 0 && isFinite(audioEl.duration)) { resolve(); return; }
+        const timer = setTimeout(() => reject(new Error("timeout")), 10000);
+        const done = () => { clearTimeout(timer); resolve(); };
+        audioEl.addEventListener("durationchange", done, { once: true });
+        audioEl.addEventListener(
+          "error",
+          () => { clearTimeout(timer); reject(new Error("audio load error")); },
+          { once: true },
+        );
+      });
+
+      engine.seek({ audioId: "audio-a", percentage: 0.5 });
+
+      return {
+        currentTime: audioEl.currentTime,
+        expected: 0.5 * audioEl.duration,
+      };
+    });
+
+    expect(result.currentTime).toBe(result.expected);
+  });
+
+  it("play sets isPlaying to true", async () => {
+    const result = await testWeb(async () => {
+      const mod = await import("~/components/engine/audio/element.js");
+      const { trackA } = await import("~/testing/sample/tracks.js");
+      const engine = new mod.CLASS();
+      document.body.append(engine);
+
+      engine.supply({
+        audio: [{
+          id: "audio-a",
+          url: "/testing/sample/audio.mp3",
+          isPreload: false,
+          track: trackA,
+        }],
+      });
+
+      const audioEl = engine.querySelector(
+        'de-audio-item[id="audio-a"]:not([preload]) audio',
+      ) as HTMLAudioElement;
+
+      await new Promise<void>((resolve, reject) => {
+        const st = engine.state("audio-a");
+        if (st?.loadingState() === "loaded") { resolve(); return; }
+        const timer = setTimeout(() => reject(new Error("timeout")), 10000);
+        const done = () => { clearTimeout(timer); resolve(); };
+        audioEl.addEventListener("canplay", done, { once: true });
+        audioEl.addEventListener("suspend", done, { once: true });
+        audioEl.addEventListener(
+          "error",
+          () => { clearTimeout(timer); reject(new Error("audio load error")); },
+          { once: true },
+        );
+      });
+
+      // play() sets isPlaying optimistically before the audio.play() promise settles
+      engine.play({ audioId: "audio-a", volume: 0.5 });
+
+      return engine.state("audio-a")?.isPlaying();
+    });
+
+    expect(result).toBe(true);
+  });
+
+  it("pause resets isPlaying to false", async () => {
+    const result = await testWeb(async () => {
+      const mod = await import("~/components/engine/audio/element.js");
+      const { trackA } = await import("~/testing/sample/tracks.js");
+      const engine = new mod.CLASS();
+      document.body.append(engine);
+
+      engine.supply({
+        audio: [{
+          id: "audio-a",
+          url: "/testing/sample/audio.mp3",
+          isPreload: false,
+          track: trackA,
+        }],
+      });
+
+      const audioEl = engine.querySelector(
+        'de-audio-item[id="audio-a"]:not([preload]) audio',
+      ) as HTMLAudioElement;
+
+      await new Promise<void>((resolve, reject) => {
+        const st = engine.state("audio-a");
+        if (st?.loadingState() === "loaded") { resolve(); return; }
+        const timer = setTimeout(() => reject(new Error("timeout")), 10000);
+        const done = () => { clearTimeout(timer); resolve(); };
+        audioEl.addEventListener("canplay", done, { once: true });
+        audioEl.addEventListener("suspend", done, { once: true });
+        audioEl.addEventListener(
+          "error",
+          () => { clearTimeout(timer); reject(new Error("audio load error")); },
+          { once: true },
+        );
+      });
+
+      engine.play({ audioId: "audio-a", volume: 0.5 });
+      engine.pause({ audioId: "audio-a" });
+
+      // Wait for pause event to propagate
+      await new Promise<void>((resolve) => setTimeout(resolve, 50));
+
+      return engine.state("audio-a")?.isPlaying();
+    });
+
+    expect(result).toBe(false);
+  });
 });
