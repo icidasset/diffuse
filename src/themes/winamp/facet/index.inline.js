@@ -17,7 +17,6 @@ main.classList.add("has-loaded");
 const queue = await foundation.engine.queue();
 const repeatShuffle = await foundation.engine.repeatShuffle();
 const scopedTracks = await foundation.orchestrator.scopedTracks();
-const search = await foundation.processor.search();
 
 await foundation.orchestrator.sources();
 await foundation.orchestrator.processTracks({ disableWhenReady: true });
@@ -65,7 +64,7 @@ effect(() => {
   const col = output.tracks.collection();
   if (col.state !== "loaded") return;
 
-  const fingerprintSearch = search.supplyFingerprint();
+  const fingerprintSearch = scopedTracks.supplyFingerprint();
   if (fingerprintSearch === undefined) return;
 
   const fingerprintQueue = queue.supplyFingerprint();

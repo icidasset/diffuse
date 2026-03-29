@@ -5,11 +5,14 @@ import {
 } from "~/common/element.js";
 import { batch, computed, signal } from "~/common/signal.js";
 import { filterByPlaylist } from "~/common/playlist.js";
+import { listen } from "~/common/worker.js";
 
 /**
+ * @import {ProxiedActions} from "~/common/worker.d.ts"
  * @import {Track} from "~/definitions/types.d.ts"
  * @import {InputElement} from "~/components/input/types.d.ts"
  * @import {OutputElement} from "~/components/output/types.d.ts"
+ * @import {Actions, State} from "./types.d.ts"
  */
 
 ////////////////////////////////////////////
@@ -18,6 +21,15 @@ import { filterByPlaylist } from "~/common/playlist.js";
 
 class ScopedTracksOrchestrator extends BroadcastableDiffuseElement {
   static NAME = "diffuse/orchestrator/scoped-tracks";
+  static WORKER_URL = "components/orchestrator/scoped-tracks/worker.js";
+
+  /** @type {ProxiedActions<Actions & State>} */
+  #proxy;
+
+  constructor() {
+    super();
+    this.#proxy = this.workerProxy();
+  }
 
   // SIGNALS
 
@@ -28,9 +40,7 @@ class ScopedTracksOrchestrator extends BroadcastableDiffuseElement {
     /** @type {import("~/components/engine/scope/element.js").CLASS | null} */ (null),
   );
 
-  #search = signal(
-    /** @type {import("~/components/processor/search/element.js").CLASS | null} */ (null),
-  );
+  #supplyFingerprint = signal(/** @type {string | undefined} */ (undefined));
 
   #selectedPlaylistItems = computed(() => {
     const playlist = this.#scope.value?.playlist();
@@ -47,6 +57,7 @@ class ScopedTracksOrchestrator extends BroadcastableDiffuseElement {
 
   // STATE
 
+  supplyFingerprint = this.#supplyFingerprint.get;
   tracks = this.#tracksFinal.get;
 
   // LIFECYCLE
@@ -113,17 +124,18 @@ class ScopedTracksOrchestrator extends BroadcastableDiffuseElement {
     /** @type {OutputElement} */
     const output = query(this, "output-selector");
 
-    /** @type {import("~/components/processor/search/element.js").CLASS} */
-    const search = query(this, "search-processor-selector");
-
     /** @type {import("~/components/engine/scope/element.js").CLASS | null} */
     const scope = queryOptional(this, "scope-engine-selector");
 
     // Assign to self
     this.#input.value = input;
     this.#output.value = output;
-    this.#search.value = search;
     if (scope) this.#scope.value = scope;
+
+    // Sync supply fingerprint with worker
+    const link = this.workerLink();
+    listen("supplyFingerprint", this.#supplyFingerprint.set, link);
+    this.#proxy.supplyFingerprint().then(this.#supplyFingerprint.set);
 
     // When defined
     await customElements.whenDefined(input.localName);
@@ -161,21 +173,21 @@ class ScopedTracksOrchestrator extends BroadcastableDiffuseElement {
       });
 
       // Set pool
-      search.supply({ tracks: availableTracks });
+      this.#proxy.supply({ tracks: availableTracks });
 
       this.#tracksAvailable.set(availableTracks);
     });
 
     // Watch search supply
     this.effect(async () => {
-      const _trigger = search.supplyFingerprint();
+      const _trigger = this.#supplyFingerprint.value;
       const availableTracks = this.#tracksAvailable.value;
       const searchTerm = this.#scope.value?.searchTerm();
 
       if ((await this.isLeader()) === false) return;
 
       if (searchTerm?.length) {
-        const searchResults = await search.search({
+        const searchResults = await this.#proxy.search({
           term: searchTerm,
         });
         this.#tracksSearch.set(searchResults);

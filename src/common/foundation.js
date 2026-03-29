@@ -79,11 +79,6 @@ const signals = {
     ),
   },
 
-  processor: {
-    search: signal(
-      /** @type {import("~/components/processor/search/element.js").CLASS | null} */ (null),
-    ),
-  },
 };
 
 /**
@@ -121,10 +116,6 @@ export const config = {
     sources,
   },
 
-  processor: {
-    search,
-  },
-
   /**
    * Element signals
    */
@@ -157,9 +148,6 @@ export const config = {
       sources: signals.orchestrator.sources.get,
     },
 
-    processor: {
-      search: signals.processor.search.get,
-    },
   },
 
   // Utilities
@@ -313,17 +301,6 @@ async function artwork() {
 }
 
 
-async function search() {
-  const { default: SearchProcessor } = await import(
-    "~/components/processor/search/element.js"
-  );
-
-  const s = new SearchProcessor();
-  s.setAttribute("group", GROUP);
-
-  return findExistingOrAdd(s, signals.processor.search);
-}
-
 // Orchestrators
 async function autoQueue() {
   const [{ default: AutoQueueOrchestrator }, q, r, t] = await Promise.all([
@@ -435,22 +412,18 @@ async function queueAudio() {
 }
 
 async function scopedTracks() {
-  const [{ default: ScopedTracksOrchestrator }, i, o, e, s] = await Promise.all(
-    [
-      import("~/components/orchestrator/scoped-tracks/element.js"),
-      input(),
-      output(),
-      scope(),
-      search(),
-    ],
-  );
+  const [{ default: ScopedTracksOrchestrator }, i, o, e] = await Promise.all([
+    import("~/components/orchestrator/scoped-tracks/element.js"),
+    input(),
+    output(),
+    scope(),
+  ]);
 
   const sto = new ScopedTracksOrchestrator();
   sto.setAttribute("group", GROUP);
   sto.setAttribute("input-selector", i.selector);
   sto.setAttribute("output-selector", o.selector);
   sto.setAttribute("scope-engine-selector", e.selector);
-  sto.setAttribute("search-processor-selector", s.selector);
 
   return findExistingOrAdd(sto, signals.orchestrator.scopedTracks);
 }
