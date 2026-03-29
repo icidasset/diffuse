@@ -25,6 +25,18 @@ const blobUrls = new Map();
 ////////////////////////////////////////////
 
 /**
+ * @type {ActionsWithTunnel<Actions>['artwork']}
+ */
+export async function artwork({ data, ports }) {
+  const uri = data;
+  const scheme = uri.split(":", 1)[0];
+  const input = grabInput(scheme, ports);
+  if (!input) return null;
+
+  return await input.artwork(uri);
+}
+
+/**
  * @type {ActionsWithTunnel<Actions>['consult']}
  */
 export async function consult({ data, ports }) {
@@ -217,6 +229,7 @@ export async function removeFromCache({ data }) {
 
 ostiary((context) => {
   rpc(context, {
+    artwork,
     consult,
     detach,
     groupConsult,

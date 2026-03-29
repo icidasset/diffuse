@@ -125,6 +125,17 @@ describe("components/input/local", () => {
     expect(result).toBe(null);
   });
 
+  it("artwork returns null", async () => {
+    const result = await testWeb(async () => {
+      const mod = await import("~/components/input/local/element.js");
+      const input = new mod.CLASS();
+      document.body.append(input);
+      return await input.artwork("local://tid-aaa/track.mp3");
+    });
+
+    expect(result).toBe(null);
+  });
+
   it("groupConsult returns empty object for unknown TIDs", async () => {
     const result = await testWeb(async () => {
       const mod = await import("~/components/input/local/element.js");

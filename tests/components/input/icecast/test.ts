@@ -146,6 +146,17 @@ describe("components/input/icecast", () => {
     expect(remaining.length).toBe(2);
   });
 
+  it("artwork returns null", async () => {
+    const result = await testWeb(async () => {
+      const mod = await import("~/components/input/icecast/element.js");
+      const input = new mod.CLASS();
+      document.body.append(input);
+      return await input.artwork("icecast://radio.example.com/stream.mp3");
+    });
+
+    expect(result).toBe(null);
+  });
+
   it("sources returns an entry with icecast:// URI for each track", async () => {
     const sources = await testWeb(async () => {
       const mod = await import("~/components/input/icecast/element.js");

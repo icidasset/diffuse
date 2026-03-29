@@ -19,6 +19,13 @@ import { SCHEME } from "./constants.js";
 ////////////////////////////////////////////
 
 /**
+ * @type {Actions['artwork']}
+ */
+export async function artwork(_uri) {
+  return null;
+}
+
+/**
  * @type {Actions['consult']}
  */
 export async function consult(fileUriOrScheme) {
@@ -142,6 +149,7 @@ export async function resolve({ uri }) {
 
 ostiary((context) => {
   rpc(context, {
+    artwork,
     consult,
     detach,
     groupConsult,

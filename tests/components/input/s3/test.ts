@@ -120,6 +120,19 @@ describe("components/input/s3", () => {
     expect(remaining[0].id).toBe("2");
   });
 
+  it("artwork returns null", async () => {
+    const result = await testWeb(async () => {
+      const mod = await import("~/components/input/s3/element.js");
+      const input = new mod.CLASS();
+      document.body.append(input);
+      return await input.artwork(
+        "s3://key:secret@s3.amazonaws.com/music/track1.mp3?bucketName=my-bucket&region=us-east-1",
+      );
+    });
+
+    expect(result).toBe(null);
+  });
+
   it("sources returns labels with bucket name and host", async () => {
     const sources = await testWeb(async () => {
       const mod = await import("~/components/input/s3/element.js");

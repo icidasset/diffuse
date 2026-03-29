@@ -134,6 +134,17 @@ describe("components/input/https", () => {
     expect(remaining[1].id).toBe("4");
   });
 
+  it("artwork returns null", async () => {
+    const result = await testWeb(async () => {
+      const HttpsInput = await import("~/components/input/https/element.js");
+      const input = new HttpsInput.CLASS();
+      document.body.append(input);
+      return await input.artwork("https://example.com/audio.mp3");
+    });
+
+    expect(result).toBe(null);
+  });
+
   it("has correct SCHEME property", async () => {
     const scheme = await testWeb(async () => {
       const HttpsInput = await import("~/components/input/https/element.js");

@@ -20,7 +20,8 @@ export type ConsultGrouping =
 export type GroupConsult = Record<string, ConsultGrouping>;
 
 export type InputActions = {
-  consult(fileUriOrScheme: string): Promise<Consult>;
+  artwork(uri: string): Promise<Uint8Array | null>;
+  consult(uriOrScheme: string): Promise<Consult>;
   detach(args: { fileUriOrScheme: string; tracks: Track[] }): Promise<Track[]>;
   groupConsult(uris: string[]): Promise<GroupConsult>;
   list(tracks: Track[]): Promise<Track[]>;

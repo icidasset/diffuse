@@ -89,6 +89,19 @@ describe("components/input/opensubsonic", () => {
     expect(remaining.length).toBe(1);
   });
 
+  it("artwork returns null", async () => {
+    const result = await testWeb(async () => {
+      const mod = await import("~/components/input/opensubsonic/element.js");
+      const input = new mod.CLASS();
+      document.body.append(input);
+      return await input.artwork(
+        "opensubsonic://user:pass@subsonic.example.com?songId=123&tls=t",
+      );
+    });
+
+    expect(result).toBe(null);
+  });
+
   it("detach with specific server URI removes only matching tracks", async () => {
     const remaining = await testWeb(async () => {
       const mod = await import("~/components/input/opensubsonic/element.js");

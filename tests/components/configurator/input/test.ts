@@ -82,6 +82,39 @@ describe("components/configurator/input", () => {
     expect(result["ipfs"]?.uris).toEqual(["ipfs://QmA", "ipfs://QmB"]);
   });
 
+  it("artwork with an unsupported scheme returns null", async () => {
+    const result = await testWeb(async () => {
+      const mod = await import(
+        "~/components/configurator/input/element.js"
+      );
+      const configurator = new mod.CLASS();
+      document.body.append(configurator);
+      return configurator.artwork("ipfs://QmSomeCid");
+    });
+
+    expect(result).toBe(null);
+  });
+
+  it("artwork delegates to the appropriate input and returns null", async () => {
+    const result = await testWeb(async () => {
+      const mod = await import(
+        "~/components/configurator/input/element.js"
+      );
+      const HttpsInput = await import(
+        "~/components/input/https/element.js"
+      );
+
+      const configurator = new mod.CLASS();
+      const httpsInput = new HttpsInput.CLASS();
+      configurator.appendChild(httpsInput);
+      document.body.append(configurator);
+
+      return configurator.artwork("https://example.com/audio.mp3");
+    });
+
+    expect(result).toBe(null);
+  });
+
   it("inputs maps child input elements by their SCHEME", async () => {
     const result = await testWeb(async () => {
       const mod = await import(
