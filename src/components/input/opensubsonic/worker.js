@@ -32,8 +32,17 @@ import {
 /**
  * @type {Actions['artwork']}
  */
-export async function artwork(_uri) {
-  return null;
+export async function artwork(uri) {
+  const parsed = parseURI(uri);
+  if (!parsed?.songId) return null;
+
+  const client = createClient(parsed.server);
+  const response = await client.getCoverArt({ id: parsed.songId }).catch(
+    () => null,
+  );
+  if (!response?.ok) return null;
+
+  return new Uint8Array(await response.arrayBuffer());
 }
 
 /**
