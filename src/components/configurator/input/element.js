@@ -27,6 +27,7 @@ class InputConfigurator extends DiffuseElement {
     /** @type {ProxiedActions<Actions>} */
     const proxy = this.workerProxy();
 
+    this.artwork = proxy.artwork;
     this.consult = proxy.consult;
     this.detach = proxy.detach;
     this.groupConsult = proxy.groupConsult;

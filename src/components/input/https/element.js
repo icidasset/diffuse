@@ -28,6 +28,7 @@ class HttpsInput extends DiffuseElement {
     /** @type {ProxiedActions<InputActions>} */
     this.proxy = this.workerProxy();
 
+    this.artwork = this.proxy.artwork;
     this.consult = this.proxy.consult;
     this.detach = this.proxy.detach;
     this.groupConsult = this.proxy.groupConsult;
