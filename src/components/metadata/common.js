@@ -7,7 +7,7 @@ import { removeUndefinedValuesFromRecord } from "~/common/utils.js";
 
 /**
  * @import { TrackStats, TrackTags } from "~/definitions/types.d.ts";
- * @import { Extraction, Urls } from "./types.d.ts";
+ * @import { Extraction, Urls } from "~/components/metadata/audio-file/types.d.ts";
  */
 
 // 🛠️

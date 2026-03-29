@@ -70,7 +70,9 @@ examples:
         {{- echo -}}
           import foundation from "common/foundation.js"
         {{ /echo }}
+{{ echo -}}await foundation.configurator.artwork(){{- /echo }}
 {{ echo -}}await foundation.configurator.input(){{- /echo }}
+{{ echo -}}await foundation.configurator.metadata(){{- /echo }}
 {{ echo -}}await foundation.configurator.scrobbles(){{- /echo }}
 
 {{ echo -}}await foundation.engine.audio(){{- /echo }}
@@ -89,7 +91,6 @@ examples:
 {{ echo -}}await foundation.orchestrator.sources(){{- /echo }}
 
 {{ echo -}}await foundation.orchestrator.artwork(){{- /echo }}
-{{ echo -}}await foundation.processor.metadata(){{- /echo }}
 {{ echo -}}await foundation.processor.search(){{- /echo -}}
       </code>
     </div>

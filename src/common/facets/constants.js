@@ -6,6 +6,7 @@ export const STARTING_SET_URIS = [
   "themes/blur/artwork-controller/facet/index.html",
 
   // PRELUDES
+  "facets/data/metadata-bundle/index.html",
   "facets/data/artwork-bundle/index.html",
   "facets/data/input-bundle/index.html",
   "facets/data/output-bundle/index.html",

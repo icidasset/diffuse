@@ -6,6 +6,7 @@ import { listen } from "~/common/worker.js";
  * @import {ProxiedActions} from "~/common/worker.d.ts"
  * @import {InputElement} from "~/components/input/types.d.ts"
  * @import {OutputElement} from "~/components/output/types.d.ts"
+ * @import MetadataConfigurator from "~/components/configurator/metadata/element.js"
  *
  * @import {Actions, Progress} from "./types.d.ts"
  */
@@ -98,13 +99,13 @@ class ProcessTracksOrchestrator extends BroadcastableDiffuseElement {
     /** @type {OutputElement} */
     const output = query(this, "output-selector");
 
-    /** @type {import("~/components/processor/metadata/element.js").CLASS} */
-    const metadataProcessor = query(this, "metadata-processor-selector");
+    /** @type {MetadataConfigurator} */
+    const metadataConfigurator = query(this, "metadata-selector");
 
     // Assign to self
     this.input = input;
     this.output = output;
-    this.metadataProcessor = metadataProcessor;
+    this.metadataConfigurator = metadataConfigurator;
 
     // Worker link
     const link = this.workerLink();
@@ -112,7 +113,7 @@ class ProcessTracksOrchestrator extends BroadcastableDiffuseElement {
     // Wait until defined
     await customElements.whenDefined(input.localName);
     await customElements.whenDefined(output.localName);
-    await customElements.whenDefined(metadataProcessor.localName);
+    await customElements.whenDefined(metadataConfigurator.localName);
 
     // Sync progress with worker
     listen("progress", this.#progress.set, link);
@@ -156,13 +157,13 @@ class ProcessTracksOrchestrator extends BroadcastableDiffuseElement {
    */
   dependencies() {
     if (!this.input) throw new Error("Input element not defined yet");
-    if (!this.metadataProcessor) {
-      throw new Error("Metadata processor element not defined yet");
+    if (!this.metadataConfigurator) {
+      throw new Error("Metadata configurator element not defined yet");
     }
 
     return {
       input: this.input,
-      metadataProcessor: this.metadataProcessor,
+      metadata: this.metadataConfigurator,
     };
   }
 

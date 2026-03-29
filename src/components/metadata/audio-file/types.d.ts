@@ -1,17 +1,6 @@
 import type { IPicture } from "music-metadata";
 import type { TrackStats, TrackTags } from "~/definitions/types.d.ts";
 
-export type Actions = {
-  supply: (
-    args: {
-      includeArtwork?: boolean;
-      mimeType?: string;
-      stream?: ReadableStream;
-      urls?: Urls;
-    },
-  ) => Promise<Extraction>;
-};
-
 export type Extraction = {
   artwork?: IPicture[];
   stats?: TrackStats;

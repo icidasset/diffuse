@@ -7,7 +7,7 @@ import { announce, ostiary, rpc, workerProxy } from "~/common/worker.js";
  * @import {Track} from "~/definitions/types.d.ts"
  * @import {ActionsWithTunnel, ProxiedActions} from "~/common/worker.d.ts"
  * @import {InputActions} from "~/components/input/types.d.ts"
- * @import {Actions as MetadataProcessorActions} from "~/components/processor/metadata/types.d.ts"
+ * @import {Actions as MetadataActions} from "~/components/metadata/types.d.ts"
  *
  * @import {Actions} from "./types.d.ts"
  */
@@ -37,11 +37,11 @@ export async function process({ data, ports }) {
   /** @type {ProxiedActions<InputActions>} */
   const input = workerProxy(() => ports.input);
 
-  /** @type {ProxiedActions<MetadataProcessorActions>} */
-  const metadataProcessor = workerProxy(() => ports.metadataProcessor);
+  /** @type {ProxiedActions<MetadataActions>} */
+  const metadata = workerProxy(() => ports.metadata);
 
   ports.input.start();
-  ports.metadataProcessor.start();
+  ports.metadata.start();
 
   // List
   const tracks = await input.list(cachedTracks);
@@ -66,41 +66,12 @@ export async function process({ data, ports }) {
         return [...acc, track];
       }
 
-      const resGet = await input.resolve({
-        method: "GET",
-        uri: track.uri,
-      });
-
-      if (!resGet) {
-        processed++;
-        $progress.value = { processed, total: tracks.length };
-        return [...acc, track];
-      }
-
-      const resHead = "stream" in resGet ? undefined : await input.resolve({
-        method: "HEAD",
-        uri: track.uri,
-      });
-
-      const { stats, tags } = await metadataProcessor.supply({
-        stream: "stream" in resGet ? resGet.stream : undefined,
-        urls: "url" in resGet
-          ? {
-            get: resGet.url,
-            head: resHead && "url" in resHead ? resHead.url : resGet.url,
-          }
-          : undefined,
-      });
+      const patched = await metadata.patch(track);
 
       processed++;
       $progress.value = { processed, total: tracks.length };
 
-      return [...acc, {
-        ...track,
-        stats,
-        tags,
-        updatedAt: new Date().toISOString(),
-      }];
+      return [...acc, patched];
     },
     Promise.resolve([]),
   );

@@ -32,6 +32,9 @@ configurators:
   - url: "components/configurator/input/element.js"
     title: "Input"
     desc: "Allows for multiple inputs to be used at once."
+  - url: "components/configurator/metadata/element.js"
+    title: "Metadata"
+    desc: "Takes metadata components as children and chains their patches in sequence."
   - url: "components/configurator/output/element.js"
     title: "Output"
     desc: "Enables the user to configure a specific output. If no default output is set, it creates a temporary session by storing everything in memory."
@@ -140,10 +143,12 @@ output:
     desc: >
       Store your user data on the storage associated with your ATProtocol identity. Data is lexicon shaped by default so this element takes in that data directly without any transformations.
 
+metadata:
+  - url: "components/metadata/audio-file/element.js"
+    title: "Audio File"
+    desc: "Extracts tags and audio stats from audio files using the music-metadata library."
+
 processors:
-  - url: "components/processor/metadata/element.js"
-    title: "Metadata"
-    desc: "Fetch audio metadata for a given set of tracks, adding to the `Track` object."
   - url: "components/processor/search/element.js"
     title: "Search"
     desc: "Provides a way to search through a collection of tracks, powered by orama.js"
@@ -237,6 +242,7 @@ definitions:
       <li><a href="elements/#configurators">Configurators</a></li>
       <li><a href="elements/#engines">Engines</a></li>
       <li><a href="elements/#input">Input</a></li>
+      <li><a href="elements/#metadata">Metadata</a></li>
       <li><a href="elements/#orchestrators">Orchestrators</a></li>
       <li><a href="elements/#output">Output</a></li>
       <li><a href="elements/#processors">Processors</a></li>
@@ -256,7 +262,7 @@ definitions:
         title: "Artwork",
         items: artwork,
         content: `
-          Artwork sources for tracks. Each implements a <code>get(track)</code> action and returns artwork bytes or null. Use an artwork configurator to combine multiple sources.
+          Elements that provide artwork for tracks.
         `
       }) }}
 
@@ -264,7 +270,7 @@ definitions:
         title: "Configurators",
         items: configurators,
         content: `
-          Elements that serve as an intermediate in order to make a particular kind of element configurable. In other words, these allow for an element to be swapped out with another that takes the same set of the actions and data output.
+          Intermediates in order to make a particular kind of element configurable. In other words, these allow for an element to be swapped out with another that takes the same set of the actions and data output.
         `
       }) }}
 
@@ -281,6 +287,14 @@ definitions:
         items: input,
         content: `
         Inputs are sources of audio tracks. Each track is an entry in the list of possible items to play. These can be files or streams, static or dynamic.
+        `
+      }) }}
+
+      {{ await comp.element({
+        title: "Metadata",
+        items: metadata,
+        content: `
+          Elements that provide metadata for tracks.
         `
       }) }}
 

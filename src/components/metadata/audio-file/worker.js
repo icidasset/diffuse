@@ -1,11 +1,11 @@
-import { musicMetadataTags } from "~/components/metadata/common.js";
 import { ostiary, rpc, workerProxy } from "~/common/worker.js";
+import { musicMetadataTags } from "~/components/metadata/common.js";
 
 /**
- * @import {Extraction} from "~/components/metadata/audio-file/types.d.ts"
+ * @import {Track} from "~/definitions/types.d.ts"
  * @import {ActionsWithTunnel, ProxiedActions} from "~/common/worker.d.ts"
  * @import {InputActions} from "~/components/input/types.d.ts"
- * @import {Actions} from "~/components/artwork/types.d.ts"
+ * @import {Actions} from "~/components/metadata/types.d.ts"
  */
 
 ////////////////////////////////////////////
@@ -13,9 +13,9 @@ import { ostiary, rpc, workerProxy } from "~/common/worker.js";
 ////////////////////////////////////////////
 
 /**
- * @type {ActionsWithTunnel<Actions>['get']}
+ * @type {ActionsWithTunnel<Actions>['patch']}
  */
-export async function get({ data: track, ports }) {
+export async function patch({ data: track, ports }) {
   /** @type {ProxiedActions<InputActions>} */
   const input = workerProxy(() => {
     ports.input.start();
@@ -23,14 +23,13 @@ export async function get({ data: track, ports }) {
   });
 
   const resGet = await input.resolve({ method: "GET", uri: track.uri });
-  if (!resGet) return null;
+  if (!resGet) return track;
 
   const resHead = "stream" in resGet
     ? undefined
     : await input.resolve({ method: "HEAD", uri: track.uri });
 
-  const meta = await musicMetadataTags({
-    includeArtwork: true,
+  const { stats, tags } = await musicMetadataTags({
     stream: "stream" in resGet ? resGet.stream : undefined,
     mimeType: "stream" in resGet ? resGet.mimeType : undefined,
     urls: "url" in resGet
@@ -40,14 +39,18 @@ export async function get({ data: track, ports }) {
       }
       : undefined,
   }).catch(/** @param {Error} err */ (err) => {
-    console.error("music-metadata error", err);
-    return /** @type {Extraction} */ ({});
+    console.warn("audio-file metadata error", err);
+    return /** @type {import("./types.d.ts").Extraction} */ ({});
   });
 
-  const pictures = meta.artwork ?? [];
-  if (!pictures.length) return null;
+  if (!tags && !stats) return track;
 
-  return pictures[0].data;
+  return {
+    ...track,
+    stats,
+    tags,
+    updatedAt: new Date().toISOString(),
+  };
 }
 
 ////////////////////////////////////////////
@@ -55,5 +58,5 @@ export async function get({ data: track, ports }) {
 ////////////////////////////////////////////
 
 ostiary((context) => {
-  rpc(context, { get });
+  rpc(context, { patch });
 });

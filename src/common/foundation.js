@@ -17,6 +17,9 @@ const signals = {
     artwork: signal(
       /** @type {import("~/components/configurator/artwork/element.js").CLASS | null} */ (null),
     ),
+    metadata: signal(
+      /** @type {import("~/components/configurator/metadata/element.js").CLASS | null} */ (null),
+    ),
     input: signal(
       /** @type {import("~/components/configurator/input/element.js").CLASS | null} */ (null),
     ),
@@ -77,9 +80,6 @@ const signals = {
   },
 
   processor: {
-    metadata: signal(
-      /** @type {import("~/components/processor/metadata/element.js").CLASS | null} */ (null),
-    ),
     search: signal(
       /** @type {import("~/components/processor/search/element.js").CLASS | null} */ (null),
     ),
@@ -95,6 +95,7 @@ export const config = {
   // Elements
   configurator: {
     artwork: configuratorArtwork,
+    metadata: configuratorMetadata,
     input,
     scrobbles,
   },
@@ -121,7 +122,6 @@ export const config = {
   },
 
   processor: {
-    metadata,
     search,
   },
 
@@ -131,6 +131,7 @@ export const config = {
   signals: {
     configurator: {
       artwork: signals.configurator.artwork.get,
+      metadata: signals.configurator.metadata.get,
       input: signals.configurator.input.get,
       scrobbles: signals.configurator.scrobbles.get,
     },
@@ -157,7 +158,6 @@ export const config = {
     },
 
     processor: {
-      metadata: signals.processor.metadata.get,
       search: signals.processor.search.get,
     },
   },
@@ -205,6 +205,18 @@ async function configuratorArtwork() {
   ac.setAttribute("id", "artwork");
 
   return findExistingOrAdd(ac, signals.configurator.artwork);
+}
+
+async function configuratorMetadata() {
+  const { default: MetadataConfigurator } = await import(
+    "~/components/configurator/metadata/element.js"
+  );
+
+  const mc = new MetadataConfigurator();
+  mc.setAttribute("group", GROUP);
+  mc.setAttribute("id", "metadata");
+
+  return findExistingOrAdd(mc, signals.configurator.metadata);
 }
 
 async function input() {
@@ -300,16 +312,6 @@ async function artwork() {
   return findExistingOrAdd(a, signals.orchestrator.artwork);
 }
 
-async function metadata() {
-  const { default: MetadataProcessor } = await import(
-    "~/components/processor/metadata/element.js"
-  );
-
-  const m = new MetadataProcessor();
-  m.setAttribute("group", GROUP);
-
-  return findExistingOrAdd(m, signals.processor.metadata);
-}
 
 async function search() {
   const { default: SearchProcessor } = await import(
@@ -394,14 +396,14 @@ async function processTracks(opts = { disableWhenReady: false }) {
     import("~/components/orchestrator/process-tracks/element.js"),
     input(),
     output(),
-    metadata(),
+    configuratorMetadata(),
   ]);
 
   const opt = new ProcessTracksOrchestrator();
   opt.setAttribute("group", GROUP);
   opt.setAttribute("input-selector", i.selector);
   opt.setAttribute("output-selector", o.selector);
-  opt.setAttribute("metadata-processor-selector", m.selector);
+  opt.setAttribute("metadata-selector", m.selector);
 
   if (!opts.disableWhenReady) {
     opt.toggleAttribute("process-when-ready");

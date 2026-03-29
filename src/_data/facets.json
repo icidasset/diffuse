@@ -16,14 +16,14 @@
   },
   {
     "url": "themes/blur/artwork-controller/facet/index.html",
-    "title": "Blur / Artwork controller",
+    "title": "Blur / Artwork Controller",
     "category": "Playback",
     "featured": true,
     "desc": "Audio playback controller with an artwork display. Play audio from the queue, add tracks to your favourites, control the queue and volume."
   },
   {
     "url": "facets/data/cache-tracks/index.html",
-    "title": "Cache tracks",
+    "title": "Cache Tracks",
     "kind": "prelude",
     "category": "Data",
     "featured": true,
@@ -91,6 +91,13 @@
     "kind": "prelude",
     "category": "Data",
     "desc": "The default setup for audio input sources. Adds support for: HTTPS, Icecast, the local filesystem, OpenSubsonic, and S3-compatible storage."
+  },
+  {
+    "url": "facets/data/metadata-bundle/index.html",
+    "title": "Default Metadata Bundle",
+    "kind": "prelude",
+    "category": "Data",
+    "desc": "The default setup for track metadata lookups. Reads tags and audio stats from audio files."
   },
   {
     "url": "facets/data/output-bundle/index.html",
