@@ -47,6 +47,9 @@ const signals = {
     artwork: signal(
       /** @type {import("~/components/orchestrator/artwork/element.js").CLASS | null} */ (null),
     ),
+    controller: signal(
+      /** @type {import("~/components/orchestrator/controller/element.js").CLASS | null} */ (null),
+    ),
     autoQueue: signal(
       /** @type {import("~/components/orchestrator/auto-queue/element.js").CLASS | null} */ (null),
     ),
@@ -78,7 +81,6 @@ const signals = {
       /** @type {import("~/components/orchestrator/sources/element.js").CLASS | null} */ (null),
     ),
   },
-
 };
 
 /**
@@ -104,6 +106,7 @@ export const config = {
 
   orchestrator: {
     artwork,
+    controller,
     autoQueue,
     favourites,
     mediaSession,
@@ -136,6 +139,7 @@ export const config = {
 
     orchestrator: {
       artwork: signals.orchestrator.artwork.get,
+      controller: signals.orchestrator.controller.get,
       autoQueue: signals.orchestrator.autoQueue.get,
       favourites: signals.orchestrator.favourites.get,
       mediaSession: signals.orchestrator.mediaSession.get,
@@ -147,7 +151,6 @@ export const config = {
       scrobbleAudio: signals.orchestrator.scrobbleAudio.get,
       sources: signals.orchestrator.sources.get,
     },
-
   },
 
   // Utilities
@@ -300,7 +303,6 @@ async function artwork() {
   return findExistingOrAdd(a, signals.orchestrator.artwork);
 }
 
-
 // Orchestrators
 async function autoQueue() {
   const [{ default: AutoQueueOrchestrator }, q, r, t] = await Promise.all([
@@ -317,6 +319,22 @@ async function autoQueue() {
   aqo.setAttribute("tracks-selector", t.selector);
 
   return findExistingOrAdd(aqo, signals.orchestrator.autoQueue);
+}
+
+async function controller() {
+  const [{ default: ControllerOrchestrator }, a, o, q] = await Promise.all([
+    import("~/components/orchestrator/controller/element.js"),
+    audio(),
+    output(),
+    queue(),
+  ]);
+
+  const co = new ControllerOrchestrator();
+  co.setAttribute("audio-engine-selector", a.selector);
+  co.setAttribute("output-selector", o.selector);
+  co.setAttribute("queue-engine-selector", q.selector);
+
+  return findExistingOrAdd(co, signals.orchestrator.controller);
 }
 
 async function favourites() {

@@ -21,6 +21,7 @@ const scopedTracks = await foundation.orchestrator.scopedTracks();
 await foundation.orchestrator.sources();
 await foundation.orchestrator.processTracks({ disableWhenReady: true });
 await foundation.orchestrator.queueAudio();
+await foundation.orchestrator.controller();
 
 await import("~/themes/winamp/browser/element.js");
 await import("~/themes/winamp/window/element.js");

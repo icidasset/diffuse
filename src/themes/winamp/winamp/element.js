@@ -3,14 +3,12 @@ import {
   query,
   whenElementsDefined,
 } from "~/common/element.js";
-import { computed, signal, untracked } from "~/common/signal.js";
+import { signal, untracked } from "~/common/signal.js";
 
 /**
  * @import {RenderArg} from "~/common/element.d.ts"
  *
- * @import {OutputElement} from "~/components/output/types.d.ts"
- * @import AudioEngine from "~/components/engine/audio/element.js"
- * @import QueueEngine from "~/components/engine/queue/element.js"
+ * @import ControllerOrchestrator from "~/components/orchestrator/controller/element.js"
  * @import RepeatShuffleEngine from "~/components/engine/repeat-shuffle/element.js"
  */
 
@@ -235,31 +233,18 @@ class WinampElement extends DiffuseElement {
 
   // SIGNALS - DEPENDENCIES
 
-  $audio = signal(/** @type {AudioEngine | undefined} */ (undefined));
-  $output = signal(/** @type {OutputElement | undefined} */ (undefined));
-  $queue = signal(/** @type {QueueEngine | undefined} */ (undefined));
+  $controller = signal(
+    /** @type {ControllerOrchestrator | undefined} */ (undefined),
+  );
   $repeatShuffle = signal(
     /** @type {RepeatShuffleEngine | undefined} */ (undefined),
   );
 
   // SIGNALS - COMPUTED
 
-  audio = computed(() => {
-    const curr = this.$queue.value?.now();
-    return curr ? this.$audio.value?.state(curr.id) : undefined;
-  });
-
-  currentTrack = computed(() => {
-    const item = this.$queue.value?.now();
-    if (!item) return undefined;
-    const col = this.$output.value?.tracks.collection();
-    if (!col || col.state !== "loaded") return undefined;
-    return col.data.find((t) => t.id === item.id);
-  });
-
-  isPlaying = computed(() => {
-    return this.$audio.value?.isPlaying();
-  });
+  audio = () => this.$controller.value?.audio();
+  currentTrack = () => this.$controller.value?.currentTrack();
+  isPlaying = () => this.$controller.value?.isPlaying();
 
   // LIFECYCLE
 
@@ -269,22 +254,14 @@ class WinampElement extends DiffuseElement {
   connectedCallback() {
     super.connectedCallback();
 
-    /** @type {AudioEngine} */
-    const audio = query(this, "audio-engine-selector");
-
-    /** @type {OutputElement} */
-    const output = query(this, "output-selector");
-
-    /** @type {QueueEngine} */
-    const queue = query(this, "queue-engine-selector");
+    /** @type {ControllerOrchestrator} */
+    const controller = query(this, "controller-orchestrator-selector");
 
     /** @type {RepeatShuffleEngine} */
     const repeatShuffle = query(this, "repeat-shuffle-engine-selector");
 
-    whenElementsDefined({ audio, output, queue, repeatShuffle }).then(() => {
-      this.$audio.value = audio;
-      this.$output.value = output;
-      this.$queue.value = queue;
+    whenElementsDefined({ controller, repeatShuffle }).then(() => {
+      this.$controller.value = controller;
       this.$repeatShuffle.value = repeatShuffle;
 
       this.effect(() => {
@@ -306,7 +283,7 @@ class WinampElement extends DiffuseElement {
       });
 
       this.effect(() => {
-        const audioId = this.$queue.value?.now()?.id;
+        const audioId = this.$controller.value?.$queue.value?.now()?.id;
         const playing = this.isPlaying();
         untracked(() => {
           if (audioId) this.#connectToAnalyser(audioId);
@@ -865,7 +842,7 @@ class WinampElement extends DiffuseElement {
   /** @param {string} audioId */
   #connectToAnalyser(audioId) {
     if (this.#srcNodes.has(audioId)) return;
-    const audioEl = this.$audio.value
+    const audioEl = this.$controller.value?.$audio.value
       ?.querySelector(`de-audio-item[id="${audioId}"]:not([preload]) audio`);
     if (!(audioEl instanceof HTMLAudioElement)) return;
     this.#ensureAnalyser();
@@ -959,7 +936,7 @@ class WinampElement extends DiffuseElement {
       const PUSH_DOWN = H >= 16 ? 2 : 0;
 
       // Lazy-connect current audio
-      const audioId = this.$queue.value?.now()?.id;
+      const audioId = this.$controller.value?.$queue.value?.now()?.id;
       if (audioId) this.#connectToAnalyser(audioId);
 
       // Time-domain → FFT → spectral data
@@ -1151,7 +1128,7 @@ class WinampElement extends DiffuseElement {
   #onVolumeInput = (e) => {
     if (!(e.target instanceof HTMLInputElement)) return;
     const volume = Number(e.target.value) / 100;
-    this.$audio.value?.adjustVolume({ volume });
+    this.$controller.value?.$audio.value?.adjustVolume({ volume });
 
     this.#marqueeOverride.value = `Volume: ${Math.round(volume * 100)}%`;
     clearTimeout(this.#marqueeOverrideTimeout);
@@ -1183,27 +1160,27 @@ class WinampElement extends DiffuseElement {
   #onPositionChange = (e) => {
     if (!(e.target instanceof HTMLInputElement)) return;
     const percentage = Number(e.target.value) / 100;
-    const audioId = this.$queue.value?.now()?.id;
-    if (audioId) this.$audio.value?.seek({ audioId, percentage });
+    const audioId = this.$controller.value?.$queue.value?.now()?.id;
+    if (audioId) this.$controller.value?.$audio.value?.seek({ audioId, percentage });
     this.#marqueeOverride.value = null;
     setTimeout(() => { this.#seekingProgress.value = null; }, 250);
   };
 
   #playPause = () => {
-    const audioId = this.$queue.value?.now()?.id;
+    const audioId = this.$controller.value?.$queue.value?.now()?.id;
     this.#stopped.value = false;
     if (this.isPlaying() && audioId) {
-      this.$audio.value?.pause({ audioId });
+      this.$controller.value?.$audio.value?.pause({ audioId });
     } else if (audioId) {
-      this.$audio.value?.play({ audioId });
+      this.$controller.value?.$audio.value?.play({ audioId });
     }
   };
 
   #stop = () => {
-    const audioId = this.$queue.value?.now()?.id;
+    const audioId = this.$controller.value?.$queue.value?.now()?.id;
     if (!audioId) return;
-    if (this.isPlaying()) this.$audio.value?.pause({ audioId });
-    this.$audio.value?.seek({ audioId, percentage: 0 });
+    if (this.isPlaying()) this.$controller.value?.$audio.value?.pause({ audioId });
+    this.$controller.value?.$audio.value?.seek({ audioId, percentage: 0 });
     this.#stopped.value = true;
   };
 
@@ -1212,11 +1189,11 @@ class WinampElement extends DiffuseElement {
   };
 
   #next = () => {
-    this.$queue.value?.shift();
+    this.$controller.value?.$queue.value?.shift();
   };
 
   #previous = () => {
-    this.$queue.value?.unshift();
+    this.$controller.value?.$queue.value?.unshift();
   };
 
   #toggleShuffle = () => {
@@ -1321,8 +1298,8 @@ class WinampElement extends DiffuseElement {
   };
 
   #closeMain = () => {
-    const audioId = this.$queue.value?.now()?.id;
-    if (audioId && this.isPlaying()) this.$audio.value?.pause({ audioId });
+    const audioId = this.$controller.value?.$queue.value?.now()?.id;
+    if (audioId && this.isPlaying()) this.$controller.value?.$audio.value?.pause({ audioId });
     this.#mainOpen.value = false;
   };
 
@@ -1377,7 +1354,7 @@ class WinampElement extends DiffuseElement {
   /** @param {number} idx */
   #playTrack = (idx) => {
     this.#selectedIndex.value = idx;
-    const queue = this.$queue.value;
+    const queue = this.$controller.value?.$queue.value;
     if (!queue) return;
     const past = queue.past();
     const pastLen = past.length;
@@ -1422,7 +1399,7 @@ class WinampElement extends DiffuseElement {
       `;
     };
 
-    const volume = this.$audio.value?.volume() ?? 1;
+    const volume = this.$controller.value?.$audio.value?.volume() ?? 1;
     const volumeSprite = Math.round(volume * 28);
     const volumeBgPos = `0 -${(volumeSprite - 1) * 15}px`;
     const volumePct = Math.round(volume * 100);
@@ -1465,14 +1442,14 @@ class WinampElement extends DiffuseElement {
     };
 
     // Playlist
-    const queueEl = this.$queue.value;
+    const queueEl = this.$controller.value?.$queue.value;
     const nowItem = queueEl?.now();
     const allItems = [
       ...(queueEl?.past() ?? []),
       ...(nowItem ? [nowItem] : []),
       ...(queueEl?.future() ?? []),
     ];
-    const col = this.$output.value?.tracks.collection();
+    const col = this.$controller.value?.$output.value?.tracks.collection();
     const trackMap = col?.state === "loaded"
       ? new Map(col.data.map((t) => [t.id, t]))
       : new Map();

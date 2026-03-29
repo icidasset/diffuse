@@ -8,22 +8,18 @@ foundation.setup({ title: "Artwork controller | Blur | Diffuse" });
 await foundation.orchestrator.queueAudio();
 await foundation.orchestrator.mediaSession();
 
-const [aud, art, fav, inp, out, que] = await Promise.all([
-  foundation.engine.audio(),
+const [art, ctl, fav, inp] = await Promise.all([
   foundation.orchestrator.artwork(),
+  foundation.orchestrator.controller(),
   foundation.orchestrator.favourites(),
   foundation.configurator.input(),
-  foundation.orchestrator.output(),
-  foundation.engine.queue(),
 ]);
 
 // Controller
 const dac = new ArtworkController();
 dac.setAttribute("artwork-selector", art.selector);
-dac.setAttribute("audio-engine-selector", aud.selector);
+dac.setAttribute("controller-orchestrator-selector", ctl.selector);
 dac.setAttribute("input-selector", inp.selector);
-dac.setAttribute("output-selector", out.selector);
-dac.setAttribute("queue-engine-selector", que.selector);
 dac.setAttribute("favourites-orchestrator-selector", fav.selector);
 
 // Add to DOM

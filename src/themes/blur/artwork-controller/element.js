@@ -11,16 +11,14 @@ import {
   whenElementsDefined,
 } from "~/common/element.js";
 
-import { computed, signal, untracked } from "~/common/signal.js";
+import { signal, untracked } from "~/common/signal.js";
 
 /**
  * @import {RenderArg} from "~/common/element.d.ts"
  *
  * @import {InputElement} from "~/components/input/types.d.ts"
- * @import {OutputElement} from "~/components/output/types.d.ts"
- * @import AudioEngine from "~/components/engine/audio/element.js"
- * @import QueueEngine from "~/components/engine/queue/element.js"
  * @import ArtworkOrchestrator from "~/components/orchestrator/artwork/element.js"
+ * @import ControllerOrchestrator from "~/components/orchestrator/controller/element.js"
  * @import FavouritesOrchestrator from "~/components/orchestrator/favourites/element.js"
  */
 
@@ -53,32 +51,19 @@ class ArtworkController extends DiffuseElement {
   // SIGNALS - DEPENDENCIES
 
   $artwork = signal(/** @type {ArtworkOrchestrator | undefined} */ (undefined));
-  $audio = signal(/** @type {AudioEngine | undefined} */ (undefined));
+  $controller = signal(
+    /** @type {ControllerOrchestrator | undefined} */ (undefined),
+  );
   $favourites = signal(
     /** @type {FavouritesOrchestrator | undefined} */ (undefined),
   );
   $input = signal(/** @type {InputElement | undefined} */ (undefined));
-  $output = signal(/** @type {OutputElement | undefined} */ (undefined));
-  $queue = signal(/** @type {QueueEngine | undefined} */ (undefined));
 
   // SIGNALS - COMPUTED
 
-  audio = computed(() => {
-    const curr = this.$queue.value?.now();
-    return curr ? this.$audio.value?.state(curr.id) : undefined;
-  });
-
-  currentTrack = computed(() => {
-    const item = this.$queue.value?.now();
-    if (!item) return undefined;
-    const col = this.$output.value?.tracks.collection();
-    if (!col || col.state !== "loaded") return undefined;
-    return col.data.find((t) => t.id === item.id);
-  });
-
-  isPlaying = computed(() => {
-    return this.$audio.value?.isPlaying();
-  });
+  audio = () => this.$controller.value?.audio();
+  currentTrack = () => this.$controller.value?.currentTrack();
+  isPlaying = () => this.$controller.value?.isPlaying();
 
   // LIFECYCLE
 
@@ -91,29 +76,21 @@ class ArtworkController extends DiffuseElement {
     /** @type {ArtworkOrchestrator} */
     const artwork = query(this, "artwork-selector");
 
-    /** @type {AudioEngine} */
-    const audio = query(this, "audio-engine-selector");
+    /** @type {ControllerOrchestrator} */
+    const controller = query(this, "controller-orchestrator-selector");
 
     /** @type {InputElement} */
     const input = query(this, "input-selector");
 
-    /** @type {OutputElement} */
-    const output = query(this, "output-selector");
-
-    /** @type {QueueEngine} */
-    const queue = query(this, "queue-engine-selector");
-
     /** @type {FavouritesOrchestrator} */
     const favourites = query(this, "favourites-orchestrator-selector");
 
-    whenElementsDefined({ audio, artwork, favourites, input, output, queue })
+    whenElementsDefined({ artwork, controller, favourites, input })
       .then(
         () => {
           this.$artwork.value = artwork;
-          this.$audio.value = audio;
+          this.$controller.value = controller;
           this.$input.value = input;
-          this.$output.value = output;
-          this.$queue.value = queue;
           this.$favourites.value = favourites;
 
           // Changed artwork based on active queue item.
@@ -131,7 +108,7 @@ class ArtworkController extends DiffuseElement {
           this.effect(() => this.#lightOrDark());
 
           this.effect(() => {
-            const now = !!queue.now();
+            const now = !!this.$controller.value?.$queue.value?.now();
             const aud = this.audio()?.loadingState();
             const bool = now && aud !== "loaded";
 
@@ -179,7 +156,7 @@ class ArtworkController extends DiffuseElement {
       return;
     }
 
-    if (this.$queue.value?.now()?.id !== track?.id) {
+    if (this.$controller.value?.$queue.value?.now()?.id !== track?.id) {
       return;
     }
 
@@ -303,29 +280,29 @@ class ArtworkController extends DiffuseElement {
   };
 
   fullVolume = () => {
-    this.$audio.value?.adjustVolume({ volume: 1 });
+    this.$controller.value?.$audio.value?.adjustVolume({ volume: 1 });
   };
 
   mute = () => {
-    this.$audio.value?.adjustVolume({ volume: 0 });
+    this.$controller.value?.$audio.value?.adjustVolume({ volume: 0 });
   };
 
   next = () => {
-    this.$queue.value?.shift();
+    this.$controller.value?.$queue.value?.shift();
   };
 
   playPause = () => {
-    const audioId = this.$queue.value?.now()?.id;
+    const audioId = this.$controller.value?.$queue.value?.now()?.id;
 
     if (this.isPlaying() && audioId) {
-      this.$audio.value?.pause({ audioId });
+      this.$controller.value?.$audio.value?.pause({ audioId });
     } else if (audioId) {
-      this.$audio.value?.play({ audioId });
+      this.$controller.value?.$audio.value?.play({ audioId });
     }
   };
 
   previous = () => {
-    this.$queue.value?.unshift();
+    this.$controller.value?.$queue.value?.unshift();
   };
 
   /**
@@ -336,9 +313,9 @@ class ArtworkController extends DiffuseElement {
       ? /** @type {HTMLProgressElement} */ (event.target)
       : null;
     const percentage = target ? event.offsetX / target.clientWidth : 0;
-    const audioId = this.$queue.value?.now()?.id;
+    const audioId = this.$controller.value?.$queue.value?.now()?.id;
 
-    if (audioId) this.$audio.value?.seek({ audioId, percentage });
+    if (audioId) this.$controller.value?.$audio.value?.seek({ audioId, percentage });
   };
 
   /**
@@ -350,7 +327,7 @@ class ArtworkController extends DiffuseElement {
       : null;
 
     const percentage = target ? event.offsetX / target.clientWidth : 0;
-    this.$audio.value?.adjustVolume({ volume: percentage });
+    this.$controller.value?.$audio.value?.adjustVolume({ volume: percentage });
   };
 
   toggleFavourite = () => {
@@ -508,7 +485,7 @@ class ArtworkController extends DiffuseElement {
             <div class="volume">
               <i @click="${this.mute}" class="ph-fill ph-speaker-none"></i>
               <div @click="${this.setVolume}" class="progress-bar">
-                <progress max="100" value="${(this.$audio.value?.volume() ??
+                <progress max="100" value="${(this.$controller.value?.$audio.value?.volume() ??
                   0) * 100}"></progress>
               </div>
               <i @click="${this
