@@ -79,6 +79,13 @@
     "desc": "Export all data as a JSON snapshot, or restore from a previously exported file."
   },
   {
+    "url": "facets/data/artwork-bundle/index.html",
+    "title": "Default Artwork Bundle",
+    "kind": "prelude",
+    "category": "Data",
+    "desc": "The default setup for track artwork retrieval. Adds support for: embedded audio metadata, Last.fm, and MusicBrainz."
+  },
+  {
     "url": "facets/data/input-bundle/index.html",
     "title": "Default Input Bundle",
     "kind": "prelude",

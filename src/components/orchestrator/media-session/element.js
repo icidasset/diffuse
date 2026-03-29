@@ -6,8 +6,7 @@ import {
 
 /**
  * @import {OutputElement} from "~/components/output/types.d.ts"
- * @import {Artwork} from "~/components/processor/artwork/types.d.ts"
- * @import ArtworkProcessor from "~/components/processor/artwork/element.js"
+ * @import ArtworkOrchestrator from "~/components/orchestrator/artwork/element.js"
  */
 
 ////////////////////////////////////////////
@@ -47,8 +46,8 @@ class MediaSessionOrchestrator extends BroadcastableDiffuseElement {
     /** @type {OutputElement | null} */
     this.output = queryOptional(this, "output-selector");
 
-    /** @type {ArtworkProcessor | null} */
-    this.artwork = queryOptional(this, "artwork-processor-selector");
+    /** @type {ArtworkOrchestrator | null} */
+    this.artwork = queryOptional(this, "artwork-selector");
 
     // Wait until defined
     await customElements.whenDefined(this.audio.localName);
@@ -92,22 +91,19 @@ class MediaSessionOrchestrator extends BroadcastableDiffuseElement {
 
     // Optionally fetch and attach artwork
     if (this.artwork) {
-      const artworkProcessor = this.artwork;
+      const artworkOrchestrator = this.artwork;
 
-      /** @type {Artwork[]} */
-      let artworkItems;
+      /** @type {Uint8Array | null} */
+      let bytes = null;
 
       try {
-        artworkItems = await artworkProcessor.artwork({
-          cacheId: track.id,
-          tags,
-        });
+        bytes = await artworkOrchestrator.get(track);
       } catch {
-        artworkItems = [];
+        bytes = null;
       }
 
-      if (artworkItems?.length && navigator.mediaSession.metadata) {
-        const { bytes, mime } = artworkItems[0];
+      if (bytes && navigator.mediaSession.metadata) {
+        const mime = detectMime(bytes);
         const blob = new Blob([/** @type {ArrayBuffer} */ (bytes.buffer)], {
           type: mime,
         });
@@ -202,6 +198,22 @@ class MediaSessionOrchestrator extends BroadcastableDiffuseElement {
 }
 
 export default MediaSessionOrchestrator;
+
+////////////////////////////////////////////
+// 🛠️
+////////////////////////////////////////////
+
+/**
+ * @param {Uint8Array} bytes
+ * @returns {string}
+ */
+function detectMime(bytes) {
+  if (bytes[0] === 0xFF && bytes[1] === 0xD8) return "image/jpeg";
+  if (bytes[0] === 0x89 && bytes[1] === 0x50) return "image/png";
+  if (bytes[0] === 0x47 && bytes[1] === 0x49) return "image/gif";
+  if (bytes[0] === 0x52 && bytes[1] === 0x49) return "image/webp";
+  return "image/jpeg";
+}
 
 ////////////////////////////////////////////
 // REGISTER

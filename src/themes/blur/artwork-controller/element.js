@@ -18,10 +18,9 @@ import { computed, signal, untracked } from "~/common/signal.js";
  *
  * @import {InputElement} from "~/components/input/types.d.ts"
  * @import {OutputElement} from "~/components/output/types.d.ts"
- * @import {Artwork} from "~/components/processor/artwork/types.d.ts"
  * @import AudioEngine from "~/components/engine/audio/element.js"
  * @import QueueEngine from "~/components/engine/queue/element.js"
- * @import ArtworkProcessor from "~/components/processor/artwork/element.js"
+ * @import ArtworkOrchestrator from "~/components/orchestrator/artwork/element.js"
  * @import FavouritesOrchestrator from "~/components/orchestrator/favourites/element.js"
  */
 
@@ -39,7 +38,7 @@ class ArtworkController extends DiffuseElement {
   // SIGNALS
 
   #artwork = signal(
-    /** @type {{ current: (Artwork & { hash: string; index: number; loaded: boolean; url: string }) | null; previous: (Artwork & { hash: string; index: number; loaded: boolean; url: string }) | null }} */ ({
+    /** @type {{ current: ({ bytes: Uint8Array; mime: string; hash: string; index: number; loaded: boolean; url: string }) | null; previous: ({ bytes: Uint8Array; mime: string; hash: string; index: number; loaded: boolean; url: string }) | null }} */ ({
       current: null,
       previous: null,
     }),
@@ -53,7 +52,7 @@ class ArtworkController extends DiffuseElement {
 
   // SIGNALS - DEPENDENCIES
 
-  $artwork = signal(/** @type {ArtworkProcessor | undefined} */ (undefined));
+  $artwork = signal(/** @type {ArtworkOrchestrator | undefined} */ (undefined));
   $audio = signal(/** @type {AudioEngine | undefined} */ (undefined));
   $favourites = signal(
     /** @type {FavouritesOrchestrator | undefined} */ (undefined),
@@ -89,8 +88,8 @@ class ArtworkController extends DiffuseElement {
   connectedCallback() {
     super.connectedCallback();
 
-    /** @type {ArtworkProcessor} */
-    const artwork = query(this, "artwork-processor-selector");
+    /** @type {ArtworkOrchestrator} */
+    const artwork = query(this, "artwork-selector");
 
     /** @type {AudioEngine} */
     const audio = query(this, "audio-engine-selector");
@@ -176,72 +175,42 @@ class ArtworkController extends DiffuseElement {
       if (currArtwork.current) {
         this.#artwork.value = { current: null, previous: currArtwork.current };
       }
+
       return;
     }
-
-    const cacheId = track.id;
-
-    const resGet = await this.$input.value?.resolve({
-      method: "GET",
-      uri: track.uri,
-    });
-
-    const resHead = await this.$input.value?.resolve({
-      method: "HEAD",
-      uri: track.uri,
-    });
-
-    if (!resGet) return;
-
-    const request = "stream" in resGet
-      ? {
-        cacheId,
-        stream: resGet.stream,
-        tags: track.tags,
-      }
-      : {
-        cacheId,
-        tags: track.tags,
-        urls: {
-          get: resGet.url,
-          head: resHead && "url" in resHead ? resHead.url : resGet.url,
-        },
-      };
 
     if (this.$queue.value?.now()?.id !== track?.id) {
       return;
     }
 
-    const allArt = await this.$artwork.value?.artwork(request) ?? [];
+    const bytes = await this.$artwork.value?.get(track) ?? null;
 
     // Check if queue item has changed while fetching the artwork
     const currTrack = this.currentTrack();
-    const currCacheId = currTrack ? currTrack.id : undefined;
 
-    if (cacheId === currCacheId) {
-      const art = allArt[0];
-
+    if (track.id === currTrack?.id) {
       this.#artwork.set({
         previous: currArtwork.current
           ? { ...currArtwork.current, loaded: false }
           : null,
-        current: art
-          ? {
-            ...art,
-            hash: xxh32r(art.bytes).toString(),
-            index: (currArtwork.current?.index ?? 0) + 1,
-            loaded: false,
-            url: URL.createObjectURL(
-              new Blob(
-                [/** @type {ArrayBuffer} */ (art.bytes.buffer)],
-                { type: art.mime },
+        current: bytes
+          ? (() => {
+            const mime = detectMime(bytes);
+            return {
+              bytes,
+              mime,
+              hash: xxh32r(bytes).toString(),
+              index: (currArtwork.current?.index ?? 0) + 1,
+              loaded: false,
+              url: URL.createObjectURL(
+                new Blob([/** @type {ArrayBuffer} */ (bytes.buffer)], { type: mime }),
               ),
-            ),
-          }
+            };
+          })()
           : null,
       });
 
-      if (!art) {
+      if (!bytes) {
         this.#artworkColor.value = undefined;
         this.#artworkLightMode.value = false;
       }
@@ -480,7 +449,10 @@ class ArtworkController extends DiffuseElement {
             <!-- PROGRESS -->
 
             <div class="progress" @click="${this.seek}">
-              <progress max="100" value="${(this.audio()?.loadingState() === "loaded" ? (this.audio()?.progress() ?? 0) : 0) * 100}"></progress>
+              <progress max="100" value="${(this.audio()?.loadingState() ===
+                  "loaded"
+                ? (this.audio()?.progress() ?? 0)
+                : 0) * 100}"></progress>
               <div class="timestamps">
                 <time datetime="${this.#time.value}">${this.#time.value}</time>
                 <time datetime="${this.#time.value}">${this.#duration
@@ -562,6 +534,22 @@ class ArtworkController extends DiffuseElement {
 }
 
 export default ArtworkController;
+
+////////////////////////////////////////////
+// 🛠️
+////////////////////////////////////////////
+
+/**
+ * @param {Uint8Array} bytes
+ * @returns {string}
+ */
+function detectMime(bytes) {
+  if (bytes[0] === 0xFF && bytes[1] === 0xD8) return "image/jpeg";
+  if (bytes[0] === 0x89 && bytes[1] === 0x50) return "image/png";
+  if (bytes[0] === 0x47 && bytes[1] === 0x49) return "image/gif";
+  if (bytes[0] === 0x52 && bytes[1] === 0x49) return "image/webp";
+  return "image/jpeg";
+}
 
 ////////////////////////////////////////////
 // REGISTER

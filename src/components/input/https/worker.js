@@ -105,6 +105,12 @@ export async function list(cachedTracks = []) {
  * @type {Actions['resolve']}
  */
 export async function resolve({ method, uri }) {
+  if (uri.startsWith("blob:")) {
+    const expiresInSeconds = 60 * 60 * 24 * 365;
+    const expiresAtSeconds = Math.round(Date.now() / 1000) + expiresInSeconds;
+    return { url: uri, expiresAt: expiresAtSeconds };
+  }
+
   const parsed = parseURI(uri);
   if (!parsed) return undefined;
 

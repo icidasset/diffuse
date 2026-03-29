@@ -14,7 +14,21 @@ scripts:
 
 # ELEMENTS
 
+artwork:
+  - url: "components/artwork/audio-metadata/element.js"
+    title: "Audio Metadata"
+    desc: "Extracts embedded artwork from audio files using the music-metadata library."
+  - url: "components/artwork/last.fm/element.js"
+    title: "Last.fm"
+    desc: "Fetches cover art from the Last.fm API using track artist and album tags."
+  - url: "components/artwork/musicbrainz/element.js"
+    title: "MusicBrainz"
+    desc: "Fetches cover art from MusicBrainz and the Cover Art Archive using track artist and album tags."
+
 configurators:
+  - url: "components/configurator/artwork/element.js"
+    title: "Artwork"
+    desc: "Takes artwork components as children and tries each in sequence, returning the first non-null result."
   - url: "components/configurator/input/element.js"
     title: "Input"
     desc: "Allows for multiple inputs to be used at once."
@@ -106,6 +120,9 @@ orchestrators:
   - url: "components/orchestrator/sources/element.js"
     title: "Sources"
     desc: "Monitor tracks from the given output to form a list of sources based on the input's sources return value."
+  - url: "components/orchestrator/artwork/element.js"
+    title: "Artwork"
+    desc: "Fetches cover art for a given set of tracks, stored locally in indexedDB. Uses the artwork configurator to try each configured source in sequence."
   - url: "components/orchestrator/scoped-tracks/element.js"
     title: "Scoped Tracks"
     desc: "Supplies the tracks from the given output to the given search processor whenever the tracks collection changes. Additionally it can perform a search and other ways to reduce the scope of tracks based on the given scope engine. Provides a `tracks` signal similar to `output.tracks.collection`"
@@ -124,9 +141,6 @@ output:
       Store your user data on the storage associated with your ATProtocol identity. Data is lexicon shaped by default so this element takes in that data directly without any transformations.
 
 processors:
-  - url: "components/processor/artwork/element.js"
-    title: "Artwork"
-    desc: "Fetches cover art for a given set of tracks, stored locally in indexedDB. Checks the audio metadata first, then MusicBrainz and uses Last.fm as the fallback."
   - url: "components/processor/metadata/element.js"
     title: "Metadata"
     desc: "Fetch audio metadata for a given set of tracks, adding to the `Track` object."
@@ -219,6 +233,7 @@ definitions:
       Diffuse was built using these web components, consume these using the <a href="../build/">build tool</a>, the Javascript <a href="https://jsr.io/@toko/diffuse">package</a>, or the linked Javascript files down below.
     </p>
     <ul class="table-of-contents">
+      <li><a href="elements/#artwork">Artwork</a></li>
       <li><a href="elements/#configurators">Configurators</a></li>
       <li><a href="elements/#engines">Engines</a></li>
       <li><a href="elements/#input">Input</a></li>
@@ -237,6 +252,14 @@ definitions:
   <!-- ELEMENTS -->
   <section>
     <div class="columns">
+      {{ await comp.element({
+        title: "Artwork",
+        items: artwork,
+        content: `
+          Artwork sources for tracks. Each implements a <code>get(track)</code> action and returns artwork bytes or null. Use an artwork configurator to combine multiple sources.
+        `
+      }) }}
+
       {{ await comp.element({
         title: "Configurators",
         items: configurators,

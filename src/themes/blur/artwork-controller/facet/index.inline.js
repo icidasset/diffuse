@@ -10,7 +10,7 @@ await foundation.orchestrator.mediaSession();
 
 const [aud, art, fav, inp, out, que] = await Promise.all([
   foundation.engine.audio(),
-  foundation.processor.artwork(),
+  foundation.orchestrator.artwork(),
   foundation.orchestrator.favourites(),
   foundation.configurator.input(),
   foundation.orchestrator.output(),
@@ -19,7 +19,7 @@ const [aud, art, fav, inp, out, que] = await Promise.all([
 
 // Controller
 const dac = new ArtworkController();
-dac.setAttribute("artwork-processor-selector", art.selector);
+dac.setAttribute("artwork-selector", art.selector);
 dac.setAttribute("audio-engine-selector", aud.selector);
 dac.setAttribute("input-selector", inp.selector);
 dac.setAttribute("output-selector", out.selector);

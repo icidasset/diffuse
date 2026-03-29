@@ -14,6 +14,9 @@ export const GROUP = url.searchParams.get("group") ?? "facets";
  */
 const signals = {
   configurator: {
+    artwork: signal(
+      /** @type {import("~/components/configurator/artwork/element.js").CLASS | null} */ (null),
+    ),
     input: signal(
       /** @type {import("~/components/configurator/input/element.js").CLASS | null} */ (null),
     ),
@@ -38,6 +41,9 @@ const signals = {
   },
 
   orchestrator: {
+    artwork: signal(
+      /** @type {import("~/components/orchestrator/artwork/element.js").CLASS | null} */ (null),
+    ),
     autoQueue: signal(
       /** @type {import("~/components/orchestrator/auto-queue/element.js").CLASS | null} */ (null),
     ),
@@ -71,9 +77,6 @@ const signals = {
   },
 
   processor: {
-    artwork: signal(
-      /** @type {import("~/components/processor/artwork/element.js").CLASS | null} */ (null),
-    ),
     metadata: signal(
       /** @type {import("~/components/processor/metadata/element.js").CLASS | null} */ (null),
     ),
@@ -91,6 +94,7 @@ export const config = {
 
   // Elements
   configurator: {
+    artwork: configuratorArtwork,
     input,
     scrobbles,
   },
@@ -103,6 +107,7 @@ export const config = {
   },
 
   orchestrator: {
+    artwork,
     autoQueue,
     favourites,
     mediaSession,
@@ -116,7 +121,6 @@ export const config = {
   },
 
   processor: {
-    artwork,
     metadata,
     search,
   },
@@ -126,6 +130,7 @@ export const config = {
    */
   signals: {
     configurator: {
+      artwork: signals.configurator.artwork.get,
       input: signals.configurator.input.get,
       scrobbles: signals.configurator.scrobbles.get,
     },
@@ -138,6 +143,7 @@ export const config = {
     },
 
     orchestrator: {
+      artwork: signals.orchestrator.artwork.get,
       autoQueue: signals.orchestrator.autoQueue.get,
       favourites: signals.orchestrator.favourites.get,
       mediaSession: signals.orchestrator.mediaSession.get,
@@ -151,7 +157,6 @@ export const config = {
     },
 
     processor: {
-      artwork: signals.processor.artwork.get,
       metadata: signals.processor.metadata.get,
       search: signals.processor.search.get,
     },
@@ -189,6 +194,18 @@ export default config;
 // 🥡
 
 // Configurators
+
+async function configuratorArtwork() {
+  const { default: ArtworkConfigurator } = await import(
+    "~/components/configurator/artwork/element.js"
+  );
+
+  const ac = new ArtworkConfigurator();
+  ac.setAttribute("group", GROUP);
+  ac.setAttribute("id", "artwork");
+
+  return findExistingOrAdd(ac, signals.configurator.artwork);
+}
 
 async function input() {
   const { default: InputConfigurator } = await import(
@@ -269,16 +286,18 @@ async function scope() {
   return findExistingOrAdd(s, signals.engine.scope);
 }
 
-// Processors
+// Orchestrators (cont.)
 async function artwork() {
-  const { default: ArtworkProcessor } = await import(
-    "~/components/processor/artwork/element.js"
-  );
+  const [{ default: ArtworkOrchestrator }, ac] = await Promise.all([
+    import("~/components/orchestrator/artwork/element.js"),
+    configuratorArtwork(),
+  ]);
 
-  const a = new ArtworkProcessor();
+  const a = new ArtworkOrchestrator();
   a.setAttribute("group", GROUP);
+  a.setAttribute("artwork-selector", ac.selector);
 
-  return findExistingOrAdd(a, signals.processor.artwork);
+  return findExistingOrAdd(a, signals.orchestrator.artwork);
 }
 
 async function metadata() {
@@ -347,7 +366,7 @@ async function mediaSession() {
   const mso = new MediaSessionOrchestrator();
   mso.setAttribute("group", GROUP);
   mso.setAttribute("audio-engine-selector", a.selector);
-  mso.setAttribute("artwork-processor-selector", aw.selector);
+  mso.setAttribute("artwork-selector", aw.selector);
   mso.setAttribute("output-selector", o.selector);
   mso.setAttribute("queue-engine-selector", q.selector);
 

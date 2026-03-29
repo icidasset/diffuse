@@ -2,7 +2,7 @@ import { DiffuseElement } from "~/common/element.js";
 
 /**
  * @import {ProxiedActions} from "~/common/worker.d.ts"
- * @import {Actions} from "./types.d.ts"
+ * @import {Actions} from "~/components/artwork/types.d.ts"
  */
 
 ////////////////////////////////////////////
@@ -12,9 +12,9 @@ import { DiffuseElement } from "~/common/element.js";
 /**
  * @implements {ProxiedActions<Actions>}
  */
-class ArtworkProcessor extends DiffuseElement {
-  static NAME = "diffuse/processor/artwork";
-  static WORKER_URL = "components/processor/artwork/worker.js";
+class MusicBrainzArtwork extends DiffuseElement {
+  static NAME = "diffuse/artwork/musicbrainz";
+  static WORKER_URL = "components/artwork/musicbrainz/worker.js";
 
   constructor() {
     super();
@@ -22,18 +22,17 @@ class ArtworkProcessor extends DiffuseElement {
     /** @type {ProxiedActions<Actions>} */
     const p = this.workerProxy();
 
-    this.artwork = p.artwork;
-    this.supply = p.supply;
+    this.get = p.get;
   }
 }
 
-export default ArtworkProcessor;
+export default MusicBrainzArtwork;
 
 ////////////////////////////////////////////
 // REGISTER
 ////////////////////////////////////////////
 
-export const CLASS = ArtworkProcessor;
-export const NAME = "dp-artwork";
+export const CLASS = MusicBrainzArtwork;
+export const NAME = "da-musicbrainz";
 
-customElements.define(NAME, ArtworkProcessor);
+customElements.define(NAME, MusicBrainzArtwork);

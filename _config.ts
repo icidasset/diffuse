@@ -275,6 +275,7 @@ for (
 
 site.add([".html"]);
 site.add([".json"]);
+site.add([".webmanifest"]);
 
 site.use(brotli());
 site.use(sourceMaps());
