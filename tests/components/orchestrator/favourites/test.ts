@@ -244,6 +244,90 @@ describe("components/orchestrator/favourites", () => {
     expect(result.afterRemoveCount).toBe(0);
   });
 
+  it("isFavourite returns false before include", async () => {
+    const result = await testWeb(async () => {
+      const Output = await import(
+        "~/components/configurator/output/element.js"
+      );
+      const Favourites = await import(
+        "~/components/orchestrator/favourites/element.js"
+      );
+      const { tracks } = await import("~/testing/sample/tracks.js");
+
+      const output = new Output.CLASS();
+      output.id = "test-output";
+      document.body.append(output);
+
+      const fav = new Favourites.CLASS();
+      fav.setAttribute("output-selector", "#test-output");
+      document.body.append(fav);
+
+      await customElements.whenDefined(output.localName);
+      await customElements.whenDefined(fav.localName);
+
+      return fav.isFavourite(tracks[0]);
+    });
+
+    expect(result).toBe(false);
+  });
+
+  it("isFavourite returns true after include", async () => {
+    const result = await testWeb(async () => {
+      const Output = await import(
+        "~/components/configurator/output/element.js"
+      );
+      const Favourites = await import(
+        "~/components/orchestrator/favourites/element.js"
+      );
+      const { tracks } = await import("~/testing/sample/tracks.js");
+
+      const output = new Output.CLASS();
+      output.id = "test-output";
+      document.body.append(output);
+
+      const fav = new Favourites.CLASS();
+      fav.setAttribute("output-selector", "#test-output");
+      document.body.append(fav);
+
+      await customElements.whenDefined(output.localName);
+      await customElements.whenDefined(fav.localName);
+
+      await fav.include(tracks[0]);
+      return fav.isFavourite(tracks[0]);
+    });
+
+    expect(result).toBe(true);
+  });
+
+  it("isFavourite returns false after expel", async () => {
+    const result = await testWeb(async () => {
+      const Output = await import(
+        "~/components/configurator/output/element.js"
+      );
+      const Favourites = await import(
+        "~/components/orchestrator/favourites/element.js"
+      );
+      const { tracks } = await import("~/testing/sample/tracks.js");
+
+      const output = new Output.CLASS();
+      output.id = "test-output";
+      document.body.append(output);
+
+      const fav = new Favourites.CLASS();
+      fav.setAttribute("output-selector", "#test-output");
+      document.body.append(fav);
+
+      await customElements.whenDefined(output.localName);
+      await customElements.whenDefined(fav.localName);
+
+      await fav.include(tracks[0]);
+      await fav.expel(tracks[0]);
+      return fav.isFavourite(tracks[0]);
+    });
+
+    expect(result).toBe(false);
+  });
+
   it("toggles mixed tracks (some already favourited)", async () => {
     const favourites = await testWeb(async () => {
       const Output = await import(
