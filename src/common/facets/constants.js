@@ -12,4 +12,5 @@ export const STARTING_SET_URIS = [
   "facets/data/output-bundle/index.html",
   "facets/data/process-tracks/prelude/index.html",
   "facets/playback/auto-queue/prelude/index.html",
+  "facets/playback/preload/prelude/index.html",
 ];

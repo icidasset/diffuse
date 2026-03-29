@@ -73,16 +73,11 @@ class QueueAudioOrchestrator extends BroadcastableDiffuseElement {
     if (!queue) return;
 
     const activeItem = queue.now();
-    const nextItem = queue.future()[0] ?? null;
     const tracksCol = this.output?.tracks.collection();
     const tracks = tracksCol?.state === "loaded" ? tracksCol.data : undefined;
 
     const activeTrack = activeItem
       ? tracks?.find((t) => t.id === activeItem.id)
-      : undefined;
-
-    const nextTrack = nextItem
-      ? tracks?.find((t) => t.id === nextItem.id)
       : undefined;
 
     if ((await this.isLeader()) === false) return;
@@ -114,32 +109,6 @@ class QueueAudioOrchestrator extends BroadcastableDiffuseElement {
       audio: activeAudio,
       play: activeItem && isPlaying ? { audioId: activeItem.id } : undefined,
     });
-
-    // Preload next track after a delay
-    clearTimeout(this._preloadTimeout);
-    if (!nextTrack) return;
-
-    this._preloadTimeout = setTimeout(async () => {
-      const resolvedNextUri = await input.resolve({
-        method: "GET",
-        uri: nextTrack.uri,
-      });
-
-      const nextUrl = resolvedNextUri && !("stream" in resolvedNextUri)
-        ? resolvedNextUri.url
-        : undefined;
-
-      if (!nextUrl) return;
-
-      audio.supply({
-        audio: [...activeAudio, {
-          id: nextItem.id,
-          isPreload: true,
-          url: nextUrl,
-          track: nextTrack,
-        }],
-      });
-    }, 30_000);
   }
 
   async monitorAudioEnd() {

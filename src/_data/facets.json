@@ -107,6 +107,13 @@
     "desc": "The default setup for user-data storage output. Adds support for: AT Protocol and S3-compatible storage. For both of these a custom local-first syncing algorithm is used."
   },
   {
+    "url": "facets/playback/preload/prelude/index.html",
+    "title": "Preload Tracks",
+    "kind": "prelude",
+    "category": "Playback",
+    "desc": "Automatically preload the next track in the queue."
+  },
+  {
     "url": "facets/data/process-tracks/prelude/index.html",
     "title": "Process Tracks",
     "kind": "prelude",
