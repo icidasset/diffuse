@@ -16,6 +16,9 @@ const RAW = 0x55;
 const IDB_PREFIX = "~/components/orchestrator/artwork";
 const IDB_ARTWORK_PREFIX = `${IDB_PREFIX}/cache`;
 
+/** @type {Map<string, Promise<Uint8Array | null>>} */
+const inFlight = new Map();
+
 ////////////////////////////////////////////
 // ACTIONS
 ////////////////////////////////////////////
@@ -24,7 +27,15 @@ const IDB_ARTWORK_PREFIX = `${IDB_PREFIX}/cache`;
  * @type {ActionsWithTunnel<Actions>['get']}
  */
 export async function get({ data: track, ports }) {
-  return processRequest(track, ports);
+  const existing = inFlight.get(track.id);
+  if (existing) return existing;
+
+  const promise = processRequest(track, ports).finally(() => {
+    inFlight.delete(track.id);
+  });
+
+  inFlight.set(track.id, promise);
+  return promise;
 }
 
 ////////////////////////////////////////////

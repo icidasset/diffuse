@@ -41,6 +41,7 @@ export async function artwork(uri) {
     () => null,
   );
   if (!response?.ok) return null;
+  if (!response.headers.get("content-type")?.startsWith("image/")) return null;
 
   return new Uint8Array(await response.arrayBuffer());
 }

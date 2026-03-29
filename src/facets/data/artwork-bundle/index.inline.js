@@ -20,8 +20,8 @@ effect(() => {
 
   inputArtwork(artwork, input);
   audioMetadata(artwork, input);
-  lastFm(artwork);
   musicBrainz(artwork);
+  lastFm(artwork);
 });
 
 ////////////////////////////////////////////

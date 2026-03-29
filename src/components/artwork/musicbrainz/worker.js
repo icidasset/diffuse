@@ -79,9 +79,7 @@ async function search(track, variousArtists) {
   const album = track.tags?.album;
 
   const query = `release:"${escapeLucene(album || "")}"` +
-    (variousArtists
-      ? ``
-      : ` AND artistname:"${escapeLucene(artist || "")}"`);
+    (variousArtists ? `` : ` AND artistname:"${escapeLucene(artist || "")}"`);
   const encodedQuery = encodeURIComponent(query);
 
   return await fetch(
