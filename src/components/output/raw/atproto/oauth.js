@@ -81,7 +81,7 @@ export async function login(handle) {
   const location = globalThis.location;
 
   sessionStorage.setItem(
-    "diffuse/output/raw/atproto/oauth/redirect_path",
+    "oauth/callback/redirect_path",
     location.pathname + location.search,
   );
 
