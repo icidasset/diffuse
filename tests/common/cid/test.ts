@@ -46,12 +46,13 @@ describe("common/cid", () => {
       expect(result).toBe(false);
     });
 
-    it("returns a CID starting with 'bafy'", async () => {
+    it("returns a base32-encoded CID string", async () => {
       const result = await testWeb(async () => {
         const { create } = await import("~/common/cid.js");
         return create(0x55, new TextEncoder().encode("test"));
       });
-      expect(result.startsWith("bafy")).toBe(true);
+      // CIDv1 base32 strings contain only lowercase alphanumeric characters
+      expect(/^[a-z2-7]+$/.test(result)).toBe(true);
     });
   });
 

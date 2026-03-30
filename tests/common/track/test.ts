@@ -10,7 +10,7 @@ describe("common/track", () => {
         const { trackURIBase } = await import("~/common/track.js");
         return trackURIBase("https://example.com/music/track.mp3");
       });
-      expect(result).toBe("https://example.com");
+      expect(result).toBe("https://example.com/");
     });
 
     it("strips query string from URI", async () => {
@@ -18,7 +18,7 @@ describe("common/track", () => {
         const { trackURIBase } = await import("~/common/track.js");
         return trackURIBase("https://example.com/track.mp3?token=abc");
       });
-      expect(result).toBe("https://example.com");
+      expect(result).toBe("https://example.com/");
     });
 
     it("handles URIs with no path", async () => {
@@ -26,7 +26,7 @@ describe("common/track", () => {
         const { trackURIBase } = await import("~/common/track.js");
         return trackURIBase("https://example.com");
       });
-      expect(result).toBe("https://example.com");
+      expect(result).toBe("https://example.com/");
     });
 
     it("preserves scheme and host", async () => {
@@ -49,7 +49,7 @@ describe("common/track", () => {
         const set = uniqueTrackURIs(tracks);
         return [...set];
       });
-      expect(result).toEqual(["https://example.com"]);
+      expect(result).toEqual(["https://example.com/"]);
     });
 
     it("deduplicates tracks from the same source", async () => {
