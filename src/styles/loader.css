@@ -10,6 +10,15 @@ body {
   color: var(--text-color);
 }
 
+#container {
+  opacity: 0;
+  transition: opacity 750ms;
+
+  &.has-loaded {
+    opacity: 1;
+  }
+}
+
 @scope (.diffuse) {
   :scope {
     color: var(--text-color);

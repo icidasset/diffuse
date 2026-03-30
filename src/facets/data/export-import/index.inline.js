@@ -5,11 +5,8 @@ import { effect } from "~/common/signal.js";
 // Set doc title
 foundation.setup({ title: "Export & Import | Diffuse" });
 
-// Doc loader
-const main = /** @type {HTMLElement} */ (document.querySelector("main"));
-main.classList.add("has-loaded");
-
 // Setup
+const main = /** @type {HTMLElement} */ (document.querySelector("main"));
 const output = await foundation.orchestrator.output();
 
 // Elements
@@ -140,7 +137,6 @@ importPlaylistItemsBtn.onclick = async () => {
     showStatus(`Import failed: ${/** @type {Error} */ (err).message}`, "error");
   }
 };
-
 // Import facets
 importFacetsBtn.onclick = async () => {
   /** @type {any[]} */
@@ -155,3 +151,9 @@ importFacetsBtn.onclick = async () => {
     showStatus(`Import failed: ${/** @type {Error} */ (err).message}`, "error");
   }
 };
+
+////////////////////////////////////////////
+// 🚀
+////////////////////////////////////////////
+
+foundation.ready();

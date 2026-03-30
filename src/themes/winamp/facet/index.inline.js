@@ -6,10 +6,6 @@ import WindowManager from "~/themes/winamp/window-manager/element.js";
 // Set doc title
 foundation.setup({ title: "Winamp | Diffuse" });
 
-// Doc loader
-const main = /** @type {HTMLElement} */ (document.querySelector("main"));
-main.classList.add("has-loaded");
-
 /**
  * @import {OutputElement} from "~/components/output/types.d.ts"
  */
@@ -101,3 +97,9 @@ function windowManager() {
   if (w instanceof WindowManager) return w;
   return null;
 }
+
+////////////////////////////////////////////
+// 🚀
+////////////////////////////////////////////
+
+foundation.ready();

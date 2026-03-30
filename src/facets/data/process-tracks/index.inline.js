@@ -6,7 +6,6 @@ import foundation from "~/common/foundation.js";
 foundation.setup({ title: "Process Tracks | Diffuse" });
 
 const main = /** @type {HTMLElement} */ (document.querySelector("main"));
-main.classList.add("has-loaded");
 
 const orchestrator = await foundation.orchestrator.processTracks({
   disableWhenReady: true,
@@ -76,3 +75,9 @@ effect(() => {
     /** @type {HTMLElement} */ (placeholder),
   );
 });
+
+////////////////////////////////////////////
+// 🚀
+////////////////////////////////////////////
+
+foundation.ready();

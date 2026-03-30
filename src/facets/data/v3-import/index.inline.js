@@ -4,7 +4,6 @@ import foundation from "~/common/foundation.js";
 foundation.setup({ title: "V3.x Import | Diffuse" });
 
 const main = /** @type {HTMLElement} */ (document.querySelector("main"));
-main.classList.add("has-loaded");
 
 /**
  * @import {PlaylistItem, Track} from "~/definitions/types.d.ts"
@@ -164,3 +163,9 @@ importPlaylistItemsBtn.onclick = async () => {
     showStatus(`Import failed: ${/** @type {Error} */ (err).message}`, "error");
   }
 };
+
+////////////////////////////////////////////
+// 🚀
+////////////////////////////////////////////
+
+foundation.ready();

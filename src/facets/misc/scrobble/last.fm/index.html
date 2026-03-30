@@ -11,16 +11,6 @@
     margin: 0;
   }
 
-  main {
-    opacity: 0;
-    pointer-events: none;
-    transition: opacity 750ms;
-
-    &.has-loaded {
-      opacity: 1;
-      pointer-events: auto;
-    }
-  }
 
   wa-card {
     width: min(360px, calc(100vw - 2rem));
@@ -104,8 +94,3 @@
 </main>
 
 <script type="module" src="facets/misc/scrobble/last.fm/index.inline.js"></script>
-
-<script type="module">
-  await customElements.whenDefined("wa-button");
-  document.querySelector("main")?.classList.add("has-loaded");
-</script>

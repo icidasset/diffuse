@@ -164,3 +164,9 @@ resetCredsBtn.onclick = () => {
   apiKeyInput.value = "";
   apiSecretInput.value = "";
 };
+
+////////////////////////////////////////////
+// 🚀
+////////////////////////////////////////////
+
+foundation.ready();

@@ -7,11 +7,8 @@ const ACTIVE_CLASS = "button--active";
 // Set doc title
 foundation.setup({ title: "Automatic Queue | Diffuse" });
 
-// Doc load
-const main = /** @type {HTMLElement} */ (document.querySelector("main"));
-main.classList.add("has-loaded");
-
 // Setup
+const main = /** @type {HTMLElement} */ (document.querySelector("main"));
 await foundation.orchestrator.autoQueue();
 
 const [repeatShuffle, scope, output] = await Promise.all([
@@ -135,3 +132,9 @@ sortDirectionBtn.onclick = () => {
   const dir = scope.sortDirection() ?? "desc";
   scope.setSortDirection(dir === "asc" ? "desc" : "asc");
 };
+
+////////////////////////////////////////////
+// 🚀
+////////////////////////////////////////////
+
+foundation.ready();

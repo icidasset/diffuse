@@ -24,3 +24,9 @@ dac.setAttribute("favourites-orchestrator-selector", fav.selector);
 
 // Add to DOM
 (document.querySelector("#container") ?? document.body).append(dac);
+
+////////////////////////////////////////////
+// 🚀
+////////////////////////////////////////////
+
+foundation.ready();

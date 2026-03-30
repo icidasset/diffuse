@@ -4,10 +4,6 @@ import BrowserElement from "~/themes/winamp/browser/element.js";
 // Set doc title
 foundation.setup({ title: "Browser | Winamp | Diffuse" });
 
-// Doc loader
-const window = /** @type {HTMLElement} */ (document.querySelector(".window"));
-window.classList.add("has-loaded");
-
 const [out, que, scp, trc] = await Promise.all([
   foundation.orchestrator.output(),
   foundation.engine.queue(),
@@ -22,3 +18,9 @@ el.setAttribute("scope-engine-selector", scp.selector);
 el.setAttribute("tracks-selector", trc.selector);
 
 document.querySelector("#placeholder")?.replaceWith(el);
+
+////////////////////////////////////////////
+// 🚀
+////////////////////////////////////////////
+
+foundation.ready();

@@ -176,7 +176,21 @@ export const config = {
    */
   setup: ({ title }) => {
     document.title = title;
+  },
+
+  /**
+   * Hide the loader and fade in the facet content by adding the `has-loaded`
+   * class to `#container` after two animation frames (so the initial opacity:0
+   * is painted first and the CSS transition actually runs).
+   */
+  ready: () => {
     config.hideLoader();
+
+    requestAnimationFrame(() => {
+      requestAnimationFrame(() => {
+        document.querySelector("#container")?.classList.add("has-loaded");
+      });
+    });
   },
 };
 
