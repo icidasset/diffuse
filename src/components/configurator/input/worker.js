@@ -1,5 +1,6 @@
 import * as IDB from "idb-keyval";
 import * as URI from "fast-uri";
+import * as Cid from "~/common/cid.js";
 
 import { groupTracksPerScheme, groupUrisPerScheme } from "~/common/utils.js";
 import { ostiary, rpc, workerProxy } from "~/common/worker.js";
@@ -16,9 +17,6 @@ import { ostiary, rpc, workerProxy } from "~/common/worker.js";
 ////////////////////////////////////////////
 
 const CACHE_KEY_PREFIX = "diffuse/components/configurator/input/cache/";
-
-/** @type {Map<string, string>} */
-const blobUrls = new Map();
 
 ////////////////////////////////////////////
 // INPUT ACTIONS
@@ -58,8 +56,8 @@ export async function consult({ data, ports }) {
  * @type {ActionsWithTunnel<Actions>['detach']}
  */
 export async function detach({ data, ports }) {
-  const cachedTracks = data.tracks;
-  const groups = groupTracks(cachedTracks, ports);
+  const currentTracks = data.tracks;
+  const groups = groupTracks(currentTracks, ports);
 
   const promises = Object.entries(groups).map(
     async ([scheme, tracksGroup]) => {
@@ -154,19 +152,6 @@ export async function list({ data, ports }) {
 export async function resolve({ data, ports }) {
   const uri = data.uri;
 
-  const cachedBlob =
-    /** @type {Blob | undefined} */ (await IDB.get(CACHE_KEY_PREFIX + uri));
-  if (cachedBlob) {
-    let blobUrl = blobUrls.get(uri);
-
-    if (!blobUrl) {
-      blobUrl = URL.createObjectURL(cachedBlob);
-      blobUrls.set(uri, blobUrl);
-    }
-
-    return { expiresAt: Infinity, url: blobUrl };
-  }
-
   const scheme = uri.split(":", 1)[0];
   const input = grabInput(scheme, ports);
   if (!input) return undefined;
@@ -213,14 +198,22 @@ export async function listCached() {
 export async function removeFromCache({ data }) {
   const uris = data;
 
-  await Promise.all(uris.map(async (uri) => {
-    const blobUrl = blobUrls.get(uri);
-    if (blobUrl) {
-      URL.revokeObjectURL(blobUrl);
-      blobUrls.delete(uri);
-    }
-    await IDB.del(CACHE_KEY_PREFIX + uri);
-  }));
+  await Promise.all(uris.map((uri) => IDB.del(CACHE_KEY_PREFIX + uri)));
+}
+
+/**
+ * @type {ActionsWithTunnel<Actions>['cacheBlob']}
+ */
+export async function cacheBlob({ data }) {
+  const blob = data;
+  const buffer = await blob.arrayBuffer();
+  const bytes = new Uint8Array(buffer);
+  const cid = await Cid.create(0x55, bytes);
+  const uri = `ephemeral+cache://${cid}`;
+  if (await IDB.get(CACHE_KEY_PREFIX + uri) === undefined) {
+    await IDB.set(CACHE_KEY_PREFIX + uri, blob);
+  }
+  return uri;
 }
 
 ////////////////////////////////////////////
@@ -237,6 +230,7 @@ ostiary((context) => {
     resolve,
 
     cache,
+    cacheBlob,
     listCached,
     removeFromCache,
   });

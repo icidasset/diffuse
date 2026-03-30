@@ -69,7 +69,7 @@ class Sources extends BroadcastableDiffuseElement {
           }
         } else {
           const dep = deps[scheme];
-          if (!dep) sources = [];
+          if (!dep) sources = tracks.map((t) => ({ label: t.uri, uri: t.uri }));
           else sources = dep.sources(tracks);
         }
 

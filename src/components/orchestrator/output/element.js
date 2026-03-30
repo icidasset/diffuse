@@ -144,6 +144,7 @@ class OutputOrchestrator extends DiffuseElement {
       <dtor-default
         id="do-output__output"
         output-selector="#do-output__dtor-initial-contents"
+        group="${ifDefined(group)}"
       ></dtor-default>
     `;
   }

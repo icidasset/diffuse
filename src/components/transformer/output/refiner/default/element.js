@@ -22,17 +22,13 @@ class DefaultOutputRefinerTransformer extends OutputTransformer {
 
     const base = this.base();
 
-    // Ephemeral signals
-    const ephemeralPlaylistItems = signal(/** @type {any[]} */ ([]));
-    const ephemeralTracks = signal(/** @type {any[]} */ ([]));
-
     // Restore stored ephemeral items
     IDB.get(IDB_KEY_PLAYLISTS).then((items) => {
-      if (items) ephemeralPlaylistItems.set(items);
+      if (items) this.#ephemeralPlaylistItems.set(items);
     });
 
     IDB.get(IDB_KEY_TRACKS).then((items) => {
-      if (items) ephemeralTracks.set(items);
+      if (items) this.#ephemeralTracks.set(items);
     });
 
     /** @type {OutputManagerDeputy} */
@@ -52,7 +48,7 @@ class DefaultOutputRefinerTransformer extends OutputTransformer {
           if (col.state !== "loaded") return col;
           return {
             state: "loaded",
-            data: [...col.data, ...ephemeralPlaylistItems.get()],
+            data: [...col.data, ...this.#ephemeralPlaylistItems.get()],
           };
         }),
         save: async (newPlaylists) => {
@@ -69,7 +65,7 @@ class DefaultOutputRefinerTransformer extends OutputTransformer {
           });
 
           await IDB.set(IDB_KEY_PLAYLISTS, ephemeral);
-          ephemeralPlaylistItems.set(ephemeral);
+          this.#ephemeralPlaylistItems.set(ephemeral);
 
           await base.playlistItems.save(filtered);
         },
@@ -81,7 +77,7 @@ class DefaultOutputRefinerTransformer extends OutputTransformer {
           if (col.state !== "loaded") return col;
           return {
             state: "loaded",
-            data: [...col.data, ...ephemeralTracks.get()],
+            data: [...col.data, ...this.#ephemeralTracks.get()],
           };
         }),
         save: async (newTracks) => {
@@ -98,7 +94,7 @@ class DefaultOutputRefinerTransformer extends OutputTransformer {
           });
 
           await IDB.set(IDB_KEY_TRACKS, ephemeral);
-          ephemeralTracks.set(ephemeral);
+          this.#ephemeralTracks.set(ephemeral);
 
           await base.tracks.save(filtered);
         },
@@ -113,6 +109,52 @@ class DefaultOutputRefinerTransformer extends OutputTransformer {
     this.playlistItems = manager.playlistItems;
     this.tracks = manager.tracks;
     this.ready = manager.ready;
+  }
+
+  // SIGNALS
+
+  #ephemeralPlaylistItems = signal(/** @type {PlaylistItem[]} */ ([]));
+  #ephemeralTracks = signal(/** @type {Track[]} */ ([]));
+
+  // LIFECYCLE
+
+  /** @override */
+  connectedCallback() {
+    if (this.hasAttribute("group")) {
+      const actions = this.broadcast(IDB_KEY_TRACKS, {
+        getEphemeralPlaylistItems: {
+          strategy: "leaderOnly",
+          fn: this.#ephemeralPlaylistItems.get,
+        },
+        setEphemeralPlaylistItems: {
+          strategy: "replicate",
+          fn: this.#ephemeralPlaylistItems.set,
+        },
+        getEphemeralTracks: {
+          strategy: "leaderOnly",
+          fn: this.#ephemeralTracks.get,
+        },
+        setEphemeralTracks: {
+          strategy: "replicate",
+          fn: this.#ephemeralTracks.set,
+        },
+      });
+
+      if (actions) {
+        this.#ephemeralPlaylistItems.set = actions.setEphemeralPlaylistItems;
+        this.#ephemeralTracks.set = actions.setEphemeralTracks;
+
+        actions.getEphemeralPlaylistItems().then((items) => {
+          this.#ephemeralPlaylistItems.value = items;
+        });
+
+        actions.getEphemeralTracks().then((tracks) => {
+          this.#ephemeralTracks.value = tracks;
+        });
+      }
+    }
+
+    super.connectedCallback();
   }
 }
 

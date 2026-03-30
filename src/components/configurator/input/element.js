@@ -35,6 +35,7 @@ class InputConfigurator extends DiffuseElement {
     this.resolve = proxy.resolve;
 
     this.cache = proxy.cache;
+    this.cacheBlob = proxy.cacheBlob;
     this.listCached = proxy.listCached;
     this.removeFromCache = proxy.removeFromCache;
   }

@@ -155,6 +155,85 @@ describe("components/configurator/input", () => {
     expect(result.supported).toBe(true);
   });
 
+  it("cacheBlob stores a blob and returns an ephemeral+cache:// URI", async () => {
+    const result = await testWeb(async () => {
+      const mod = await import(
+        "~/components/configurator/input/element.js"
+      );
+      const configurator = new mod.CLASS();
+      document.body.append(configurator);
+
+      const blob = new Blob(["audio data"], { type: "audio/mpeg" });
+      return configurator.cacheBlob(blob);
+    });
+
+    expect(result).toMatch(/^ephemeral\+cache:\/\//);
+  });
+
+  it("cacheBlob returns the same URI for identical blobs", async () => {
+    const [uri1, uri2] = await testWeb(async () => {
+      const mod = await import(
+        "~/components/configurator/input/element.js"
+      );
+      const configurator = new mod.CLASS();
+      document.body.append(configurator);
+
+      const uri1 = await configurator.cacheBlob(
+        new Blob(["same content"], { type: "audio/mpeg" }),
+      );
+      const uri2 = await configurator.cacheBlob(
+        new Blob(["same content"], { type: "audio/mpeg" }),
+      );
+      return [uri1, uri2];
+    });
+
+    expect(uri1).toBe(uri2);
+  });
+
+  it("cacheBlob returns different URIs for different blobs", async () => {
+    const [uri1, uri2] = await testWeb(async () => {
+      const mod = await import(
+        "~/components/configurator/input/element.js"
+      );
+      const configurator = new mod.CLASS();
+      document.body.append(configurator);
+
+      const uri1 = await configurator.cacheBlob(
+        new Blob(["content A"], { type: "audio/mpeg" }),
+      );
+      const uri2 = await configurator.cacheBlob(
+        new Blob(["content B"], { type: "audio/mpeg" }),
+      );
+      return [uri1, uri2];
+    });
+
+    expect(uri1).not.toBe(uri2);
+  });
+
+  it("removeFromCache deletes a previously cached blob", async () => {
+    const result = await testWeb(async () => {
+      const IDB = await import("idb-keyval");
+      const { CACHE_KEY_PREFIX } = await import(
+        "~/components/input/ephemeral-cache/constants.js"
+      );
+      const mod = await import(
+        "~/components/configurator/input/element.js"
+      );
+      const configurator = new mod.CLASS();
+      document.body.append(configurator);
+
+      const uri = await configurator.cacheBlob(
+        new Blob(["to be removed"], { type: "audio/mpeg" }),
+      );
+      await configurator.removeFromCache([uri]);
+
+      const stored = await IDB.get(CACHE_KEY_PREFIX + uri);
+      return stored ?? null;
+    });
+
+    expect(result).toBe(null);
+  });
+
   it("resolve with an HTTPS URI returns a url via the HTTPS input", async () => {
     const result = await testWeb(async () => {
       const mod = await import(

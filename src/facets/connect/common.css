@@ -92,6 +92,29 @@ wa-card {
   flex-shrink: 0;
 }
 
+.dropzone {
+  align-items: center;
+  border: 2px dashed var(--wa-color-neutral-border-quiet);
+  border-radius: var(--wa-border-radius-m);
+  color: var(--wa-color-text-quiet);
+  display: flex;
+  flex-direction: column;
+  gap: var(--wa-space-xs);
+  font-size: var(--wa-font-size-s);
+  justify-content: center;
+  padding: var(--wa-space-l);
+  transition:
+    background-color 150ms,
+    border-color 150ms,
+    color 150ms;
+
+  &.dropzone--active {
+    background-color: var(--wa-color-surface-sunken);
+    border-color: var(--wa-color-brand-500);
+    color: var(--wa-color-text-normal);
+  }
+}
+
 [hidden] {
   display: none !important;
 }
