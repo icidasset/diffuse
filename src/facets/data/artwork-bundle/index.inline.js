@@ -8,6 +8,7 @@ import { NAME as MUSICBRAINZ_NAME } from "~/components/artwork/musicbrainz/eleme
 
 /**
  * @import ArtworkConfigurator from "~/components/configurator/artwork/element.js"
+ * @import InputOrchestrator from "~/components/configurator/input/element.js"
  */
 
 /**
@@ -30,7 +31,7 @@ effect(() => {
 
 /**
  * @param {ArtworkConfigurator} artwork
- * @param {import("~/components/configurator/input/element.js").default} input
+ * @param {InputOrchestrator} input
  */
 export function inputArtwork(artwork, input) {
   const el = document.createElement(INPUT_NAME);
@@ -44,7 +45,7 @@ export function inputArtwork(artwork, input) {
 
 /**
  * @param {ArtworkConfigurator} artwork
- * @param {import("~/components/configurator/input/element.js").default} input
+ * @param {InputOrchestrator} input
  */
 export function audioMetadata(artwork, input) {
   const el = document.createElement(AUDIO_METADATA_NAME);

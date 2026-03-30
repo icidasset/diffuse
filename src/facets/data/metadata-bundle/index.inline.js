@@ -5,6 +5,7 @@ import { NAME as AUDIO_FILE_NAME } from "~/components/metadata/audio-file/elemen
 
 /**
  * @import MetadataConfigurator from "~/components/configurator/metadata/element.js"
+ * @import InputOrchestrator from "~/components/configurator/input/element.js"
  */
 
 /**
@@ -24,7 +25,7 @@ effect(() => {
 
 /**
  * @param {MetadataConfigurator} metadata
- * @param {import("~/components/configurator/input/element.js").default} input
+ * @param {InputOrchestrator} input
  */
 export function audioFile(metadata, input) {
   const el = document.createElement(AUDIO_FILE_NAME);
