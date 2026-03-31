@@ -1,0 +1,74 @@
+<style>
+  @import "./vendor/@awesome.me/webawesome/styles/webawesome.css" layer(wa);
+
+  @layer base, diffuse, wa;
+
+  #container {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    min-height: 100dvh;
+    margin: 0;
+  }
+
+  wa-card {
+    width: min(360px, calc(100vw - 2rem));
+  }
+
+  .card-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+  }
+
+  .card-body {
+    display: flex;
+    flex-direction: column;
+    gap: var(--wa-space-m);
+  }
+
+  [hidden] {
+    display: none !important;
+  }
+
+  p {
+    margin: 0;
+  }
+</style>
+
+<main class="wa-theme-default">
+  <wa-card>
+    <div slot="header" class="card-header">
+      <strong>Rocksky</strong>
+    </div>
+
+    <div id="state-connect" class="card-body">
+      <div id="state-no-atproto" class="card-body">
+        <p>Sign in with your AT Protocol identity first, then connect to Rocksky.</p>
+        <wa-input id="handle-input" label="Handle" placeholder="you.bsky.social"></wa-input>
+        <wa-button id="atproto-sign-in-btn" variant="neutral" appearance="outlined">
+          <wa-icon slot="start" library="phosphor/bold" name="at"></wa-icon>
+          Sign in with AT Protocol
+        </wa-button>
+      </div>
+
+      <div id="state-has-atproto" class="card-body" hidden>
+        <p>Connect your Rocksky account using your AT Protocol identity.</p>
+        <wa-button id="sign-in-btn" variant="brand" appearance="filled">
+          <wa-icon slot="start" library="phosphor/bold" name="plugs"></wa-icon>
+          Connect
+        </wa-button>
+      </div>
+    </div>
+
+    <div id="state-connected" class="card-body" hidden>
+      <p id="handle-paragraph" hidden>Connected as <strong id="handle-text"></strong>.</p>
+      <wa-button id="sign-out-btn" variant="neutral" appearance="outlined" hidden>
+        <wa-icon slot="start" library="phosphor/bold" name="plugs-connecte"></wa-icon>
+        Disconnect
+      </wa-button>
+    </div>
+  </wa-card>
+</main>
+
+<script type="module" src="facets/misc/scrobble/rocksky/index.inline.js"></script>

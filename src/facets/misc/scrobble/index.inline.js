@@ -20,4 +20,12 @@ async function setup() {
   const lastFm = new LastFmScrobbler();
   lastFm.setAttribute("group", foundation.GROUP);
   configurator.append(lastFm);
+
+  const { default: RockskyScrobbler } = await import(
+    "~/components/supplement/rocksky/element.js"
+  );
+
+  const rocksky = new RockskyScrobbler();
+  rocksky.setAttribute("group", foundation.GROUP);
+  configurator.append(rocksky);
 }
