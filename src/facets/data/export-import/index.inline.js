@@ -107,18 +107,31 @@ fileInput.onchange = async () => {
   }
 };
 
+/**
+ * @param {HTMLButtonElement} btn
+ * @param {string} label
+ */
+function setButtonLabel(btn, label) {
+  /** @type {ChildNode} */ (btn.querySelector(".with-icon")?.lastChild).textContent = label;
+}
+
 // Import tracks
 importTracksBtn.onclick = async () => {
   /** @type {any[]} */
   const tracks = json?.tracks;
   if (!Array.isArray(tracks) || tracks.length === 0) return;
 
+  importTracksBtn.disabled = true;
+  setButtonLabel(importTracksBtn, " Importing ...");
   try {
     await output.tracks.save(tracks);
     showStatus(`Imported ${tracks.length} track(s).`, "success");
   } catch (err) {
     console.error("Import failed:", err);
     showStatus(`Import failed: ${/** @type {Error} */ (err).message}`, "error");
+  } finally {
+    setButtonLabel(importTracksBtn, " Import tracks");
+    importTracksBtn.disabled = false;
   }
 };
 
@@ -128,6 +141,8 @@ importPlaylistItemsBtn.onclick = async () => {
   const playlistItems = json?.playlistItems;
   if (!Array.isArray(playlistItems) || playlistItems.length === 0) return;
 
+  importPlaylistItemsBtn.disabled = true;
+  setButtonLabel(importPlaylistItemsBtn, " Importing ...");
   try {
     await output.playlistItems.save(playlistItems);
     const playlistCount = new Set(playlistItems.map((p) => p.playlist)).size;
@@ -135,20 +150,29 @@ importPlaylistItemsBtn.onclick = async () => {
   } catch (err) {
     console.error("Import failed:", err);
     showStatus(`Import failed: ${/** @type {Error} */ (err).message}`, "error");
+  } finally {
+    setButtonLabel(importPlaylistItemsBtn, " Import playlist items");
+    importPlaylistItemsBtn.disabled = false;
   }
 };
+
 // Import facets
 importFacetsBtn.onclick = async () => {
   /** @type {any[]} */
   const facets = json?.facets;
   if (!Array.isArray(facets) || facets.length === 0) return;
 
+  importFacetsBtn.disabled = true;
+  setButtonLabel(importFacetsBtn, " Importing ...");
   try {
     await output.facets.save(facets);
     showStatus(`Imported ${facets.length} facet(s).`, "success");
   } catch (err) {
     console.error("Import failed:", err);
     showStatus(`Import failed: ${/** @type {Error} */ (err).message}`, "error");
+  } finally {
+    setButtonLabel(importFacetsBtn, " Import facets");
+    importFacetsBtn.disabled = false;
   }
 };
 

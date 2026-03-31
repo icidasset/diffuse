@@ -4,7 +4,6 @@ import { encode } from "@atcute/cbor";
 import { xxh32r } from "xxh32/dist/raw.js";
 import * as Repo from "@atcute/repo";
 import * as IDB from "idb-keyval";
-import * as TID from "@atcute/tid";
 
 import { computed, signal } from "~/common/signal.js";
 import { BroadcastedOutputElement, outputManager } from "../../common.js";
@@ -101,10 +100,11 @@ class ATProtoOutput extends BroadcastedOutputElement {
           const bundles = [];
 
           for (let i = 0; i < data.length; i += 100) {
+            const chunk = data.slice(i, i + 100);
             bundles.push({
               $type: "sh.diffuse.output.trackBundle",
-              id: TID.now(),
-              tracks: data.slice(i, i + 100),
+              id: xxh32r(encode(chunk)).toString(16),
+              tracks: chunk,
             });
           }
 
@@ -127,6 +127,8 @@ class ATProtoOutput extends BroadcastedOutputElement {
   #did = signal(/** @type {`did:${string}:${string}` | null} */ (null));
   #isOnline = signal(navigator.onLine);
   #rev = signal(/** @type {string | null} */ (null));
+  #revFetchedAt = 0;
+  #writing = 0;
 
   did = this.#did.get;
   rev = this.#rev.get;
@@ -324,6 +326,7 @@ class ATProtoOutput extends BroadcastedOutputElement {
     );
 
     if (touched.size === 0) return;
+    if (this.#writing > 0) return;
 
     if (touched.has("sh.diffuse.output.facet")) this.#manager.facets.reload();
     if (touched.has("sh.diffuse.output.playlistItem")) {
@@ -355,6 +358,7 @@ class ATProtoOutput extends BroadcastedOutputElement {
       ));
 
       this.#rev.value = result?.rev;
+      this.#revFetchedAt = Date.now();
       return result?.rev;
     } catch (err) {
       if (this.#isSessionError(err)) {
@@ -377,7 +381,11 @@ class ATProtoOutput extends BroadcastedOutputElement {
     const rpc = this.#rpc;
     if (!rpc || !did) return null;
 
-    const latestRev = await this.getLatestCommit();
+    const REV_TTL_MS = 5_000;
+    const latestRev =
+      (Date.now() - this.#revFetchedAt < REV_TTL_MS && this.#rev.value)
+        ? this.#rev.value
+        : await this.getLatestCommit();
     if (!latestRev) return null;
 
     const IDB_KEY = `diffuse/output/raw/atproto/repo/${did}`;
@@ -446,6 +454,7 @@ class ATProtoOutput extends BroadcastedOutputElement {
 
     if (!rpc || !did) return;
 
+    this.#writing++;
     try {
       // 1. Fetch current state
       /** @type {Map<string, { rkey: string, value: unknown }>} */
@@ -544,13 +553,8 @@ class ATProtoOutput extends BroadcastedOutputElement {
         // Wait until the sliding window has room for this batch
         while (true) {
           const window = await loadWindow();
-          const uniqueInWindow = new Set(window.map((e) => e.id));
-          const batchIds = batch.map((op) => op.rkey ?? op.value?.id).filter(
-            Boolean,
-          );
-          const newIds = batchIds.filter((id) => !uniqueInWindow.has(id));
 
-          if (uniqueInWindow.size + newIds.length <= RATE_LIMIT) break;
+          if (window.length + batch.length <= RATE_LIMIT) break;
 
           // Wait until the oldest entry in the window expires
           const oldest = window.reduce((a, b) => a.ts < b.ts ? a : b);
@@ -587,6 +591,8 @@ class ATProtoOutput extends BroadcastedOutputElement {
       }
 
       throw err;
+    } finally {
+      this.#writing--;
     }
   }
 }

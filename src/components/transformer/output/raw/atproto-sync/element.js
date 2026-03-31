@@ -82,10 +82,13 @@ class ATProtoOutputSyncTransformer extends OutputTransformer {
           await l[name].save(newData);
 
           if (remote.ready()) {
-            await remote[name].save(newData);
-            const rev = this.#atproto()?.rev();
-            if (rev) this.#storeRev(rev);
-            this.#clearDirty();
+            remote[name].save(newData).then(() => {
+              const rev = this.#atproto()?.rev();
+              if (rev) this.#storeRev(rev);
+              this.#clearDirty();
+            }).catch((err) => {
+              console.error(err);
+            });
           } else {
             this.#markDirty();
           }
