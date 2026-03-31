@@ -140,13 +140,19 @@
     "title": "Scrobble",
     "kind": "prelude",
     "category": "Misc",
-    "desc": "Enable scrobbling, keep track of what you're listening to. Adds support for these scrobblers: Last.fm, Rocksky"
+    "desc": "Enable scrobbling, keep track of what you're listening to. Adds support for these scrobblers: Last.fm, ListenBrainz, Rocksky"
   },
   {
     "url": "facets/misc/scrobble/last.fm/index.html",
     "title": "Scrobble / Last.fm",
     "category": "Misc",
     "desc": "Connect to Last.fm to setup the Last.fm scrobbler."
+  },
+  {
+    "url": "facets/misc/scrobble/listenbrainz/index.html",
+    "title": "Scrobble / ListenBrainz",
+    "category": "Misc",
+    "desc": "Connect to ListenBrainz to setup the ListenBrainz scrobbler."
   },
   {
     "url": "facets/misc/scrobble/rocksky/index.html",

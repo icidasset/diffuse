@@ -28,4 +28,12 @@ async function setup() {
   const rocksky = new RockskyScrobbler();
   rocksky.setAttribute("group", foundation.GROUP);
   configurator.append(rocksky);
+
+  const { default: ListenBrainzScrobbler } = await import(
+    "~/components/supplement/listenbrainz/element.js"
+  );
+
+  const listenBrainz = new ListenBrainzScrobbler();
+  listenBrainz.setAttribute("group", foundation.GROUP);
+  configurator.append(listenBrainz);
 }
