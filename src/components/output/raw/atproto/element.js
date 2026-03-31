@@ -27,6 +27,10 @@ import {
 // ELEMENT
 ////////////////////////////////////////////
 
+const WRITE_WINDOW_MS = 3_600_000;
+const WRITE_RATE_LIMIT = 1500;
+const WRITE_IDB_KEY = "diffuse/output/raw/atproto/writes";
+
 /** @type {Set<string>} */
 const WATCHED_COLLECTIONS = new Set([
   "sh.diffuse.output.facet",
@@ -129,6 +133,12 @@ class ATProtoOutput extends BroadcastedOutputElement {
   #rev = signal(/** @type {string | null} */ (null));
   #revFetchedAt = 0;
   #writing = 0;
+
+  /** @type {Array<{ fn: () => Promise<void>, resolve: () => void, reject: (err: unknown) => void }>} */
+  #writeQueue = [];
+  #writeDraining = false;
+  /** @type {Map<string, { cancelled: boolean }>} */
+  #writeCancels = new Map();
 
   did = this.#did.get;
   rev = this.#rev.get;
@@ -439,6 +449,57 @@ class ATProtoOutput extends BroadcastedOutputElement {
     }
   }
 
+  // WRITE QUEUE
+
+  /** @returns {Promise<{ id: string, ts: number }[]>} */
+  async #loadWriteWindow() {
+    const now = Date.now();
+    const all = /** @type {{ id: string, ts: number }[]} */ (
+      await IDB.get(WRITE_IDB_KEY) ?? []
+    );
+    return all.filter((e) => now - e.ts < WRITE_WINDOW_MS);
+  }
+
+  /** @param {string[]} ids */
+  async #recordWritten(ids) {
+    const now = Date.now();
+    const window = await this.#loadWriteWindow();
+    await IDB.set(WRITE_IDB_KEY, [
+      ...window,
+      ...ids.map((id) => ({ id, ts: now })),
+    ]);
+  }
+
+  /**
+   * @param {() => Promise<void>} fn
+   * @returns {Promise<void>}
+   */
+  #enqueueWrite(fn) {
+    return new Promise((resolve, reject) => {
+      this.#writeQueue.push({ fn, resolve, reject });
+      this.#drainWrites();
+    });
+  }
+
+  async #drainWrites() {
+    if (this.#writeDraining) return;
+    this.#writeDraining = true;
+
+    while (this.#writeQueue.length > 0) {
+      const { fn, resolve, reject } = /** @type {NonNullable<typeof this.#writeQueue[0]>} */ (
+        this.#writeQueue.shift()
+      );
+      try {
+        await fn();
+        resolve();
+      } catch (err) {
+        reject(err);
+      }
+    }
+
+    this.#writeDraining = false;
+  }
+
   /**
    * @param {string} collection
    * @param {Array<{ id: string }>} data
@@ -449,9 +510,36 @@ class ATProtoOutput extends BroadcastedOutputElement {
     data,
     { deleteBatchSize = 100, upsertBatchSize = deleteBatchSize } = {},
   ) {
+    if (!this.#rpc || !this.#did.value) return;
+
+    // Supersede any prior write for this collection
+    const prior = this.#writeCancels.get(collection);
+    if (prior) prior.cancelled = true;
+
+    const token = { cancelled: false };
+    this.#writeCancels.set(collection, token);
+
+    return this.#enqueueWrite(async () => {
+      if (token.cancelled) return;
+      try {
+        await this.#doPutRecords(collection, data, { deleteBatchSize, upsertBatchSize }, token);
+      } finally {
+        if (this.#writeCancels.get(collection) === token) {
+          this.#writeCancels.delete(collection);
+        }
+      }
+    });
+  }
+
+  /**
+   * @param {string} collection
+   * @param {Array<{ id: string }>} data
+   * @param {{ deleteBatchSize: number, upsertBatchSize: number }} options
+   * @param {{ cancelled: boolean }} token
+   */
+  async #doPutRecords(collection, data, { deleteBatchSize, upsertBatchSize }, token) {
     const rpc = this.#rpc;
     const did = this.#did.value;
-
     if (!rpc || !did) return;
 
     this.#writing++;
@@ -512,53 +600,16 @@ class ATProtoOutput extends BroadcastedOutputElement {
         }
       }
 
-      // 4. Apply in batches, throttled to 1500 ops/hour via a persisted sliding window
-      const WINDOW_MS = 3_600_000;
-      const RATE_LIMIT = 1500;
-
-      const IDB_KEY = "diffuse/output/raw/atproto/writes";
-
-      /**
-       * Returns all record IDs written within the last hour, loaded from IDB.
-       *
-       * @returns {Promise<{ id: string, ts: number }[]>}
-       */
-      const loadWindow = async () => {
-        const now = Date.now();
-        const all = await IDB.get(IDB_KEY) ?? [];
-        return all.filter(
-          /**
-           * @param {{ id: string, ts: number }} entry
-           * @returns {boolean}
-           */
-          (entry) => now - entry.ts < WINDOW_MS,
-        );
-      };
-
-      /**
-       * Records IDs as written, pruning entries older than one hour.
-       *
-       * @param {string[]} ids
-       */
-      const recordWritten = async (ids) => {
-        const now = Date.now();
-        const window = await loadWindow();
-        await IDB.set(IDB_KEY, [
-          ...window,
-          ...ids.map((id) => ({ id, ts: now })),
-        ]);
-      };
-
+      // 4. Apply batches, throttled to WRITE_RATE_LIMIT ops/hour.
+      // The write queue ensures we are the only writer, so one precise sleep
+      // is enough — no need to re-check in a loop.
       const applyBatch = async (/** @type {any[]} */ batch) => {
-        // Wait until the sliding window has room for this batch
-        while (true) {
-          const window = await loadWindow();
+        const window = await this.#loadWriteWindow();
 
-          if (window.length + batch.length <= RATE_LIMIT) break;
-
-          // Wait until the oldest entry in the window expires
-          const oldest = window.reduce((a, b) => a.ts < b.ts ? a : b);
-          const waitMs = WINDOW_MS - (Date.now() - oldest.ts) + 1;
+        if (window.length + batch.length > WRITE_RATE_LIMIT) {
+          const needed = window.length + batch.length - WRITE_RATE_LIMIT;
+          const sorted = [...window].sort((a, b) => a.ts - b.ts);
+          const waitMs = WRITE_WINDOW_MS - (Date.now() - sorted[needed - 1].ts) + 1;
           await new Promise((resolve) => setTimeout(resolve, waitMs));
         }
 
@@ -569,8 +620,7 @@ class ATProtoOutput extends BroadcastedOutputElement {
         const writtenIds = batch.map((op) => op.rkey ?? op.value?.id).filter(
           Boolean,
         );
-
-        await recordWritten(writtenIds);
+        await this.#recordWritten(writtenIds);
 
         if (result?.commit?.rev) {
           this.#rev.value = result.commit.rev;
@@ -578,10 +628,12 @@ class ATProtoOutput extends BroadcastedOutputElement {
       };
 
       for (let i = 0; i < deletes.length; i += deleteBatchSize) {
+        if (token.cancelled) return;
         await applyBatch(deletes.slice(i, i + deleteBatchSize));
       }
 
       for (let i = 0; i < upserts.length; i += upsertBatchSize) {
+        if (token.cancelled) return;
         await applyBatch(upserts.slice(i, i + upsertBatchSize));
       }
     } catch (err) {

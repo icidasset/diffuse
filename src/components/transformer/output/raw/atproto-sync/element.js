@@ -153,11 +153,13 @@ class ATProtoOutputSyncTransformer extends OutputTransformer {
         await remote[name].reload();
       }
 
-      const localHasData = COLLECTIONS.some((name) => {
-        const col = l[name].collection();
-        return col.state === "loaded" && Array.isArray(col.data) &&
-          col.data.length > 0;
-      });
+      const localCollections = await Promise.all(
+        COLLECTIONS.map((name) => Output.data(l[name])),
+      );
+
+      const localHasData = localCollections.some(
+        (data) => Array.isArray(data) && data.length > 0,
+      );
 
       if (!localHasData && !dirty) {
         // Local is empty and clean — just pull remote
@@ -197,6 +199,7 @@ class ATProtoOutputSyncTransformer extends OutputTransformer {
       this.#clearDirty();
     } catch (err) {
       console.warn("Sync failed:", err);
+    } finally {
       this.#syncing = false;
     }
   }
@@ -219,15 +222,17 @@ class ATProtoOutputSyncTransformer extends OutputTransformer {
   #mergeRecords(collection, localArr, remoteArr) {
     const tombstones = this.#getTombstones(collection);
     const knownIds = this.#getKnownIds(collection);
+    const remoteIds = new Set(remoteArr.map((r) => r.id));
 
     /** @type {Map<string, T>} */
     const merged = new Map();
 
     // Start with local records
     for (const record of localArr) {
-      if (!tombstones.has(record.id)) {
-        merged.set(record.id, record);
-      }
+      if (tombstones.has(record.id)) continue;
+      // If previously synced but now absent from remote, it was deleted remotely.
+      if (knownIds.has(record.id) && !remoteIds.has(record.id)) continue;
+      merged.set(record.id, record);
     }
 
     // Merge remote records
