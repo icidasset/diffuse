@@ -63,17 +63,36 @@ class ATProtoOutputSyncTransformer extends OutputTransformer {
           const l = local();
           if (!l) return;
 
-          // Track deletions: any id present in local but absent in
-          // newData has been deleted by the user.
+          const newIds = new Set(newData.map((/** @type {any} */ r) => r.id));
+
+          // Update tombstones in one pass: add for records deleted from local,
+          // remove for records being (re-)added — so that fixed-ID records can
+          // be recreated after deletion without the tombstone blocking them.
+          const tombstones = this.#getTombstones(name);
+          let tombstonesChanged = false;
+
           const oldCol = await Output.data(l[name]);
           if (oldCol && Array.isArray(oldCol.data)) {
-            const newIds = new Set(newData.map((/** @type {any} */ r) => r.id));
-
             for (const record of oldCol.data) {
-              if (!newIds.has(record.id)) {
-                this.#addTombstone(name, record.id);
+              if (!newIds.has(record.id) && !tombstones.has(record.id)) {
+                tombstones.add(record.id);
+                tombstonesChanged = true;
               }
             }
+          }
+
+          for (const record of newData) {
+            if (tombstones.has(record.id)) {
+              tombstones.delete(record.id);
+              tombstonesChanged = true;
+            }
+          }
+
+          if (tombstonesChanged) {
+            localStorage.setItem(
+              `${STORAGE_PREFIX}/tombstones/${name}`,
+              JSON.stringify([...tombstones]),
+            );
           }
 
           // Update known ids
@@ -271,19 +290,6 @@ class ATProtoOutputSyncTransformer extends OutputTransformer {
       `${STORAGE_PREFIX}/tombstones/${collection}`,
     );
     return raw ? new Set(JSON.parse(raw)) : new Set();
-  }
-
-  /**
-   * @param {string} collection
-   * @param {string} id
-   */
-  #addTombstone(collection, id) {
-    const tombstones = this.#getTombstones(collection);
-    tombstones.add(id);
-    localStorage.setItem(
-      `${STORAGE_PREFIX}/tombstones/${collection}`,
-      JSON.stringify([...tombstones]),
-    );
   }
 
   /**
