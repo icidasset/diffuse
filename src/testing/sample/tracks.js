@@ -28,7 +28,20 @@ export const trackB = {
   },
 };
 
+/**
+ * @type {Track}
+ */
+export const trackC = {
+  $type: "sh.diffuse.output.track",
+  id: "sample-c",
+  uri: "http://example.com/audio-c.mp3",
+  tags: {
+    title: "Sample C",
+  },
+};
+
 export const tracks = [
   trackA,
   trackB,
+  trackC,
 ];

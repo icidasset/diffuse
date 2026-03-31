@@ -4,12 +4,15 @@ import {
   whenElementsDefined,
 } from "~/common/element.js";
 import { signal, untracked } from "~/common/signal.js";
+import { repeat } from "lit-html/directives/repeat.js";
+import { guard } from "lit-html/directives/guard.js";
 
 /**
  * @import {RenderArg} from "~/common/element.d.ts"
  *
  * @import ControllerOrchestrator from "~/components/orchestrator/controller/element.js"
  * @import RepeatShuffleEngine from "~/components/engine/repeat-shuffle/element.js"
+ * @import {Item} from "~/components/engine/queue/types.d.ts"
  */
 
 ////////////////////////////////////////////
@@ -35,7 +38,18 @@ function loadUiState() {
       ...JSON.parse(localStorage.getItem(UI_STATE_KEY) ?? "{}"),
     };
   } catch {
-    return { eqOpen: true, playlistOpen: true, milkdropOpen: true, eqOn: false, eqSliders: null, mainShade: false, eqShade: false, playlistShade: false, positions: null, sizes: null };
+    return {
+      eqOpen: true,
+      playlistOpen: true,
+      milkdropOpen: true,
+      eqOn: false,
+      eqSliders: null,
+      mainShade: false,
+      eqShade: false,
+      playlistShade: false,
+      positions: null,
+      sizes: null,
+    };
   }
 }
 
@@ -81,9 +95,16 @@ class WinampFFT {
   #initBitRev(NFREQ) {
     const t = Array.from({ length: NFREQ }, (_, i) => i);
     for (let i = 0, j = 0; i < NFREQ; i++) {
-      if (j > i) { const tmp = t[i]; t[i] = t[j]; t[j] = tmp; }
+      if (j > i) {
+        const tmp = t[i];
+        t[i] = t[j];
+        t[j] = tmp;
+      }
       let m = NFREQ >> 1;
-      while (m >= 1 && j >= m) { j -= m; m >>= 1; }
+      while (m >= 1 && j >= m) {
+        j -= m;
+        m >>= 1;
+      }
       j += m;
     }
     return t;
@@ -104,8 +125,10 @@ class WinampFFT {
   /** @param {number} n @param {number} power */
   #initEnvelope(n, power) {
     const mult = (1.0 / n) * WinampFFT.#TWO_PI;
-    return Float32Array.from({ length: n }, (_, i) =>
-      Math.pow(0.5 + 0.5 * Math.sin(i * mult - WinampFFT.#HALF_PI), power)
+    return Float32Array.from(
+      { length: n },
+      (_, i) =>
+        Math.pow(0.5 + 0.5 * Math.sin(i * mult - WinampFFT.#HALF_PI), power),
     );
   }
 
@@ -147,14 +170,17 @@ class WinampFFT {
           const j = i + half;
           const tr = wr * real[j] - wi * imag[j];
           const ti = wr * imag[j] + wi * real[j];
-          real[j] = real[i] - tr; imag[j] = imag[i] - ti;
-          real[i] += tr;          imag[i] += ti;
+          real[j] = real[i] - tr;
+          imag[j] = imag[i] - ti;
+          real[i] += tr;
+          imag[i] += ti;
         }
         const wt = wr;
         wr = wr * wpr - wi * wpi;
         wi = wi * wpr + wt * wpi;
       }
-      dftsize <<= 1; t++;
+      dftsize <<= 1;
+      t++;
     }
 
     const eq = this.#equalize;
@@ -175,6 +201,24 @@ class WinampElement extends DiffuseElement {
   #marqueeOverride = signal(/** @type {string | null} */ (null));
   /** @type {ReturnType<typeof setTimeout> | undefined} */
   #marqueeOverrideTimeout = undefined;
+  /** @type {ReturnType<typeof setTimeout> | undefined} */
+  #isLoadingTimeout = undefined;
+  #playlist = signal(
+    /** @type {{ past: Item[]; now: Item | null; future: Item[] }} */ ({
+      past: [],
+      now: null,
+      future: [],
+    }),
+  );
+  /** @type {ReturnType<typeof setTimeout> | undefined} */
+  #playlistDebounce = undefined;
+  #dragState = signal(
+    /** @type {{ fromIdx: number; toIdx: number; startY: number } | null} */ (null),
+  );
+  /** @type {((e: MouseEvent) => void) | null} */
+  #dragMouseMove = null;
+  /** @type {((e: MouseEvent) => void) | null} */
+  #dragMouseUp = null;
   #marqueeCurrentOffset = 0;
   /** @type {HTMLElement | null} */
   #marqueeScroller = null;
@@ -204,11 +248,16 @@ class WinampElement extends DiffuseElement {
   #eqShade = signal(false);
   #playlistShade = signal(false);
   #eqOn = signal(false);
-  #eqSliders = signal({ preamp: 50, bands: /** @type {number[]} */ (Array(10).fill(50)) });
+  #eqSliders = signal({
+    preamp: 50,
+    bands: /** @type {number[]} */ (Array(10).fill(50)),
+  });
   #balance = signal(0);
   #stopped = signal(false);
   #seekingProgress = signal(/** @type {number | null} */ (null));
-  #focusedWindow = signal(/** @type {"main" | "eq" | "playlist" | "milkdrop"} */ ("main"));
+  #focusedWindow = signal(
+    /** @type {"main" | "eq" | "playlist" | "milkdrop"} */ ("main"),
+  );
   #playlistOpen = signal(true);
   #milkdropOpen = signal(true);
 
@@ -265,6 +314,17 @@ class WinampElement extends DiffuseElement {
       this.$repeatShuffle.value = repeatShuffle;
 
       this.effect(() => {
+        const queueEl = this.$controller.value?.$queue.value;
+        const past = queueEl?.past() ?? [];
+        const now = queueEl?.now() ?? null;
+        const future = queueEl?.future() ?? [];
+        clearTimeout(this.#playlistDebounce);
+        this.#playlistDebounce = setTimeout(() => {
+          this.#playlist.value = { past, now, future };
+        }, 100);
+      });
+
+      this.effect(() => {
         const track = this.currentTrack();
         if (!track) return; // preserve last text during track transitions
         const aud = this.audio();
@@ -294,6 +354,22 @@ class WinampElement extends DiffuseElement {
           }
         });
       });
+
+      this.effect(() => {
+        const now = !!this.$controller.value?.$queue.value?.now();
+        const loadingState = this.audio()?.loadingState();
+        const isLoading = now && loadingState !== "loaded";
+
+        clearTimeout(this.#isLoadingTimeout);
+
+        if (isLoading) {
+          this.#isLoadingTimeout = setTimeout(() => {
+            this.#marqueeOverride.value = "Loading audio ...";
+          }, 2000);
+        } else if (this.#marqueeOverride.value === "Loading audio ...") {
+          this.#marqueeOverride.value = null;
+        }
+      });
     });
 
     // UI State
@@ -314,21 +390,31 @@ class WinampElement extends DiffuseElement {
     }
 
     if (ui.sizes) {
-      if (ui.sizes.playlist) Object.assign(this.#playlistSize, ui.sizes.playlist);
-      if (ui.sizes.milkdrop) Object.assign(this.#milkdropSize, ui.sizes.milkdrop);
+      if (ui.sizes.playlist) {
+        Object.assign(this.#playlistSize, ui.sizes.playlist);
+      }
+      if (ui.sizes.milkdrop) {
+        Object.assign(this.#milkdropSize, ui.sizes.milkdrop);
+      }
     }
 
     if (ui.positions) {
       if (ui.positions.main) Object.assign(this.#mainPos, ui.positions.main);
       if (ui.positions.eq) Object.assign(this.#eqPos, ui.positions.eq);
-      if (ui.positions.playlist) Object.assign(this.#playlistPos, ui.positions.playlist);
-      if (ui.positions.milkdrop) Object.assign(this.#milkdropPos, ui.positions.milkdrop);
+      if (ui.positions.playlist) {
+        Object.assign(this.#playlistPos, ui.positions.playlist);
+      }
+      if (ui.positions.milkdrop) {
+        Object.assign(this.#milkdropPos, ui.positions.milkdrop);
+      }
     } else {
       // Center the windows on startup
       const leftColH = 116 + 116 + this.#playlistSize.height;
       const milkdropOpen = this.#milkdropOpen.value;
       const totalW = milkdropOpen ? 275 + this.#milkdropSize.width : 275;
-      const totalH = milkdropOpen ? Math.max(leftColH, this.#milkdropSize.height) : leftColH;
+      const totalH = milkdropOpen
+        ? Math.max(leftColH, this.#milkdropSize.height)
+        : leftColH;
       const cx = Math.round((window.innerWidth - totalW) / 2);
       const cy = Math.round((window.innerHeight - totalH) / 2);
       this.#mainPos.x = cx;
@@ -361,18 +447,27 @@ class WinampElement extends DiffuseElement {
 
     this.forceRender();
     this.#marqueeScroller = this.root().querySelector("#marquee > div");
-    this.#playlistHandle = this.root().querySelector(".playlist-scrollbar-handle");
+    this.#playlistHandle = this.root().querySelector(
+      ".playlist-scrollbar-handle",
+    );
     requestAnimationFrame(() => {
       this.#drawEqGraph();
       this.#updatePlaylistHandle();
     });
 
     // Custom playlist scrollbar
-    const playlistContent = this.root().querySelector(".playlist-middle-center");
-    const playlistHandle = this.root().querySelector(".playlist-scrollbar-handle");
+    const playlistContent = this.root().querySelector(
+      ".playlist-middle-center",
+    );
+    const playlistHandle = this.root().querySelector(
+      ".playlist-scrollbar-handle",
+    );
     const playlistScrollbar = this.root().querySelector(".playlist-scrollbar");
     if (playlistContent instanceof HTMLElement) {
-      playlistContent.addEventListener("scroll", () => this.#updatePlaylistHandle());
+      playlistContent.addEventListener(
+        "scroll",
+        () => this.#updatePlaylistHandle(),
+      );
     }
     if (
       playlistHandle instanceof HTMLElement &&
@@ -386,10 +481,14 @@ class WinampElement extends DiffuseElement {
         const range = playlistScrollbar.clientHeight - HANDLE_H;
         const startY = e.clientY;
         const startTop = parseFloat(playlistHandle.style.top) || 0;
-        const maxScroll = playlistContent.scrollHeight - playlistContent.clientHeight;
+        const maxScroll = playlistContent.scrollHeight -
+          playlistContent.clientHeight;
         /** @param {MouseEvent} mv */
         const onMove = (mv) => {
-          const newTop = Math.max(0, Math.min(range, startTop + mv.clientY - startY));
+          const newTop = Math.max(
+            0,
+            Math.min(range, startTop + mv.clientY - startY),
+          );
           const rawScroll = (newTop / range) * maxScroll;
           playlistContent.scrollTop = Math.round(rawScroll / TRACK_H) * TRACK_H;
         };
@@ -431,12 +530,16 @@ class WinampElement extends DiffuseElement {
     this.root().addEventListener("pointerdown", (e) => {
       if (!(e.target instanceof HTMLElement)) return;
       // Window focus
-      const win = e.target.closest("#main-window, #equalizer-window, #playlist-window, #playlist-window-shade, #milkdrop-window");
+      const win = e.target.closest(
+        "#main-window, #equalizer-window, #playlist-window, #playlist-window-shade, #milkdrop-window",
+      );
       if (win instanceof HTMLElement) {
         if (win.id === "main-window") this.#focusedWindow.value = "main";
-        else if (win.id === "equalizer-window") this.#focusedWindow.value = "eq";
-        else if (win.id === "milkdrop-window") this.#focusedWindow.value = "milkdrop";
-        else this.#focusedWindow.value = "playlist";
+        else if (win.id === "equalizer-window") {
+          this.#focusedWindow.value = "eq";
+        } else if (win.id === "milkdrop-window") {
+          this.#focusedWindow.value = "milkdrop";
+        } else this.#focusedWindow.value = "playlist";
       }
       // Press feedback
       if (e.target.tagName !== "DIV" || !e.target.id) return;
@@ -450,13 +553,19 @@ class WinampElement extends DiffuseElement {
     });
 
     // Window dragging
-    this.root().addEventListener("mousedown", /** @type {EventListener} */ (this.#onWindowDragStart));
+    this.root().addEventListener(
+      "mousedown",
+      /** @type {EventListener} */ (this.#onWindowDragStart),
+    );
   }
 
   /** @override */
   disconnectedCallback() {
     clearInterval(this.#marqueeStepInterval);
-    this.root().removeEventListener("mousedown", /** @type {EventListener} */ (this.#onWindowDragStart));
+    this.root().removeEventListener(
+      "mousedown",
+      /** @type {EventListener} */ (this.#onWindowDragStart),
+    );
     if (this.#visRAF !== undefined) {
       cancelAnimationFrame(this.#visRAF);
       this.#visRAF = undefined;
@@ -509,7 +618,9 @@ class WinampElement extends DiffuseElement {
       if (near(a.y, b.y + b.height)) y = b.y + b.height;
       else if (near(a.y + a.height, b.y)) y = b.y - a.height;
       else if (near(a.y, b.y)) y = b.y;
-      else if (near(a.y + a.height, b.y + b.height)) y = b.y + b.height - a.height;
+      else if (near(a.y + a.height, b.y + b.height)) {
+        y = b.y + b.height - a.height;
+      }
     }
     return { x, y };
   }
@@ -535,8 +646,10 @@ class WinampElement extends DiffuseElement {
    */
   static #areTouching(a, b) {
     const T = 1;
-    const hTouch = Math.abs(a.x - (b.x + b.width)) <= T || Math.abs(b.x - (a.x + a.width)) <= T;
-    const vTouch = Math.abs(a.y - (b.y + b.height)) <= T || Math.abs(b.y - (a.y + a.height)) <= T;
+    const hTouch = Math.abs(a.x - (b.x + b.width)) <= T ||
+      Math.abs(b.x - (a.x + a.width)) <= T;
+    const vTouch = Math.abs(a.y - (b.y + b.height)) <= T ||
+      Math.abs(b.y - (a.y + a.height)) <= T;
     const oX = a.x < b.x + b.width + T && b.x < a.x + a.width + T;
     const oY = a.y < b.y + b.height + T && b.y < a.y + a.height + T;
     return (hTouch && oY) || (vTouch && oX);
@@ -577,7 +690,9 @@ class WinampElement extends DiffuseElement {
     if (win.id === "main-window") {
       const trace = (/** @type {typeof allWindows[0]} */ entry) => {
         for (const other of allWindows) {
-          if (other === entry || other === draggedEntry || attached.has(other)) continue;
+          if (
+            other === entry || other === draggedEntry || attached.has(other)
+          ) continue;
           if (WinampElement.#areTouching(entry.box(), other.box())) {
             attached.add(other);
             trace(other);
@@ -590,7 +705,11 @@ class WinampElement extends DiffuseElement {
     const startMouseX = e.clientX;
     const startMouseY = e.clientY;
     const startPos = { x: draggedEntry.pos.x, y: draggedEntry.pos.y };
-    const attachedStarts = [...attached].map((w) => ({ w, x: w.pos.x, y: w.pos.y }));
+    const attachedStarts = [...attached].map((w) => ({
+      w,
+      x: w.pos.x,
+      y: w.pos.y,
+    }));
     const snapTargets = allWindows
       .filter((w) => w !== draggedEntry && !attached.has(w))
       .map((w) => w.box());
@@ -725,12 +844,17 @@ class WinampElement extends DiffuseElement {
 
   #updatePlaylistHandle() {
     if (!this.#playlistHandle?.isConnected) {
-      this.#playlistHandle = this.root().querySelector(".playlist-scrollbar-handle");
+      this.#playlistHandle = this.root().querySelector(
+        ".playlist-scrollbar-handle",
+      );
     }
     const handle = this.#playlistHandle;
     const content = this.root().querySelector(".playlist-middle-center");
     const scrollbar = this.root().querySelector(".playlist-scrollbar");
-    if (!handle || !(content instanceof HTMLElement) || !(scrollbar instanceof HTMLElement)) return;
+    if (
+      !handle || !(content instanceof HTMLElement) ||
+      !(scrollbar instanceof HTMLElement)
+    ) return;
 
     const HANDLE_H = 18;
     const range = Math.max(0, scrollbar.clientHeight - HANDLE_H);
@@ -750,22 +874,43 @@ class WinampElement extends DiffuseElement {
       {
         el: /** @type {HTMLElement} */ (root.querySelector("#main-window")),
         pos: this.#mainPos,
-        box: () => ({ x: this.#mainPos.x, y: this.#mainPos.y, width: 275, height: this.#mainShade.value ? 14 : 116 }),
+        box: () => ({
+          x: this.#mainPos.x,
+          y: this.#mainPos.y,
+          width: 275,
+          height: this.#mainShade.value ? 14 : 116,
+        }),
       },
       {
-        el: /** @type {HTMLElement} */ (root.querySelector("#equalizer-window")),
+        el:
+          /** @type {HTMLElement} */ (root.querySelector("#equalizer-window")),
         pos: this.#eqPos,
-        box: () => ({ x: this.#eqPos.x, y: this.#eqPos.y, width: 275, height: this.#eqShade.value ? 14 : 116 }),
+        box: () => ({
+          x: this.#eqPos.x,
+          y: this.#eqPos.y,
+          width: 275,
+          height: this.#eqShade.value ? 14 : 116,
+        }),
       },
       {
         el: /** @type {HTMLElement} */ (root.querySelector("#playlist-window")),
         pos: this.#playlistPos,
-        box: () => ({ x: this.#playlistPos.x, y: this.#playlistPos.y, width: ps.width, height: ps.height }),
+        box: () => ({
+          x: this.#playlistPos.x,
+          y: this.#playlistPos.y,
+          width: ps.width,
+          height: ps.height,
+        }),
       },
       {
         el: /** @type {HTMLElement} */ (root.querySelector("#milkdrop-window")),
         pos: this.#milkdropPos,
-        box: () => ({ x: this.#milkdropPos.x, y: this.#milkdropPos.y, width: this.#milkdropSize.width, height: this.#milkdropSize.height }),
+        box: () => ({
+          x: this.#milkdropPos.x,
+          y: this.#milkdropPos.y,
+          width: this.#milkdropSize.width,
+          height: this.#milkdropSize.height,
+        }),
       },
     ].filter((e) => e.el != null);
   }
@@ -793,22 +938,22 @@ class WinampElement extends DiffuseElement {
 
   // Webamp default viscolors[0..15]: y=0 top (black), y=2 loud (red), y=15 quiet (green)
   static #BAR_COLORS = [
-    "rgb(0,0,0)",       // 0 — black (never visible)
-    "rgb(24,33,41)",    // 1 — grid dot color (never visible with pushDown=2)
-    "rgb(239,49,16)",   // 2 — bright red (loud)
-    "rgb(206,41,16)",   // 3
-    "rgb(214,90,0)",    // 4
-    "rgb(214,102,0)",   // 5
-    "rgb(214,115,0)",   // 6
-    "rgb(198,123,8)",   // 7
-    "rgb(222,165,24)",  // 8
-    "rgb(214,181,33)",  // 9
-    "rgb(189,222,41)",  // 10
-    "rgb(148,222,33)",  // 11
-    "rgb(41,206,16)",   // 12
-    "rgb(50,190,16)",   // 13
-    "rgb(57,181,16)",   // 14
-    "rgb(49,156,8)",    // 15 — dim green (quiet)
+    "rgb(0,0,0)", // 0 — black (never visible)
+    "rgb(24,33,41)", // 1 — grid dot color (never visible with pushDown=2)
+    "rgb(239,49,16)", // 2 — bright red (loud)
+    "rgb(206,41,16)", // 3
+    "rgb(214,90,0)", // 4
+    "rgb(214,102,0)", // 5
+    "rgb(214,115,0)", // 6
+    "rgb(198,123,8)", // 7
+    "rgb(222,165,24)", // 8
+    "rgb(214,181,33)", // 9
+    "rgb(189,222,41)", // 10
+    "rgb(148,222,33)", // 11
+    "rgb(41,206,16)", // 12
+    "rgb(50,190,16)", // 13
+    "rgb(57,181,16)", // 14
+    "rgb(49,156,8)", // 15 — dim green (quiet)
   ];
 
   #ensureAnalyser() {
@@ -817,7 +962,8 @@ class WinampElement extends DiffuseElement {
 
     this.#preampNode = this.#audioCtx.createGain();
     this.#eqNodes = EQ_BANDS.map((freq) => {
-      const f = /** @type {AudioContext} */ (this.#audioCtx).createBiquadFilter();
+      const f = /** @type {AudioContext} */ (this.#audioCtx)
+        .createBiquadFilter();
       f.type = "peaking";
       f.frequency.value = freq;
       f.Q.value = 1.0;
@@ -886,7 +1032,8 @@ class WinampElement extends DiffuseElement {
     gradCanvas.width = 1;
     const gradCtx = gradCanvas.getContext("2d");
     const peakCanvas = document.createElement("canvas");
-    peakCanvas.width = 1; peakCanvas.height = 1;
+    peakCanvas.width = 1;
+    peakCanvas.height = 1;
     const peakCtx = peakCanvas.getContext("2d");
     if (peakCtx) {
       peakCtx.fillStyle = "rgb(150,150,150)";
@@ -898,25 +1045,30 @@ class WinampElement extends DiffuseElement {
 
     /** @param {number} W @param {number} H */
     const rebuildCaches = (W, H) => {
-      bgCanvas.width = W; bgCanvas.height = H;
+      bgCanvas.width = W;
+      bgCanvas.height = H;
       if (bgCtx) {
         bgCtx.fillStyle = "rgb(0,0,0)";
         bgCtx.fillRect(0, 0, W, H);
         bgCtx.fillStyle = "rgb(24,33,41)";
-        for (let x = 0; x < W; x += 2)
-          for (let y = 1; y < H; y += 2)
+        for (let x = 0; x < W; x += 2) {
+          for (let y = 1; y < H; y += 2) {
             bgCtx.fillRect(x, y, 1, 1);
+          }
+        }
       }
       gradCanvas.height = H;
       if (gradCtx) {
         const maxColorIdx = WinampElement.#BAR_COLORS.length - 1;
         for (let y = 0; y < H; y++) {
           const colorIdx = H > 1 ? Math.round((y / (H - 1)) * maxColorIdx) : 0;
-          gradCtx.fillStyle = WinampElement.#BAR_COLORS[colorIdx] ?? "rgb(0,0,0)";
+          gradCtx.fillStyle = WinampElement.#BAR_COLORS[colorIdx] ??
+            "rgb(0,0,0)";
           gradCtx.fillRect(0, y, 1, 1);
         }
       }
-      cachedH = H; cachedW = W;
+      cachedH = H;
+      cachedW = W;
     };
 
     const logMaxFreqIndex = Math.log10(512);
@@ -941,7 +1093,9 @@ class WinampElement extends DiffuseElement {
 
       // Time-domain → FFT → spectral data
       analyser.getByteTimeDomainData(timeDomainBuf);
-      for (let i = 0; i < 1024; i++) inWaveData[i] = (timeDomainBuf[i] - 128) / 24;
+      for (let i = 0; i < 1024; i++) {
+        inWaveData[i] = (timeDomainBuf[i] - 128) / 24;
+      }
       fft.timeToFrequencyDomain(inWaveData, outSpectralData);
 
       for (let x = 0; x < MAX_WIDTH; x++) {
@@ -952,7 +1106,8 @@ class WinampElement extends DiffuseElement {
         const i2 = Math.min(511, Math.ceil(si));
         sample[x] = i1 === i2
           ? outSpectralData[i1]
-          : (1 - (si - i1)) * outSpectralData[i1] + (si - i1) * outSpectralData[i2];
+          : (1 - (si - i1)) * outSpectralData[i1] +
+            (si - i1) * outSpectralData[i2];
       }
 
       ctx.drawImage(bgCanvas, 0, 0);
@@ -961,8 +1116,9 @@ class WinampElement extends DiffuseElement {
         const chunk = x & ~3;
         const saData = Math.min(
           (((sample[chunk] ?? 0) + (sample[chunk + 1] ?? 0) +
-            (sample[chunk + 2] ?? 0) + (sample[chunk + 3] ?? 0)) / 4) * HEIGHT_SCALE,
-          MAX_HEIGHT
+            (sample[chunk + 2] ?? 0) + (sample[chunk + 3] ?? 0)) / 4) *
+            HEIGHT_SCALE,
+          MAX_HEIGHT,
         );
 
         if (saPeaks[x] >= MAX_HEIGHT * 256) saPeaks[x] = MAX_HEIGHT * 256;
@@ -984,7 +1140,17 @@ class WinampElement extends DiffuseElement {
 
         const barHeight = Math.round(saFalloff[x]) - PUSH_DOWN;
         if (barHeight > 0) {
-          ctx.drawImage(gradCanvas, 0, H - barHeight, 1, barHeight, x, H - barHeight, 1, barHeight);
+          ctx.drawImage(
+            gradCanvas,
+            0,
+            H - barHeight,
+            1,
+            barHeight,
+            x,
+            H - barHeight,
+            1,
+            barHeight,
+          );
         }
 
         const peakHeight = barPeak[x] + 1 - PUSH_DOWN;
@@ -1014,9 +1180,14 @@ class WinampElement extends DiffuseElement {
     const { preamp, bands } = this.#eqSliders.value;
     /** @type {Record<string, number>} */
     const sliders = { preamp };
-    bands.forEach((v, i) => { sliders[`band_${i}`] = v; });
+    bands.forEach((v, i) => {
+      sliders[`band_${i}`] = v;
+    });
     const ui = loadUiState();
-    localStorage.setItem(UI_STATE_KEY, JSON.stringify({ ...ui, eqOn: this.#eqOn.value, eqSliders: sliders }));
+    localStorage.setItem(
+      UI_STATE_KEY,
+      JSON.stringify({ ...ui, eqOn: this.#eqOn.value, eqSliders: sliders }),
+    );
   }
 
   /**
@@ -1027,13 +1198,18 @@ class WinampElement extends DiffuseElement {
   #startSliderDrag(e, isPreamp, bandIndex = 0) {
     e.preventDefault();
     const RANGE = 52; // px travel for handle (63 - 11)
-    const SNAP = 5;   // webamp BAND_SNAP_DISTANCE
+    const SNAP = 5; // webamp BAND_SNAP_DISTANCE
     const startY = e.clientY;
-    const startValue = isPreamp ? this.#eqSliders.value.preamp : this.#eqSliders.value.bands[bandIndex];
+    const startValue = isPreamp
+      ? this.#eqSliders.value.preamp
+      : this.#eqSliders.value.bands[bandIndex];
     const startTop = Math.floor((1 - startValue / 100) * RANGE);
 
     const onMove = (/** @type {MouseEvent} */ mv) => {
-      const newTop = Math.max(0, Math.min(RANGE, startTop + mv.clientY - startY));
+      const newTop = Math.max(
+        0,
+        Math.min(RANGE, startTop + mv.clientY - startY),
+      );
       const raw = Math.round((1 - newTop / RANGE) * 100);
       const value = Math.abs(raw - 50) < SNAP ? 50 : raw;
       const cur = this.#eqSliders.value;
@@ -1116,7 +1292,8 @@ class WinampElement extends DiffuseElement {
       const i2 = Math.min(9, i1 + 1);
       const v = bands[i1] * (1 - (t - i1)) + bands[i2] * (t - i1);
       const y = Math.round((1 - v / 100) * H);
-      const [r, g, b] = WinampElement.#EQ_COLORS[y] ?? WinampElement.#EQ_COLORS[0];
+      const [r, g, b] = WinampElement.#EQ_COLORS[y] ??
+        WinampElement.#EQ_COLORS[0];
       ctx.fillStyle = `rgb(${r},${g},${b})`;
       ctx.fillRect(paddingLeft + x, y, 1, 1);
     }
@@ -1152,7 +1329,9 @@ class WinampElement extends DiffuseElement {
     const secs = Math.round(percentage * duration);
     const m = Math.floor(secs / 60);
     const s = secs % 60;
-    this.#marqueeOverride.value = `Seek to: ${m}:${String(s).padStart(2, "0")} (${Math.round(percentage * 100)}%)`;
+    this.#marqueeOverride.value = `Seek to: ${m}:${
+      String(s).padStart(2, "0")
+    } (${Math.round(percentage * 100)}%)`;
     clearTimeout(this.#marqueeOverrideTimeout);
   };
 
@@ -1161,9 +1340,13 @@ class WinampElement extends DiffuseElement {
     if (!(e.target instanceof HTMLInputElement)) return;
     const percentage = Number(e.target.value) / 100;
     const audioId = this.$controller.value?.$queue.value?.now()?.id;
-    if (audioId) this.$controller.value?.$audio.value?.seek({ audioId, percentage });
+    if (audioId) {
+      this.$controller.value?.$audio.value?.seek({ audioId, percentage });
+    }
     this.#marqueeOverride.value = null;
-    setTimeout(() => { this.#seekingProgress.value = null; }, 250);
+    setTimeout(() => {
+      this.#seekingProgress.value = null;
+    }, 250);
   };
 
   #playPause = () => {
@@ -1179,7 +1362,9 @@ class WinampElement extends DiffuseElement {
   #stop = () => {
     const audioId = this.$controller.value?.$queue.value?.now()?.id;
     if (!audioId) return;
-    if (this.isPlaying()) this.$controller.value?.$audio.value?.pause({ audioId });
+    if (this.isPlaying()) {
+      this.$controller.value?.$audio.value?.pause({ audioId });
+    }
     this.$controller.value?.$audio.value?.seek({ audioId, percentage: 0 });
     this.#stopped.value = true;
   };
@@ -1210,38 +1395,68 @@ class WinampElement extends DiffuseElement {
     const leftColH = 116 + 116 + this.#playlistSize.height;
     const milkdropOpen = this.#milkdropOpen.value;
     const totalW = milkdropOpen ? 275 + this.#milkdropSize.width : 275;
-    const totalH = milkdropOpen ? Math.max(leftColH, this.#milkdropSize.height) : leftColH;
+    const totalH = milkdropOpen
+      ? Math.max(leftColH, this.#milkdropSize.height)
+      : leftColH;
     const cx = Math.round((window.innerWidth - totalW) / 2);
     const cy = Math.round((window.innerHeight - totalH) / 2);
-    this.#mainPos.x = cx;     this.#mainPos.y = cy;
-    this.#eqPos.x = cx;       this.#eqPos.y = cy + 116;
-    this.#playlistPos.x = cx; this.#playlistPos.y = cy + 232;
-    this.#milkdropPos.x = cx + 275; this.#milkdropPos.y = cy;
+    this.#mainPos.x = cx;
+    this.#mainPos.y = cy;
+    this.#eqPos.x = cx;
+    this.#eqPos.y = cy + 116;
+    this.#playlistPos.x = cx;
+    this.#playlistPos.y = cy + 232;
+    this.#milkdropPos.x = cx + 275;
+    this.#milkdropPos.y = cy;
     this.forceRender();
     this.#saveLayout();
   };
 
   #saveLayout = () => {
     const ui = loadUiState();
-    localStorage.setItem(UI_STATE_KEY, JSON.stringify({
-      ...ui,
-      positions: {
-        main: { ...this.#mainPos },
-        eq: { ...this.#eqPos },
-        playlist: { ...this.#playlistPos },
-        milkdrop: { ...this.#milkdropPos },
-      },
-      sizes: {
-        playlist: { ...this.#playlistSize },
-        milkdrop: { ...this.#milkdropSize },
-      },
-    }));
+    localStorage.setItem(
+      UI_STATE_KEY,
+      JSON.stringify({
+        ...ui,
+        positions: {
+          main: { ...this.#mainPos },
+          eq: { ...this.#eqPos },
+          playlist: { ...this.#playlistPos },
+          milkdrop: { ...this.#milkdropPos },
+        },
+        sizes: {
+          playlist: { ...this.#playlistSize },
+          milkdrop: { ...this.#milkdropSize },
+        },
+      }),
+    );
   };
 
   #toggleMilkdrop = () => {
     this.#milkdropOpen.value = !this.#milkdropOpen.value;
     const ui = loadUiState();
-    localStorage.setItem(UI_STATE_KEY, JSON.stringify({ ...ui, milkdropOpen: this.#milkdropOpen.value }));
+    localStorage.setItem(
+      UI_STATE_KEY,
+      JSON.stringify({ ...ui, milkdropOpen: this.#milkdropOpen.value }),
+    );
+  };
+
+  #toggleMilkdropFullscreen = () => {
+    const canvas = this.root().querySelector("#milkdrop-canvas");
+    if (!(canvas instanceof HTMLCanvasElement)) return;
+
+    if (document.fullscreenElement) {
+      document.exitFullscreen();
+    } else {
+      canvas.requestFullscreen();
+      canvas.addEventListener("fullscreenchange", () => {
+        const cw = canvas.clientWidth;
+        const ch = canvas.clientHeight;
+        canvas.width = cw;
+        canvas.height = ch;
+        this.#butterchurn?.setRendererSize(cw, ch);
+      }, { once: true });
+    }
   };
 
   /** @param {HTMLCanvasElement} canvas */
@@ -1250,19 +1465,29 @@ class WinampElement extends DiffuseElement {
     if (!this.#audioCtx || !this.#analyser) return;
 
     const { default: butterchurn } = await import("butterchurn");
-    const w = canvas.clientWidth || canvas.offsetWidth || this.#milkdropSize.width;
-    const h = canvas.clientHeight || canvas.offsetHeight || (this.#milkdropSize.height - 34);
+    const w = canvas.clientWidth || canvas.offsetWidth ||
+      this.#milkdropSize.width;
+    const h = canvas.clientHeight || canvas.offsetHeight ||
+      (this.#milkdropSize.height - 34);
     canvas.width = w;
     canvas.height = h;
-    this.#butterchurn = butterchurn.createVisualizer(this.#audioCtx, canvas, { width: w, height: h });
+    this.#butterchurn = butterchurn.createVisualizer(this.#audioCtx, canvas, {
+      width: w,
+      height: h,
+    });
     this.#butterchurn.connectAudio(this.#analyser);
 
     const { default: raw } = await import("butterchurn-presets/dist/base.js");
-    const presets = typeof raw?.default === "object" && raw.default !== null ? raw.default : raw;
+    const presets = typeof raw?.default === "object" && raw.default !== null
+      ? raw.default
+      : raw;
     this.#butterchurnPresetList = Object.values(presets ?? {});
     this.#cyclePreset(0);
 
-    this.#butterchurnCycleInterval = setInterval(() => this.#cyclePreset(5.7), 15000);
+    this.#butterchurnCycleInterval = setInterval(
+      () => this.#cyclePreset(5.7),
+      15000,
+    );
     this.#startButterchurn();
   };
 
@@ -1270,11 +1495,23 @@ class WinampElement extends DiffuseElement {
     if (this.#butterchurnRAF !== undefined) return;
     const step = () => {
       this.#butterchurnRAF = requestAnimationFrame(step);
-      if (this.isPlaying()) this.#butterchurn?.render();
+      if (this.isPlaying()) {
+        try {
+          this.#butterchurn?.render();
+        } catch {
+          this.#cyclePreset(0);
+        }
+      }
     };
     step();
-    if (this.#butterchurnCycleInterval === undefined && this.#butterchurnPresetList.length) {
-      this.#butterchurnCycleInterval = setInterval(() => this.#cyclePreset(5.7), 15000);
+    if (
+      this.#butterchurnCycleInterval === undefined &&
+      this.#butterchurnPresetList.length
+    ) {
+      this.#butterchurnCycleInterval = setInterval(
+        () => this.#cyclePreset(5.7),
+        15000,
+      );
     }
   };
 
@@ -1299,7 +1536,9 @@ class WinampElement extends DiffuseElement {
 
   #closeMain = () => {
     const audioId = this.$controller.value?.$queue.value?.now()?.id;
-    if (audioId && this.isPlaying()) this.$controller.value?.$audio.value?.pause({ audioId });
+    if (audioId && this.isPlaying()) {
+      this.$controller.value?.$audio.value?.pause({ audioId });
+    }
     this.#mainOpen.value = false;
   };
 
@@ -1319,13 +1558,19 @@ class WinampElement extends DiffuseElement {
   #toggleMainShade = () => {
     this.#mainShade.value = !this.#mainShade.value;
     const ui = loadUiState();
-    localStorage.setItem(UI_STATE_KEY, JSON.stringify({ ...ui, mainShade: this.#mainShade.value }));
+    localStorage.setItem(
+      UI_STATE_KEY,
+      JSON.stringify({ ...ui, mainShade: this.#mainShade.value }),
+    );
   };
 
   #toggleEqShade = () => {
     this.#eqShade.value = !this.#eqShade.value;
     const ui = loadUiState();
-    localStorage.setItem(UI_STATE_KEY, JSON.stringify({ ...ui, eqShade: this.#eqShade.value }));
+    localStorage.setItem(
+      UI_STATE_KEY,
+      JSON.stringify({ ...ui, eqShade: this.#eqShade.value }),
+    );
     if (!this.#eqShade.value) {
       requestAnimationFrame(() => this.#drawEqGraph());
     }
@@ -1334,7 +1579,10 @@ class WinampElement extends DiffuseElement {
   #togglePlaylistShade = () => {
     this.#playlistShade.value = !this.#playlistShade.value;
     const ui = loadUiState();
-    localStorage.setItem(UI_STATE_KEY, JSON.stringify({ ...ui, playlistShade: this.#playlistShade.value }));
+    localStorage.setItem(
+      UI_STATE_KEY,
+      JSON.stringify({ ...ui, playlistShade: this.#playlistShade.value }),
+    );
   };
 
   #togglePlaylist = () => {
@@ -1349,6 +1597,66 @@ class WinampElement extends DiffuseElement {
   /** @param {number} idx */
   #selectTrack = (idx) => {
     this.#selectedIndex.value = idx;
+  };
+
+  static #TRACK_HEIGHT = 13;
+
+  /**
+   * @param {MouseEvent} e
+   * @param {number} idx
+   * @param {number} totalItems
+   */
+  #onTrackMouseDown = (e, idx, totalItems) => {
+    e.preventDefault();
+    this.#dragState.value = { fromIdx: idx, toIdx: idx, startY: e.clientY };
+
+    this.#dragMouseMove = (mv) => {
+      const state = this.#dragState.value;
+      if (!state) return;
+      const diff = Math.round(
+        (mv.clientY - state.startY) / WinampElement.#TRACK_HEIGHT,
+      );
+      const toIdx = Math.max(0, Math.min(totalItems - 1, state.fromIdx + diff));
+      if (toIdx !== state.toIdx) this.#dragState.value = { ...state, toIdx };
+    };
+
+    this.#dragMouseUp = () => {
+      const state = this.#dragState.value;
+      if (state) {
+        if (state.fromIdx !== state.toIdx) {
+          this.$controller.value?.$queue.value?.move({
+            from: state.fromIdx,
+            to: state.toIdx,
+          });
+          // Immediately commit the reorder to #playlist so the item stays in
+          // place while the debounce is still pending.
+          const { past, now, future } = this.#playlist.value;
+          const all = [...past, ...(now ? [now] : []), ...future];
+          const [item] = all.splice(state.fromIdx, 1);
+          all.splice(state.toIdx, 0, item);
+          const nowIdx = now ? all.indexOf(now) : past.length;
+          clearTimeout(this.#playlistDebounce);
+          this.#playlist.value = {
+            past: all.slice(0, nowIdx),
+            now: now ? (all[nowIdx] ?? null) : null,
+            future: all.slice(nowIdx + (now ? 1 : 0)),
+          };
+        }
+        this.#selectedIndex.value = state.toIdx;
+      }
+      this.#dragState.value = null;
+      if (this.#dragMouseMove) {
+        window.removeEventListener("mousemove", this.#dragMouseMove);
+      }
+      if (this.#dragMouseUp) {
+        window.removeEventListener("mouseup", this.#dragMouseUp);
+      }
+      this.#dragMouseMove = null;
+      this.#dragMouseUp = null;
+    };
+
+    window.addEventListener("mousemove", this.#dragMouseMove);
+    window.addEventListener("mouseup", this.#dragMouseUp);
   };
 
   /** @param {number} idx */
@@ -1389,12 +1697,17 @@ class WinampElement extends DiffuseElement {
       const sx = (n % 14) * 15;
       const sy = Math.floor(n / 14) * 65;
       return html`
-        <div class="band" style="background-position: -${sx}px -${sy}px; width: 14px; height: 63px; position: relative;">
+        <div
+          class="band"
+          style="background-position: -${sx}px -${sy}px; width: 14px; height: 63px; position: relative;"
+        >
           <div
             class="slider-handle"
             style="position: absolute; top: ${handleTop}px; width: 11px; height: 11px; margin-left: 1px;"
-            @mousedown="${(/** @type {MouseEvent} */ e) => this.#startSliderDrag(e, isPreamp, bandIndex)}"
-          ></div>
+            @mousedown="${(/** @type {MouseEvent} */ e) =>
+              this.#startSliderDrag(e, isPreamp, bandIndex)}"
+          >
+          </div>
         </div>
       `;
     };
@@ -1403,26 +1716,46 @@ class WinampElement extends DiffuseElement {
     const volumeSprite = Math.round(volume * 28);
     const volumeBgPos = `0 -${(volumeSprite - 1) * 15}px`;
     const volumePct = Math.round(volume * 100);
-    const volumeClass = volumePct < 50 ? "left" : volumePct > 50 ? "right" : "center";
+    const volumeClass = volumePct < 50
+      ? "left"
+      : volumePct > 50
+      ? "right"
+      : "center";
     const balance = this.#balance.value;
-    const balanceClass = balance < 0 ? "left" : balance > 0 ? "right" : "center";
+    const balanceClass = balance < 0
+      ? "left"
+      : balance > 0
+      ? "right"
+      : "center";
 
     const audio = this.audio();
     const focused = this.#focusedWindow.value;
 
     // Track metadata
     const track = this.currentTrack();
-    const kbps = track?.stats?.bitrate ? Math.round(track.stats.bitrate / 1000) : null;
-    const khz = track?.stats?.sampleRate ? Math.round(track.stats.sampleRate / 1000) : null;
+    const kbps = track?.stats?.bitrate
+      ? Math.round(track.stats.bitrate / 1000)
+      : null;
+    const khz = track?.stats?.sampleRate
+      ? Math.round(track.stats.sampleRate / 1000)
+      : null;
     const channels = track?.stats?.numberOfChannels ?? null;
     const isStereo = channels !== null && channels >= 2;
     const isMono = channels === 1;
-    const kbpsChars = kbps != null ? [...String(kbps)].map((c) =>
-      html`<span class="character character-${c.charCodeAt(0)}">${c}</span>`
-    ) : [];
-    const khzChars = khz != null ? [...String(khz)].map((c) =>
-      html`<span class="character character-${c.charCodeAt(0)}">${c}</span>`
-    ) : [];
+    const kbpsChars = kbps != null
+      ? [...String(kbps)].map((c) =>
+        html`
+          <span class="character character-${c.charCodeAt(0)}">${c}</span>
+        `
+      )
+      : [];
+    const khzChars = khz != null
+      ? [...String(khz)].map((c) =>
+        html`
+          <span class="character character-${c.charCodeAt(0)}">${c}</span>
+        `
+      )
+      : [];
 
     const seekPct = this.#seekingProgress.value;
     const timeSeconds = seekPct !== null
@@ -1430,9 +1763,15 @@ class WinampElement extends DiffuseElement {
       : audio?.currentTime() ?? 0;
     const timeMinutes = Math.floor(timeSeconds / 60);
     const timeSecs = Math.floor(timeSeconds % 60);
-    const miniTimeStr = `${String(timeMinutes).padStart(2, "0")}:${String(timeSecs).padStart(2, "0")}`;
+    const miniTimeStr = `${String(timeMinutes).padStart(2, "0")}:${
+      String(timeSecs).padStart(2, "0")
+    }`;
     const miniTimeChars = [...miniTimeStr].map((c, i) =>
-      c === ":" ? null : html`<span class="character character-${c.charCodeAt(0)}" style="left: ${i * 5}px">${c}</span>`
+      c === ":" ? null : html`
+        <span class="character character-${c.charCodeAt(0)}" style="left: ${i *
+          5}px"
+        >${c}</span>
+      `
     );
     const d = {
       mFirst: Math.floor(timeMinutes / 10),
@@ -1443,22 +1782,35 @@ class WinampElement extends DiffuseElement {
 
     // Playlist
     const queueEl = this.$controller.value?.$queue.value;
-    const nowItem = queueEl?.now();
+    const { past: queuePast, now: nowItem, future: queueFuture } =
+      this.#playlist.value;
     const allItems = [
-      ...(queueEl?.past() ?? []),
+      ...queuePast,
       ...(nowItem ? [nowItem] : []),
-      ...(queueEl?.future() ?? []),
+      ...queueFuture,
     ];
+
+    // Apply local drag reorder for visual feedback (worker is only called on mouseup)
+    const dragState = this.#dragState.value;
+    const displayItems = dragState && dragState.fromIdx !== dragState.toIdx
+      ? (() => {
+        const arr = [...allItems];
+        const [item] = arr.splice(dragState.fromIdx, 1);
+        arr.splice(dragState.toIdx, 0, item);
+        return arr;
+      })()
+      : allItems;
+
     const col = this.$controller.value?.$output.value?.tracks.collection();
     const trackMap = col?.state === "loaded"
       ? new Map(col.data.map((t) => [t.id, t]))
       : new Map();
     const selectedIdx = this.#selectedIndex.value;
-    const nowIdx = nowItem ? (queueEl?.past().length ?? 0) : -1;
-    const playlistRows = allItems.map((item, i) => {
+    const nowIdx = nowItem ? displayItems.indexOf(nowItem) : -1;
+    const playlistRows = displayItems.map((item, i) => {
       const track = trackMap.get(item.id);
       const isCurrent = i === nowIdx;
-      const isSelected = selectedIdx === i;
+      const isSelected = dragState ? i === dragState.toIdx : selectedIdx === i;
       const artist = track?.tags?.artist ?? "";
       const title = track?.tags?.title ?? "";
       const label = artist ? `${artist} - ${title}` : title;
@@ -1470,7 +1822,7 @@ class WinampElement extends DiffuseElement {
         : "";
       const color = isCurrent ? "#FFFFFF" : "#00FF00";
       const bg = isSelected && !isCurrent ? "#0000FF" : "transparent";
-      return { idx: i, n: i + 1, label, dur, color, bg };
+      return { id: item.id, idx: i, n: i + 1, label, dur, color, bg };
     });
 
     // Playlist running time display: currentTrackDuration/totalPlaylistDuration
@@ -1493,14 +1845,20 @@ class WinampElement extends DiffuseElement {
     };
     const runningTimeStr = `${fmtDur(nowTrackSec)}/${fmtDur(totalSec)}`;
     const totalTimeChars = [...runningTimeStr].map((c) =>
-      html`<span class="character character-${c.charCodeAt(0)}">${c}</span>`
+      html`
+        <span class="character character-${c.charCodeAt(0)}">${c}</span>
+      `
     );
 
     const isPaused = !!audio && !this.isPlaying() && !this.#stopped.value;
 
     // Playlist mini-time (current playback position)
     const playlistMiniTimeChars = [...miniTimeStr].map((c, i) =>
-      c === ":" ? null : html`<span class="character character-${c.charCodeAt(0)}" style="left: ${i * 5}px">${c}</span>`
+      c === ":" ? null : html`
+        <span class="character character-${c.charCodeAt(0)}" style="left: ${i *
+          5}px"
+        >${c}</span>
+      `
     );
 
     // Playlist shade: current track title + time
@@ -1510,10 +1868,16 @@ class WinampElement extends DiffuseElement {
       ? `${shadeArtist} - ${nowTrack?.tags?.title ?? ""}`.toLowerCase()
       : (nowTrack?.tags?.title ?? "").toLowerCase();
     const shadeTitleChars = [...shadeTitle].map((c) =>
-      html`<span class="character character-${c.charCodeAt(0)}">${c}</span>`
+      html`
+        <span class="character character-${c.charCodeAt(0)}">${c}</span>
+      `
     );
     const shadeTimeChars = [...miniTimeStr].map((c, i) =>
-      c === ":" ? null : html`<span class="character character-${c.charCodeAt(0)}" style="left: ${i * 5}px">${c}</span>`
+      c === ":" ? null : html`
+        <span class="character character-${c.charCodeAt(0)}" style="left: ${i *
+          5}px"
+        >${c}</span>
+      `
     );
 
     const activeMarquee = this.#marqueeOverride.value ??
@@ -1583,17 +1947,37 @@ class WinampElement extends DiffuseElement {
       }
       </style>
 
-      <div id="webamp" style="display: ${this.#mainOpen.value ? "block" : "none"}">
+      <div id="webamp" style="display: ${this.#mainOpen.value
+        ? "block"
+        : "none"}">
         <div
           id="main-window"
-          class="window ${this.#stopped.value ? "stop" : this.isPlaying() ? "play" : audio ? "pause" : "stop"}${this.#mainShade.value ? " shade" : ""}${focused === "main" ? " selected" : ""}"
-          style="position: absolute; top: ${this.#mainPos.y}px; left: ${this.#mainPos.x}px;"
+          class="window ${this.#stopped.value
+            ? "stop"
+            : this.isPlaying()
+            ? "play"
+            : audio
+            ? "pause"
+            : "stop"}${this.#mainShade.value
+            ? " shade"
+            : ""}${focused === "main" ? " selected" : ""}"
+          style="position: absolute; top: ${this.#mainPos.y}px; left: ${this
+            .#mainPos.x}px;"
         >
-          <div id="title-bar" class="draggable" @dblclick="${this.#toggleMainShade}">
-            <div id="option-context" @click="${this.#toggleMilkdrop}"><div id="option"></div></div>
+          <div id="title-bar" class="draggable" @dblclick="${this
+            .#toggleMainShade}">
+            <div id="option-context" @click="${this.#toggleMilkdrop}">
+              <div id="option"></div>
+            </div>
             <div id="minimize"></div>
             <div id="shade" @click="${this.#toggleMainShade}"></div>
-            ${this.#mainShade.value ? html`<div class="mini-time${isPaused ? " blinking" : ""}">${miniTimeChars}</div>` : ""}
+            ${this.#mainShade.value
+              ? html`
+                <div class="mini-time${isPaused
+                  ? " blinking"
+                  : ""}">${miniTimeChars}</div>
+              `
+              : ""}
             <div id="close" @click="${this.#closeMain}"></div>
           </div>
           <div class="webamp-status">
@@ -1618,7 +2002,9 @@ class WinampElement extends DiffuseElement {
                 .sSecond}"></div>
             </div>
           </div>
-          <canvas id="visualizer" width="76" height="${this.#mainShade.value ? 5 : 16}"></canvas>
+          <canvas id="visualizer" width="76" height="${this.#mainShade.value
+            ? 5
+            : 16}"></canvas>
           <div class="media-info">
             <div id="marquee">
               <div style="white-space: nowrap; will-change: transform; font-size: 0;">
@@ -1684,66 +2070,117 @@ class WinampElement extends DiffuseElement {
 
         <div
           id="equalizer-window"
-          class="window${this.#eqShade.value ? " shade" : ""}${focused === "eq" ? " selected" : ""}"
-          style="position: absolute; top: ${this.#eqPos.y}px; left: ${this.#eqPos.x}px; display: ${this.#eqOpen.value ? "block" : "none"};"
+          class="window${this.#eqShade.value ? " shade" : ""}${focused === "eq"
+            ? " selected"
+            : ""}"
+          style="position: absolute; top: ${this.#eqPos.y}px; left: ${this
+            .#eqPos.x}px; display: ${this.#eqOpen.value ? "block" : "none"};"
         >
-          ${this.#eqShade.value ? html`
-            <div class="draggable" style="width: 100%; height: 100%;" @dblclick="${this.#toggleEqShade}">
-              <div id="equalizer-shade" @click="${this.#toggleEqShade}"></div>
-              <div id="equalizer-close" @click="${this.#toggleEq}"></div>
-              <input type="range" id="equalizer-volume" class="${volumeClass}" min="0" max="100" value="${volumePct}" @input="${this.#onVolumeInput}">
-              <input type="range" id="equalizer-balance" class="${balanceClass}" min="-100" max="100" value="${balance}" @input="${this.#onBalanceInput}">
-            </div>
-          ` : html`
-            <div class="equalizer-top title-bar draggable" @dblclick="${this.#toggleEqShade}">
-              <div id="equalizer-shade" @click="${this.#toggleEqShade}"></div>
-              <div id="equalizer-close" @click="${this.#toggleEq}"></div>
-            </div>
-            <div id="on" class="${this.#eqOn.value ? "selected" : ""}" @click="${this.#toggleEqOn}"></div>
-            <div id="auto" @click="${this.#resetEq}"></div>
-            <canvas id="eqGraph" width="113" height="19"></canvas>
-            <div id="presets-context"><div id="presets"></div></div>
-            <div id="preamp">${bandSlider(preampVal, true)}</div>
-            <div id="preamp-line"></div>
-            <div id="plus12db"></div>
-            <div id="zerodb"></div>
-            <div id="minus12db"></div>
-            ${EQ_BANDS.map((hz, i) =>
-              html`<div id="band-${hz}">${bandSlider(bandVals[i], false, i)}</div>`
-            )}
-          `}
+          ${this.#eqShade.value
+            ? html`
+              <div
+                class="draggable"
+                style="width: 100%; height: 100%;"
+                @dblclick="${this.#toggleEqShade}"
+              >
+                <div id="equalizer-shade" @click="${this.#toggleEqShade}"></div>
+                <div id="equalizer-close" @click="${this.#toggleEq}"></div>
+                <input
+                  type="range"
+                  id="equalizer-volume"
+                  class="${volumeClass}"
+                  min="0"
+                  max="100"
+                  value="${volumePct}"
+                  @input="${this.#onVolumeInput}"
+                >
+                <input
+                  type="range"
+                  id="equalizer-balance"
+                  class="${balanceClass}"
+                  min="-100"
+                  max="100"
+                  value="${balance}"
+                  @input="${this.#onBalanceInput}"
+                >
+              </div>
+            `
+            : html`
+              <div class="equalizer-top title-bar draggable" @dblclick="${this
+                .#toggleEqShade}">
+                <div id="equalizer-shade" @click="${this.#toggleEqShade}"></div>
+                <div id="equalizer-close" @click="${this.#toggleEq}"></div>
+              </div>
+              <div id="on" class="${this.#eqOn.value
+                ? "selected"
+                : ""}" @click="${this.#toggleEqOn}"></div>
+              <div id="auto" @click="${this.#resetEq}"></div>
+              <canvas id="eqGraph" width="113" height="19"></canvas>
+              <div id="presets-context"><div id="presets"></div></div>
+              <div id="preamp">${bandSlider(preampVal, true)}</div>
+              <div id="preamp-line"></div>
+              <div id="plus12db"></div>
+              <div id="zerodb"></div>
+              <div id="minus12db"></div>
+              ${EQ_BANDS.map((hz, i) =>
+                html`
+                  <div id="band-${hz}">${bandSlider(
+                    bandVals[i],
+                    false,
+                    i,
+                  )}</div>
+                `
+              )}
+            `}
         </div>
 
-        ${this.#playlistShade.value && this.#playlistOpen.value ? html`
-        <div
-          id="playlist-window-shade"
-          class="window draggable${focused === "playlist" ? " selected" : ""}"
-          style="position: absolute; top: ${this.#playlistPos.y}px; left: ${this.#playlistPos.x}px; width: ${this.#playlistSize.width}px;"
-        >
-          <div class="left">
-            <div class="right draggable">
-              <div id="playlist-shade-track-title">${shadeTitleChars}</div>
-              <div id="playlist-shade-time">${shadeTimeChars}</div>
-              <div id="playlist-shade-button" @click="${this.#togglePlaylistShade}"></div>
-              <div id="playlist-close-button" @click="${this.#togglePlaylist}"></div>
+        ${this.#playlistShade.value && this.#playlistOpen.value
+          ? html`
+            <div
+              id="playlist-window-shade"
+              class="window draggable${focused === "playlist"
+                ? " selected"
+                : ""}"
+              style="position: absolute; top: ${this.#playlistPos
+                .y}px; left: ${this.#playlistPos.x}px; width: ${this
+                .#playlistSize.width}px;"
+            >
+              <div class="left">
+                <div class="right draggable">
+                  <div id="playlist-shade-track-title">${shadeTitleChars}</div>
+                  <div id="playlist-shade-time">${shadeTimeChars}</div>
+                  <div id="playlist-shade-button" @click="${this
+                    .#togglePlaylistShade}"></div>
+                  <div id="playlist-close-button" @click="${this
+                    .#togglePlaylist}"></div>
+                </div>
+              </div>
             </div>
-          </div>
-        </div>
-        ` : ""}
+          `
+          : ""}
 
         <div
           id="playlist-window"
           class="window${focused === "playlist" ? " selected" : ""}"
-          style="position: absolute; top: ${this.#playlistPos.y}px; left: ${this.#playlistPos.x}px; height: ${this.#playlistSize.height}px; width: ${this.#playlistSize.width}px; display: ${this.#playlistOpen.value && !this.#playlistShade.value ? "flex" : "none"};"
+          style="position: absolute; top: ${this.#playlistPos.y}px; left: ${this
+            .#playlistPos.x}px; height: ${this.#playlistSize
+            .height}px; width: ${this.#playlistSize
+            .width}px; display: ${this.#playlistOpen.value &&
+              !this.#playlistShade.value
+            ? "flex"
+            : "none"};"
         >
-          <div class="playlist-top draggable" @dblclick="${this.#togglePlaylistShade}">
+          <div class="playlist-top draggable" @dblclick="${this
+            .#togglePlaylistShade}">
             <div class="playlist-top-left draggable"></div>
             <div class="playlist-top-left-fill draggable"></div>
             <div class="playlist-top-title draggable"></div>
             <div class="playlist-top-right-fill draggable"></div>
             <div class="playlist-top-right draggable">
-              <div id="playlist-shade-button" @click="${this.#togglePlaylistShade}"></div>
-              <div id="playlist-close-button" @click="${this.#togglePlaylist}"></div>
+              <div id="playlist-shade-button" @click="${this
+                .#togglePlaylistShade}"></div>
+              <div id="playlist-close-button" @click="${this
+                .#togglePlaylist}"></div>
             </div>
           </div>
           <div class="playlist-middle">
@@ -1752,36 +2189,55 @@ class WinampElement extends DiffuseElement {
               class="playlist-middle-center"
               style="background-color: #000000; overflow-y: auto; font-family: Arial, sans-serif;"
             >
-              <div class="playlist-tracks">
-                <div class="playlist-track-titles">
-                  ${playlistRows.map((r) =>
-                    html`
-                      <div
-                        class="track-cell"
-                        style="color: ${r.color}; background-color: ${r.bg};"
-                        @click="${() => this.#selectTrack(r.idx)}"
-                        @dblclick="${() => this.#playTrack(r.idx)}"
-                      >
-                        ${r.n}. ${r.label}
-                      </div>
-                    `
-                  )}
-                </div>
-                <div class="playlist-track-durations">
-                  ${playlistRows.map((r) =>
-                    html`
-                      <div
-                        class="track-cell"
-                        style="color: ${r.color}; background-color: ${r.bg};"
-                        @click="${() => this.#selectTrack(r.idx)}"
-                        @dblclick="${() => this.#playTrack(r.idx)}"
-                      >
-                        ${r.dur}
-                      </div>
-                    `
-                  )}
-                </div>
-              </div>
+              ${guard([
+                this.#playlist.value,
+                selectedIdx,
+                this.#dragState.value,
+              ], () =>
+                html`
+                  <div class="playlist-tracks">
+                    <div class="playlist-track-titles">
+                      ${repeat(playlistRows, (r) => r.id, (r) =>
+                        html`
+                          <div
+                            class="track-cell"
+                            style="color: ${r.color}; background-color: ${r
+                              .bg}; cursor: grab;"
+                            @click="${() => this.#selectTrack(r.idx)}"
+                            @dblclick="${() => this.#playTrack(r.idx)}"
+                            @mousedown="${(/** @type {MouseEvent} */ e) =>
+                              this.#onTrackMouseDown(
+                                e,
+                                r.idx,
+                                allItems.length,
+                              )}"
+                          >
+                            ${r.n}. ${r.label}
+                          </div>
+                        `)}
+                    </div>
+                    <div class="playlist-track-durations">
+                      ${repeat(playlistRows, (r) => r.id, (r) =>
+                        html`
+                          <div
+                            class="track-cell"
+                            style="color: ${r.color}; background-color: ${r
+                              .bg}; cursor: grab;"
+                            @click="${() => this.#selectTrack(r.idx)}"
+                            @dblclick="${() => this.#playTrack(r.idx)}"
+                            @mousedown="${(/** @type {MouseEvent} */ e) =>
+                              this.#onTrackMouseDown(
+                                e,
+                                r.idx,
+                                allItems.length,
+                              )}"
+                          >
+                            ${r.dur}
+                          </div>
+                        `)}
+                    </div>
+                  </div>
+                `)}
             </div>
             <div class="playlist-middle-right">
               <div class="playlist-scrollbar">
@@ -1791,7 +2247,9 @@ class WinampElement extends DiffuseElement {
           </div>
           <div class="playlist-bottom">
             <div class="playlist-bottom-left">
-              <div id="playlist-add-menu" class="playlist-menu" @click="${this.#openConnect}"></div>
+              <div id="playlist-add-menu" class="playlist-menu" @click="${this
+                .#openConnect}">
+              </div>
               <div id="playlist-remove-menu" class="playlist-menu"></div>
               <div id="playlist-selection-menu" class="playlist-menu"></div>
               <div id="playlist-misc-menu" class="playlist-menu"></div>
@@ -1799,14 +2257,20 @@ class WinampElement extends DiffuseElement {
             <div class="playlist-bottom-center"></div>
             <div class="playlist-bottom-right">
               <div class="playlist-running-time-display draggable">${totalTimeChars}</div>
-              <div class="mini-time${isPaused ? " blinking" : ""}">${playlistMiniTimeChars}</div>
+              <div class="mini-time${isPaused
+                ? " blinking"
+                : ""}">${playlistMiniTimeChars}</div>
               <div class="playlist-action-buttons">
-                <div class="playlist-previous-button" @click="${this.#previous}"></div>
-                <div class="playlist-play-button" @click="${this.#playPause}"></div>
-                <div class="playlist-pause-button" @click="${this.#playPause}"></div>
+                <div class="playlist-previous-button" @click="${this
+                  .#previous}"></div>
+                <div class="playlist-play-button" @click="${this
+                  .#playPause}"></div>
+                <div class="playlist-pause-button" @click="${this
+                  .#playPause}"></div>
                 <div class="playlist-stop-button" @click="${this.#stop}"></div>
                 <div class="playlist-next-button" @click="${this.#next}"></div>
-                <div class="playlist-eject-button" @click="${this.#openConnect}"></div>
+                <div class="playlist-eject-button" @click="${this
+                  .#openConnect}"></div>
               </div>
               <div id="playlist-list-menu" class="playlist-menu"></div>
               <div id="playlist-resize-target"></div>
@@ -1816,20 +2280,31 @@ class WinampElement extends DiffuseElement {
 
         <div
           id="milkdrop-window"
-          class="window gen-window${this.#focusedWindow.value === "milkdrop" ? " selected" : ""}"
-          style="position: absolute; top: ${this.#milkdropPos.y}px; left: ${this.#milkdropPos.x}px; width: ${this.#milkdropSize.width}px; height: ${this.#milkdropSize.height}px; display: ${this.#milkdropOpen.value ? "flex" : "none"};"
+          class="window gen-window${this.#focusedWindow.value === "milkdrop"
+            ? " selected"
+            : ""}"
+          style="position: absolute; top: ${this.#milkdropPos.y}px; left: ${this
+            .#milkdropPos.x}px; width: ${this.#milkdropSize
+            .width}px; height: ${this.#milkdropSize
+            .height}px; display: ${this.#milkdropOpen.value ? "flex" : "none"};"
         >
           <div class="gen-top draggable">
             <div class="gen-top-left draggable"></div>
             <div class="gen-top-left-fill draggable"></div>
             <div class="gen-top-left-end draggable"></div>
             <div class="gen-top-title draggable">
-              ${"MILKDROP".split("").map((c) => html`<div class="draggable gen-text-letter gen-text-${c.toLowerCase()}"></div>`)}
+              ${"MILKDROP".split("").map((c) =>
+                html`
+                  <div class="draggable gen-text-letter gen-text-${c
+                    .toLowerCase()}"></div>
+                `
+              )}
             </div>
             <div class="gen-top-right-end draggable"></div>
             <div class="gen-top-right-fill draggable"></div>
             <div class="gen-top-right draggable">
-              <div class="gen-close selected" @click="${this.#toggleMilkdrop}"></div>
+              <div class="gen-close selected" @click="${this
+                .#toggleMilkdrop}"></div>
             </div>
           </div>
           <div class="gen-middle">
@@ -1837,7 +2312,11 @@ class WinampElement extends DiffuseElement {
               <div class="gen-middle-left-bottom draggable"></div>
             </div>
             <div class="gen-middle-center" style="background: #000;">
-              <canvas id="milkdrop-canvas" style="position: absolute; inset: 0; width: 100%; height: 100%;"></canvas>
+              <canvas
+                id="milkdrop-canvas"
+                style="position: absolute; inset: 0; width: 100%; height: 100%;"
+                @dblclick="${this.#toggleMilkdropFullscreen}"
+              ></canvas>
             </div>
             <div class="gen-middle-right draggable">
               <div class="gen-middle-right-bottom draggable"></div>
@@ -1850,7 +2329,6 @@ class WinampElement extends DiffuseElement {
             </div>
           </div>
         </div>
-
       </div>
     `;
   }

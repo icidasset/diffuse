@@ -114,6 +114,109 @@ export function fill({ augment, amount, shuffled }) {
 }
 
 /**
+ * @type {Actions['move']}
+ *
+ * @example Moves an item forward in the flat list
+ * ```js
+ * import { move, $future } from "~/components/engine/queue/worker.js";
+ *
+ * $future.value = [
+ *   { id: "a", manualEntry: true },
+ *   { id: "b", manualEntry: true },
+ *   { id: "c", manualEntry: true },
+ * ];
+ *
+ * move({ from: 0, to: 2 });
+ *
+ * if ($future.value[0].id !== "b") throw new Error("expected 'b' first");
+ * if ($future.value[1].id !== "c") throw new Error("expected 'c' second");
+ * if ($future.value[2].id !== "a") throw new Error("expected 'a' last");
+ * ```
+ *
+ * @example Moves an item backward in the flat list
+ * ```js
+ * import { move, $future } from "~/components/engine/queue/worker.js";
+ *
+ * $future.value = [
+ *   { id: "a", manualEntry: true },
+ *   { id: "b", manualEntry: true },
+ *   { id: "c", manualEntry: true },
+ * ];
+ *
+ * move({ from: 2, to: 0 });
+ *
+ * if ($future.value[0].id !== "c") throw new Error("expected 'c' first");
+ * if ($future.value[1].id !== "a") throw new Error("expected 'a' second");
+ * if ($future.value[2].id !== "b") throw new Error("expected 'b' last");
+ * ```
+ *
+ * @example Preserves now identity when reordering across past/future
+ * ```js
+ * import { move, $past, $now, $future } from "~/components/engine/queue/worker.js";
+ *
+ * $past.value = [{ id: "a", manualEntry: false }];
+ * $now.value = { id: "b", manualEntry: false };
+ * $future.value = [{ id: "c", manualEntry: false }];
+ *
+ * // flat list is [a(0), b(1), c(2)]; moving c to front → [c, a, b]
+ * move({ from: 2, to: 0 });
+ *
+ * if ($now.value?.id !== "b") throw new Error("now should still be 'b'");
+ * if ($past.value[0]?.id !== "c") throw new Error("expected 'c' first in past");
+ * if ($past.value[1]?.id !== "a") throw new Error("expected 'a' second in past");
+ * if ($future.value.length !== 0) throw new Error("future should be empty");
+ * ```
+ *
+ * @example Does nothing when from equals to
+ * ```js
+ * import { move, $future } from "~/components/engine/queue/worker.js";
+ *
+ * $future.value = [{ id: "a", manualEntry: true }, { id: "b", manualEntry: true }];
+ *
+ * move({ from: 1, to: 1 });
+ *
+ * if ($future.value[0].id !== "a") throw new Error("order should be unchanged");
+ * if ($future.value[1].id !== "b") throw new Error("order should be unchanged");
+ * ```
+ *
+ * @example Does nothing for out-of-bounds indices
+ * ```js
+ * import { move, $future } from "~/components/engine/queue/worker.js";
+ *
+ * $future.value = [{ id: "a", manualEntry: true }, { id: "b", manualEntry: true }];
+ *
+ * move({ from: 0, to: 99 });
+ *
+ * if ($future.value[0].id !== "a") throw new Error("order should be unchanged");
+ * if ($future.value[1].id !== "b") throw new Error("order should be unchanged");
+ * ```
+ */
+export function move({ from, to }) {
+  const all = [
+    ...$past.value,
+    ...($now.value ? [$now.value] : []),
+    ...$future.value,
+  ];
+
+  if (from === to || from < 0 || to < 0 || from >= all.length || to >= all.length) return;
+
+  const [item] = all.splice(from, 1);
+  all.splice(to, 0, item);
+
+  const now = $now.value;
+  if (now) {
+    const nowIdx = all.indexOf(now);
+    $past.value = all.slice(0, nowIdx);
+    $now.value = all[nowIdx] ?? null;
+    $future.value = all.slice(nowIdx + 1);
+  } else {
+    const pastLen = $past.value.length;
+    $past.value = all.slice(0, pastLen);
+    $future.value = all.slice(pastLen);
+  }
+}
+
+/**
  * @type {Actions['shift']}
  */
 export function shift() {
@@ -215,6 +318,7 @@ ostiary((context, _firstConnection, _connectionId) => {
     add,
     clear,
     fill,
+    move,
     shift,
     supply,
     unshift,

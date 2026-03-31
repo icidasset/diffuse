@@ -14,6 +14,7 @@ export type Actions = {
       shuffled: boolean;
     },
   ) => void;
+  move: (args: { from: number; to: number }) => void;
   shift: () => void;
   supply: (args: { trackIds: string[] }) => void;
   unshift: () => void;
