@@ -30,6 +30,13 @@
     "desc": "Store tracks locally for offline usage automatically after they've been playing for a little while."
   },
   {
+    "url": "facets/misc/command/index.html",
+    "title": "Command Menu",
+    "category": "Misc",
+    "featured": true,
+    "desc": "A command palette for common actions: add the now-playing track to Favourites, select or create playlists, remove playlists, and toggle repeat/shuffle."
+  },
+  {
     "url": "facets/connect/index.html",
     "title": "Connect",
     "category": "Data",
@@ -140,13 +147,6 @@
     "title": "Scrobble / Last.fm",
     "category": "Misc",
     "desc": "Connect to Last.fm to setup the Last.fm scrobbler."
-  },
-  {
-    "url": "facets/misc/command/index.html",
-    "title": "Command Menu",
-    "category": "Misc",
-    "featured": true,
-    "desc": "A command palette for common actions: add the now-playing track to Favourites, select or create playlists, remove playlists, and toggle repeat/shuffle."
   },
   {
     "url": "facets/misc/split-view/index.html",
