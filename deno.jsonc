@@ -42,6 +42,7 @@
     "fast-average-color": "npm:fast-average-color@^9.5.0",
     "fast-uri": "npm:fast-uri@^3.1.0",
     "idb-keyval": "npm:idb-keyval@^6.2.2",
+    "kmenu": "npm:kmenu@^2.0.3",
     "iso-base": "npm:iso-base@^4.3.0",
     "lit-html": "npm:lit-html@^3.3.2",
     "marked": "npm:marked@^17.0.4",

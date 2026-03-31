@@ -142,6 +142,13 @@
     "desc": "Connect to Last.fm to setup the Last.fm scrobbler."
   },
   {
+    "url": "facets/misc/command/index.html",
+    "title": "Command Menu",
+    "category": "Misc",
+    "featured": true,
+    "desc": "A command palette for common actions: add the now-playing track to Favourites, select or create playlists, remove playlists, and toggle repeat/shuffle."
+  },
+  {
     "url": "facets/misc/split-view/index.html",
     "title": "Split View",
     "category": "Misc",
