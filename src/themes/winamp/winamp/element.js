@@ -2202,7 +2202,7 @@ class WinampElement extends DiffuseElement {
                           <div
                             class="track-cell"
                             style="color: ${r.color}; background-color: ${r
-                              .bg}; cursor: grab;"
+                              .bg};"
                             @click="${() => this.#selectTrack(r.idx)}"
                             @dblclick="${() => this.#playTrack(r.idx)}"
                             @mousedown="${(/** @type {MouseEvent} */ e) =>
