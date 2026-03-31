@@ -486,7 +486,7 @@ class ATProtoOutput extends BroadcastedOutputElement {
     this.#writeDraining = true;
 
     while (this.#writeQueue.length > 0) {
-      const { fn, resolve, reject } = /** @type {NonNullable<typeof this.#writeQueue[0]>} */ (
+      const { fn, resolve, reject } = /** @type {{ fn: () => Promise<void>, resolve: () => void, reject: (err: unknown) => void }} */ (
         this.#writeQueue.shift()
       );
       try {
