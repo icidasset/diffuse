@@ -1,27 +1,128 @@
 <style>
-  @import "./vendor/@awesome.me/webawesome/styles/webawesome.css" layer(wa);
-  @import "./facets/connect/common.css" layer(connect);
+  @import "./styles/base.css";
+  @import "./vendor/@phosphor-icons/web/fill/style.css";
 
-  @layer base, diffuse, wa;
+  @layer base, diffuse;
 
-  ul li {
-    margin-left: 0;
+  body {
+    background-color: var(--bg-color);
+    color: var(--text-color);
+  }
+
+  main {
+    padding: var(--space-2xl) var(--space-xl);
+
+    @media (min-width: 48rem) {
+      align-items: center;
+      display: flex;
+      flex-direction: row;
+      gap: var(--space-2xl);
+      justify-content: center;
+      min-height: 100dvh;
+    }
+  }
+
+  .connect-index__left {
+    flex: 1;
+    margin-bottom: var(--space-lg);
+    max-width: 24rem;
+  }
+
+  .connect-index__right {
+    flex: 1;
+    max-width: 24rem;
+  }
+
+  .diffuse-logo-container {
+    display: block;
+    margin-bottom: var(--space-lg);
+
+    svg {
+      display: block;
+      fill: oklch(from var(--bg-color) calc(l - 0.5) c h);
+      opacity: 0.2;
+      width: 5em;
+
+      @media (prefers-color-scheme: dark) {
+        fill: var(--text-color);
+        opacity: 0.25;
+      }
+    }
+  }
+
+  h1 {
+    font-size: var(--fs-2xl);
+    font-weight: 700;
+    letter-spacing: -0.02em;
+    line-height: 1.2;
+    margin: 0 0 var(--space-sm);
+  }
+
+  p {
+    color: oklch(from var(--text-color) l c h / 0.55);
+    font-size: var(--fs-sm);
+    line-height: var(--leading-relaxed);
+    margin: 0;
+    max-width: 22rem;
+  }
+
+  ul {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-md);
+  }
+
+  li {
+    margin: 0;
+  }
+
+  .connect-item {
+    align-items: center;
+    display: flex;
+    gap: var(--space-md);
   }
 
   .connect-item[href] {
-    text-decoration: none;
+    border-radius: var(--radius-md);
     color: inherit;
-    border-radius: var(--wa-border-radius-m);
-    gap: var(--wa-space-m);
-    padding: var(--wa-space-2xs);
-    margin: calc(-1 * var(--wa-space-2xs));
+    margin: calc(-1 * var(--space-2xs));
+    padding: var(--space-2xs);
+    text-decoration: none;
 
     &:hover {
-      background: var(--wa-color-fill-quiet);
+      background: oklch(from var(--text-color) l c h / 0.05);
     }
+  }
+
+  .connect-item__icon {
+    flex-shrink: 0;
+    font-size: var(--fs-base);
+  }
+
+  .connect-item__info {
+    display: flex;
+    flex-direction: column;
+    flex: 1;
+    gap: var(--space-3xs);
+    min-width: 0;
+  }
+
+  .connect-item__name {
+    font-weight: 600;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  .connect-item__detail {
+    color: oklch(from var(--text-color) l c h / 0.55);
+    font-size: var(--fs-xs);
   }
 </style>
 
-<main class="wa-theme-default"></main>
+<main></main>
 
 <script type="module" src="./facets/connect/index.inline.js"></script>

@@ -1,12 +1,5 @@
 import { html, render as litRender } from "lit-html";
 
-import "@awesome.me/webawesome/dist/components/card/card.js";
-import "@awesome.me/webawesome/dist/components/divider/divider.js";
-import "@awesome.me/webawesome/dist/components/icon/icon.js";
-
-import "~/common/webawesome/detect-dark.js";
-import "~/common/webawesome/phosphor/fill.js";
-
 import { data as facetsData } from "~/facets/index.js";
 import foundation from "~/common/foundation.js";
 
@@ -43,38 +36,40 @@ if (!main) throw new Error("No <main> element");
 
 litRender(
   html`
-    <wa-card>
-      <div slot="header" class="card-header">
-        <strong>Connect</strong>
-      </div>
-      <div class="card-body">
-        <p>
-          These are some of the options available to add as an audio source, or to
-          use as user-data storage. Some offer both.
-        </p>
-        <wa-divider></wa-divider>
-        <ul class="connect-list">
-          ${facets.map(({ name, description, icon, href }) =>
-            html`
-              <li>
-                <a class="connect-item" href="${href}">
-                  <wa-icon
-                    library="phosphor/fill"
-                    name="${icon}"
-                    class="wa-body-l"
-                    style="flex-shrink: 0;"
-                  ></wa-icon>
-                  <div class="connect-item__info">
-                    <span class="connect-item__name">${name}</span>
-                    <span class="connect-item__detail">${description}</span>
-                  </div>
-                </a>
-              </li>
-            `
-          )}
-        </ul>
-      </div>
-    </wa-card>
+    <div class="connect-index__left">
+      <a href="./dashboard/" class="diffuse-logo-container">
+        <svg viewBox="0 0 902 134" width="160">
+          <title>Diffuse</title>
+          <use
+            xlink:href="images/diffuse-current.svg#diffuse"
+            href="images/diffuse-current.svg#diffuse"
+          >
+          </use>
+        </svg>
+      </a>
+      <h1>Connect</h1>
+      <p>
+        These are some of the options available to add as an audio source, or to use
+        as user-data storage. Some offer both.
+      </p>
+    </div>
+    <div class="connect-index__right">
+      <ul class="connect-list">
+        ${facets.map(({ name, description, icon, href }) =>
+          html`
+            <li>
+              <a class="connect-item" href="${href}">
+                <i class="ph-fill ph-${icon} connect-item__icon"></i>
+                <div class="connect-item__info">
+                  <span class="connect-item__name">${name}</span>
+                  <span class="connect-item__detail">${description}</span>
+                </div>
+              </a>
+            </li>
+          `
+        )}
+      </ul>
+    </div>
   `,
   main,
 );
