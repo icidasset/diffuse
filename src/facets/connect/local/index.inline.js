@@ -49,48 +49,46 @@ const { setItems, setError } = setup({
 
   description: html`
     <p>Add local directories or files as audio input.</p>
+  `,
 
+  rightContent: html`
     <label class="dropzone" id="local-dropzone">
-      <input id="local-dropzone-input" type="file" multiple hidden />
-      <wa-icon library="phosphor/bold" name="upload-simple"></wa-icon>
+      <input id="local-dropzone-input" type="file" accept="audio/*" multiple hidden />
+      <i class="ph-bold ph-upload-simple"></i>
       <span>Drop or click to select files</span>
     </label>
 
-    <wa-divider id="local-ephemeral-divider" hidden></wa-divider>
+    <hr id="local-ephemeral-divider" hidden>
     <div id="local-ephemeral-row" class="button-row" hidden>
-      <wa-button
+      <button
         id="local-clear-ephemeral-btn"
-        variant="danger"
-        appearance="outlined"
-        size="small"
+        class="button--danger button--small"
         style="width: 100%"
       >
-        <wa-icon slot="start" library="phosphor/bold" name="trash"></wa-icon>
+        <i class="ph-bold ph-trash"></i>
         Clear files
-      </wa-button>
+      </button>
     </div>
 
     ${supported
       ? html`
-        <wa-divider></wa-divider>
+        <hr>
 
         <div class="button-row">
-          <wa-button id="local-add-dir-btn" variant="neutral" appearance="filled">
-            <wa-icon slot="start" library="phosphor/fill" name="folder-open"></wa-icon>
+          <button id="local-add-dir-btn">
+            <i class="ph-fill ph-folder-open"></i>
             Add directory
-          </wa-button>
-          <wa-button id="local-add-files-btn" variant="neutral" appearance="filled">
-            <wa-icon slot="start" library="phosphor/fill" name="music-notes"></wa-icon>
+          </button>
+          <button id="local-add-files-btn">
+            <i class="ph-fill ph-music-notes"></i>
             Add files
-          </wa-button>
+          </button>
         </div>
       `
       : nothing}
   `,
 
-  formFields: html`
-
-  `,
+  formFields: html``,
   onSubmit: async () => {},
 });
 
@@ -113,7 +111,9 @@ const dropzoneInput =
   ));
 
 dropzoneInput?.addEventListener("change", async () => {
-  const files = Array.from(dropzoneInput.files ?? []);
+  const files = Array.from(dropzoneInput.files ?? []).filter((f) =>
+    f.type.startsWith("audio/")
+  );
   dropzoneInput.value = "";
   if (files.length === 0) return;
   await cacheFiles(files);
@@ -323,7 +323,7 @@ async function collectFiles(items) {
         files.push(...dirFiles);
       } else {
         const file = item.getAsFile();
-        if (file) files.push(file);
+        if (file?.type.startsWith("audio/")) files.push(file);
       }
     }),
   );
@@ -362,7 +362,7 @@ async function readDirectoryEntry(dir) {
                 (res, rej) =>
                   /** @type {FileSystemFileEntry} */ (entry).file(res, rej),
               );
-              files.push(file);
+              if (file.type.startsWith("audio/")) files.push(file);
             }
           }),
         );

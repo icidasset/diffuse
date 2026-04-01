@@ -1,6 +1,3 @@
-import "@awesome.me/webawesome/dist/components/callout/callout.js";
-import "@awesome.me/webawesome/dist/components/input/input.js";
-
 import { html, nothing, render as litRender } from "lit-html";
 
 import { NAME as ATPROTO_NAME } from "~/components/output/raw/atproto/element.js";
@@ -13,7 +10,6 @@ import { setup } from "~/facets/connect/common.js";
 foundation.setup({ title: "Connect AT Protocol | Diffuse" });
 
 /**
- * @import { default as WaInput } from "@awesome.me/webawesome/dist/components/input/input.js"
  * @import { ATProtoOutputElement } from "~/components/output/raw/atproto/types.d.ts"
  * @import TrackUriPasskeyTransformer from "~/components/transformer/output/refiner/track-uri-passkey/element.js"
  */
@@ -23,21 +19,38 @@ foundation.setup({ title: "Connect AT Protocol | Diffuse" });
 ////////////////////////////////////////////
 
 const outputOrchestrator = await foundation.orchestrator.output();
-await customElements.whenDefined(outputOrchestrator.localName);
 
-const atprotoOption = (await outputOrchestrator.options()).find(
-  (o) => o.label === "AT Protocol",
-);
+await customElements.whenDefined(outputOrchestrator.localName);
+await customElements.whenDefined(ATPROTO_NAME);
+
+// The AT Protocol option is added dynamically by the output-bundle facet, which
+// runs in a separate script and appends the element to the output configurator
+// via a signal effect. That effect may not have fired yet when this facet loads,
+// so we observe the configurator for child-list mutations and resolve as soon as
+// the option appears.
+const outputConfigurator = outputOrchestrator.outputConfigurator;
+
+const atprotoOption = await new Promise((resolve) => {
+  const check = async () => {
+    const opt = (await outputOrchestrator.options()).find(
+      (o) => o.label === "AT Protocol",
+    );
+    if (opt) {
+      observer.disconnect();
+      resolve(opt);
+    }
+  };
+
+  const observer = new MutationObserver(check);
+  observer.observe(outputConfigurator, { childList: true });
+  check();
+});
+
+const ATPROTO_OUTPUT_ID = atprotoOption.id;
 
 const atprotoEl = /** @type {ATProtoOutputElement | undefined} */ (
   outputOrchestrator.root().querySelector(ATPROTO_NAME)
 );
-
-if (!atprotoOption) {
-  throw new Error("AT Protocol output was not enabled!");
-}
-
-const ATPROTO_OUTPUT_ID = atprotoOption.id;
 
 const atprotoPasskeyEl = /** @type {TrackUriPasskeyTransformer | null} */ (
   outputOrchestrator.root().querySelector(
@@ -64,19 +77,13 @@ const { setItems } = setup({
     <p>
       Connect to your AT Protocol identity to use it as user-data storage.
     </p>
-    <p class="wa-caption-xs">
+    <p class="caption">
       Your data is stored as lexicon records in your personal data server (PDS).
     </p>
   `,
 
   formFields: html`
-    <wa-input
-      id="atproto-handle"
-      label="Handle"
-      placeholder="you.bsky.social"
-      required
-    ></wa-input>
-    <p class="wa-caption-xs">* Required fields</p>
+    <label>Handle <input id="atproto-handle" placeholder="you.bsky.social" required></label>
   `,
 
   onSubmit: (_mode) => connect(),
@@ -87,7 +94,7 @@ const { setItems } = setup({
 });
 
 const handleInput =
-  /** @type {WaInput} */ (document.querySelector("#atproto-handle"));
+  /** @type {HTMLInputElement} */ (document.querySelector("#atproto-handle"));
 
 ////////////////////////////////////////////
 // REACTIVE LIST
@@ -120,8 +127,7 @@ effect(() => {
 
 if (atprotoPasskeyEl) {
   const passkeyRoot = document.createElement("div");
-  passkeyRoot.classList.add("wa-stack");
-  document.querySelector("main .card-body")?.appendChild(passkeyRoot);
+  document.querySelector("main .facet__right")?.appendChild(passkeyRoot);
 
   effect(() => {
     const passkeyActive = atprotoPasskeyEl.passkeyActive() ?? false;
@@ -131,7 +137,7 @@ if (atprotoPasskeyEl) {
 
     litRender(
       html`
-        <wa-divider style="margin: var(--spacing) 0"></wa-divider>
+        <hr>
 
         <div>
           <strong>Passkey encryption (optional)</strong>
@@ -142,61 +148,44 @@ if (atprotoPasskeyEl) {
             <p>Passkey active — Track URIs are encrypted.</p>
 
             ${passkeyError
-              ? html`
-                <wa-callout variant="danger">${passkeyError}</wa-callout>
-              `
+              ? html`<div class="callout callout--danger">${passkeyError}</div>`
               : nothing}
 
             <div class="button-row">
-              <wa-button
-                variant="neutral"
-                appearance="outlined"
-                @click="${handlePasskeyRemove}"
-              >Remove passkey</wa-button>
+              <button @click="${handlePasskeyRemove}">Remove passkey</button>
             </div>
 
-            <p class="wa-caption-xs">
+            <p class="caption">
               Removing the passkey will expose all the sensitive information that was
               previously encrypted.
             </p>
           `
           : html`
-            <p class="wa-caption-xs">
+            <p class="caption">
               Track URIs can optionally be encrypted so that passwords and other sensitive
               authentication details are kept private. Note that, with this enabled, other
               people cannot play audio listed on your account.
             </p>
 
             ${passkeyError
-              ? html`
-                <wa-callout variant="danger">${passkeyError}</wa-callout>
-              `
+              ? html`<div class="callout callout--danger">${passkeyError}</div>`
               : nothing}
 
             <div class="button-row">
-              <wa-button
-                variant="neutral"
-                appearance="outlined"
-                ?disabled="${passkeyWorking}"
-                @click="${handlePasskeySetup}"
-              >${passkeyWorking
-                ? "Setting up …"
-                : "Set up passkey encryption"}</wa-button>
-              <wa-button
-                variant="neutral"
-                appearance="outlined"
-                ?disabled="${passkeyWorking}"
-                @click="${handlePasskeyAdopt}"
-              >${passkeyWorking
-                ? "Authenticating …"
-                : "Use existing passkey"}</wa-button>
+              <button ?disabled="${passkeyWorking}" @click="${handlePasskeySetup}">
+                ${passkeyWorking ? "Setting up …" : "Set up passkey encryption"}
+              </button>
+              <button ?disabled="${passkeyWorking}" @click="${handlePasskeyAdopt}">
+                ${passkeyWorking ? "Authenticating …" : "Use existing passkey"}
+              </button>
             </div>
-          `} ${lockedTracksCount > 0
+          `}
+        ${lockedTracksCount > 0
           ? html`
-            <wa-callout variant="warning">
+            <div class="callout callout--warning">
               ${lockedTracksCount} encrypted track(s) cannot be played until you unlock them with
               your passkey.
-            </wa-callout>
+            </div>
           `
           : nothing}
       `,

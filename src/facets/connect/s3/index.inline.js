@@ -1,5 +1,3 @@
-import "@awesome.me/webawesome/dist/components/input/input.js";
-
 import * as TID from "@atcute/tid";
 import { html } from "lit-html";
 
@@ -15,7 +13,6 @@ import { setup } from "~/facets/connect/common.js";
 foundation.setup({ title: "Connect S3 | Diffuse" });
 
 /**
- * @import { default as WaInput } from "@awesome.me/webawesome/dist/components/input/input.js"
  * @import { Bucket } from "~/components/input/s3/types.d.ts"
  * @import { S3OutputElement } from "~/components/output/bytes/s3/types.d.ts"
  */
@@ -63,30 +60,20 @@ const { setItems, setError } = setup({
       Connect to an S3-compatible storage to use it as audio input or user-data
       storage.
     </p>
-    <p class="wa-caption-xs">
+    <p class="caption">
       A custom syncing strategy is used for the user-data storage, tracking what was
       added and removed so conflicts can be resolved.
     </p>
   `,
 
   formFields: html`
-    <wa-input id="s3-access-key" label="Access key" required></wa-input>
-    <wa-input
-      id="s3-secret-key"
-      label="Secret key"
-      type="password"
-      required
-    ></wa-input>
-    <wa-input
-      id="s3-bucket-name"
-      label="Bucket name"
-      placeholder="my-bucket"
-      required
-    ></wa-input>
-    <wa-input id="s3-host" label="Host" placeholder="s3.amazonaws.com"></wa-input>
-    <wa-input id="s3-region" label="Region" placeholder="us-east-1"></wa-input>
-    <wa-input id="s3-path" label="Path" placeholder="/"></wa-input>
-    <p class="wa-caption-xs">* Required fields</p>
+    <label>Access key <input id="s3-access-key" required></label>
+    <label>Secret key <input id="s3-secret-key" type="password" required></label>
+    <label>Bucket name <input id="s3-bucket-name" placeholder="my-bucket" required></label>
+    <label>Host <input id="s3-host" placeholder="s3.amazonaws.com"></label>
+    <label>Region <input id="s3-region" placeholder="us-east-1"></label>
+    <label>Path <input id="s3-path" placeholder="/"></label>
+    <p class="caption">* Required fields</p>
   `,
 
   onSubmit: (mode) => addBucket(mode),
@@ -97,15 +84,15 @@ const { setItems, setError } = setup({
 });
 
 const accessKeyInput =
-  /** @type {WaInput} */ (document.querySelector("#s3-access-key"));
+  /** @type {HTMLInputElement} */ (document.querySelector("#s3-access-key"));
 const secretKeyInput =
-  /** @type {WaInput} */ (document.querySelector("#s3-secret-key"));
+  /** @type {HTMLInputElement} */ (document.querySelector("#s3-secret-key"));
 const bucketNameInput =
-  /** @type {WaInput} */ (document.querySelector("#s3-bucket-name"));
-const hostInput = /** @type {WaInput} */ (document.querySelector("#s3-host"));
+  /** @type {HTMLInputElement} */ (document.querySelector("#s3-bucket-name"));
+const hostInput = /** @type {HTMLInputElement} */ (document.querySelector("#s3-host"));
 const regionInput =
-  /** @type {WaInput} */ (document.querySelector("#s3-region"));
-const pathInput = /** @type {WaInput} */ (document.querySelector("#s3-path"));
+  /** @type {HTMLInputElement} */ (document.querySelector("#s3-region"));
+const pathInput = /** @type {HTMLInputElement} */ (document.querySelector("#s3-path"));
 
 ////////////////////////////////////////////
 // REACTIVE LIST

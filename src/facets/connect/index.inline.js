@@ -37,16 +37,18 @@ if (!main) throw new Error("No <main> element");
 litRender(
   html`
     <div class="connect-index__left">
-      <a href="./dashboard/" class="diffuse-logo-container">
-        <svg viewBox="0 0 902 134" width="160">
-          <title>Diffuse</title>
-          <use
-            xlink:href="images/diffuse-current.svg#diffuse"
-            href="images/diffuse-current.svg#diffuse"
-          >
-          </use>
-        </svg>
-      </a>
+      <div>
+        <a href="./dashboard/" class="diffuse-logo-container">
+          <svg viewBox="0 0 902 134" width="160">
+            <title>Diffuse</title>
+            <use
+              xlink:href="images/diffuse-current.svg#diffuse"
+              href="images/diffuse-current.svg#diffuse"
+            >
+            </use>
+          </svg>
+        </a>
+      </div>
       <h1>Connect</h1>
       <p>
         These are some of the options available to add as an audio source, or to use

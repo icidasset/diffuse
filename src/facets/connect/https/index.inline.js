@@ -1,5 +1,3 @@
-import "@awesome.me/webawesome/dist/components/input/input.js";
-
 import * as TID from "@atcute/tid";
 import { html } from "lit-html";
 
@@ -10,10 +8,6 @@ import { effect } from "~/common/signal.js";
 import foundation from "~/common/foundation.js";
 
 import { setup } from "~/facets/connect/common.js";
-
-/**
- * @import { default as WaInput } from "@awesome.me/webawesome/dist/components/input/input.js"
- */
 
 foundation.setup({ title: "Connect HTTPS | Diffuse" });
 
@@ -47,19 +41,13 @@ const { setItems, setError } = setup({
   `,
 
   formFields: html`
-    <wa-input
-      id="https-url"
-      label="URL"
-      type="url"
-      placeholder="https://example.com/audio.mp3"
-      required
-    ></wa-input>
+    <label>URL <input id="https-url" type="url" placeholder="https://example.com/audio.mp3" required></label>
   `,
 
   onSubmit: () => addUrl(),
 });
 
-const urlInput = /** @type {WaInput} */ (document.querySelector("#https-url"));
+const urlInput = /** @type {HTMLInputElement} */ (document.querySelector("#https-url"));
 
 ////////////////////////////////////////////
 // REACTIVE LIST

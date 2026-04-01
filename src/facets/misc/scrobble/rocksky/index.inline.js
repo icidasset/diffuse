@@ -1,20 +1,8 @@
-import "@awesome.me/webawesome/dist/components/card/card.js";
-import "@awesome.me/webawesome/dist/components/button/button.js";
-import "@awesome.me/webawesome/dist/components/input/input.js";
-import "@awesome.me/webawesome/dist/components/icon/icon.js";
-
-import "~/common/webawesome/detect-dark.js";
-import "~/common/webawesome/phosphor/bold.js";
-
 import { login } from "~/components/output/raw/atproto/oauth.js";
 import { finalizeAuthorization } from "@atcute/oauth-browser-client";
 
 import foundation from "~/common/foundation.js";
 import { effect, signal } from "~/common/signal.js";
-
-/**
- * @import { default as WaInput } from "@awesome.me/webawesome/dist/components/input/input.js"
- */
 
 ////////////////////////////////////////////
 // SETUP
@@ -92,7 +80,7 @@ const handleText = /** @type {HTMLElement} */ (
   document.querySelector("#handle-text")
 );
 
-const handleInput = /** @type {WaInput} */ (
+const handleInput = /** @type {HTMLInputElement} */ (
   document.querySelector("#handle-input")
 );
 

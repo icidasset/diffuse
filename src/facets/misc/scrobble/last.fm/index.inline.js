@@ -1,22 +1,8 @@
-import "@awesome.me/webawesome/dist/components/card/card.js";
-import "@awesome.me/webawesome/dist/components/button/button.js";
-import "@awesome.me/webawesome/dist/components/drawer/drawer.js";
-import "@awesome.me/webawesome/dist/components/input/input.js";
-import "@awesome.me/webawesome/dist/components/icon/icon.js";
-
-import "~/common/webawesome/detect-dark.js";
-import "~/common/webawesome/phosphor/bold.js";
-
 import foundation from "~/common/foundation.js";
 import { effect } from "~/common/signal.js";
 
 // Set doc title
 foundation.setup({ title: "Last.fm | Scrobble | Diffuse" });
-
-/**
- * @import { default as WaDrawer } from "@awesome.me/webawesome/dist/components/drawer/drawer.js"
- * @import { default as WaInput } from "@awesome.me/webawesome/dist/components/input/input.js"
- */
 
 ////////////////////////////////////////////
 // SETUP
@@ -46,12 +32,6 @@ if (!lastFm) {
   lastFm.setAttribute("group", foundation.GROUP);
   configurator.append(lastFm);
 }
-
-// const creds = loadCredentials();
-// if (creds) {
-//   lastFm.setAttribute("api-key", creds.apiKey);
-//   lastFm.setAttribute("api-secret", creds.apiSecret);
-// }
 
 await customElements.whenDefined(lastFm.localName);
 
@@ -87,15 +67,15 @@ const signOutBtn = /** @type {HTMLElement} */ (
   document.querySelector("#sign-out-btn")
 );
 
-const credentialsDrawer = /** @type {WaDrawer} */ (
-  document.querySelector("#credentials-drawer")
+const credentialsDialog = /** @type {HTMLDialogElement} */ (
+  document.querySelector("#credentials-dialog")
 );
 
-const apiKeyInput = /** @type {WaInput} */ (
+const apiKeyInput = /** @type {HTMLInputElement} */ (
   document.querySelector("#api-key-input")
 );
 
-const apiSecretInput = /** @type {WaInput} */ (
+const apiSecretInput = /** @type {HTMLInputElement} */ (
   document.querySelector("#api-secret-input")
 );
 
@@ -107,7 +87,7 @@ const resetCredsBtn = /** @type {HTMLElement} */ (
   document.querySelector("#reset-creds-btn")
 );
 
-// Pre-fill drawer inputs with stored credentials
+// Pre-fill dialog inputs with stored credentials
 const existingCreds = loadCredentials();
 if (existingCreds) {
   apiKeyInput.value = existingCreds.apiKey;
@@ -140,7 +120,7 @@ effect(() => {
 
 settingsBtn?.addEventListener("click", (e) => {
   e.stopPropagation();
-  credentialsDrawer.open = true;
+  credentialsDialog.showModal();
 });
 
 signInBtn.onclick = () => lastFm.signIn();

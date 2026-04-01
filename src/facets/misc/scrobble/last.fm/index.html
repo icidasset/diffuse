@@ -1,96 +1,69 @@
 <style>
-  @import "./vendor/@awesome.me/webawesome/styles/webawesome.css" layer(wa);
+  @import "./styles/base.css";
+  @import "./vendor/@phosphor-icons/web/bold/style.css";
+  @import "./styles/diffuse/facet.css";
 
-  @layer base, diffuse, wa;
+  @layer base, diffuse;
 
-  #container {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    min-height: 100dvh;
-    margin: 0;
-  }
-
-
-  wa-card {
-    width: min(360px, calc(100vw - 2rem));
-  }
-
-  .card-header {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-  }
-
-  .card-body {
+  .facet__right {
     display: flex;
     flex-direction: column;
-    gap: var(--wa-space-m);
-  }
-
-  .drawer-body {
-    display: flex;
-    flex-direction: column;
-    gap: var(--wa-space-m);
-  }
-
-  .drawer-footer {
-    display: flex;
-    gap: var(--wa-space-s);
-  }
-
-  [hidden] {
-    display: none !important;
-  }
-
-  p {
-    margin: 0;
+    gap: var(--space-sm);
+    width: 24rem;
   }
 </style>
 
-<main class="wa-theme-default">
-  <wa-card>
-    <div slot="header" class="card-header">
-      <strong>Last.fm</strong>
-      <!--<wa-button id="settings-btn" appearance="plain" size="small" aria-label="API credentials">
-        <wa-icon name="gear"></wa-icon>
-      </wa-button>-->
+<main>
+  <div class="facet__left">
+    <div>
+      <a href="./dashboard/" class="diffuse-logo-container">
+        <svg viewBox="0 0 902 134" width="160">
+          <title>Diffuse</title>
+          <use
+            xlink:href="images/diffuse-current.svg#diffuse"
+            href="images/diffuse-current.svg#diffuse"
+          ></use>
+        </svg>
+      </a>
+    </div>
+    <h1>Last.fm</h1>
+    <p>Connect your Last.fm account to scrobble tracks.</p>
+  </div>
+
+  <div class="facet__right">
+    <div id="state-connect">
+      <div class="button-row">
+        <button id="sign-in-btn" class="button--brand">
+          <i class="ph-bold ph-plugs"></i>
+          Connect
+        </button>
+      </div>
     </div>
 
-    <div id="state-connect" class="card-body">
-      <p>Connect your Last.fm account to start scrobbling.</p>
-      <wa-button id="sign-in-btn" variant="brand" appearance="filled">
-        <wa-icon slot="start" library="phosphor/bold" name="plugs"></wa-icon>
-        Connect
-      </wa-button>
-    </div>
-
-    <div id="state-connected" class="card-body" hidden>
+    <div id="state-connected" hidden>
       <p id="handle-paragraph" hidden>Connected as <strong id="handle-text"></strong>.</p>
-      <wa-button id="sign-out-btn" variant="neutral" appearance="outlined" hidden>
-        <wa-icon slot="start" library="phosphor/bold" name="plugs-connecte"></wa-icon>
-        Disconnect
-      </wa-button>
+      <div class="button-row">
+        <button id="sign-out-btn" hidden>
+          <i class="ph-bold ph-plugs-connected"></i>
+          Disconnect
+        </button>
+      </div>
     </div>
-  </wa-card>
+  </div>
 
-  <wa-drawer id="credentials-drawer" label="API Credentials" placement="end">
-    <div class="drawer-body">
-      <wa-input id="api-key-input" label="API Key" placeholder="Default"></wa-input>
-      <wa-input
-        id="api-secret-input"
-        label="API Secret"
-        type="password"
-        placeholder="Default"
-      ></wa-input>
+  <dialog id="credentials-dialog">
+    <div class="dialog-header">
+      <strong>API Credentials</strong>
     </div>
-    <div slot="footer" class="drawer-footer">
-      <wa-button id="save-creds-btn" variant="brand" appearance="filled">Save</wa-button>
-      <wa-button id="reset-creds-btn" variant="neutral" appearance="outlined"
-        >Reset to defaults</wa-button
-      >
+    <div class="dialog-body">
+      <label>API Key <input id="api-key-input" placeholder="Default"></label>
+      <label>API Secret <input id="api-secret-input" type="password" placeholder="Default"></label>
     </div>
-  </wa-drawer>
+    <div class="dialog-footer">
+      <button id="save-creds-btn" class="button--brand">Save</button>
+      <button id="reset-creds-btn">Reset to defaults</button>
+    </div>
+  </dialog>
 </main>
 
 <script type="module" src="facets/misc/scrobble/last.fm/index.inline.js"></script>

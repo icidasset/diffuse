@@ -1,17 +1,5 @@
-import "@awesome.me/webawesome/dist/components/card/card.js";
-import "@awesome.me/webawesome/dist/components/button/button.js";
-import "@awesome.me/webawesome/dist/components/input/input.js";
-import "@awesome.me/webawesome/dist/components/icon/icon.js";
-
-import "~/common/webawesome/detect-dark.js";
-import "~/common/webawesome/phosphor/bold.js";
-
 import foundation from "~/common/foundation.js";
 import { effect } from "~/common/signal.js";
-
-/**
- * @import { default as WaInput } from "@awesome.me/webawesome/dist/components/input/input.js"
- */
 
 ////////////////////////////////////////////
 // SETUP
@@ -55,7 +43,7 @@ const handleText = /** @type {HTMLElement} */ (
   document.querySelector("#handle-text")
 );
 
-const tokenInput = /** @type {WaInput} */ (
+const tokenInput = /** @type {HTMLInputElement} */ (
   document.querySelector("#token-input")
 );
 
@@ -85,7 +73,6 @@ effect(() => {
 
   // @ts-ignore
   signInBtn.disabled = isAuthenticating;
-  // @ts-ignore
   tokenInput.disabled = isAuthenticating;
 });
 

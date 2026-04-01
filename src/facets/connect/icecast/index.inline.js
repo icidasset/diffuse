@@ -1,5 +1,3 @@
-import "@awesome.me/webawesome/dist/components/input/input.js";
-
 import * as TID from "@atcute/tid";
 import { html } from "lit-html";
 
@@ -10,10 +8,6 @@ import { effect } from "~/common/signal.js";
 import foundation from "~/common/foundation.js";
 
 import { setup } from "~/facets/connect/common.js";
-
-/**
- * @import { default as WaInput } from "@awesome.me/webawesome/dist/components/input/input.js"
- */
 
 foundation.setup({ title: "Connect Icecast | Diffuse" });
 
@@ -47,20 +41,14 @@ const { setItems, setError } = setup({
   `,
 
   formFields: html`
-    <wa-input
-      id="icecast-url"
-      label="Stream URL"
-      type="url"
-      placeholder="https://example.com/stream"
-      required
-    ></wa-input>
+    <label>Stream URL <input id="icecast-url" type="url" placeholder="https://example.com/stream" required></label>
   `,
 
   onSubmit: () => addStream(),
 });
 
 const urlInput =
-  /** @type {WaInput} */ (document.querySelector("#icecast-url"));
+  /** @type {HTMLInputElement} */ (document.querySelector("#icecast-url"));
 
 ////////////////////////////////////////////
 // REACTIVE LIST
