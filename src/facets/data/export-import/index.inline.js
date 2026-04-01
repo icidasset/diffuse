@@ -112,7 +112,8 @@ fileInput.onchange = async () => {
  * @param {string} label
  */
 function setButtonLabel(btn, label) {
-  /** @type {ChildNode} */ (btn.querySelector(".with-icon")?.lastChild).textContent = label;
+  const span = /** @type {HTMLElement} */ (btn.querySelector("span"));
+  span.textContent = label;
 }
 
 // Import tracks

@@ -1,78 +1,19 @@
-<main>
-  <div class="panel">
-    <p>
-      Export all Diffuse data to a JSON snapshot, or restore from a previously exported file.
-      Importing replaces all data in that category.
-    </p>
-    <hr />
-    <div class="row">
-      <button id="export" disabled>
-        <span class="with-icon"><i class="ph-bold ph-download-simple"></i> Export all data</span>
-      </button>
-    </div>
-    <hr />
-    <div class="row">
-      <label class="with-icon" for="file">
-        <i class="ph-bold ph-upload"></i>
-        <input id="file" type="file" accept=".json,application/json" />
-      </label>
-    </div>
-    <hr />
-    <div class="row">
-      <button id="import-tracks" disabled>
-        <span class="with-icon"><i class="ph-bold ph-music-note"></i> Import tracks</span>
-      </button>
-    </div>
-    <div class="row">
-      <button id="import-playlist-items" disabled>
-        <span class="with-icon"><i class="ph-bold ph-playlist"></i> Import playlist items</span>
-      </button>
-    </div>
-    <div class="row">
-      <button id="import-facets" disabled>
-        <span class="with-icon"><i class="ph-bold ph-squares-four"></i> Import facets</span>
-      </button>
-    </div>
-    <div id="status" class="status" hidden></div>
-  </div>
-</main>
-
 <style>
   @import "./styles/base.css";
-  @import "./styles/wireframe/ui.css";
   @import "./vendor/@phosphor-icons/web/bold/style.css";
+  @import "./styles/diffuse/facet.css";
 
-  body {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    height: 100dvh;
-  }
-
-  main {
-    padding: var(--space-md);
-  }
-
-  button {
-    flex: 1;
-  }
-
-  p {
-    line-height: var(--leading-relaxed);
-    max-width: 42ch;
-  }
-
-  label {
-    flex: 1;
-  }
+  @layer base, diffuse;
 
   input[type="file"] {
-    flex: 1;
+    background: none;
+    border: none;
+    padding: 0;
+    width: auto;
   }
 
   .status {
-    margin-top: var(--space-sm);
-    font-size: var(--text-sm);
+    font-size: var(--fs-xs);
   }
 
   .status--success {
@@ -91,5 +32,64 @@
     }
   }
 </style>
+
+<main>
+  <div class="facet__left">
+    <div>
+      <a href="./dashboard/" class="diffuse-logo-container">
+        <svg viewBox="0 0 902 134" width="160">
+          <title>Diffuse</title>
+          <use
+            xlink:href="images/diffuse-current.svg#diffuse"
+            href="images/diffuse-current.svg#diffuse"
+          ></use>
+        </svg>
+      </a>
+    </div>
+    <h1>Export &amp; Import</h1>
+    <p>
+      Export all Diffuse data to a JSON snapshot, or restore from a previously exported file.
+      Importing replaces all data in that category.
+    </p>
+  </div>
+
+  <div class="facet__right">
+    <div class="button-row">
+      <button id="export" disabled>
+        <i class="ph-bold ph-download-simple"></i>
+        <span>Export all data</span>
+      </button>
+    </div>
+
+    <hr />
+
+    <div>
+      <input id="file" type="file" accept=".json,application/json" />
+    </div>
+
+    <hr />
+
+    <p class="button-row">
+      <button id="import-tracks" disabled>
+        <i class="ph-bold ph-music-note"></i>
+        <span>Import tracks</span>
+      </button>
+    </p>
+    <p class="button-row">
+      <button id="import-playlist-items" disabled>
+        <i class="ph-bold ph-playlist"></i>
+        <span>Import playlist items</span>
+      </button>
+    </p>
+    <p class="button-row">
+      <button id="import-facets" disabled>
+        <i class="ph-bold ph-squares-four"></i>
+        <span>Import facets</span>
+      </button>
+    </p>
+
+    <div id="status" class="status" hidden></div>
+  </div>
+</main>
 
 <script type="module" src="facets/data/export-import/index.inline.js"></script>
