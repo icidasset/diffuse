@@ -59,7 +59,9 @@ export function openAddFromURIModal() {
               />
             </div>
           </div>
-          <div style="display: flex; gap: var(--space-xs); margin-top: var(--space-sm)">
+          <div
+            style="display: flex; font-size: var(--fs-sm); gap: var(--space-xs); margin-top: var(--space-sm)"
+          >
             <button type="submit" class="button--bg-accent">Add</button>
             <button type="button" id="add-uri-cancel">
               Cancel
@@ -112,12 +114,15 @@ export function openAddFromURIModal() {
   const nameEl = /** @type {HTMLInputElement} */ (
     dialog.querySelector("#add-uri-name")
   );
+
   const kindEl = /** @type {HTMLSelectElement} */ (
     dialog.querySelector("#add-uri-kind")
   );
+
   const uriEl = /** @type {HTMLInputElement} */ (
     dialog.querySelector("#add-uri-uri")
   );
+
   if (nameEl) nameEl.value = "";
   if (kindEl) kindEl.value = "interactive";
   if (uriEl) uriEl.value = "";

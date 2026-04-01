@@ -4,11 +4,22 @@ base: ../
 title: Guide | Diffuse
 ---
 
+<style>
+  h2 {
+    color: var(--bg-color);
+    background: oklch(from var(--accent-twist-2) l c h / 0.8);
+    display: inline-block;
+    line-height: 0.75;
+    text-box: trim-both cap alphabetic;
+    padding: var(--space-3xs);
+  }
+</style>
+
 <h1 hidden>Guide</h1>
 
 <div class="columns">
   <section>
-    <h3>Concept</h3>
+    <h2>Concept</h2>
 
     <p>
       Diffuse is unlike traditional software; instead of combining several features into a single user interface and producing data output, we do the opposite, we start with the data and work our way up from there.
@@ -28,7 +39,7 @@ title: Guide | Diffuse
   </section>
 
   <section>
-    <h3>Getting started</h3>
+    <h2>Getting started</h2>
 
     <ul style="display: flex; flex-direction: column; gap: var(--space-md); margin-top: var(--space-md); padding-left: 0">
       <!-- 1 -->
@@ -52,7 +63,7 @@ title: Guide | Diffuse
       <!-- 4 -->
       <li class="with-icon" style="gap: var(--space-sm)">
         <i class="ph-fill ph-sparkle" style="opacity: 0.4"></i>
-        <span><strong style="color: var(--accent-twist-4)">Continue exploring, enable some additional features</strong> such as making played audio available offline automatically.</span>
+        <span><strong>Continue exploring, enable some additional features</strong> such as making played audio available offline automatically.</span>
       </li>
 
       <!-- 5 -->
@@ -65,7 +76,7 @@ title: Guide | Diffuse
 </div>
 
 <section id="tutorial">
-  <h3>Tutorial</h3>
+  <h2>Tutorial</h2>
 
   <div class="columns">
     <div>
@@ -74,7 +85,7 @@ title: Guide | Diffuse
       </p>
 
       <p>
-        <button id="add-sample-content" class="button--bg-accent">
+        <button id="add-sample-content" class="button--bg-twist-2">
           <span>Add sample content</span>
         </button>
       </p>
@@ -88,7 +99,7 @@ title: Guide | Diffuse
       </p>
 
       <p>
-        <a class="button button--bg-accent" href="{{ ('themes/blur/artwork-controller/facet/index.html') |> facetLoaderURL }}" target="_blank">
+        <a class="button button--bg-twist-2" href="{{ ('themes/blur/artwork-controller/facet/index.html') |> facetLoaderURL }}" target="_blank">
           Play audio
         </a>
       </p>
@@ -108,7 +119,7 @@ title: Guide | Diffuse
       </p>
 
       <p>
-        <a class="button button--bg-accent" href="{{ ('facets/connect/index.html') |> facetLoaderURL }}" target="_blank">
+        <a class="button button--bg-twist-2" href="{{ ('facets/connect/index.html') |> facetLoaderURL }}" target="_blank">
           Add audio input
         </a>
       </p>

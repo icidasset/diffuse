@@ -3,6 +3,10 @@ body {
   color: var(--text-color);
 }
 
+main {
+  width: min(var(--container-md), 100vw);
+}
+
 .panel {
   border: 2px solid var(--form-color);
   border-radius: var(--radius-md);
@@ -105,6 +109,7 @@ select {
   padding: var(--space-2xs) var(--space-xs);
   transition-duration: 250ms;
   transition-property: border-color;
+  width: 100%;
 
   &:focus {
     border-color: var(--accent);
