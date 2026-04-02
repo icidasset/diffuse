@@ -219,11 +219,11 @@ export function setup(
                       : nothing}
                   </div>
                   <button
-                    class="button--plain button--small"
+                    class="button--plain button--icon"
                     aria-label="Remove"
                     @click="${onRemove}"
                   >
-                    <i class="ph-bold ph-x"></i>
+                    <i class="ph-fill ph-skull"></i>
                   </button>
                 </li>
               `,

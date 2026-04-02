@@ -161,6 +161,13 @@
     "desc": "Connect to Rocksky to setup the Rocksky scrobbler."
   },
   {
+    "url": "facets/data/sources/index.html",
+    "title": "Sources",
+    "category": "Data",
+    "featured": true,
+    "desc": "An overview of all audio inputs. Disable a source to hide its tracks without removing them."
+  },
+  {
     "url": "facets/misc/split-view/index.html",
     "title": "Split View",
     "category": "Misc",

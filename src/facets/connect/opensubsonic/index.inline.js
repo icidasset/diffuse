@@ -46,10 +46,7 @@ const { setItems, setError } = setup({
 
   description: html`
     <p>
-      Connect to an OpenSubsonic server to use it as audio input.
-    </p>
-    <p class="caption">
-      Supports authentication via username + password, or an API key.
+      Connect to an OpenSubsonic server to use it as audio input. Supports authentication via username + password, or an API key.
     </p>
   `,
 

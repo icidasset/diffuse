@@ -25,10 +25,19 @@ main {
   @media (min-width: 48rem) {
     margin-bottom: 0;
   }
+
+  p:last-child {
+    margin-bottom: 0;
+  }
 }
 
 .facet__right {
+  flex: 1;
   max-width: 24rem;
+
+  p:first-child {
+    margin-top: 0;
+  }
 }
 
 .diffuse-logo-container {
@@ -125,20 +134,27 @@ button {
   font-size: var(--fs-sm);
   gap: var(--space-2xs);
   padding: var(--space-2xs) var(--space-sm);
-
-  &:hover:not(:disabled) {
-    opacity: 0.8;
-  }
+  transition-duration: 250ms;
+  transition-property: opacity;
 
   &:disabled {
     cursor: not-allowed;
-    opacity: 0.5;
+    opacity: 0.4;
   }
 
   &.button--brand {
     background: var(--accent);
     border-color: transparent;
     color: var(--bg-color);
+  }
+
+  &.button--icon {
+    opacity: 0.4;
+
+    &:hover,
+    &:focus {
+      opacity: 1;
+    }
   }
 
   &.button--outlined {
@@ -249,8 +265,4 @@ hr {
 p,
 .callout {
   margin: var(--space-sm) 0;
-}
-
-.facet__right p:first-child {
-  margin-top: 0;
 }

@@ -34,6 +34,9 @@ class Sources extends BroadcastableDiffuseElement {
    * @param {string} uri
    */
   async toggle(uri) {
+    const q = uri.indexOf("?");
+    const key = q === -1 ? uri : uri.slice(0, q);
+
     const output = this.#output.value;
     if (!output) {
       console.warn("Output element is not available yet.");
@@ -54,10 +57,10 @@ class Sources extends BroadcastableDiffuseElement {
       }
     }
 
-    if (disabled.includes(uri)) {
-      disabled = disabled.filter((u) => u !== uri);
+    if (disabled.includes(key)) {
+      disabled = disabled.filter((u) => u !== key);
     } else {
-      disabled = [...disabled, uri];
+      disabled = [...disabled, key];
     }
 
     const value = JSON.stringify(disabled);

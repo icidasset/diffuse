@@ -1,0 +1,89 @@
+<style>
+  @import "./styles/base.css";
+  @import "./styles/diffuse/facet.css";
+  @import "./vendor/@phosphor-icons/web/fill/style.css";
+
+  @layer base, diffuse;
+
+  .sources-list {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-xs);
+    list-style: none;
+    margin: 0;
+    padding: 0;
+  }
+
+  .sources-scheme {
+    font-size: var(--fs-2xs);
+    font-weight: 600;
+    letter-spacing: var(--tracking-wider);
+    margin-top: var(--space-lg);
+    opacity: 0.4;
+    text-transform: uppercase;
+
+    &:first-child {
+      margin-top: 0;
+    }
+  }
+
+  .sources-item {
+    align-items: center;
+    display: flex;
+    gap: var(--space-xs);
+  }
+
+  .sources-item--disabled .sources-item__info {
+    opacity: 0.2;
+  }
+
+  .sources-item__info {
+    display: flex;
+    flex-direction: column;
+    flex: 1;
+    gap: var(--space-3xs);
+    min-width: 0;
+  }
+
+  .sources-item__name {
+    font-weight: 600;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  .sources-item__detail {
+    color: oklch(from var(--text-color) l c h / 0.6);
+    font-size: var(--fs-xs);
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+</style>
+
+<main>
+  <div class="facet__left">
+    <div>
+      <a href="./dashboard/" class="diffuse-logo-container">
+        <svg viewBox="0 0 902 134" width="160">
+          <title>Diffuse</title>
+          <use
+            xlink:href="images/diffuse-current.svg#diffuse"
+            href="images/diffuse-current.svg#diffuse"
+          ></use>
+        </svg>
+      </a>
+    </div>
+    <h1>Sources</h1>
+    <p>
+      An overview of all audio inputs. Disable a source to hide its tracks without removing them.
+    </p>
+  </div>
+
+  <div class="facet__right">
+    <ul id="sources-list" class="sources-list" hidden></ul>
+    <p id="sources-empty" class="caption">No sources configured yet.</p>
+  </div>
+</main>
+
+<script type="module" src="facets/data/sources/index.inline.js"></script>

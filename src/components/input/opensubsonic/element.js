@@ -42,7 +42,7 @@ class OpensubsonicInput extends DiffuseElement {
   sources(tracks) {
     return Object.values(serversFromTracks(tracks)).map((server) => {
       return {
-        label: `${server.host} (${server.username ?? server.apiKey})`,
+        label: server.host,
         uri: buildURI(server),
       };
     });
