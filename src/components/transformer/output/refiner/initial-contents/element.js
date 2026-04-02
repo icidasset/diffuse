@@ -106,12 +106,14 @@ class InitialContentsTransformer extends OutputTransformer {
       },
 
       playlistItems: base.playlistItems,
+      settings: base.settings,
       tracks: base.tracks,
       ready: base.ready,
     };
 
     this.facets = manager.facets;
     this.playlistItems = manager.playlistItems;
+    this.settings = manager.settings;
     this.tracks = manager.tracks;
     this.ready = manager.ready;
   }

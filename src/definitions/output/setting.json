@@ -1,0 +1,39 @@
+{
+  "lexicon": 1,
+  "id": "sh.diffuse.output.setting",
+  "defs": {
+    "main": {
+      "type": "record",
+      "record": {
+        "type": "object",
+        "required": ["id", "setting"],
+        "properties": {
+          "id": { "type": "string" },
+          "createdAt": { "type": "string", "format": "datetime" },
+          "updatedAt": { "type": "string", "format": "datetime" },
+          "setting": {
+            "type": "union",
+            "description": "The key and value of a setting",
+            "refs": ["#sh_diffuse_input_disabled_uris", "#untyped_setting"]
+          }
+        }
+      }
+    },
+    "sh_diffuse_input_disabled_uris": {
+      "type": "object",
+      "required": ["key", "value"],
+      "properties": {
+        "key": { "type": "string", "const": "sh.diffuse.input.disabled.uris" },
+        "value": { "type": "array", "items": { "type": "string" } }
+      }
+    },
+    "untyped_setting": {
+      "type": "object",
+      "required": ["key", "value"],
+      "properties": {
+        "key": { "type": "string" },
+        "value": { "type": "unknown" }
+      }
+    }
+  }
+}

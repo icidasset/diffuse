@@ -3,7 +3,7 @@ import { batch, computed, signal } from "~/common/signal.js";
 
 /**
  * @import {DiffuseElement} from "~/common/element.js"
- * @import {Facet, PlaylistItem, Track} from "~/definitions/types.d.ts"
+ * @import {Facet, PlaylistItem, Setting, Track} from "~/definitions/types.d.ts"
  * @import {OutputManagerDeputy, OutputElement} from "~/components/output/types.d.ts"
  *
  * @import {OutputConfiguratorElement} from "./types.d.ts"
@@ -94,6 +94,38 @@ class OutputConfigurator extends BroadcastableDiffuseElement {
           this.#memory.playlistItems.value = newPlaylistItems;
         },
       },
+      settings: {
+        collection: computed(() => {
+          const out = this.#selected.value;
+          if (out) return out.settings.collection();
+
+          const def = this.#defaultOutput.value;
+          if (def) return def.settings.collection();
+          if (this.hasDefault()) return { state: "loading" };
+
+          return this.#setupFinished.value
+            ? { state: "loaded", data: this.#memory.settings.value }
+            : { state: "loading" };
+        }),
+        reload: () => {
+          const def = this.#defaultOutput.value;
+          if (def) def.settings.reload();
+
+          const out = this.#selected.value;
+          if (out) return out.settings.reload();
+
+          return Promise.resolve();
+        },
+        save: async (newSettings) => {
+          const out = this.#selected.value;
+          if (out) return await out.settings.save(newSettings);
+
+          const def = this.#defaultOutput.value;
+          if (def) return await def.settings.save(newSettings);
+
+          this.#memory.settings.value = newSettings;
+        },
+      },
       tracks: {
         collection: computed(() => {
           const out = this.#selected.value;
@@ -142,6 +174,7 @@ class OutputConfigurator extends BroadcastableDiffuseElement {
     // Assign manager properties to class
     this.facets = manager.facets;
     this.playlistItems = manager.playlistItems;
+    this.settings = manager.settings;
     this.tracks = manager.tracks;
     this.ready = manager.ready;
 
@@ -179,6 +212,18 @@ class OutputConfigurator extends BroadcastableDiffuseElement {
       const out = this.#selected.value;
       if (!out) return;
 
+      const col = out.settings.collection();
+      if (col.state !== "loaded") return;
+
+      const def = this.#defaultOutput.value;
+      if (def) def.settings.save(col.data);
+      else this.#memory.settings.set(col.data);
+    });
+
+    this.effect(() => {
+      const out = this.#selected.value;
+      if (!out) return;
+
       const col = out.tracks.collection();
       if (col.state !== "loaded") return;
 
@@ -199,6 +244,7 @@ class OutputConfigurator extends BroadcastableDiffuseElement {
   #memory = {
     facets: signal(/** @type {Facet[]} */ ([])),
     playlistItems: signal(/** @type {PlaylistItem[]} */ ([])),
+    settings: signal(/** @type {Setting[]} */ ([])),
     tracks: signal(/** @type {Track[]} */ ([])),
   };
 

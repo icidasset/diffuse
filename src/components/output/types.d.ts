@@ -3,6 +3,7 @@ import type { DiffuseElement } from "~/common/element.js";
 import type {
   Facet,
   PlaylistItem,
+  Setting,
   Track,
 } from "~/definitions/types.d.ts";
 
@@ -35,9 +36,20 @@ export type OutputManager<Encoding = null> = {
       playlistItems: Encoding extends null ? PlaylistItem[] : Encoding,
     ) => Promise<void>;
   };
+  settings: {
+    collection: SignalReader<
+      | { state: "loading" }
+      | { state: "loaded"; data: Encoding extends null ? Setting[] : Encoding }
+    >;
+    reload: () => Promise<void>;
+    save: (
+      settings: Encoding extends null ? Setting[] : Encoding,
+    ) => Promise<void>;
+  };
   signals: {
     facets: Signal<Encoding extends null ? Facet[] : Encoding>;
     playlistItems: Signal<Encoding extends null ? PlaylistItem[] : Encoding>;
+    settings: Signal<Encoding extends null ? Setting[] : Encoding>;
     tracks: Signal<Encoding extends null ? Track[] : Encoding>;
   };
   tracks: {
@@ -64,6 +76,13 @@ export type OutputManagerProperties<Encoding = null> = {
     get(): Promise<Encoding extends null ? PlaylistItem[] : Encoding>;
     put(
       playlistItems: Encoding extends null ? PlaylistItem[] : Encoding,
+    ): Promise<void>;
+  };
+  settings: {
+    empty(): Encoding extends null ? Setting[] : Encoding;
+    get(): Promise<Encoding extends null ? Setting[] : Encoding>;
+    put(
+      settings: Encoding extends null ? Setting[] : Encoding,
     ): Promise<void>;
   };
   tracks: {

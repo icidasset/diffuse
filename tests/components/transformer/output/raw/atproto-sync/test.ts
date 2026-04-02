@@ -52,4 +52,16 @@ describe("components/transformer/output/raw/atproto-sync", () => {
 
     expect(result).toBe("loading");
   });
+
+  it("settings.collection is loading when no local output is connected", async () => {
+    const result = await testWeb(async () => {
+      const mod = await import(
+        "~/components/transformer/output/raw/atproto-sync/element.js"
+      );
+      const t = new mod.CLASS() as any;
+      return t.settings.collection().state;
+    });
+
+    expect(result).toBe("loading");
+  });
 });

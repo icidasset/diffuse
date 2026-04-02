@@ -3,7 +3,7 @@ import { OutputTransformer } from "../../base.js";
 
 /**
  * @import { OutputManagerDeputy } from "~/components/output/types.d.ts"
- * @import { Facet, PlaylistItem, Track } from "~/definitions/types.d.ts"
+ * @import { Facet, PlaylistItem, Setting, Track } from "~/definitions/types.d.ts"
  */
 
 /**
@@ -49,6 +49,22 @@ class JsonStringOutputTransformer extends OutputTransformer {
           await base.playlistItems.save(bytes);
         },
       },
+      settings: {
+        ...base.settings,
+        collection: computed(() => {
+          const col = base.settings.collection();
+          if (col.state !== "loaded") return col;
+          /** @type {Setting[]} */
+          const data = parseArray(col.data);
+          return { state: "loaded", data };
+        }),
+        save: async (newSettings) => {
+          const json = JSON.stringify(newSettings);
+          const encoder = new TextEncoder();
+          const bytes = encoder.encode(json);
+          await base.settings.save(bytes);
+        },
+      },
       tracks: {
         ...base.tracks,
         collection: computed(() => {
@@ -73,6 +89,7 @@ class JsonStringOutputTransformer extends OutputTransformer {
     // Assign manager properties to class
     this.facets = manager.facets;
     this.playlistItems = manager.playlistItems;
+    this.settings = manager.settings;
     this.tracks = manager.tracks;
     this.ready = manager.ready;
   }

@@ -35,6 +35,7 @@ const WRITE_IDB_KEY = "diffuse/output/raw/atproto/writes";
 const WATCHED_COLLECTIONS = new Set([
   "sh.diffuse.output.facet",
   "sh.diffuse.output.playlistItem",
+  "sh.diffuse.output.setting",
   "sh.diffuse.output.trackBundle",
 ]);
 
@@ -80,6 +81,11 @@ class ATProtoOutput extends BroadcastedOutputElement {
         get: () => this.listRecords("sh.diffuse.output.playlistItem"),
         put: (data) => this.putRecords("sh.diffuse.output.playlistItem", data),
       },
+      settings: {
+        empty: () => [],
+        get: () => this.listRecords("sh.diffuse.output.setting"),
+        put: (data) => this.putRecords("sh.diffuse.output.setting", data),
+      },
       tracks: {
         empty: () => [],
         get: async () => {
@@ -123,6 +129,7 @@ class ATProtoOutput extends BroadcastedOutputElement {
 
     this.facets = this.#manager.facets;
     this.playlistItems = this.#manager.playlistItems;
+    this.settings = this.#manager.settings;
     this.tracks = this.#manager.tracks;
   }
 
@@ -341,6 +348,9 @@ class ATProtoOutput extends BroadcastedOutputElement {
     if (touched.has("sh.diffuse.output.facet")) this.#manager.facets.reload();
     if (touched.has("sh.diffuse.output.playlistItem")) {
       this.#manager.playlistItems.reload();
+    }
+    if (touched.has("sh.diffuse.output.setting")) {
+      this.#manager.settings.reload();
     }
     if (touched.has("sh.diffuse.output.trackBundle")) {
       this.#manager.tracks.reload();

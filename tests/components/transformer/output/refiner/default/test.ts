@@ -112,6 +112,39 @@ describe("components/transformer/output/refiner/default", () => {
     expect(result?.backingIds).toEqual(["regular"]);
   });
 
+  it("settings.collection delegates to backing output unchanged", async () => {
+    const result = await testWeb(async () => {
+      const idbMod = await import(
+        "~/components/output/polymorphic/indexed-db/element.js"
+      );
+      const mod = await import(
+        "~/components/transformer/output/refiner/default/element.js"
+      );
+
+      const output = new idbMod.CLASS();
+      output.id = "test-idb-settings";
+      document.body.append(output);
+
+      const t = new mod.CLASS();
+      t.setAttribute("output-selector", "#test-idb-settings");
+      document.body.append(t);
+
+      await t.settings.save([
+        {
+          $type: "sh.diffuse.output.setting",
+          id: "s1",
+          setting: { key: "sh.diffuse.input.disabled.uris", value: [] },
+        },
+      ]);
+
+      const col = t.settings.collection();
+      if (col.state !== "loaded") return null;
+      return (col.data as Array<{ id: string }>).map((s) => s.id);
+    });
+
+    expect(result).toEqual(["s1"]);
+  });
+
   it("ephemeral playlist items appear in transformer collection but not in backing output", async () => {
     const result = await testWeb(async () => {
       const idbMod = await import(

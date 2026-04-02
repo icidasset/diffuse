@@ -23,6 +23,7 @@ class PathCollectionsOrchestrator extends OutputTransformer {
     });
 
     this.facets = base.facets;
+    this.settings = base.settings;
     this.playlistItems = {
       ...base.playlistItems,
       collection: computed(() => {

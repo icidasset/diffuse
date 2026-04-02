@@ -46,6 +46,21 @@ class JsonStringOutputTransformer extends OutputTransformer {
           await base.playlistItems.save(json);
         },
       },
+      settings: {
+        ...base.settings,
+        collection: computed(() => {
+          const col = base.settings.collection();
+          if (col.state !== "loaded") return col;
+          return {
+            state: "loaded",
+            data: typeof col.data === "string" ? parseArray(col.data) : [],
+          };
+        }),
+        save: async (newSettings) => {
+          const json = JSON.stringify(newSettings);
+          await base.settings.save(json);
+        },
+      },
       tracks: {
         ...base.tracks,
         collection: computed(() => {
@@ -69,6 +84,7 @@ class JsonStringOutputTransformer extends OutputTransformer {
     // Assign manager properties to class
     this.facets = manager.facets;
     this.playlistItems = manager.playlistItems;
+    this.settings = manager.settings;
     this.tracks = manager.tracks;
     this.ready = manager.ready;
   }

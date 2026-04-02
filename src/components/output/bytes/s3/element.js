@@ -45,6 +45,11 @@ class S3Output extends BroadcastedOutputElement {
         get: () => this.#get("playlistItems"),
         put: (data) => this.#put("playlistItems", data),
       },
+      settings: {
+        empty: () => undefined,
+        get: () => this.#get("settings"),
+        put: (data) => this.#put("settings", data),
+      },
       tracks: {
         empty: () => undefined,
         get: () => this.#get("tracks"),
@@ -54,6 +59,7 @@ class S3Output extends BroadcastedOutputElement {
 
     this.facets = this.#manager.facets;
     this.playlistItems = this.#manager.playlistItems;
+    this.settings = this.#manager.settings;
     this.tracks = this.#manager.tracks;
   }
 

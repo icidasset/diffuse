@@ -16,6 +16,8 @@ export type {
 
 export type { Main as Theme } from "./types/sh/diffuse/output/theme.ts";
 
+export type { Main as Setting } from "./types/sh/diffuse/output/setting.ts";
+
 export type {
   Main as Track,
   Stats as TrackStats,

@@ -100,6 +100,8 @@ class DefaultOutputRefinerTransformer extends OutputTransformer {
         },
       },
 
+      settings: base.settings,
+
       // Other
       ready: base.ready,
     };
@@ -107,6 +109,7 @@ class DefaultOutputRefinerTransformer extends OutputTransformer {
     // Assign manager properties to class
     this.facets = manager.facets;
     this.playlistItems = manager.playlistItems;
+    this.settings = manager.settings;
     this.tracks = manager.tracks;
     this.ready = manager.ready;
   }

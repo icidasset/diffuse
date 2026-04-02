@@ -13,6 +13,7 @@ import { OutputTransformer } from "../../base.js";
 import {
   INITIAL_FACETS_DOCUMENT,
   INITIAL_PLAYLIST_ITEMS_DOCUMENT,
+  INITIAL_SETTINGS_DOCUMENT,
   INITIAL_TRACKS_DOCUMENT,
 } from "./constants.js";
 
@@ -103,6 +104,12 @@ class AutomergeBytesOutputTransformer extends OutputTransformer {
       INITIAL_PLAYLIST_ITEMS_DOCUMENT,
     );
 
+    const settings = state(
+      computed(() => local()?.settings?.collection() ?? { state: "loading" }),
+      remote.settings.collection,
+      INITIAL_SETTINGS_DOCUMENT,
+    );
+
     const tracks = state(
       computed(() => local()?.tracks?.collection() ?? { state: "loading" }),
       remote.tracks.collection,
@@ -122,6 +129,12 @@ class AutomergeBytesOutputTransformer extends OutputTransformer {
       computed(() => local()?.playlistItems),
       remote.playlistItems,
       computed(() => playlistItems().doc),
+    );
+
+    this.settings = automergeEntry(
+      computed(() => local()?.settings),
+      remote.settings,
+      computed(() => settings().doc),
     );
 
     this.tracks = automergeEntry(
@@ -154,6 +167,16 @@ class AutomergeBytesOutputTransformer extends OutputTransformer {
           const bytes = Automerge.save(s.doc);
           if (l && s.local) l.playlistItems.save(bytes);
           if (s.remote) remote.playlistItems.save(bytes);
+        }
+      });
+
+      this.effect(() => {
+        if (!settings().remoteLoaded) return;
+        const s = settings();
+        if (s.diverged) {
+          const bytes = Automerge.save(s.doc);
+          if (l && s.local) l.settings.save(bytes);
+          if (s.remote) remote.settings.save(bytes);
         }
       });
 

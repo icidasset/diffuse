@@ -65,6 +65,10 @@ class OutputOrchestrator extends DiffuseElement {
     return this.output.playlistItems;
   }
 
+  get settings() {
+    return this.output.settings;
+  }
+
   get tracks() {
     return this.output.tracks;
   }

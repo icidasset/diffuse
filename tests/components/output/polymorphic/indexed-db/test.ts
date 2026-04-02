@@ -110,6 +110,21 @@ describe("components/output/polymorphic/indexed-db", () => {
     expect(result.state).toBe("loaded");
   });
 
+  it("settings.collection returns loaded state after save", async () => {
+    const result = await testWeb(async () => {
+      const mod = await import(
+        "~/components/output/polymorphic/indexed-db/element.js"
+      );
+      const output = new mod.CLASS();
+      document.body.append(output);
+
+      await output.settings.save([]);
+      return output.settings.collection();
+    });
+
+    expect(result.state).toBe("loaded");
+  });
+
   it("playlistItems.collection returns loaded state after save", async () => {
     const result = await testWeb(async () => {
       const mod = await import(

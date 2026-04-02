@@ -72,6 +72,17 @@ describe("components/output/raw/atproto", () => {
     expect(result).toBe(true);
   });
 
+  it("settings.collection is loading initially", async () => {
+    const result = await testWeb(async () => {
+      const mod = await import("~/components/output/raw/atproto/element.js");
+      const output = new mod.CLASS();
+      document.body.append(output);
+      return output.settings.collection().state;
+    });
+
+    expect(result).toBe("loading");
+  });
+
   it("tracks.collection is loading initially", async () => {
     const result = await testWeb(async () => {
       const mod = await import("~/components/output/raw/atproto/element.js");

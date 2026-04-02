@@ -160,6 +160,16 @@ class DaslBytesSyncOutputTransformer extends OutputTransformer {
       },
     );
 
+    const settings = state(
+      "settings",
+      computed(() => local()?.settings.collection() ?? { state: "loading" }),
+      remote.settings.collection,
+      {
+        saveLocal: async (v) => local()?.settings.save(v),
+        saveRemote: remote.settings.save,
+      },
+    );
+
     const tracks = state(
       "tracks",
       computed(() => local()?.tracks.collection() ?? { state: "loading" }),
@@ -183,6 +193,13 @@ class DaslBytesSyncOutputTransformer extends OutputTransformer {
       remote.playlistItems,
       remote.ready,
       playlistItems,
+    );
+
+    this.settings = this.managerProp(
+      { save: async (v) => local()?.settings.save(v) },
+      remote.settings,
+      remote.ready,
+      settings,
     );
 
     this.tracks = this.managerProp(

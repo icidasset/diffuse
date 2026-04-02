@@ -15,6 +15,7 @@ import * as Output from "~/common/output.js";
 const COLLECTIONS = /** @type {const} */ ([
   "facets",
   "playlistItems",
+  "settings",
   "tracks",
 ]);
 
