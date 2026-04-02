@@ -51,6 +51,19 @@ class ScopedTracksOrchestrator extends BroadcastableDiffuseElement {
     return col.data.filter((p) => p.playlist === playlist);
   });
 
+  #disabledSources = computed(() => {
+    const col = this.#output.value?.settings.collection();
+    if (!col || col.state !== "loaded") return [];
+    const setting = col.data.find((s) => s.key === "sh.diffuse.input.disabled.uris");
+    if (!setting) return [];
+    try {
+      const parsed = JSON.parse(setting.value);
+      return Array.isArray(parsed) ? /** @type {string[]} */ (parsed) : [];
+    } catch {
+      return [];
+    }
+  });
+
   #tracksAvailable = signal(/** @type {Track[]} */ ([]));
   #tracksSearch = signal(/** @type {Track[]} */ ([]));
   #tracksFinal = signal(/** @type {Track[]} */ ([]));
@@ -199,6 +212,7 @@ class ScopedTracksOrchestrator extends BroadcastableDiffuseElement {
     this.effect(async () => {
       const tracks = this.#tracksSearch.value;
       const playlistItems = this.#selectedPlaylistItems();
+      const disabledSources = this.#disabledSources();
       const sortBy = this.#scope.value?.sortBy();
       const sortDirection = this.#scope.value?.sortDirection();
 
@@ -207,6 +221,12 @@ class ScopedTracksOrchestrator extends BroadcastableDiffuseElement {
       let final = playlistItems?.length
         ? filterByPlaylist(tracks, playlistItems)
         : tracks;
+
+      if (disabledSources.length) {
+        final = final.filter((t) =>
+          !disabledSources.some((source) => t.uri.startsWith(source))
+        );
+      }
 
       if (sortBy?.length) {
         const dir = sortDirection === "desc" ? -1 : 1;
