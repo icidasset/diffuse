@@ -83,7 +83,8 @@ export async function list(tracks) {
  * @type {Actions['resolve']}
  */
 export async function resolve({ uri }) {
-  const blob = /** @type {Blob | undefined} */ (await IDB.get(CACHE_KEY_PREFIX + uri));
+  const blob =
+    /** @type {Blob | undefined} */ (await IDB.get(CACHE_KEY_PREFIX + uri));
   if (!blob) return undefined;
 
   let blobUrl = blobUrls.get(uri);

@@ -54,8 +54,13 @@ class ScopedTracksOrchestrator extends BroadcastableDiffuseElement {
   #disabledSources = computed(() => {
     const col = this.#output.value?.settings.collection();
     if (!col || col.state !== "loaded") return [];
-    const setting = col.data.find((s) => s.key === "sh.diffuse.input.disabled.uris");
+
+    const setting = col.data.find((s) =>
+      s.key === "sh.diffuse.input.disabled.uris"
+    );
+
     if (!setting) return [];
+
     try {
       const parsed = JSON.parse(setting.value);
       return Array.isArray(parsed) ? /** @type {string[]} */ (parsed) : [];
@@ -158,6 +163,7 @@ class ScopedTracksOrchestrator extends BroadcastableDiffuseElement {
     // Watch tracks collection
     this.effect(async () => {
       const tracksCol = output.tracks.collection();
+
       if ((await this.isLeader()) === false) return;
       if (tracksCol.state !== "loaded") return;
 
@@ -169,7 +175,9 @@ class ScopedTracksOrchestrator extends BroadcastableDiffuseElement {
       });
 
       // Consult inputs
-      const groups = tracksCol.data.length ? await input.groupConsult(uris) : {};
+      const groups = tracksCol.data.length
+        ? await input.groupConsult(uris)
+        : {};
 
       /** @type {Set<string>} */
       const availableUris = new Set();
@@ -246,7 +254,11 @@ class ScopedTracksOrchestrator extends BroadcastableDiffuseElement {
 
             const cmp = typeof aVal === "string" && typeof bVal === "string"
               ? aVal.localeCompare(bVal)
-              : aVal < bVal ? -1 : aVal > bVal ? 1 : 0;
+              : aVal < bVal
+              ? -1
+              : aVal > bVal
+              ? 1
+              : 0;
 
             if (cmp !== 0) return cmp * dir;
           }
