@@ -20,6 +20,7 @@ import { signal, untracked } from "~/common/signal.js";
  * @import ArtworkOrchestrator from "~/components/orchestrator/artwork/element.js"
  * @import ControllerOrchestrator from "~/components/orchestrator/controller/element.js"
  * @import FavouritesOrchestrator from "~/components/orchestrator/favourites/element.js"
+ * @import RepeatShuffleEngine from "~/components/engine/repeat-shuffle/element.js"
  */
 
 class ArtworkController extends DiffuseElement {
@@ -58,6 +59,9 @@ class ArtworkController extends DiffuseElement {
     /** @type {FavouritesOrchestrator | undefined} */ (undefined),
   );
   $input = signal(/** @type {InputElement | undefined} */ (undefined));
+  $repeatShuffle = signal(
+    /** @type {RepeatShuffleEngine | undefined} */ (undefined),
+  );
 
   // SIGNALS - COMPUTED
 
@@ -85,13 +89,17 @@ class ArtworkController extends DiffuseElement {
     /** @type {FavouritesOrchestrator} */
     const favourites = query(this, "favourites-orchestrator-selector");
 
-    whenElementsDefined({ artwork, controller, favourites, input })
+    /** @type {RepeatShuffleEngine} */
+    const repeatShuffle = query(this, "repeat-shuffle-engine-selector");
+
+    whenElementsDefined({ artwork, controller, favourites, input, repeatShuffle })
       .then(
         () => {
           this.$artwork.value = artwork;
           this.$controller.value = controller;
           this.$input.value = input;
           this.$favourites.value = favourites;
+          this.$repeatShuffle.value = repeatShuffle;
 
           // Changed artwork based on active queue item.
           const debouncedChangeArtwork = debounce(
@@ -337,6 +345,16 @@ class ArtworkController extends DiffuseElement {
     this.$favourites.value?.toggle(track);
   };
 
+  toggleRepeat = () => {
+    const rs = this.$repeatShuffle.value;
+    if (rs) rs.setRepeat(!rs.repeat());
+  };
+
+  toggleShuffle = () => {
+    const rs = this.$repeatShuffle.value;
+    if (rs) rs.setShuffle(!rs.shuffle());
+  };
+
   // RENDER
 
   /**
@@ -347,6 +365,8 @@ class ArtworkController extends DiffuseElement {
     const isFav = activeQueueItem
       ? this.$favourites.value?.isFavourite(activeQueueItem) ?? false
       : false;
+    const isRepeat = this.$repeatShuffle.value?.repeat() ?? false;
+    const isShuffle = this.$repeatShuffle.value?.shuffle() ?? false;
 
     // Artwork
     const artworkArr = [
@@ -495,11 +515,25 @@ class ArtworkController extends DiffuseElement {
             <footer>
               <div class="button-row">
                 <button
+                  title="Toggle repeat"
+                  data-enabled="${isRepeat ? `t` : `f`}"
+                  @click="${this.toggleRepeat}"
+                >
+                  <i class="ph-${isRepeat ? `fill` : `bold`} ph-repeat"></i>
+                </button>
+                <button
                   title="Toggle favourite"
                   data-enabled="${isFav ? `t` : `f`}"
                   @click="${this.toggleFavourite}"
                 >
                   <i class="ph-${isFav ? `fill` : `bold`} ph-star"></i>
+                </button>
+                <button
+                  title="Toggle shuffle"
+                  data-enabled="${isShuffle ? `t` : `f`}"
+                  @click="${this.toggleShuffle}"
+                >
+                  <i class="ph-${isShuffle ? `fill` : `bold`} ph-shuffle"></i>
                 </button>
               </div>
             </footer>

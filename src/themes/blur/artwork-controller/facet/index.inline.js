@@ -8,11 +8,12 @@ foundation.setup({ title: "Artwork controller | Blur | Diffuse" });
 await foundation.orchestrator.queueAudio();
 await foundation.orchestrator.mediaSession();
 
-const [art, ctl, fav, inp] = await Promise.all([
+const [art, ctl, fav, inp, rs] = await Promise.all([
   foundation.orchestrator.artwork(),
   foundation.orchestrator.controller(),
   foundation.orchestrator.favourites(),
   foundation.configurator.input(),
+  foundation.engine.repeatShuffle(),
 ]);
 
 // Controller
@@ -21,6 +22,7 @@ dac.setAttribute("artwork-selector", art.selector);
 dac.setAttribute("controller-orchestrator-selector", ctl.selector);
 dac.setAttribute("input-selector", inp.selector);
 dac.setAttribute("favourites-orchestrator-selector", fav.selector);
+dac.setAttribute("repeat-shuffle-engine-selector", rs.selector);
 
 // Add to DOM
 (document.querySelector("#container") ?? document.body).append(dac);
