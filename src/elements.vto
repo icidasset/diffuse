@@ -180,7 +180,7 @@ transformers:
     url: "components/transformer/output/refiner/default/element.js"
   - title: "Output / Refiner / Track URI Passkey"
     desc: "Encrypts track URIs using a passkey-derived PRF key. On read, decrypts `encrypted://` URIs transparently; on write, re-encrypts all URIs before passing downstream. Tracks that cannot be decrypted are held separately and excluded from the visible collection."
-    url: "components/transformer/output/refiner/track-uri-passkey/element.js"
+    url: "components/transformer/output/refiner/passkey-encryption/element.js"
   - title: "Output / String / JSON"
     desc: "Raw data schema output ⇄ JSON UTF8 string."
     url: "components/transformer/output/string/json/element.js"

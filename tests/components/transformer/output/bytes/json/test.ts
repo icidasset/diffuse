@@ -123,7 +123,8 @@ describe("components/transformer/output/bytes/json", () => {
         {
           $type: "sh.diffuse.output.setting",
           id: "s1",
-          setting: { key: "sh.diffuse.input.disabled.uris", value: [] },
+          key: "sh.diffuse.input.disabled.uris",
+          value: "",
         },
       ]);
 

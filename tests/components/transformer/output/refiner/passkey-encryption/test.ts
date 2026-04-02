@@ -3,13 +3,13 @@ import { expect } from "@std/expect";
 
 import { testWeb } from "@tests/common/index.ts";
 
-describe("components/transformer/output/refiner/track-uri-passkey", () => {
+describe("components/transformer/output/refiner/passkey-encryption", () => {
   // Crypto utilities from passkey.js
 
   it("isEncryptedUri returns true for encrypted:// URIs", async () => {
     const result = await testWeb(async () => {
       const mod = await import(
-        "~/components/transformer/output/refiner/track-uri-passkey/passkey.js"
+        "~/components/transformer/output/refiner/passkey-encryption/passkey.js"
       );
       return mod.isEncryptedUri("encrypted://abc123def456");
     });
@@ -20,7 +20,7 @@ describe("components/transformer/output/refiner/track-uri-passkey", () => {
   it("isEncryptedUri returns false for plain URIs", async () => {
     const results = await testWeb(async () => {
       const mod = await import(
-        "~/components/transformer/output/refiner/track-uri-passkey/passkey.js"
+        "~/components/transformer/output/refiner/passkey-encryption/passkey.js"
       );
       return [
         mod.isEncryptedUri("https://example.com/track.mp3"),
@@ -36,7 +36,7 @@ describe("components/transformer/output/refiner/track-uri-passkey", () => {
   it("encryptUri and decryptUri round-trip preserves the original URI", async () => {
     const result = await testWeb(async () => {
       const mod = await import(
-        "~/components/transformer/output/refiner/track-uri-passkey/passkey.js"
+        "~/components/transformer/output/refiner/passkey-encryption/passkey.js"
       );
 
       const key = crypto.getRandomValues(new Uint8Array(32));
@@ -55,7 +55,7 @@ describe("components/transformer/output/refiner/track-uri-passkey", () => {
   it("encryptUri produces different ciphertext each time (managed nonce)", async () => {
     const result = await testWeb(async () => {
       const mod = await import(
-        "~/components/transformer/output/refiner/track-uri-passkey/passkey.js"
+        "~/components/transformer/output/refiner/passkey-encryption/passkey.js"
       );
 
       const key = crypto.getRandomValues(new Uint8Array(32));
@@ -72,7 +72,7 @@ describe("components/transformer/output/refiner/track-uri-passkey", () => {
   it("decryptUri with wrong key throws", async () => {
     const result = await testWeb(async () => {
       const mod = await import(
-        "~/components/transformer/output/refiner/track-uri-passkey/passkey.js"
+        "~/components/transformer/output/refiner/passkey-encryption/passkey.js"
       );
 
       const key1 = crypto.getRandomValues(new Uint8Array(32));
@@ -95,7 +95,7 @@ describe("components/transformer/output/refiner/track-uri-passkey", () => {
   it("passkeyActive returns false when no key is loaded", async () => {
     const result = await testWeb(async () => {
       const mod = await import(
-        "~/components/transformer/output/refiner/track-uri-passkey/element.js"
+        "~/components/transformer/output/refiner/passkey-encryption/element.js"
       );
       const t = new mod.CLASS();
       document.body.append(t);
@@ -108,7 +108,7 @@ describe("components/transformer/output/refiner/track-uri-passkey", () => {
   it("lockedTracks returns empty array initially", async () => {
     const result = await testWeb(async () => {
       const mod = await import(
-        "~/components/transformer/output/refiner/track-uri-passkey/element.js"
+        "~/components/transformer/output/refiner/passkey-encryption/element.js"
       );
       const t = new mod.CLASS();
       document.body.append(t);
@@ -124,7 +124,7 @@ describe("components/transformer/output/refiner/track-uri-passkey", () => {
         "~/components/output/polymorphic/indexed-db/element.js"
       );
       const mod = await import(
-        "~/components/transformer/output/refiner/track-uri-passkey/element.js"
+        "~/components/transformer/output/refiner/passkey-encryption/element.js"
       );
 
       // connectedCallback calls super.connectedCallback() which requires

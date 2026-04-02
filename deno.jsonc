@@ -148,7 +148,7 @@
     "./components/transformer/output/bytes/automerge/utils.js": "./src/components/transformer/output/bytes/automerge/utils.js",
     "./components/transformer/output/bytes/json/element.js": "./src/components/transformer/output/bytes/json/element.js",
     "./components/transformer/output/refiner/default/element.js": "./src/components/transformer/output/refiner/default/element.js",
-    "./components/transformer/output/refiner/track-uri-passkey/element.js": "./src/components/transformer/output/refiner/track-uri-passkey/element.js",
+    "./components/transformer/output/refiner/passkey-encryption/element.js": "./src/components/transformer/output/refiner/passkey-encryption/element.js",
     "./components/transformer/output/string/json/element.js": "./src/components/transformer/output/string/json/element.js",
 
     // .d.ts

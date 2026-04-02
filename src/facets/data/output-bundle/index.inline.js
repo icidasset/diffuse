@@ -3,7 +3,7 @@ import { effect } from "~/common/signal.js";
 
 import { NAME as ATPROTO_OUTPUT_NAME } from "~/components/output/raw/atproto/element.js";
 import { NAME as ATPROTO_SYNC_NAME } from "~/components/transformer/output/raw/atproto-sync/element.js";
-import { NAME as ATPROTO_PASSKEY_NAME } from "~/components/transformer/output/refiner/track-uri-passkey/element.js";
+import { NAME as ATPROTO_PASSKEY_NAME } from "~/components/transformer/output/refiner/passkey-encryption/element.js";
 
 import { NAME as S3_OUTPUT_NAME } from "~/components/output/bytes/s3/element.js";
 import { NAME as S3_SYNC_NAME } from "~/components/transformer/output/bytes/dasl-sync/element.js";
@@ -95,7 +95,7 @@ export function atprotoCustomElements() {
     "~/components/transformer/output/raw/atproto-sync/element.js"
   );
   import(
-    "~/components/transformer/output/refiner/track-uri-passkey/element.js"
+    "~/components/transformer/output/refiner/passkey-encryption/element.js"
   );
 }
 

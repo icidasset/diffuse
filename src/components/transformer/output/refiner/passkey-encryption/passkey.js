@@ -9,7 +9,7 @@ import { utf8 } from "iso-base/utf8";
 // CONSTANTS
 ////////////////////////////////////////////
 
-const IDB_PREFIX = "diffuse/transformer/output/refiner/track-uri-passkey";
+const IDB_PREFIX = "diffuse/transformer/output/refiner/passkey-encryption";
 
 /**
  * @param {string} namespace

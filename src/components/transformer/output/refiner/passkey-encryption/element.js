@@ -14,24 +14,25 @@ import {
 } from "./passkey.js";
 
 /**
- * @import { Track } from "~/definitions/types.d.ts"
+ * @import { Setting, Track } from "~/definitions/types.d.ts"
  * @import { OutputManager } from "~/components/output/types.d.ts"
  */
 
 /**
- * Output transformer that encrypts track URIs using a passkey-derived key.
+ * Output transformer that encrypts track URIs and setting values using a
+ * passkey-derived key.
  *
- * Sits in front of any output element. On read (`tracks.collection`),
- * decrypts `encrypted://` URIs transparently. On write (`tracks.save`),
- * re-encrypts all URIs before passing them downstream.
+ * On read, decrypts `encrypted://` URIs in tracks and `encrypted://`-encoded
+ * JSON in setting values transparently. On write, re-encrypts before passing
+ * downstream.
  *
- * Tracks whose URIs cannot be decrypted (no key in memory) are held
- * in `lockedTracks` and excluded from the visible collection.
+ * Tracks/settings that cannot be decrypted (no key in memory) are held in
+ * `lockedTracks`/`lockedSettings` and excluded from the visible collection.
  *
  * @extends {OutputTransformer}
  */
-class TrackUriPasskeyTransformer extends OutputTransformer {
-  static NAME = "diffuse/transformer/output/refiner/track-uri-passkey";
+class PasskeyEncryptionTransformer extends OutputTransformer {
+  static NAME = "diffuse/transformer/output/refiner/passkey-encryption";
 
   #tracks;
 
@@ -41,12 +42,70 @@ class TrackUriPasskeyTransformer extends OutputTransformer {
     const base = this.base();
 
     const encryptionKey = this.#encryptionKey;
+    const lockedSettings = this.#lockedSettings;
     const lockedTracks = this.#lockedTracks;
 
     this.facets = base.facets;
     this.playlistItems = base.playlistItems;
-    this.settings = base.settings;
     this.ready = this.#keyReady.get;
+
+    // Settings
+    /** @type {OutputManager["settings"]} */
+    this.settings = {
+      ...base.settings,
+
+      collection: computed(() => {
+        const col = base.settings.collection();
+        if (col?.state !== "loaded") return { state: "loading" };
+
+        const key = encryptionKey.get();
+
+        /** @type {Setting[]} */
+        const unlocked = [];
+
+        /** @type {Setting[]} */
+        const locked = [];
+
+        for (const setting of col.data) {
+          const value = setting.value;
+          if (typeof value === "string" && isEncryptedUri(value)) {
+            if (key) {
+              try {
+                unlocked.push({
+                  ...setting,
+                  value: decryptUri(key, value),
+                });
+              } catch {
+                locked.push(setting);
+              }
+            } else {
+              locked.push(setting);
+            }
+          } else {
+            unlocked.push(setting);
+          }
+        }
+
+        lockedSettings.set(locked);
+        return { state: "loaded", data: unlocked };
+      }),
+
+      save: async (/** @type {Setting[]} */ newSettings) => {
+        const key = encryptionKey.get();
+
+        if (key) {
+          newSettings = newSettings.map((setting) => ({
+            ...setting,
+            value: encryptUri(key, setting.value),
+          }));
+
+          // Re-append still-locked settings so they are not lost
+          newSettings = newSettings.concat(lockedSettings.value);
+        }
+
+        await base.settings.save(newSettings);
+      },
+    };
 
     // Tracks
     this.#tracks = () => {
@@ -114,9 +173,11 @@ class TrackUriPasskeyTransformer extends OutputTransformer {
 
   #encryptionKey = signal(/** @type {Uint8Array | null} */ (null));
   #keyReady = signal(false);
+  #lockedSettings = signal(/** @type {Setting[]} */ ([]));
   #lockedTracks = signal(/** @type {Track[]} */ ([]));
 
   passkeyActive = computed(() => this.#encryptionKey.get() !== null);
+  lockedSettings = this.#lockedSettings.get;
   lockedTracks = this.#lockedTracks.get;
 
   // LIFECYCLE
@@ -125,10 +186,18 @@ class TrackUriPasskeyTransformer extends OutputTransformer {
   connectedCallback() {
     if (this.hasAttribute("group")) {
       const channelName = this.namespace?.length
-        ? `${TrackUriPasskeyTransformer.NAME}/${this.namespace}/${this.group}`
-        : `${TrackUriPasskeyTransformer.NAME}/${this.group}`;
+        ? `${PasskeyEncryptionTransformer.NAME}/${this.namespace}/${this.group}`
+        : `${PasskeyEncryptionTransformer.NAME}/${this.group}`;
 
       const actions = this.broadcast(channelName, {
+        getLockedSettings: {
+          strategy: "leaderOnly",
+          fn: this.#lockedSettings.get,
+        },
+        setLockedSettings: {
+          strategy: "replicate",
+          fn: this.#lockedSettings.set,
+        },
         getLockedTracks: {
           strategy: "leaderOnly",
           fn: this.#lockedTracks.get,
@@ -140,7 +209,12 @@ class TrackUriPasskeyTransformer extends OutputTransformer {
       });
 
       if (actions) {
+        this.#lockedSettings.set = actions.setLockedSettings;
         this.#lockedTracks.set = actions.setLockedTracks;
+
+        actions.getLockedSettings().then((locked) => {
+          this.#lockedSettings.value = locked;
+        });
 
         actions.getLockedTracks().then((locked) => {
           this.#lockedTracks.value = locked;
@@ -177,18 +251,22 @@ class TrackUriPasskeyTransformer extends OutputTransformer {
     await storeCipherKey(namespace, key);
     this.#encryptionKey.value = key;
 
-    let saved = false;
+    let savedSettings = false;
+    let savedTracks = false;
 
-    const stop = this.effect(() => {
-      if (saved) {
-        stop();
-        return;
-      }
+    const stopSettings = this.effect(() => {
+      if (savedSettings) { stopSettings(); return; }
+      const col = this.settings.collection();
+      if (col.state === "loading") return;
+      savedSettings = true;
+      this.settings.save(col.data);
+    });
 
+    const stopTracks = this.effect(() => {
+      if (savedTracks) { stopTracks(); return; }
       const col = this.tracks.collection();
       if (col.state === "loading") return;
-
-      saved = true;
+      savedTracks = true;
       this.tracks.save(col.data);
     });
   }
@@ -209,18 +287,22 @@ class TrackUriPasskeyTransformer extends OutputTransformer {
     await storeCipherKey(namespace, key);
     this.#encryptionKey.value = key;
 
-    let saved = false;
+    let savedSettings = false;
+    let savedTracks = false;
 
-    const stop = this.effect(() => {
-      if (saved) {
-        stop();
-        return;
-      }
+    const stopSettings = this.effect(() => {
+      if (savedSettings) { stopSettings(); return; }
+      const col = this.settings.collection();
+      if (col.state !== "loaded") return;
+      savedSettings = true;
+      this.settings.save(col.data);
+    });
 
+    const stopTracks = this.effect(() => {
+      if (savedTracks) { stopTracks(); return; }
       const col = this.tracks.collection();
       if (col.state !== "loaded") return;
-
-      saved = true;
+      savedTracks = true;
       this.tracks.save(col.data);
     });
   }
@@ -232,32 +314,37 @@ class TrackUriPasskeyTransformer extends OutputTransformer {
     const namespace = this.namespace ?? "";
     await removeStoredPasskey(namespace);
 
+    // Both collections must be captured in the same reactive snapshot before
+    // clearing the key. If the key were cleared between the two reads, the
+    // second collection would evaluate with key=null and show encrypted items
+    // as locked (invisible), causing them to be silently dropped on save.
     let removed = false;
 
     const stop = this.effect(() => {
-      if (removed) {
-        stop();
-        return;
-      }
+      if (removed) { stop(); return; }
 
-      const col = this.tracks.collection();
-      if (col.state !== "loaded") return;
+      const settingsCol = this.settings.collection();
+      const tracksCol = this.tracks.collection();
+
+      if (settingsCol.state !== "loaded" || tracksCol.state !== "loaded") return;
 
       removed = true;
 
       this.#encryptionKey.value = null;
-      this.tracks.save(col.data);
+
+      this.settings.save(settingsCol.data);
+      this.tracks.save(tracksCol.data);
     });
   }
 }
 
-export default TrackUriPasskeyTransformer;
+export default PasskeyEncryptionTransformer;
 
 ////////////////////////////////////////////
 // REGISTER
 ////////////////////////////////////////////
 
-export const CLASS = TrackUriPasskeyTransformer;
-export const NAME = "dtor-track-uri-passkey";
+export const CLASS = PasskeyEncryptionTransformer;
+export const NAME = "dtor-passkey-encryption";
 
 customElements.define(NAME, CLASS);

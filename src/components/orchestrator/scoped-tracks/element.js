@@ -174,7 +174,6 @@ class ScopedTracksOrchestrator extends BroadcastableDiffuseElement {
 
       // Set pool
       this.#proxy.supply({ tracks: availableTracks });
-
       this.#tracksAvailable.set(availableTracks);
     });
 

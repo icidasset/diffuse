@@ -133,7 +133,8 @@ describe("components/transformer/output/refiner/default", () => {
         {
           $type: "sh.diffuse.output.setting",
           id: "s1",
-          setting: { key: "sh.diffuse.input.disabled.uris", value: [] },
+          key: "sh.diffuse.input.disabled.uris",
+          value: "",
         },
       ]);
 
