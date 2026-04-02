@@ -152,10 +152,11 @@ async function lookup(request) {
 ////////////////////////////////////////////
 
 /**
- * Network-first strategy with content-addressed caching.
+ * Cache-first for file-tree entries, network-first for everything else.
  *
- * Online  → fetch from network, store response by CID, return it.
- * Offline → resolve the URL through the index, serve by CID from the content cache.
+ * Online + in file tree  → serve from cache if present, otherwise fetch and store.
+ * Online + not in tree   → fetch from network, store response by CID, return it.
+ * Offline                → resolve the URL through the index, serve by CID from the content cache.
  *
  * Partial responses (206) are passed through without caching so that
  * range requests for audio streaming work as normal.
@@ -165,6 +166,12 @@ async function lookup(request) {
  */
 async function handleFetch(request) {
   if (navigator.onLine) {
+    const { pathname } = new URL(request.url);
+    if (await cidFromTree(pathname) !== undefined) {
+      const cached = await lookup(request);
+      if (cached) return cached;
+    }
+
     try {
       return await fetchAndStore(request);
     } catch {}
