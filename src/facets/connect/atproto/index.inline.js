@@ -75,10 +75,7 @@ const { setItems } = setup({
 
   description: html`
     <p>
-      Connect to your AT Protocol identity to use it as user-data storage.
-    </p>
-    <p class="caption">
-      Your data is stored as lexicon records in your personal data server (PDS).
+      Use your AT Protocol identity to store your Diffuse user-data.
     </p>
   `,
 
@@ -140,12 +137,12 @@ if (atprotoPasskeyEl) {
         <hr>
 
         <div>
-          <strong>Passkey encryption (optional)</strong>
+          <strong>Passkey encryption</strong>
         </div>
 
         ${passkeyActive
           ? html`
-            <p>Passkey active — Track URIs are encrypted.</p>
+            <p>Passkey is configured. Track URIs and settings are encrypted.</p>
 
             ${passkeyError
               ? html`<div class="callout callout--danger">${passkeyError}</div>`
@@ -156,15 +153,12 @@ if (atprotoPasskeyEl) {
             </div>
 
             <p class="caption">
-              Removing the passkey will expose all the sensitive information that was
-              previously encrypted.
+              Removing the passkey will expose all the sensitive information that was previously encrypted.
             </p>
           `
           : html`
             <p class="caption">
-              Track URIs can optionally be encrypted so that passwords and other sensitive
-              authentication details are kept private. Note that, with this enabled, other
-              people cannot play audio listed on your account.
+              Track URIs and settings can optionally be encrypted so that passwords and other sensitive details are kept private.
             </p>
 
             ${passkeyError

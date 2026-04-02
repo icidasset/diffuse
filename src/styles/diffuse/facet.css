@@ -94,10 +94,11 @@ h1 {
   border: 1px solid currentColor;
   border-radius: var(--radius-xs);
   font-size: var(--fs-3xs);
+  font-weight: 500;
   letter-spacing: var(--tracking-wider);
   line-height: 0.75;
   opacity: 0.6;
-  padding: 0.1em 0.35em;
+  padding: var(--space-3xs);
   text-box: trim-both cap alphabetic;
   text-transform: uppercase;
 }
