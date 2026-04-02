@@ -22,9 +22,9 @@ const thyself =
 // INSTALL
 ////////////////////////////////////////////
 
-self.addEventListener("install", () => {
+self.addEventListener("install", (_event) => {
   // Activate immediately without waiting for existing clients to close.
-  thyself.skipWaiting();
+  /** @type {ExtendableEvent} */ (_event).waitUntil(thyself.skipWaiting());
 });
 
 ////////////////////////////////////////////
@@ -32,8 +32,15 @@ self.addEventListener("install", () => {
 ////////////////////////////////////////////
 
 self.addEventListener("activate", (event) => {
-  // Take control of all open clients right away.
-  /** @type {ExtendableEvent} */ (event).waitUntil(thyself.clients.claim());
+  // Take control of all open clients right away, then reload them so every
+  // page starts fresh under the new service worker with no mid-session split.
+  /** @type {ExtendableEvent} */ (event).waitUntil(
+    thyself.clients.claim().then(() =>
+      thyself.clients.matchAll({ type: "window" }).then((clients) => {
+        for (const client of clients) client.navigate(client.url);
+      })
+    )
+  );
 });
 
 ////////////////////////////////////////////
@@ -187,7 +194,7 @@ async function fetchAndStore(request) {
 
   // Cache full successful responses, including opaque cross-origin ones.
   if (response.status === 200 || response.type === "opaque") {
-    store(request, response.clone());
+    store(request, response.clone()).catch(() => {});
   }
 
   return response;
