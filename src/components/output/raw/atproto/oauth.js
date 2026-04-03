@@ -35,8 +35,6 @@ const CLIENT_KEY = "diffuse/output/raw/atproto";
 // CONFIGURE
 // =========
 
-const location = globalThis.location;
-
 let redirect_uri = location.origin + location.pathname + location.search;
 
 const isLocalDev = redirect_uri.startsWith("http://127.0.0.1");
@@ -81,12 +79,11 @@ configureOAuth({
  * @param {string} handle
  */
 export async function login(handle) {
-  const location = globalThis.location;
-
   sessionStorage.setItem(
     "oauth/callback/redirect_path",
     location.pathname + location.search,
   );
+
   sessionStorage.setItem("oauth/pending-client", CLIENT_KEY);
 
   const authUrl = await createAuthorizationUrl({

@@ -33,12 +33,13 @@ const SCOPE = metadata.scope;
 // CONFIGURE
 // =========
 
-const location = globalThis.location;
+let redirect_uri = location.origin + location.pathname + location.search;
 
-const redirect_uri = location.origin + location.pathname + location.search;
+const isLocalDev = redirect_uri.startsWith("http://127.0.0.1");
 
-const isLocalDev = redirect_uri.startsWith("http://127.0.0.1") ||
-  redirect_uri.startsWith("http://localhost");
+if (!isLocalDev) {
+  redirect_uri = location.origin + "/oauth/callback";
+}
 
 const client_id = isLocalDev
   ? `http://localhost/?redirect_uri=${encodeURIComponent(redirect_uri)}&scope=${
@@ -77,6 +78,7 @@ export async function login(handle) {
     "oauth/callback/redirect_path",
     location.pathname + location.search,
   );
+
   sessionStorage.setItem("oauth/pending-client", CLIENT_KEY);
 
   const authUrl = await createAuthorizationUrl({
