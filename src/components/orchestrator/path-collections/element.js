@@ -1,5 +1,6 @@
 import { computed } from "~/common/signal.js";
 import { OutputTransformer } from "~/components/transformer/output/base.js";
+import { defineElement } from "~/common/element.js";
 
 /**
  * @import {PlaylistItem, Track} from "~/definitions/types.d.ts"
@@ -100,4 +101,4 @@ export default PathCollectionsOrchestrator;
 export const CLASS = PathCollectionsOrchestrator;
 export const NAME = "do-path-collections";
 
-customElements.define(NAME, CLASS);
+defineElement(NAME, CLASS);

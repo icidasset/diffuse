@@ -1,4 +1,4 @@
-import { DiffuseElement } from "~/common/element.js";
+import { defineElement, DiffuseElement } from "~/common/element.js";
 import { signal } from "~/common/signal.js";
 import { listen } from "~/common/worker.js";
 
@@ -81,4 +81,4 @@ export default QueueEngine;
 export const CLASS = QueueEngine;
 export const NAME = "de-queue";
 
-customElements.define(NAME, QueueEngine);
+defineElement(NAME, QueueEngine);

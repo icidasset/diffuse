@@ -1,4 +1,4 @@
-import { DiffuseElement } from "~/common/element.js";
+import { defineElement, DiffuseElement } from "~/common/element.js";
 import { signal } from "~/common/signal.js";
 import { debounceMicrotask } from "@vicary/debounce-microtask";
 
@@ -197,4 +197,4 @@ export default WindowManager;
 export const CLASS = WindowManager;
 export const NAME = "dtw-window-manager";
 
-customElements.define(NAME, WindowManager);
+defineElement(NAME, WindowManager);

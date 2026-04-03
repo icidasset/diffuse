@@ -1,4 +1,4 @@
-import { DiffuseElement } from "~/common/element.js";
+import { defineElement, DiffuseElement } from "~/common/element.js";
 
 /**
  * @import {ProxiedActions} from "~/common/worker.d.ts"
@@ -50,4 +50,4 @@ export default MetadataConfigurator;
 export const CLASS = MetadataConfigurator;
 export const NAME = "dc-metadata";
 
-customElements.define(NAME, MetadataConfigurator);
+defineElement(NAME, MetadataConfigurator);

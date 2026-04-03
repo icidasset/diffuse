@@ -3,6 +3,7 @@ import { xxh32r } from "xxh32/dist/raw.js";
 
 import { batch, computed, signal, untracked } from "~/common/signal.js";
 import { OutputTransformer } from "../../base.js";
+import { defineElement } from "~/common/element.js";
 
 import { STARTING_SET_URIS, TYPE } from "~/common/facets/constants.js";
 import facets from "~/_data/facets.json" with {
@@ -133,4 +134,4 @@ function uriToRkey(uri) {
 export const CLASS = InitialContentsTransformer;
 export const NAME = "dtor-initial-contents";
 
-customElements.define(NAME, CLASS);
+defineElement(NAME, CLASS);

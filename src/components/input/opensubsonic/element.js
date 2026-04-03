@@ -1,4 +1,4 @@
-import { DiffuseElement } from "~/common/element.js";
+import { defineElement, DiffuseElement } from "~/common/element.js";
 import { SCHEME } from "./constants.js";
 import { buildURI, serversFromTracks } from "./common.js";
 
@@ -58,4 +58,4 @@ export default OpensubsonicInput;
 export const CLASS = OpensubsonicInput;
 export const NAME = "di-opensubsonic";
 
-customElements.define(NAME, CLASS);
+defineElement(NAME, CLASS);

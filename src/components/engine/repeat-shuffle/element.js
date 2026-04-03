@@ -1,4 +1,4 @@
-import { BroadcastableDiffuseElement } from "~/common/element.js";
+import { BroadcastableDiffuseElement, defineElement } from "~/common/element.js";
 import { signal } from "~/common/signal.js";
 
 ////////////////////////////////////////////
@@ -83,4 +83,4 @@ export default RepeatShuffleEngine;
 export const CLASS = RepeatShuffleEngine;
 export const NAME = "de-repeat-shuffle";
 
-customElements.define(NAME, CLASS);
+defineElement(NAME, CLASS);

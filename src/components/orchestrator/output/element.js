@@ -1,5 +1,5 @@
 import { ifDefined } from "lit-html/directives/if-defined.js";
-import { DEFAULT_GROUP, DiffuseElement } from "~/common/element.js";
+import { DEFAULT_GROUP, defineElement, DiffuseElement } from "~/common/element.js";
 
 import "~/components/configurator/output/element.js";
 import "~/components/transformer/output/refiner/default/element.js";
@@ -163,4 +163,4 @@ export default OutputOrchestrator;
 export const CLASS = OutputOrchestrator;
 export const NAME = "do-output";
 
-customElements.define(NAME, CLASS);
+defineElement(NAME, CLASS);

@@ -1,4 +1,4 @@
-import { DiffuseElement } from "~/common/element.js";
+import { defineElement, DiffuseElement } from "~/common/element.js";
 
 /**
  * @import {ProxiedActions, Tunnel} from "~/common/worker.d.ts"
@@ -68,4 +68,4 @@ export default InputConfigurator;
 export const CLASS = InputConfigurator;
 export const NAME = "dc-input";
 
-customElements.define(NAME, CLASS);
+defineElement(NAME, CLASS);

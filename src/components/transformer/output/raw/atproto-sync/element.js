@@ -4,6 +4,7 @@ import "~/components/output/polymorphic/indexed-db/element.js";
 
 import { computed, signal } from "~/common/signal.js";
 import { OutputTransformer } from "../../base.js";
+import { defineElement } from "~/common/element.js";
 import * as Output from "~/common/output.js";
 
 /**
@@ -390,4 +391,4 @@ export default ATProtoOutputSyncTransformer;
 export const CLASS = ATProtoOutputSyncTransformer;
 export const NAME = "dtor-atproto-sync";
 
-customElements.define(NAME, CLASS);
+defineElement(NAME, CLASS);

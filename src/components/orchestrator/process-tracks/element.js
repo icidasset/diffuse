@@ -1,4 +1,4 @@
-import { BroadcastableDiffuseElement, query } from "~/common/element.js";
+import { BroadcastableDiffuseElement, defineElement, query } from "~/common/element.js";
 import { signal, untracked } from "~/common/signal.js";
 import { listen } from "~/common/worker.js";
 
@@ -200,4 +200,4 @@ export default ProcessTracksOrchestrator;
 export const CLASS = ProcessTracksOrchestrator;
 export const NAME = "do-process-tracks";
 
-customElements.define(NAME, ProcessTracksOrchestrator);
+defineElement(NAME, ProcessTracksOrchestrator);

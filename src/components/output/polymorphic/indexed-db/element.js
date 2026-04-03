@@ -2,6 +2,7 @@ import * as IDB from "idb-keyval";
 
 import { IDB_PREFIX } from "./constants.js";
 import { BroadcastedOutputElement, outputManager } from "../../common.js";
+import { defineElement } from "~/common/element.js";
 
 /**
  * @import {OutputElement, OutputManager, OutputWorkerActions} from "../../types.d.ts"
@@ -90,4 +91,4 @@ export default IndexedDBOutput;
 export const CLASS = IndexedDBOutput;
 export const NAME = "dop-indexed-db";
 
-if (!customElements.get(NAME)) customElements.define(NAME, IndexedDBOutput);
+defineElement(NAME, IndexedDBOutput);

@@ -1,4 +1,4 @@
-import { BroadcastableDiffuseElement } from "~/common/element.js";
+import { BroadcastableDiffuseElement, defineElement } from "~/common/element.js";
 import { batch, computed, signal } from "~/common/signal.js";
 
 /**
@@ -419,4 +419,4 @@ export default OutputConfigurator;
 export const CLASS = OutputConfigurator;
 export const NAME = "dc-output";
 
-customElements.define(NAME, CLASS);
+defineElement(NAME, CLASS);

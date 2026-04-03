@@ -1,5 +1,6 @@
 import { computed, signal } from "~/common/signal.js";
 import { OutputTransformer } from "../../base.js";
+import { defineElement } from "~/common/element.js";
 
 import {
   adoptPasskeyPrfResult,
@@ -347,4 +348,4 @@ export default PasskeyEncryptionTransformer;
 export const CLASS = PasskeyEncryptionTransformer;
 export const NAME = "dtor-passkey-encryption";
 
-customElements.define(NAME, CLASS);
+defineElement(NAME, CLASS);

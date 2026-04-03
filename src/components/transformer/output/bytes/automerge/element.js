@@ -10,6 +10,7 @@ import {
   removeUndefinedValuesFromRecord,
 } from "~/common/utils.js";
 import { OutputTransformer } from "../../base.js";
+import { defineElement } from "~/common/element.js";
 import {
   INITIAL_FACETS_DOCUMENT,
   INITIAL_PLAYLIST_ITEMS_DOCUMENT,
@@ -292,4 +293,4 @@ export function automergeEntry(local, remote, document, opts) {
 export const CLASS = AutomergeBytesOutputTransformer;
 export const NAME = "dtob-automerge";
 
-customElements.define(NAME, CLASS);
+defineElement(NAME, CLASS);

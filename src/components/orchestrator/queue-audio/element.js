@@ -1,4 +1,4 @@
-import { BroadcastableDiffuseElement, query } from "~/common/element.js";
+import { BroadcastableDiffuseElement, defineElement, query } from "~/common/element.js";
 import { untracked } from "~/common/signal.js";
 
 /**
@@ -139,4 +139,4 @@ export default QueueAudioOrchestrator;
 export const CLASS = QueueAudioOrchestrator;
 export const NAME = "do-queue-audio";
 
-customElements.define(NAME, QueueAudioOrchestrator);
+defineElement(NAME, QueueAudioOrchestrator);

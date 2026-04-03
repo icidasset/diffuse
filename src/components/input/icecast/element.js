@@ -1,4 +1,4 @@
-import { DiffuseElement } from "~/common/element.js";
+import { defineElement, DiffuseElement } from "~/common/element.js";
 import { hostsFromTracks } from "./common.js";
 import { SCHEME } from "./constants.js";
 
@@ -58,4 +58,4 @@ export default IcecastInput;
 export const CLASS = IcecastInput;
 export const NAME = "di-icecast";
 
-customElements.define(NAME, CLASS);
+defineElement(NAME, CLASS);

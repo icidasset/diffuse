@@ -1,4 +1,4 @@
-import { DiffuseElement } from "~/common/element.js";
+import { defineElement, DiffuseElement } from "~/common/element.js";
 
 /**
  * @import {Track} from "~/definitions/types.d.ts"
@@ -69,4 +69,4 @@ export default ScrobblesConfigurator;
 export const CLASS = ScrobblesConfigurator;
 export const NAME = "dc-scrobbles";
 
-customElements.define(NAME, CLASS);
+defineElement(NAME, CLASS);

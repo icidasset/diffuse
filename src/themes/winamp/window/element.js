@@ -1,4 +1,4 @@
-import { DiffuseElement } from "~/common/element.js";
+import { defineElement, DiffuseElement } from "~/common/element.js";
 
 /**
  * @import {RenderArg} from "~/common/element.d.ts"
@@ -123,4 +123,4 @@ export default WindowElement;
 export const CLASS = WindowElement;
 export const NAME = "dtw-window";
 
-customElements.define(NAME, WindowElement);
+defineElement(NAME, WindowElement);

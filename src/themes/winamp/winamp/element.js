@@ -1,4 +1,5 @@
 import {
+  defineElement,
   DiffuseElement,
   query,
   whenElementsDefined,
@@ -2343,4 +2344,4 @@ export default WinampElement;
 export const CLASS = WinampElement;
 export const NAME = "dtw-winamp";
 
-customElements.define(NAME, WinampElement);
+defineElement(NAME, WinampElement);

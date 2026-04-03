@@ -1,4 +1,5 @@
 import {
+  defineElement,
   DiffuseElement,
   query,
   whenElementsDefined,
@@ -482,4 +483,4 @@ export default Browser;
 export const CLASS = Browser;
 export const NAME = "dtw-browser";
 
-customElements.define(NAME, CLASS);
+defineElement(NAME, CLASS);

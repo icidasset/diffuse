@@ -1,4 +1,4 @@
-import { DiffuseElement } from "~/common/element.js";
+import { defineElement, DiffuseElement } from "~/common/element.js";
 import { SCHEME } from "./constants.js";
 import { hostsFromTracks } from "./common.js";
 
@@ -58,4 +58,4 @@ export default HttpsInput;
 export const CLASS = HttpsInput;
 export const NAME = "di-https";
 
-customElements.define(NAME, CLASS);
+defineElement(NAME, CLASS);

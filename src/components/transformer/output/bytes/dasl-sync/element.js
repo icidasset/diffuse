@@ -9,6 +9,7 @@ import { diff, strictEquality } from "~/common/compare.js";
 import { computed, signal } from "~/common/signal.js";
 import { compareTimestamps } from "~/common/temporal.js";
 import { OutputTransformer } from "../../base.js";
+import { defineElement } from "~/common/element.js";
 
 /**
  * @import { SignalReader } from "~/common/signal.d.ts";
@@ -465,4 +466,4 @@ export default DaslBytesSyncOutputTransformer;
 export const CLASS = DaslBytesSyncOutputTransformer;
 export const NAME = "dtob-dasl-sync";
 
-customElements.define(NAME, CLASS);
+defineElement(NAME, CLASS);

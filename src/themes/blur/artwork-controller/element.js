@@ -6,6 +6,7 @@ import { xxh32r } from "xxh32/dist/raw.js";
 
 import {
   DEFAULT_GROUP,
+  defineElement,
   DiffuseElement,
   query,
   whenElementsDefined,
@@ -569,4 +570,4 @@ function detectMime(bytes) {
 export const CLASS = ArtworkController;
 export const NAME = "db-artwork-controller";
 
-customElements.define(NAME, CLASS);
+defineElement(NAME, CLASS);

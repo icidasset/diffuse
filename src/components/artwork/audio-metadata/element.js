@@ -1,4 +1,4 @@
-import { DiffuseElement, query } from "~/common/element.js";
+import { defineElement, DiffuseElement, query } from "~/common/element.js";
 
 /**
  * @import {ProxiedActions} from "~/common/worker.d.ts"
@@ -58,4 +58,4 @@ export default AudioMetadataArtwork;
 export const CLASS = AudioMetadataArtwork;
 export const NAME = "da-audio-metadata";
 
-customElements.define(NAME, AudioMetadataArtwork);
+defineElement(NAME, AudioMetadataArtwork);

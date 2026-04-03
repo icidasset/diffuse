@@ -1,4 +1,4 @@
-import { DiffuseElement, query } from "~/common/element.js";
+import { defineElement, DiffuseElement, query } from "~/common/element.js";
 
 /**
  * @import {ProxiedActions} from "~/common/worker.d.ts"
@@ -59,4 +59,4 @@ export default ArtworkOrchestrator;
 export const CLASS = ArtworkOrchestrator;
 export const NAME = "do-artwork";
 
-customElements.define(NAME, ArtworkOrchestrator);
+defineElement(NAME, ArtworkOrchestrator);

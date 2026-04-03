@@ -1,6 +1,6 @@
 import { keyed } from "lit-html/directives/keyed.js";
 
-import { BroadcastableDiffuseElement, nothing } from "~/common/element.js";
+import { BroadcastableDiffuseElement, defineElement, nothing } from "~/common/element.js";
 import { computed, signal, untracked } from "~/common/signal.js";
 
 /**
@@ -885,5 +885,5 @@ export const CLASS = AudioEngine;
 export const NAME = "de-audio";
 export const NAME_ITEM = "de-audio-item";
 
-customElements.define(NAME, AudioEngine);
-customElements.define(NAME_ITEM, AudioEngineItem);
+defineElement(NAME, AudioEngine);
+defineElement(NAME_ITEM, AudioEngineItem);

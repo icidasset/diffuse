@@ -1,4 +1,4 @@
-import { BroadcastableDiffuseElement } from "~/common/element.js";
+import { BroadcastableDiffuseElement, defineElement } from "~/common/element.js";
 import { signal } from "~/common/signal.js";
 
 ////////////////////////////////////////////
@@ -147,4 +147,4 @@ export default ScopeEngine;
 export const CLASS = ScopeEngine;
 export const NAME = "de-scope";
 
-customElements.define(NAME, CLASS);
+defineElement(NAME, CLASS);

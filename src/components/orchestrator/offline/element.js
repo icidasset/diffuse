@@ -1,4 +1,4 @@
-import { DiffuseElement } from "~/common/element.js";
+import { defineElement, DiffuseElement } from "~/common/element.js";
 
 ////////////////////////////////////////////
 // ELEMENT
@@ -60,4 +60,4 @@ export default OfflineOrchestrator;
 export const CLASS = OfflineOrchestrator;
 export const NAME = "do-offline";
 
-customElements.define(NAME, OfflineOrchestrator);
+defineElement(NAME, OfflineOrchestrator);

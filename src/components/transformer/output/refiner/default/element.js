@@ -2,6 +2,7 @@ import * as IDB from "idb-keyval";
 
 import { computed, signal } from "~/common/signal.js";
 import { OutputTransformer } from "../../base.js";
+import { defineElement } from "~/common/element.js";
 
 const IDB_KEY_PLAYLISTS =
   "diffuse/transformer/output/refiner/default/playlistItems/ephemeral";
@@ -170,4 +171,4 @@ export default DefaultOutputRefinerTransformer;
 export const CLASS = DefaultOutputRefinerTransformer;
 export const NAME = "dtor-default";
 
-if (!customElements.get(NAME)) customElements.define(NAME, CLASS);
+defineElement(NAME, CLASS);

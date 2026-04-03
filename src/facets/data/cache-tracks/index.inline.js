@@ -1,4 +1,4 @@
-import { BroadcastableDiffuseElement } from "~/common/element.js";
+import { BroadcastableDiffuseElement, defineElement } from "~/common/element.js";
 import { effect, signal } from "~/common/signal.js";
 import foundation from "~/common/foundation.js";
 
@@ -73,4 +73,4 @@ class PretendScrobbler extends BroadcastableDiffuseElement {
   }
 }
 
-customElements.define("dct-scrobbler", PretendScrobbler);
+defineElement("dct-scrobbler", PretendScrobbler);

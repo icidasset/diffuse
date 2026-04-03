@@ -1,4 +1,4 @@
-import { DiffuseElement, query } from "~/common/element.js";
+import { defineElement, DiffuseElement, query } from "~/common/element.js";
 
 /**
  * @import {ProxiedActions} from "~/common/worker.d.ts"
@@ -58,4 +58,4 @@ export default InputArtwork;
 export const CLASS = InputArtwork;
 export const NAME = "da-input";
 
-customElements.define(NAME, InputArtwork);
+defineElement(NAME, InputArtwork);

@@ -502,6 +502,16 @@ export function component(elementModule, id) {
 }
 
 /**
+ * Defines a custom element, guarding against double-registration.
+ *
+ * @param {string} name
+ * @param {CustomElementConstructor} constructor
+ */
+export function defineElement(name, constructor) {
+  if (!customElements.get(name)) customElements.define(name, constructor);
+}
+
+/**
  * @template {HTMLElement} T
  * @param {DiffuseElement} parent
  * @param {string} attribute

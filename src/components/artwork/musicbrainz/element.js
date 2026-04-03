@@ -1,4 +1,4 @@
-import { DiffuseElement } from "~/common/element.js";
+import { defineElement, DiffuseElement } from "~/common/element.js";
 
 /**
  * @import {ProxiedActions} from "~/common/worker.d.ts"
@@ -35,4 +35,4 @@ export default MusicBrainzArtwork;
 export const CLASS = MusicBrainzArtwork;
 export const NAME = "da-musicbrainz";
 
-customElements.define(NAME, MusicBrainzArtwork);
+defineElement(NAME, MusicBrainzArtwork);

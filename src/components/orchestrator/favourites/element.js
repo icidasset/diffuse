@@ -1,4 +1,4 @@
-import { BroadcastableDiffuseElement, query } from "~/common/element.js";
+import { BroadcastableDiffuseElement, defineElement, query } from "~/common/element.js";
 import { match as matchPlaylistItem } from "~/common/playlist.js";
 import { computed, signal } from "~/common/signal.js";
 import { filterFavourites } from "./common.js";
@@ -181,4 +181,4 @@ export default FavouritesOrchestrator;
 export const CLASS = FavouritesOrchestrator;
 export const NAME = "do-favourites";
 
-customElements.define(NAME, CLASS);
+defineElement(NAME, CLASS);

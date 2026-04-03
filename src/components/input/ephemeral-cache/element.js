@@ -1,4 +1,4 @@
-import { DiffuseElement } from "~/common/element.js";
+import { defineElement, DiffuseElement } from "~/common/element.js";
 import { SCHEME } from "./constants.js";
 
 /**
@@ -55,4 +55,4 @@ export default EphemeralCacheInput;
 export const CLASS = EphemeralCacheInput;
 export const NAME = "di-ephemeral-cache";
 
-customElements.define(NAME, CLASS);
+defineElement(NAME, CLASS);

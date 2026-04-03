@@ -1,4 +1,4 @@
-import { BroadcastableDiffuseElement, query } from "~/common/element.js";
+import { BroadcastableDiffuseElement, defineElement, query } from "~/common/element.js";
 
 /**
  * @import {ScrobbleElement} from "~/components/supplement/types.d.ts"
@@ -218,4 +218,4 @@ export default ScrobbleAudioOrchestrator;
 export const CLASS = ScrobbleAudioOrchestrator;
 export const NAME = "do-scrobble-audio";
 
-customElements.define(NAME, ScrobbleAudioOrchestrator);
+defineElement(NAME, ScrobbleAudioOrchestrator);

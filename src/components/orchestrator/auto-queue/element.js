@@ -1,4 +1,4 @@
-import { BroadcastableDiffuseElement, query } from "~/common/element.js";
+import { BroadcastableDiffuseElement, defineElement, query } from "~/common/element.js";
 
 /**
  * @import {DiffuseElement} from "~/common/element.js";
@@ -95,4 +95,4 @@ export default AutoTracksOrchestrator;
 export const CLASS = AutoTracksOrchestrator;
 export const NAME = "do-auto-queue";
 
-customElements.define(NAME, CLASS);
+defineElement(NAME, CLASS);

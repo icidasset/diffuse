@@ -7,6 +7,7 @@ import * as IDB from "idb-keyval";
 
 import { computed, signal } from "~/common/signal.js";
 import { BroadcastedOutputElement, outputManager } from "../../common.js";
+import { defineElement } from "~/common/element.js";
 
 import {
   clearStoredSession,
@@ -668,4 +669,4 @@ export default ATProtoOutput;
 export const CLASS = ATProtoOutput;
 export const NAME = "dor-atproto";
 
-customElements.define(NAME, ATProtoOutput);
+defineElement(NAME, ATProtoOutput);

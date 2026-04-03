@@ -1,4 +1,4 @@
-import { DiffuseElement, query, whenElementsDefined } from "~/common/element.js";
+import { defineElement, DiffuseElement, query, whenElementsDefined } from "~/common/element.js";
 import { computed, signal } from "~/common/signal.js";
 
 /**
@@ -77,4 +77,4 @@ export default ControllerOrchestrator;
 export const CLASS = ControllerOrchestrator;
 export const NAME = "do-controller";
 
-customElements.define(NAME, CLASS);
+defineElement(NAME, CLASS);

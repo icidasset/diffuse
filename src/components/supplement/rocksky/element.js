@@ -3,7 +3,7 @@ import { bytesToHex, utf8ToBytes } from "@noble/hashes/utils.js";
 
 import { getSession } from "@atcute/oauth-browser-client";
 
-import { BroadcastableDiffuseElement } from "~/common/element.js";
+import { BroadcastableDiffuseElement, defineElement } from "~/common/element.js";
 import { computed, signal } from "~/common/signal.js";
 
 /**
@@ -247,4 +247,4 @@ export default RockskyScrobbler;
 export const CLASS = RockskyScrobbler;
 export const NAME = "ds-rocksky-scrobbler";
 
-customElements.define(NAME, CLASS);
+defineElement(NAME, CLASS);

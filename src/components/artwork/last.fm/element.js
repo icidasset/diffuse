@@ -1,4 +1,4 @@
-import { DiffuseElement } from "~/common/element.js";
+import { defineElement, DiffuseElement } from "~/common/element.js";
 
 /**
  * @import {ProxiedActions} from "~/common/worker.d.ts"
@@ -35,4 +35,4 @@ export default LastFmArtwork;
 export const CLASS = LastFmArtwork;
 export const NAME = "da-lastfm";
 
-customElements.define(NAME, LastFmArtwork);
+defineElement(NAME, LastFmArtwork);

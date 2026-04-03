@@ -2,6 +2,7 @@ import * as IDB from "idb-keyval";
 
 import { computed, signal } from "~/common/signal.js";
 import { BroadcastedOutputElement, outputManager } from "../../common.js";
+import { defineElement } from "~/common/element.js";
 
 const STORAGE_PREFIX = "diffuse/output/bytes/s3";
 
@@ -165,4 +166,4 @@ export default S3Output;
 export const CLASS = S3Output;
 export const NAME = "dob-s3";
 
-customElements.define(NAME, S3Output);
+defineElement(NAME, S3Output);

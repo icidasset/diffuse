@@ -1,4 +1,4 @@
-import { DiffuseElement } from "~/common/element.js";
+import { defineElement, DiffuseElement } from "~/common/element.js";
 
 /**
  * @import {ProxiedActions} from "~/common/worker.d.ts"
@@ -50,4 +50,4 @@ export default ArtworkConfigurator;
 export const CLASS = ArtworkConfigurator;
 export const NAME = "dc-artwork";
 
-customElements.define(NAME, ArtworkConfigurator);
+defineElement(NAME, ArtworkConfigurator);

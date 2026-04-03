@@ -1,4 +1,4 @@
-import { DiffuseElement } from "~/common/element.js";
+import { defineElement, DiffuseElement } from "~/common/element.js";
 import { SCHEME } from "./constants.js";
 import { bucketsFromTracks, buildURI } from "./common.js";
 
@@ -61,4 +61,4 @@ export default S3Input;
 export const CLASS = S3Input;
 export const NAME = "di-s3";
 
-customElements.define(NAME, CLASS);
+defineElement(NAME, CLASS);

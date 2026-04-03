@@ -1,5 +1,6 @@
 import {
   BroadcastableDiffuseElement,
+  defineElement,
   query,
   queryOptional,
 } from "~/common/element.js";
@@ -222,4 +223,4 @@ function detectMime(bytes) {
 export const CLASS = MediaSessionOrchestrator;
 export const NAME = "do-media-session";
 
-customElements.define(NAME, MediaSessionOrchestrator);
+defineElement(NAME, MediaSessionOrchestrator);

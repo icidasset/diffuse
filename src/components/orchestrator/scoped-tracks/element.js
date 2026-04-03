@@ -1,5 +1,6 @@
 import {
   BroadcastableDiffuseElement,
+  defineElement,
   query,
   queryOptional,
 } from "~/common/element.js";
@@ -281,4 +282,4 @@ export default ScopedTracksOrchestrator;
 export const CLASS = ScopedTracksOrchestrator;
 export const NAME = "do-scoped-tracks";
 
-customElements.define(NAME, CLASS);
+defineElement(NAME, CLASS);

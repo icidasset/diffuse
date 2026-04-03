@@ -1,4 +1,4 @@
-import { BroadcastableDiffuseElement } from "~/common/element.js";
+import { BroadcastableDiffuseElement, defineElement } from "~/common/element.js";
 import { computed, signal } from "~/common/signal.js";
 
 /**
@@ -223,4 +223,4 @@ export default ListenBrainzScrobbler;
 export const CLASS = ListenBrainzScrobbler;
 export const NAME = "ds-listenbrainz-scrobbler";
 
-customElements.define(NAME, CLASS);
+defineElement(NAME, CLASS);

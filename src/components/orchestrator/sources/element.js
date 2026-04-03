@@ -1,7 +1,7 @@
 import deepDiff from "@fry69/deep-diff";
 
 import * as Output from "~/common/output.js";
-import { BroadcastableDiffuseElement, query } from "~/common/element.js";
+import { BroadcastableDiffuseElement, defineElement, query } from "~/common/element.js";
 import { groupTracksPerScheme } from "~/common/utils.js";
 import { signal } from "~/common/signal.js";
 
@@ -155,4 +155,4 @@ export default Sources;
 export const CLASS = Sources;
 export const NAME = "do-sources";
 
-customElements.define(NAME, CLASS);
+defineElement(NAME, CLASS);

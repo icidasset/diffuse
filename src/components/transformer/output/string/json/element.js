@@ -1,5 +1,6 @@
 import { computed } from "~/common/signal.js";
 import { OutputTransformer } from "../../base.js";
+import { defineElement } from "~/common/element.js";
 
 /**
  * @import { OutputManagerDeputy } from "~/components/output/types.d.ts"
@@ -111,4 +112,4 @@ export default JsonStringOutputTransformer;
 export const CLASS = JsonStringOutputTransformer;
 export const NAME = "dtos-json";
 
-customElements.define(NAME, CLASS);
+defineElement(NAME, CLASS);

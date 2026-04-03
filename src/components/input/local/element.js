@@ -1,5 +1,5 @@
 import * as TID from "@atcute/tid";
-import { DiffuseElement } from "~/common/element.js";
+import { defineElement, DiffuseElement } from "~/common/element.js";
 import { SCHEME } from "./constants.js";
 import {
   buildURI,
@@ -118,4 +118,4 @@ export default LocalInput;
 export const CLASS = LocalInput;
 export const NAME = "di-local";
 
-customElements.define(NAME, CLASS);
+defineElement(NAME, CLASS);
