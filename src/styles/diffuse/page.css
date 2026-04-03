@@ -199,7 +199,7 @@ dialog {
 
   & > a {
     cursor: pointer;
-    display: block;
+    display: flex;
     min-width: var(--space-3xl);
     padding: var(--space-xs) var(--space-sm);
     text-decoration: none;
@@ -296,9 +296,20 @@ textarea {
     border: 1px solid var(--border-color);
     border-radius: var(--radius-md);
     display: flex;
+    opacity: 1;
+    transition: opacity 250ms;
 
     &[hidden] {
       display: none;
+    }
+
+    &[data-disabled] {
+      opacity: 0.3;
+
+      &:hover,
+      &:focus-within {
+        opacity: 0.6;
+      }
     }
   }
 

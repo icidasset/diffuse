@@ -21,6 +21,22 @@ export function deleteFacet({ id }) {
 }
 
 /**
+ * @param {{ id: string }} _
+ */
+export function toggleFacetEnabled({ id }) {
+  return async () => {
+    const out = await output();
+    const col = await Output.data(out.facets);
+    const facet = col.find((c) => c.id === id);
+    if (!facet) return;
+    await out.facets.save([
+      ...col.filter((c) => c.id !== id),
+      { ...facet, enabled: !(facet.enabled ?? true), updatedAt: new Date().toISOString() },
+    ]);
+  };
+}
+
+/**
  * @param {Facet} facet
  */
 export async function saveFacet(facet) {

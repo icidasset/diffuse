@@ -8,7 +8,7 @@ import { effect, signal } from "~/common/signal.js";
 
 import { nothing } from "~/common/element.js";
 
-import { deleteFacet } from "./crud.js";
+import { deleteFacet, toggleFacetEnabled } from "./crud.js";
 import { output } from "./output.js";
 import { openAddFromURIModal } from "./from-uri.js";
 
@@ -99,7 +99,7 @@ function _renderList(output, listEl) {
       .sort((a, b) => {
         return a.name.toLocaleLowerCase().localeCompare(
           b.name.toLocaleLowerCase(),
-        );
+        ) || a.id.localeCompare(b.id);
       })
     : [];
 
@@ -182,7 +182,7 @@ function _renderList(output, listEl) {
           return keyed(
             c.id,
             html`
-              <li class="grid-item">
+              <li class="grid-item" ?data-disabled="${!(c.enabled ?? true)}">
                 <div
                   class="grid-item__contents"
                   style="--grid-item-color: ${color}"
@@ -218,21 +218,49 @@ function _renderList(output, listEl) {
                 </div>
 
                 <div class="grid-item__menu">
-                  <a
-                    class="button button--transparent"
-                    title="Edit"
-                    href="build/?id=${encodeURIComponent(c.id)}"
+                  <button
+                    class="button--transparent"
+                    title="${(c.enabled ?? true)
+                      ? c.kind === "prelude" ? "Disable" : "Dim"
+                      : c.kind === "prelude"
+                      ? "Enable"
+                      : "Light"}"
+                    @click="${toggleFacetEnabled({ id: c.id })}"
                   >
-                    <i class="ph-fill ph-code-block"></i>
-                  </a>
+                    <i class="ph-bold ${(c.enabled ?? true)
+                      ? c.kind === "prelude" ? "ph-lightning" : "ph-eye"
+                      : c.kind === "prelude"
+                      ? "ph-lightning-slash"
+                      : "ph-eye-slash"}"></i>
+                  </button>
                   <hr />
                   <button
                     class="button--transparent"
-                    title="Delete"
-                    @click="${deleteFacet({ id: c.id })}"
+                    title="More actions"
+                    popovertarget="facet-menu-${c.id}"
                   >
-                    <i class="ph-fill ph-skull"></i>
+                    <i class="ph-bold ph-dots-three-vertical"></i>
                   </button>
+                  <div id="facet-menu-${c.id}" class="dropdown" popover>
+                    <a
+                      class="with-icon"
+                      href="build/?id=${encodeURIComponent(c.id)}"
+                    >
+                      <i class="ph-fill ph-code-block"></i>
+                      Edit
+                    </a>
+                    <a
+                      class="with-icon"
+                      href="#"
+                      @click="${(/** @type {MouseEvent} */ e) => {
+                        e.preventDefault();
+                        deleteFacet({ id: c.id })();
+                      }}"
+                    >
+                      <i class="ph-fill ph-skull"></i>
+                      Delete
+                    </a>
+                  </div>
                 </div>
               </li>
             `,

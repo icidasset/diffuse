@@ -18,6 +18,11 @@
           },
           "createdAt": { "type": "string", "format": "datetime" },
           "description": { "type": "string" },
+          "enabled": {
+            "type": "boolean",
+            "default": true,
+            "description": "Whether the facet is enabled or not"
+          },
           "html": {
             "type": "string",
             "description": "The UTF8 HTML string that makes up the facet"
