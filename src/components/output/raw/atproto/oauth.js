@@ -50,7 +50,7 @@ const client_id = isLocalDev
     encodeURIComponent(SCOPE)
   }`
   : /** @type {any} */ (import.meta).env?.ATPROTO_CLIENT_ID ??
-    "https://elements.diffuse.sh/oauth-client-metadata.json";
+    "https://elements.diffuse.sh/latest/components/output/raw/atproto/oauth-client-metadata.json";
 
 configureOAuth({
   metadata: {
@@ -83,7 +83,10 @@ configureOAuth({
 export async function login(handle) {
   const location = globalThis.location;
 
-  sessionStorage.setItem("oauth/callback/redirect_path", location.pathname + location.search);
+  sessionStorage.setItem(
+    "oauth/callback/redirect_path",
+    location.pathname + location.search,
+  );
   sessionStorage.setItem("oauth/pending-client", CLIENT_KEY);
 
   const authUrl = await createAuthorizationUrl({
@@ -110,7 +113,10 @@ export async function restoreOrFinalize() {
   // so params arrive in the URL hash, not the query string)
   const params = new URLSearchParams(location.hash.slice(1));
 
-  if (params.has("code") && sessionStorage.getItem("oauth/pending-client") === CLIENT_KEY) {
+  if (
+    params.has("code") &&
+    sessionStorage.getItem("oauth/pending-client") === CLIENT_KEY
+  ) {
     sessionStorage.removeItem("oauth/pending-client");
 
     const result = await finalizeAuthorization(params);

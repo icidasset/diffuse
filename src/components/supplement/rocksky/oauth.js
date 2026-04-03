@@ -23,7 +23,7 @@ import metadata from "./oauth-client-metadata.json" with {
  * @import {Session} from "@atcute/oauth-browser-client"
  */
 
-export { OAuthUserAgent, getSession };
+export { getSession, OAuthUserAgent };
 
 export const DID_STORAGE_KEY = "diffuse/supplement/rocksky/atproto/did";
 const CLIENT_KEY = "diffuse/supplement/rocksky";
@@ -45,7 +45,7 @@ const client_id = isLocalDev
     encodeURIComponent(SCOPE)
   }`
   : /** @type {any} */ (import.meta).env?.ROCKSKY_ATPROTO_CLIENT_ID ??
-    "https://elements.diffuse.sh/rocksky-oauth-client-metadata.json";
+    "https://elements.diffuse.sh/latest/components/supplement/rocksky/oauth-client-metadata.json";
 
 configureOAuth({
   metadata: { client_id, redirect_uri },
@@ -73,7 +73,10 @@ configureOAuth({
  * @param {string} handle
  */
 export async function login(handle) {
-  sessionStorage.setItem("oauth/callback/redirect_path", location.pathname + location.search);
+  sessionStorage.setItem(
+    "oauth/callback/redirect_path",
+    location.pathname + location.search,
+  );
   sessionStorage.setItem("oauth/pending-client", CLIENT_KEY);
 
   const authUrl = await createAuthorizationUrl({
@@ -96,7 +99,10 @@ export async function login(handle) {
 export async function restoreOrFinalize() {
   const params = new URLSearchParams(location.hash.slice(1));
 
-  if (params.has("code") && sessionStorage.getItem("oauth/pending-client") === CLIENT_KEY) {
+  if (
+    params.has("code") &&
+    sessionStorage.getItem("oauth/pending-client") === CLIENT_KEY
+  ) {
     sessionStorage.removeItem("oauth/pending-client");
 
     const result = await finalizeAuthorization(params);
