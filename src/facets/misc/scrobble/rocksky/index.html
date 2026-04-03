@@ -13,59 +13,6 @@
   }
 </style>
 
-<main>
-  <div class="facet__left">
-    <div>
-      <a href="./dashboard/" class="diffuse-logo-container">
-        <svg viewBox="0 0 902 134" width="160">
-          <title>Diffuse</title>
-          <use
-            xlink:href="images/diffuse-current.svg#diffuse"
-            href="images/diffuse-current.svg#diffuse"
-          ></use>
-        </svg>
-      </a>
-    </div>
-    <h1>Rocksky</h1>
-    <p>Scrobble tracks to Rocksky using your AT Protocol identity.</p>
-  </div>
-
-  <div class="facet__right">
-    <div id="state-connect">
-      <div id="state-no-atproto">
-        <p>Sign in with your AT Protocol identity first, then connect to Rocksky.</p>
-        <form id="atproto-sign-in-form">
-          <label>Handle <input id="handle-input" placeholder="you.bsky.social" /></label>
-          <p class="button-row">
-            <button id="atproto-sign-in-btn">
-              <i class="ph-bold ph-at"></i>
-              Sign in with AT Protocol
-            </button>
-          </p>
-        </form>
-      </div>
-
-      <div id="state-has-atproto" hidden>
-        <p>Connect your Rocksky account using your AT Protocol identity.</p>
-        <div class="button-row">
-          <button id="sign-in-btn" class="button--brand">
-            <i class="ph-bold ph-plugs"></i>
-            Connect
-          </button>
-        </div>
-      </div>
-    </div>
-
-    <div id="state-connected" hidden>
-      <p id="handle-paragraph" hidden>Connected as <strong id="handle-text"></strong>.</p>
-      <div class="button-row">
-        <button id="sign-out-btn" hidden>
-          <i class="ph-bold ph-plugs-connected"></i>
-          Disconnect
-        </button>
-      </div>
-    </div>
-  </div>
-</main>
+<main></main>
 
 <script type="module" src="facets/misc/scrobble/rocksky/index.inline.js"></script>

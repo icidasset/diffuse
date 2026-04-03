@@ -23,29 +23,7 @@ const outputOrchestrator = await foundation.orchestrator.output();
 await customElements.whenDefined(outputOrchestrator.localName);
 await customElements.whenDefined(ATPROTO_NAME);
 
-// The AT Protocol option is added dynamically by the output-bundle facet, which
-// runs in a separate script and appends the element to the output configurator
-// via a signal effect. That effect may not have fired yet when this facet loads,
-// so we observe the configurator for child-list mutations and resolve as soon as
-// the option appears.
-const outputConfigurator = outputOrchestrator.outputConfigurator;
-
-const atprotoOption = await new Promise((resolve) => {
-  const check = async () => {
-    const opt = (await outputOrchestrator.options()).find(
-      (o) => o.label === "AT Protocol",
-    );
-    if (opt) {
-      observer.disconnect();
-      resolve(opt);
-    }
-  };
-
-  const observer = new MutationObserver(check);
-  observer.observe(outputConfigurator, { childList: true });
-  check();
-});
-
+const atprotoOption = await outputOrchestrator.waitForOption("AT Protocol");
 const ATPROTO_OUTPUT_ID = atprotoOption.id;
 
 const atprotoEl = /** @type {ATProtoOutputElement | undefined} */ (

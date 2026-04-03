@@ -10,6 +10,7 @@ export type OutputConfiguratorElement<ElementType = OutputElement> =
     loadSelected: () => Promise<void>;
     options: () => Promise<Array<OutputOption<ElementType>>>;
     select: (id: string) => Promise<void>;
+    waitForOption: (label: string) => Promise<OutputOption<ElementType>>;
 
     /** Output-element ids that have been selected earlier. */
     activated: SignalReader<Set<string>>;

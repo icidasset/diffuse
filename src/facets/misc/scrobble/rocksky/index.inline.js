@@ -1,5 +1,4 @@
-import { login } from "~/components/output/raw/atproto/oauth.js";
-import { finalizeAuthorization } from "@atcute/oauth-browser-client";
+import { html, nothing, render as litRender } from "lit-html";
 
 import foundation from "~/common/foundation.js";
 import { effect, signal } from "~/common/signal.js";
@@ -10,26 +9,6 @@ import { effect, signal } from "~/common/signal.js";
 
 // Set doc title
 foundation.setup({ title: "Rocksky | Scrobble | Diffuse" });
-
-const ATPROTO_DID_KEY = "diffuse/output/raw/atproto/did";
-
-// Handle AT Protocol OAuth callback if returning from it.
-// The /oauth/callback page passes the #code fragment back to this page's URL.
-// We only finalize if the code is actually present — never attempt session
-// restoration, as its error path calls clearStoredSession() which would wipe
-// the main app's AT Protocol session from localStorage and IndexedDB.
-let freshAtprotoSession = null;
-const hashParams = new URLSearchParams(location.hash.slice(1));
-if (hashParams.has("code")) {
-  try {
-    const result = await finalizeAuthorization(hashParams);
-    history.replaceState(null, "", location.pathname + location.search);
-    localStorage.setItem(ATPROTO_DID_KEY, result.session.info.sub);
-    freshAtprotoSession = result.session;
-  } catch (err) {
-    console.warn("rocksky: failed to finalize AT Protocol auth", err);
-  }
-}
 
 const configurator = await foundation.configurator.scrobbles();
 
@@ -47,107 +26,95 @@ if (!rocksky) {
 
 await customElements.whenDefined(rocksky.localName);
 
-// If AT Protocol was just authorized via OAuth, immediately connect to Rocksky
-if (freshAtprotoSession && !rocksky.isAuthenticated()) {
-  rocksky.signIn().catch(() => {});
-}
-
-////////////////////////////////////////////
-// ELEMENTS
-////////////////////////////////////////////
-
-const stateConnect = /** @type {HTMLElement} */ (
-  document.querySelector("#state-connect")
-);
-
-const stateConnected = /** @type {HTMLElement} */ (
-  document.querySelector("#state-connected")
-);
-
-const stateNoAtproto = /** @type {HTMLElement} */ (
-  document.querySelector("#state-no-atproto")
-);
-
-const stateHasAtproto = /** @type {HTMLElement} */ (
-  document.querySelector("#state-has-atproto")
-);
-
-const handleParagraph = /** @type {HTMLElement} */ (
-  document.querySelector("#handle-paragraph")
-);
-
-const handleText = /** @type {HTMLElement} */ (
-  document.querySelector("#handle-text")
-);
-
-const handleInput = /** @type {HTMLInputElement} */ (
-  document.querySelector("#handle-input")
-);
-
-const atprotoSignInBtn = /** @type {HTMLElement} */ (
-  document.querySelector("#atproto-sign-in-btn")
-);
-
-const signInBtn = /** @type {HTMLElement} */ (
-  document.querySelector("#sign-in-btn")
-);
-
-const signOutBtn = /** @type {HTMLElement} */ (
-  document.querySelector("#sign-out-btn")
-);
-
 ////////////////////////////////////////////
 // REACTIVE UI
 ////////////////////////////////////////////
 
-const $hasAtprotoSession = signal(!!localStorage.getItem(ATPROTO_DID_KEY));
+const $signingIn = signal(false);
+
+const main = document.querySelector("main");
 
 effect(() => {
   const isAuthenticated = rocksky.isAuthenticated();
   const isAuthenticating = rocksky.isAuthenticating();
   const handle = rocksky.handle();
-  const hasAtproto = $hasAtprotoSession.value;
+  const signingIn = $signingIn.value;
 
-  stateConnect.hidden = isAuthenticated;
-  stateConnected.hidden = !isAuthenticated;
+  litRender(
+    html`
+      <div class="facet__left">
+        <div>
+          <a href="./dashboard/" class="diffuse-logo-container">
+            <svg viewBox="0 0 902 134" width="160">
+              <title>Diffuse</title>
+              <use
+                xlink:href="images/diffuse-current.svg#diffuse"
+                href="images/diffuse-current.svg#diffuse"
+              ></use>
+            </svg>
+          </a>
+        </div>
+        <h1>Rocksky</h1>
+        <p>Scrobble tracks to Rocksky using your AT Protocol identity.</p>
+      </div>
 
-  stateNoAtproto.hidden = hasAtproto;
-  stateHasAtproto.hidden = !hasAtproto;
-
-  handleParagraph.hidden = !handle;
-  signOutBtn.hidden = !isAuthenticated;
-  if (handle) handleText.textContent = handle;
-
-  // @ts-ignore
-  signInBtn.disabled = isAuthenticating;
-  signInBtn.querySelector("i").className = isAuthenticating
-    ? "ph-bold ph-spinner animate-spin"
-    : "ph-bold ph-plugs";
-
-  // @ts-ignore
-  atprotoSignInBtn.disabled = isAuthenticating;
-  atprotoSignInBtn.querySelector("i").className = isAuthenticating
-    ? "ph-bold ph-spinner animate-spin"
-    : "ph-bold ph-at";
+      <div class="facet__right">
+        ${isAuthenticated
+          ? html`
+              <div>
+                ${handle
+                  ? html`<p>Connected as <strong>${handle}</strong>.</p>`
+                  : nothing}
+                <div class="button-row">
+                  <button @click="${() => rocksky.signOut()}">
+                    <i class="ph-bold ph-plugs-connected"></i>
+                    Disconnect
+                  </button>
+                </div>
+              </div>
+            `
+          : html`
+              <div>
+                <p>Sign in with your AT Protocol identity to connect Rocksky.</p>
+                <form @submit="${handleSignIn}">
+                  <label
+                    >Handle
+                    <input placeholder="you.bsky.social" />
+                  </label>
+                  <p class="button-row">
+                    <button ?disabled="${isAuthenticating || signingIn}">
+                      <i
+                        class="ph-bold ${isAuthenticating || signingIn
+                          ? "ph-spinner animate-spin"
+                          : "ph-at"}"
+                      ></i>
+                      Connect with AT Protocol
+                    </button>
+                  </p>
+                </form>
+              </div>
+            `}
+      </div>
+    `,
+    main,
+  );
 });
 
 ////////////////////////////////////////////
 // ACTIONS
 ////////////////////////////////////////////
 
-const atprotoSignInForm = /** @type {HTMLFormElement} */ (
-  document.querySelector("#atproto-sign-in-form")
-);
-
-atprotoSignInForm.onsubmit = async (e) => {
+async function handleSignIn(e) {
   e.preventDefault();
-  const handle = handleInput.value?.trim();
+  const handle = e.target.querySelector("input")?.value?.trim();
   if (!handle) return;
-  await login(handle);
-};
-
-signInBtn.onclick = () => rocksky.signIn().catch(() => {});
-signOutBtn.onclick = () => rocksky.signOut();
+  $signingIn.value = true;
+  try {
+    await rocksky.signIn(handle);
+  } finally {
+    $signingIn.value = false;
+  }
+}
 
 ////////////////////////////////////////////
 // 🚀

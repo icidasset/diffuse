@@ -3,39 +3,39 @@
     "deno": {
       "settings": {
         "deno": {
-          "enable": true
-        }
-      }
+          "enable": true,
+        },
+      },
     },
     "json-language-server": {
       "settings": {
         "json": {
           "schemas": [
             {
-              "fileMatch": ["deno.json"],
-              "url": "https://raw.githubusercontent.com/denoland/deno/refs/heads/main/cli/schemas/config-file.v1.json"
+              "fileMatch": ["deno.json", "deno.jsonc"],
+              "url": "https://raw.githubusercontent.com/denoland/deno/refs/heads/main/cli/schemas/config-file.v1.json",
             },
             {
               "fileMatch": ["package.json"],
-              "url": "http://json.schemastore.org/package"
-            }
-          ]
-        }
-      }
-    }
+              "url": "http://json.schemastore.org/package",
+            },
+          ],
+        },
+      },
+    },
   },
   "languages": {
     "JavaScript": {
       "language_servers": ["deno", "!typescript-language-server", "!vtsls", "!eslint"],
-      "formatter": "language_server"
+      "formatter": "language_server",
     },
     "TypeScript": {
       "language_servers": ["deno", "!typescript-language-server", "!vtsls", "!eslint"],
-      "formatter": "language_server"
+      "formatter": "language_server",
     },
     "TSX": {
       "language_servers": ["deno", "!typescript-language-server", "!vtsls", "!eslint"],
-      "formatter": "language_server"
-    }
-  }
+      "formatter": "language_server",
+    },
+  },
 }

@@ -408,6 +408,26 @@ class OutputConfigurator extends BroadcastableDiffuseElement {
     localStorage.setItem(`${STORAGE_PREFIX}/selected/id`, id);
     await this.#selectOutput(id);
   };
+
+  /**
+   * @param {string} label
+   * @returns {Promise<{ id: string, label: string, element: OutputElement }>}
+   */
+  waitForOption = (label) => {
+    return new Promise((resolve) => {
+      const check = async () => {
+        const opt = (await this.options()).find((o) => o.label === label);
+        if (opt) {
+          observer.disconnect();
+          resolve(opt);
+        }
+      };
+
+      const observer = new MutationObserver(check);
+      observer.observe(this, { childList: true });
+      check();
+    });
+  };
 }
 
 export default OutputConfigurator;

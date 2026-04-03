@@ -1,8 +1,11 @@
-import { configureOAuth } from "@atcute/oauth-browser-client";
-
-import metadata from "./oauth-client-metadata.json" with {
-  type: "json",
-};
+import {
+  configureOAuth,
+  createAuthorizationUrl,
+  deleteStoredSession,
+  finalizeAuthorization,
+  getSession,
+  OAuthUserAgent,
+} from "@atcute/oauth-browser-client";
 
 import {
   CompositeDidDocumentResolver,
@@ -12,52 +15,41 @@ import {
   XrpcHandleResolver,
 } from "@atcute/identity-resolver";
 
-import {
-  createAuthorizationUrl,
-  deleteStoredSession,
-  finalizeAuthorization,
-  getSession,
-  OAuthUserAgent,
-  TokenRefreshError,
-} from "@atcute/oauth-browser-client";
-
-export { OAuthUserAgent, TokenRefreshError };
+import metadata from "./oauth-client-metadata.json" with {
+  type: "json",
+};
 
 /**
  * @import {Session} from "@atcute/oauth-browser-client"
  */
 
-const STORAGE_KEY = "diffuse/output/raw/atproto/did";
+export { OAuthUserAgent, getSession };
+
+export const DID_STORAGE_KEY = "diffuse/supplement/rocksky/atproto/did";
+const CLIENT_KEY = "diffuse/supplement/rocksky";
+
 const SCOPE = metadata.scope;
-const STORAGE_NAME = "diffuse/output/raw/atproto/atcute/oauth";
-const CLIENT_KEY = "diffuse/output/raw/atproto";
 
 // CONFIGURE
 // =========
 
 const location = globalThis.location;
 
-let redirect_uri = location.origin + location.pathname + location.search;
+const redirect_uri = location.origin + location.pathname + location.search;
 
-const isLocalDev = redirect_uri.startsWith("http://127.0.0.1");
-
-if (!isLocalDev) {
-  redirect_uri = location.origin + "/oauth/callback";
-}
+const isLocalDev = redirect_uri.startsWith("http://127.0.0.1") ||
+  redirect_uri.startsWith("http://localhost");
 
 const client_id = isLocalDev
   ? `http://localhost/?redirect_uri=${encodeURIComponent(redirect_uri)}&scope=${
     encodeURIComponent(SCOPE)
   }`
-  : /** @type {any} */ (import.meta).env?.ATPROTO_CLIENT_ID ??
-    "https://elements.diffuse.sh/oauth-client-metadata.json";
+  : /** @type {any} */ (import.meta).env?.ROCKSKY_ATPROTO_CLIENT_ID ??
+    "https://elements.diffuse.sh/rocksky-oauth-client-metadata.json";
 
 configureOAuth({
-  metadata: {
-    client_id,
-    redirect_uri,
-  },
-  storageName: STORAGE_NAME,
+  metadata: { client_id, redirect_uri },
+  storageName: "diffuse/supplement/rocksky/atcute/oauth",
   identityResolver: new LocalActorResolver({
     handleResolver: new XrpcHandleResolver({
       serviceUrl: "https://public.api.bsky.app",
@@ -75,14 +67,12 @@ configureOAuth({
 // =====
 
 /**
- * Initiate the OAuth authorization flow for a given handle.
+ * Initiate the Rocksky OAuth authorization flow for a given handle.
  * Navigates the browser away to the authorization server.
  *
  * @param {string} handle
  */
 export async function login(handle) {
-  const location = globalThis.location;
-
   sessionStorage.setItem("oauth/callback/redirect_path", location.pathname + location.search);
   sessionStorage.setItem("oauth/pending-client", CLIENT_KEY);
 
@@ -98,16 +88,12 @@ export async function login(handle) {
 // ==========================
 
 /**
- * Attempt to restore an existing session or finalize an OAuth callback.
+ * Attempt to restore an existing Rocksky session or finalize an OAuth callback.
  * Returns the session if successful, or null if no session is available.
  *
  * @returns {Promise<Session | null>}
  */
 export async function restoreOrFinalize() {
-  const location = globalThis.location;
-
-  // Check for OAuth callback parameters (the library uses response_mode=fragment,
-  // so params arrive in the URL hash, not the query string)
   const params = new URLSearchParams(location.hash.slice(1));
 
   if (params.has("code") && sessionStorage.getItem("oauth/pending-client") === CLIENT_KEY) {
@@ -115,27 +101,17 @@ export async function restoreOrFinalize() {
 
     const result = await finalizeAuthorization(params);
 
-    // Clean up URL (remove fragment containing OAuth params)
-    history.replaceState(
-      null,
-      "",
-      location.pathname + location.search,
-    );
-
-    // Persist the DID for future session restoration
-    localStorage.setItem(STORAGE_KEY, result.session.info.sub);
+    history.replaceState(null, "", location.pathname + location.search);
+    localStorage.setItem(DID_STORAGE_KEY, result.session.info.sub);
 
     return result.session;
   }
 
-  // Try to restore a previously stored session
-  const did = localStorage.getItem(STORAGE_KEY);
+  const did = localStorage.getItem(DID_STORAGE_KEY);
 
   if (did) {
     try {
-      return await getSession(
-        /** @type {`did:${string}:${string}`} */ (did),
-      );
+      return await getSession(/** @type {`did:${string}:${string}`} */ (did));
     } catch (err) {
       console.warn(err);
       clearStoredSession();
@@ -149,40 +125,32 @@ export async function restoreOrFinalize() {
 // CLEAR SESSION
 // =============
 
-/**
- * Remove stored session data without contacting the server.
- * Used when the session has already been revoked.
- */
 export function clearStoredSession() {
-  const did = localStorage.getItem(STORAGE_KEY);
+  const did = localStorage.getItem(DID_STORAGE_KEY);
 
   if (did) {
     deleteStoredSession(/** @type {`did:${string}:${string}`} */ (did));
   }
 
-  localStorage.removeItem(STORAGE_KEY);
+  localStorage.removeItem(DID_STORAGE_KEY);
 }
 
 // LOGOUT
 // ======
 
 /**
- * Sign out and revoke the current session.
- *
  * @param {OAuthUserAgent} agent
  */
 export async function logout(agent) {
-  const did = localStorage.getItem(STORAGE_KEY);
+  const did = localStorage.getItem(DID_STORAGE_KEY);
 
   try {
     await agent.signOut();
   } catch {
     if (did) {
-      deleteStoredSession(
-        /** @type {`did:${string}:${string}`} */ (did),
-      );
+      deleteStoredSession(/** @type {`did:${string}:${string}`} */ (did));
     }
   }
 
-  localStorage.removeItem(STORAGE_KEY);
+  localStorage.removeItem(DID_STORAGE_KEY);
 }

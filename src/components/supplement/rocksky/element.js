@@ -1,10 +1,17 @@
-import { md5 } from "@noble/hashes/legacy.js";
-import { bytesToHex, utf8ToBytes } from "@noble/hashes/utils.js";
-
-import { getSession } from "@atcute/oauth-browser-client";
+import { now as tidNow } from "@atcute/tid";
 
 import { BroadcastableDiffuseElement, defineElement } from "~/common/element.js";
-import { computed, signal } from "~/common/signal.js";
+import { signal } from "~/common/signal.js";
+
+import {
+  clearStoredSession,
+  DID_STORAGE_KEY,
+  getSession,
+  login,
+  logout,
+  OAuthUserAgent,
+  restoreOrFinalize,
+} from "./oauth.js";
 
 /**
  * @import {Track} from "~/definitions/types.d.ts"
@@ -15,12 +22,7 @@ import { computed, signal } from "~/common/signal.js";
 // CONSTANTS
 ////////////////////////////////////////////
 
-const ROCKSKY_API_URL = "https://audioscrobbler.rocksky.app/2.0/";
-const ATPROTO_DID_KEY = "diffuse/output/raw/atproto/did";
 const STORAGE_KEY = "diffuse/supplement/rocksky/session";
-
-const DEFAULT_API_KEY = "d21bdb464bd5e92c4dbbe814a5a9a8a4";
-const DEFAULT_API_SECRET = "4a9d15e43ad1623ee7f9dc6b12d6ba08";
 
 ////////////////////////////////////////////
 // ELEMENT
@@ -32,24 +34,16 @@ const DEFAULT_API_SECRET = "4a9d15e43ad1623ee7f9dc6b12d6ba08";
 class RockskyScrobbler extends BroadcastableDiffuseElement {
   static NAME = "diffuse/supplement/rocksky";
 
-  get #apiKey() {
-    return this.getAttribute("api-key") ?? DEFAULT_API_KEY;
-  }
-
-  get #apiSecret() {
-    return this.getAttribute("api-secret") ?? DEFAULT_API_SECRET;
-  }
-
   // SIGNALS
 
   #handle = signal(/** @type {string | null} */ (null));
-  #sessionKey = signal(/** @type {string | null} */ (null));
+  #connected = signal(false);
   #isAuthenticating = signal(false);
 
   // STATE
 
   handle = this.#handle.get;
-  isAuthenticated = computed(() => this.#sessionKey.value !== null);
+  isAuthenticated = this.#connected.get;
   isAuthenticating = this.#isAuthenticating.get;
 
   // LIFECYCLE
@@ -63,7 +57,7 @@ class RockskyScrobbler extends BroadcastableDiffuseElement {
         scrobble: { strategy: "leaderOnly", fn: this.scrobble },
 
         setHandle: { strategy: "replicate", fn: this.#handle.set },
-        setSession: { strategy: "replicate", fn: this.#sessionKey.set },
+        setConnected: { strategy: "replicate", fn: this.#connected.set },
       });
 
       if (actions) {
@@ -71,7 +65,7 @@ class RockskyScrobbler extends BroadcastableDiffuseElement {
         this.scrobble = actions.scrobble;
 
         this.#handle.set = actions.setHandle;
-        this.#sessionKey.set = actions.setSession;
+        this.#connected.set = actions.setConnected;
       }
     }
 
@@ -83,17 +77,40 @@ class RockskyScrobbler extends BroadcastableDiffuseElement {
   async #tryRestore() {
     await this.whenConnected();
 
+    try {
+      const session = await restoreOrFinalize();
+
+      if (session) {
+        const did = session.info.sub;
+
+        if (await this.isLeader()) {
+          this.#connected.set(true);
+          this.#handle.set(did);
+        } else {
+          this.#connected.value = true;
+          this.#handle.value = did;
+        }
+
+        localStorage.setItem(STORAGE_KEY, JSON.stringify({ did }));
+        return;
+      }
+    } catch (err) {
+      console.warn("Rocksky: Failed to restore/finalize session", err);
+    }
+
+    // Restore previously stored connection state.
     const stored = localStorage.getItem(STORAGE_KEY);
 
     if (stored) {
       try {
-        const { key, name: handle } = JSON.parse(stored);
+        const { did } = JSON.parse(stored);
+
         if (await this.isLeader()) {
-          this.#sessionKey.set(key);
-          this.#handle.set(handle);
+          this.#connected.set(true);
+          this.#handle.set(did);
         } else {
-          this.#sessionKey.value = key;
-          this.#handle.value = handle;
+          this.#connected.value = true;
+          this.#handle.value = did;
         }
       } catch {
         localStorage.removeItem(STORAGE_KEY);
@@ -104,73 +121,48 @@ class RockskyScrobbler extends BroadcastableDiffuseElement {
   // AUTH
 
   /**
-   * Sign in to Rocksky using the existing AT Protocol session.
-   * Exchanges the AT Protocol access token for a Rocksky audioscrobbler session key.
+   * Connect to Rocksky by initiating the AT Protocol OAuth flow for the given handle.
+   * Navigates the browser away to the authorization server.
+   *
+   * @param {string} handle
    */
-  async signIn() {
-    const did = localStorage.getItem(ATPROTO_DID_KEY);
-    if (!did) {
-      console.warn("Rocksky: No AT Protocol session found");
-      return;
-    }
-
+  async signIn(handle) {
     this.#isAuthenticating.set(true);
 
     try {
-      const session = await getSession(
-        /** @type {`did:${string}:${string}`} */ (did),
-      );
-      const accessToken = session.token.access;
-
-      const data = await this.#call("auth.getMobileSession", {
-        username: did,
-        password: accessToken,
-      });
-      this.#setSession(data.session);
-    } catch (err) {
-      console.warn("Rocksky: Failed to authenticate", err);
-      throw err;
+      await login(handle);
     } finally {
       this.#isAuthenticating.set(false);
     }
   }
 
   /**
-   * Clear the stored session.
+   * Disconnect from Rocksky.
    */
   signOut() {
-    this.#sessionKey.set(null);
+    const did = localStorage.getItem(DID_STORAGE_KEY);
+
+    if (did) {
+      getSession(/** @type {`did:${string}:${string}`} */ (did))
+        .then((session) => logout(new OAuthUserAgent(session)))
+        .catch(() => clearStoredSession());
+    } else {
+      clearStoredSession();
+    }
+
+    this.#connected.set(false);
     this.#handle.set(null);
     localStorage.removeItem(STORAGE_KEY);
-  }
-
-  /** @param {{ key: string, name: string }} session */
-  #setSession({ key, name: handle }) {
-    this.#sessionKey.set(key);
-    this.#handle.set(handle);
-    localStorage.setItem(STORAGE_KEY, JSON.stringify({ key, name: handle }));
   }
 
   // SCROBBLE ACTIONS
 
   /**
-   * @param {Track} track
+   * @param {Track} _track
    */
-  async nowPlaying(track) {
-    const tags = track.tags ?? {};
-    /** @type {Record<string, string>} */
-    const params = {};
-
-    if (tags.title) params.track = tags.title;
-    if (tags.artist) params.artist = tags.artist;
-    if (tags.album) params.album = tags.album;
-    if (tags.albumartist) params.albumArtist = tags.albumartist;
-    if (tags.track?.no != null) params.trackNumber = String(tags.track.no);
-    if (track.stats?.duration != null) {
-      params.duration = String(Math.round(track.stats.duration / 1000));
-    }
-
-    return this.#authenticatedCall("track.updateNowPlaying", params);
+  // deno-lint-ignore no-unused-vars
+  async nowPlaying(_track) {
+    // Rocksky has no now-playing PDS record type; scrobbles are the source of truth.
   }
 
   /**
@@ -178,67 +170,56 @@ class RockskyScrobbler extends BroadcastableDiffuseElement {
    * @param {number} startedAt Unix timestamp in milliseconds
    */
   async scrobble(track, startedAt) {
+    if (!this.#connected.value) return;
+
+    const did = localStorage.getItem(DID_STORAGE_KEY);
+    if (!did) return;
+
+    const session = await getSession(/** @type {`did:${string}:${string}`} */ (did));
+    const agent = new OAuthUserAgent(session);
+
     const tags = track.tags ?? {};
-    /** @type {Record<string, string>} */
-    const params = {
-      timestamp: String(Math.floor(startedAt / 1000)),
+
+    // All five fields are required by the app.rocksky.scrobble lexicon.
+    if (
+      !tags.title ||
+      !tags.artist ||
+      !tags.album ||
+      !tags.albumartist ||
+      track.stats?.duration == null
+    ) return;
+
+    /** @type {Record<string, unknown>} */
+    const record = {
+      $type: "app.rocksky.scrobble",
+      title: tags.title,
+      artist: tags.artist,
+      album: tags.album,
+      albumArtist: tags.albumartist,
+      duration: Math.round(track.stats.duration / 1000), // seconds
     };
 
-    if (tags.title) params.track = tags.title;
-    if (tags.artist) params.artist = tags.artist;
-    if (tags.album) params.album = tags.album;
-    if (tags.albumartist) params.albumArtist = tags.albumartist;
-    if (tags.track?.no != null) params.trackNumber = String(tags.track.no);
-    if (track.stats?.duration != null) {
-      params.duration = String(Math.round(track.stats.duration / 1000));
+    if (tags.track?.no != null) record.trackNumber = tags.track.no;
+    if (tags.disk?.no != null) record.discNumber = tags.disk.no;
+
+    record.createdAt = new Date(startedAt).toISOString();
+
+    const response = await agent.handle("/xrpc/com.atproto.repo.putRecord", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        repo: did,
+        collection: "app.rocksky.scrobble",
+        rkey: tidNow(),
+        record,
+        validate: false,
+      }),
+    });
+
+    if (!response.ok) {
+      const error = await response.json().catch(() => ({}));
+      throw new Error(`rocksky: scrobble failed ${response.status}: ${error.message ?? ""}`);
     }
-
-    return this.#authenticatedCall("track.scrobble", params);
-  }
-
-  // API
-
-  /**
-   * @param {Record<string, string>} params
-   * @returns {string} MD5 hex digest
-   */
-  #sign(params) {
-    const str = Object.keys(params)
-      .sort()
-      .map((k) => k + params[k])
-      .join("");
-    return bytesToHex(md5(utf8ToBytes(str + this.#apiSecret)));
-  }
-
-  /**
-   * @param {string} method
-   * @param {Record<string, string>} [params]
-   * @returns {Promise<any>}
-   */
-  async #call(method, params = {}) {
-    const allParams = { ...params, api_key: this.#apiKey, method };
-    const api_sig = this.#sign(allParams);
-    const body = new URLSearchParams({ ...allParams, api_sig, format: "json" });
-
-    const response = await fetch(ROCKSKY_API_URL, { method: "POST", body });
-    const data = await response.json();
-
-    if (data.error) {
-      throw new Error(`rocksky error ${data.error}: ${data.message}`);
-    }
-
-    return data;
-  }
-
-  /**
-   * @param {string} method
-   * @param {Record<string, string>} [params]
-   * @returns {Promise<any>}
-   */
-  async #authenticatedCall(method, params = {}) {
-    const sk = this.#sessionKey.value;
-    if (!sk) throw new Error("Not authenticated with Rocksky");
-    return this.#call(method, { ...params, sk });
   }
 }
 
