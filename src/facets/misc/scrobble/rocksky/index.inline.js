@@ -120,22 +120,33 @@ effect(() => {
 
   // @ts-ignore
   signInBtn.disabled = isAuthenticating;
+  signInBtn.querySelector("i").className = isAuthenticating
+    ? "ph-bold ph-spinner animate-spin"
+    : "ph-bold ph-plugs";
+
   // @ts-ignore
   atprotoSignInBtn.disabled = isAuthenticating;
+  atprotoSignInBtn.querySelector("i").className = isAuthenticating
+    ? "ph-bold ph-spinner animate-spin"
+    : "ph-bold ph-at";
 });
 
 ////////////////////////////////////////////
 // ACTIONS
 ////////////////////////////////////////////
 
-atprotoSignInBtn.onclick = async () => {
+const atprotoSignInForm = /** @type {HTMLFormElement} */ (
+  document.querySelector("#atproto-sign-in-form")
+);
+
+atprotoSignInForm.onsubmit = async (e) => {
+  e.preventDefault();
   const handle = handleInput.value?.trim();
   if (!handle) return;
   await login(handle);
 };
 
 signInBtn.onclick = () => rocksky.signIn().catch(() => {});
-
 signOutBtn.onclick = () => rocksky.signOut();
 
 ////////////////////////////////////////////

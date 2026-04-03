@@ -109,9 +109,13 @@ class RockskyScrobbler extends BroadcastableDiffuseElement {
    */
   async signIn() {
     const did = localStorage.getItem(ATPROTO_DID_KEY);
-    if (!did) throw new Error("rocksky: no AT Protocol session found");
+    if (!did) {
+      console.warn("Rocksky: No AT Protocol session found");
+      return;
+    }
 
     this.#isAuthenticating.set(true);
+
     try {
       const session = await getSession(
         /** @type {`did:${string}:${string}`} */ (did),
@@ -124,7 +128,7 @@ class RockskyScrobbler extends BroadcastableDiffuseElement {
       });
       this.#setSession(data.session);
     } catch (err) {
-      console.warn("rocksky: failed to authenticate", err);
+      console.warn("Rocksky: Failed to authenticate", err);
       throw err;
     } finally {
       this.#isAuthenticating.set(false);

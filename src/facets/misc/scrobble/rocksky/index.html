@@ -34,13 +34,15 @@
     <div id="state-connect">
       <div id="state-no-atproto">
         <p>Sign in with your AT Protocol identity first, then connect to Rocksky.</p>
-        <label>Handle <input id="handle-input" placeholder="you.bsky.social" /></label>
-        <p class="button-row">
-          <button id="atproto-sign-in-btn">
-            <i class="ph-bold ph-at"></i>
-            Sign in with AT Protocol
-          </button>
-        </p>
+        <form id="atproto-sign-in-form">
+          <label>Handle <input id="handle-input" placeholder="you.bsky.social" /></label>
+          <p class="button-row">
+            <button id="atproto-sign-in-btn">
+              <i class="ph-bold ph-at"></i>
+              Sign in with AT Protocol
+            </button>
+          </p>
+        </form>
       </div>
 
       <div id="state-has-atproto" hidden>
