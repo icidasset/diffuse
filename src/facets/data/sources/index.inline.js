@@ -4,7 +4,7 @@ import * as Output from "~/common/output.js";
 import foundation from "~/common/foundation.js";
 import { computed, effect } from "~/common/signal.js";
 
-import { CLASS as Sources } from "~/components/orchestrator/sources/element.js";
+import { DISABLED_KEY as DISABLED_SOURCES_KEY } from "~/components/orchestrator/sources/constants.js";
 
 import { SCHEME as SCHEME_EPHEMERAL_CACHE } from "~/components/input/ephemeral-cache/constants.js";
 import { SCHEME as SCHEME_HTTPS } from "~/components/input/https/constants.js";
@@ -46,7 +46,7 @@ const disabledSources = computed(() => {
   const col = outputOrchestrator.settings.collection();
   if (col.state !== "loaded") return /** @type {string[]} */ ([]);
 
-  const setting = col.data.find((s) => s.key === Sources.DISABLED_KEY);
+  const setting = col.data.find((s) => s.key === DISABLED_SOURCES_KEY);
   if (!setting) return /** @type {string[]} */ ([]);
 
   try {

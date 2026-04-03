@@ -509,6 +509,7 @@ export function component(elementModule, id) {
  */
 export function defineElement(name, constructor) {
   if (!customElements.get(name)) customElements.define(name, constructor);
+    else console.warn(`The '${name}' element was asked to be defined again, this should be avoided. The code may have been executed multiple times.`)
 }
 
 /**

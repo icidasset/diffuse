@@ -5,6 +5,8 @@ import { BroadcastableDiffuseElement, defineElement, query } from "~/common/elem
 import { groupTracksPerScheme } from "~/common/utils.js";
 import { signal } from "~/common/signal.js";
 
+import { DISABLED_KEY } from "./constants.js";
+
 /**
  * @import {InputElement, Source} from "~/components/input/types.d.ts"
  * @import {OutputElement} from "~/components/output/types.d.ts"
@@ -16,7 +18,6 @@ import { signal } from "~/common/signal.js";
 
 class Sources extends BroadcastableDiffuseElement {
   static NAME = "diffuse/orchestrator/sources";
-  static DISABLED_KEY = "sh.diffuse.input.disabled.uris";
 
   // SIGNALS
 
@@ -44,7 +45,7 @@ class Sources extends BroadcastableDiffuseElement {
     }
 
     const settings = await Output.data(output.settings);
-    const existing = settings.find((s) => s.key === Sources.DISABLED_KEY);
+    const existing = settings.find((s) => s.key === DISABLED_KEY);
 
     /** @type {string[]} */
     let disabled = [];
@@ -66,7 +67,7 @@ class Sources extends BroadcastableDiffuseElement {
     const value = JSON.stringify(disabled);
     const updated = existing
       ? settings.map((s) =>
-        s.key === Sources.DISABLED_KEY ? { ...s, value } : s
+        s.key === DISABLED_KEY ? { ...s, value } : s
       )
       : [
         ...settings,
@@ -75,7 +76,7 @@ class Sources extends BroadcastableDiffuseElement {
             "sh.diffuse.output.setting"
           ),
           id: crypto.randomUUID(),
-          key: Sources.DISABLED_KEY,
+          key: DISABLED_KEY,
           value,
         },
       ];
