@@ -178,7 +178,7 @@ async function editFacet(ogFacet) {
   }
 
   // Scroll to builder
-  document.querySelector("#build")?.scrollIntoView();
+  document.querySelector("#code")?.scrollIntoView();
 
   // Make sure HTML is loaded
   if (!facet.html && facet.uri) {
@@ -212,7 +212,7 @@ export function handleBuildFormSubmit() {
   const editor = $editor.value;
   if (!editor) return;
 
-  document.querySelector("#build-form")?.addEventListener(
+  document.querySelector("#code-form")?.addEventListener(
     "submit",
     onBuildSubmit(editor),
   );
@@ -254,7 +254,7 @@ export function listenForExamplesEdit() {
           });
           setEditorLoading(false);
           editFacet(facet);
-          document.querySelector("#build")?.scrollIntoView();
+          document.querySelector("#code")?.scrollIntoView();
           break;
         }
       }

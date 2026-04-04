@@ -1,4 +1,4 @@
-import * as Build from "./build.js";
+import * as Build from "./code.js";
 import * as Dashboard from "./dashboard.js";
 import * as Grid from "./grid.js";
 import * as Guide from "./guide.js";
@@ -9,7 +9,7 @@ const BASE_PATHNAME = new URL(document.baseURI).pathname;
 
 /**
  * Strips the app's base path prefix from an absolute pathname,
- * returning a root-relative path like "/build".
+ * returning a root-relative path like "/code".
  *
  * @param {string} pathname
  */
@@ -36,7 +36,7 @@ async function initJsBasedOnPage(url) {
   await Grid.setupOutputIndicator();
 
   switch (path) {
-    case "/build":
+    case "/code":
       Build.renderEditor();
       Build.handleBuildFormSubmit();
       Build.listenForExamplesEdit();
