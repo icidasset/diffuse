@@ -28,6 +28,7 @@ async function initJsBasedOnPage(url) {
   const path = relativePathname(url.pathname);
 
   Nav.update();
+  Nav.updateActiveLinks();
   Nav.watchResize();
 
   Grid.setupFilter();
@@ -72,6 +73,7 @@ function navigateHandler(event) {
 
   const url = new URL(event.destination.url);
   if (url.origin !== location.origin) return;
+  if (url.pathname === location.pathname) return;
 
   // Only intercept paths one level deep
   const relative = relativePathname(url.pathname);

@@ -10,37 +10,104 @@ import { output } from "./output.js";
 
 export function setupFilter() {
   /** @type {NodeListOf<HTMLElement>} */
-  const buttons = document.querySelectorAll(".grid-filter button[data-filter]");
+  const kindButtons = document.querySelectorAll(
+    ".grid-filter button[data-filter]",
+  );
 
   /** @type {NodeListOf<HTMLElement>} */
   const items = document.querySelectorAll(".grid-item");
 
-  /** @param {string} filter */
-  function applyFilter(filter) {
-    buttons.forEach((b) => {
-      if (b.dataset.filter === filter) b.classList.remove("button--transparent");
-      else b.classList.add("button--transparent");
+  // Build category buttons from the categories present in the current grid
+  const categoriesEl = document.querySelector(".grid-filter--categories");
+  const categories = /** @type {string[]} */ (
+    [...new Set([...items].map((i) => i.dataset.category).filter(Boolean))]
+      .sort()
+  );
+
+  /** @type {HTMLElement | null} */
+  let categoryLabelEl = null;
+  /** @type {HTMLElement | null} */
+  let categoryMenuEl = null;
+
+  if (categoriesEl && categories.length > 1) {
+    categoryLabelEl = document.createElement("span");
+    categoryLabelEl.textContent = "All";
+
+    const triggerBtn = document.createElement("button");
+    triggerBtn.className = "button--border button--tiny button--transparent";
+    triggerBtn.setAttribute("popovertarget", "grid-category-menu");
+    const span = document.createElement("span");
+    span.className = "with-icon";
+    span.appendChild(categoryLabelEl);
+    const caret = document.createElement("i");
+    caret.className = "ph-bold ph-caret-down";
+    span.appendChild(caret);
+    triggerBtn.appendChild(span);
+
+    categoryMenuEl = document.createElement("div");
+    categoryMenuEl.id = "grid-category-menu";
+    categoryMenuEl.className = "dropdown";
+    categoryMenuEl.setAttribute("popover", "");
+
+    for (const cat of ["all", ...categories]) {
+      const item = document.createElement("button");
+      item.dataset.category = cat;
+      item.textContent = cat === "all" ? "All" : cat;
+      item.addEventListener("click", () => {
+        activeCategory = cat;
+        const url = new URL(location.href);
+        if (cat === "all") url.searchParams.delete("category");
+        else url.searchParams.set("category", cat);
+        history.replaceState(null, "", url);
+        categoryMenuEl?.hidePopover();
+        applyFilter(activeKind, activeCategory);
+      });
+      categoryMenuEl.appendChild(item);
+    }
+
+    categoriesEl.appendChild(triggerBtn);
+    categoriesEl.appendChild(categoryMenuEl);
+  }
+
+  let activeKind = "all";
+  let activeCategory = "all";
+
+  /**
+   * @param {string} kind
+   * @param {string} category
+   */
+  function applyFilter(kind, category) {
+    kindButtons.forEach((b) => {
+      const transparent = b.dataset.filter !== kind;
+      if (b.classList.contains("button--transparent") !== transparent) {
+        b.classList.toggle("button--transparent", transparent);
+      }
     });
+    if (categoryLabelEl) {
+      categoryLabelEl.textContent = category === "all" ? "All" : category;
+    }
     items.forEach((item) => {
-      const kind = item.dataset.kind;
-      const show = filter === "all" || kind === filter;
-      item.hidden = !show;
+      const kindMatch = kind === "all" || item.dataset.kind === kind;
+      const catMatch = category === "all" || item.dataset.category === category;
+      item.hidden = !(kindMatch && catMatch);
     });
   }
 
-  buttons.forEach((b) => {
+  kindButtons.forEach((b) => {
     b.addEventListener("click", () => {
-      const filter = b.dataset.filter ?? "all";
+      activeKind = b.dataset.filter ?? "all";
       const url = new URL(location.href);
-      if (filter === "all") url.searchParams.delete("filter");
-      else url.searchParams.set("filter", filter);
+      if (activeKind === "all") url.searchParams.delete("filter");
+      else url.searchParams.set("filter", activeKind);
       history.replaceState(null, "", url);
-      applyFilter(filter);
+      applyFilter(activeKind, activeCategory);
     });
   });
 
-  const initial = new URL(location.href).searchParams.get("filter") ?? "all";
-  applyFilter(initial);
+  const params = new URL(location.href).searchParams;
+  activeKind = params.get("filter") ?? "all";
+  activeCategory = params.get("category") ?? "all";
+  applyFilter(activeKind, activeCategory);
 }
 
 ////////////////////////////////////////////

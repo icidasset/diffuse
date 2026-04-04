@@ -15,23 +15,19 @@ scripts:
   - common/pages/version-upgrade.js
 ---
 
-<header style="overflow: hidden">
-  <div>
-    <div class="diffuse-logo-container diffuse-logo-container--condensed">
-      <a href="./" style="display: inline-block;">
-        {{ await comp.diffuse.logo() }}
-      </a>
+<header>
+  <div class="header__nav">
+    <div style="flex-shrink: 0;">
+      <div class="diffuse-logo-container diffuse-logo-container--condensed">
+        <a href="./" style="display: inline-block;">
+          {{ await comp.diffuse.logo() }}
+        </a>
+      </div>
     </div>
-  </div>
-  <div class="dither-mask filler">
-    <div id="status--filler-container">
-      {{ await comp.diffuse.status() }}
-    </div>
+    {{ await comp.nav({ url, facets }) }}
   </div>
 </header>
 
 <main>
-  {{ await comp.nav({ url, facets }) }}
-
   {{ content }}
 </main>

@@ -7,8 +7,8 @@
 
   <div style="flex: 1"></div>
 
-  <span class="grid-filter--label grid-filter--label-output">Userdata from</span>
-  <span class="grid-filter--output"></span>
+  <span class="grid-filter--label">Category</span>
+  <div class="grid-filter--categories"></div>
 </div>
 
 <ul class="grid" style="margin-top: var(--space-xs);">
@@ -33,6 +33,7 @@
       data-active-color="{{color}}"
       data-description="{{item.desc.trim()}}"
       data-name="{{item.title}}"
+      data-category="{{ item.category ?? `` }}"
       data-kind="{{item.kind ?? `interface`}}"
       data-uri="{{ item.url |> facetURI }}"
     >

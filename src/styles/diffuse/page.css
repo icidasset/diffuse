@@ -75,6 +75,14 @@ header {
     display: flex;
     gap: var(--space-lg);
   }
+
+  .header__nav {
+    align-items: center;
+    border-bottom: 1px solid var(--border-color);
+    display: flex;
+    flex: 1;
+    gap: var(--space-lg);
+  }
 }
 
 header,
@@ -197,7 +205,8 @@ dialog {
     background: transparent;
   }
 
-  & > a {
+  & > a,
+  & > button {
     cursor: pointer;
     display: flex;
     min-width: var(--space-3xl);
@@ -209,7 +218,20 @@ dialog {
     }
   }
 
-  & > a:not(:last-child) {
+  & > button {
+    background: none;
+    border: 0;
+    border-radius: 0;
+    color: inherit;
+    font-family: inherit;
+    font-size: inherit;
+    font-weight: inherit;
+    text-align: left;
+    width: 100%;
+  }
+
+  & > a:not(:last-child),
+  & > button:not(:last-child) {
     border-bottom: 1px solid var(--border-color);
   }
 
@@ -406,6 +428,7 @@ textarea {
     font-weight: 600;
     margin-right: var(--space-2xs);
     opacity: 0.4;
+    white-space: nowrap;
 
     @media (min-width: 31.5rem) {
       display: block;
@@ -424,6 +447,12 @@ textarea {
   .grid-filter--output {
     opacity: 0;
     transition: opacity 250ms;
+  }
+
+  .grid-filter--categories {
+    align-items: center;
+    display: flex;
+    gap: var(--space-2xs);
   }
 }
 
@@ -760,11 +789,10 @@ ul li::marker {
 
 .nav-container {
   align-items: center;
-  border-bottom: 1px solid var(--border-color);
   display: flex;
+  flex: 1;
   gap: var(--space-xs);
-  margin-top: var(--space-md);
-  padding-bottom: var(--space-md);
+  min-width: 0;
 }
 
 nav {
@@ -774,6 +802,7 @@ nav {
   flex-wrap: nowrap;
   font-size: var(--fs-sm);
   gap: var(--space-xs);
+  justify-content: flex-end;
   overflow: hidden;
 
   .button {
