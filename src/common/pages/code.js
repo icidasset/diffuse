@@ -267,17 +267,27 @@ export function listenForExamplesEdit() {
 ////////////////////////////////////////////
 
 export async function editFacetFromURL() {
-  const idParam = new URLSearchParams(location.search).get("id");
+  const params = new URLSearchParams(location.search);
+  const idParam = params.get("id");
+  const uriParam = params.get("uri");
 
-  if (idParam) {
-    setEditorLoading(true);
-    try {
+  setEditorLoading(true);
+  try {
+    if (idParam) {
       const out = await output();
       const col = await Output.data(out.facets);
       const facet = col.find((f) => f.id === idParam);
       if (facet) await editFacet(facet);
-    } finally {
-      setEditorLoading(false);
+    } else if (uriParam) {
+      const facet = await facetFromURI({
+        uri: uriParam,
+        name: params.get("name") ?? "",
+        kind: /** @type {any} */ (params.get("kind") ?? undefined),
+        description: params.get("description") ?? undefined,
+      }, { fetchHTML: true });
+      await editFacet(facet);
     }
+  } finally {
+    setEditorLoading(false);
   }
 }
