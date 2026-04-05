@@ -32,9 +32,8 @@
   {
     "url": "facets/misc/command/index.html",
     "title": "Command Menu",
-    "category": "Misc",
-    "featured": true,
-    "desc": "A command palette for common actions: add the now-playing track to Favourites, select or create playlists, remove playlists, and toggle repeat/shuffle."
+    "category": "Miscellaneous",
+    "desc": "A command palette for various actions."
   },
   {
     "url": "facets/connect/index.html",
@@ -80,16 +79,11 @@
     "desc": "Connect to an S3-compatible storage for audio input or user-data storage."
   },
   {
-    "url": "facets/data/export-import/index.html",
-    "title": "Export & Import",
-    "category": "Data",
-    "desc": "Export all data as a JSON snapshot, or restore from a previously exported file."
-  },
-  {
     "url": "facets/data/artwork-bundle/index.html",
     "title": "Default Artwork Bundle",
     "kind": "prelude",
     "category": "Data",
+    "tags": ["base"],
     "desc": "The default setup for track artwork retrieval. Adds support for: embedded audio metadata, Last.fm, and MusicBrainz."
   },
   {
@@ -97,6 +91,7 @@
     "title": "Default Input Bundle",
     "kind": "prelude",
     "category": "Data",
+    "tags": ["base"],
     "desc": "The default setup for audio input sources. Adds support for: HTTPS, Icecast, the local filesystem, OpenSubsonic, and S3-compatible storage."
   },
   {
@@ -104,6 +99,7 @@
     "title": "Default Metadata Bundle",
     "kind": "prelude",
     "category": "Data",
+    "tags": ["base"],
     "desc": "The default setup for track metadata lookups. Reads tags and audio stats from audio files."
   },
   {
@@ -111,7 +107,14 @@
     "title": "Default Output Bundle",
     "kind": "prelude",
     "category": "Data",
+    "tags": ["base"],
     "desc": "The default setup for user-data storage output. Adds support for: AT Protocol and S3-compatible storage. For both of these a custom local-first syncing algorithm is used."
+  },
+  {
+    "url": "facets/data/export-import/index.html",
+    "title": "Export & Import",
+    "category": "Data",
+    "desc": "Export all data as a JSON snapshot, or restore from a previously exported file."
   },
   {
     "url": "facets/playback/preload/prelude/index.html",
@@ -125,7 +128,6 @@
     "title": "Process Tracks",
     "kind": "prelude",
     "category": "Data",
-    "featured": true,
     "desc": "Process all your audio inputs into tracks automatically when opening any interface. Only happens once every 10 minutes, if the processing was completed."
   },
   {
@@ -139,25 +141,25 @@
     "url": "facets/misc/scrobble/index.html",
     "title": "Scrobble",
     "kind": "prelude",
-    "category": "Misc",
+    "category": "Miscellaneous",
     "desc": "Enable scrobbling, keep track of what you're listening to. Adds support for these scrobblers: Last.fm, ListenBrainz, Rocksky"
   },
   {
     "url": "facets/misc/scrobble/last.fm/index.html",
     "title": "Scrobble / Last.fm",
-    "category": "Misc",
+    "category": "Miscellaneous",
     "desc": "Connect to Last.fm to setup the Last.fm scrobbler."
   },
   {
     "url": "facets/misc/scrobble/listenbrainz/index.html",
     "title": "Scrobble / ListenBrainz",
-    "category": "Misc",
+    "category": "Miscellaneous",
     "desc": "Connect to ListenBrainz to setup the ListenBrainz scrobbler."
   },
   {
     "url": "facets/misc/scrobble/rocksky/index.html",
     "title": "Scrobble / Rocksky",
-    "category": "Misc",
+    "category": "Miscellaneous",
     "desc": "Connect to Rocksky to setup the Rocksky scrobbler."
   },
   {
@@ -170,7 +172,7 @@
   {
     "url": "facets/misc/split-view/index.html",
     "title": "Split View",
-    "category": "Misc",
+    "category": "Miscellaneous",
     "desc": "Arrange multiple facets side-by-side in a resizable split-panel layout."
   },
   {

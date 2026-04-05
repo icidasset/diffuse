@@ -8,11 +8,11 @@ import * as CID from "../cid.js";
  */
 
 /**
- * @param {{ description?: string; kind: string | undefined; name: string; uri: string }} _args
+ * @param {{ description?: string; kind: string | undefined; name: string; tags?: string[]; uri: string }} _args
  * @param {{ fetchHTML: boolean }} options
  */
 export async function facetFromURI(
-  { description, kind, name, uri },
+  { description, kind, name, tags, uri },
   { fetchHTML },
 ) {
   const html = fetchHTML ? await loadURI(uri) : undefined;
@@ -31,6 +31,7 @@ export async function facetFromURI(
     html,
     name,
     kind: kind === "interactive" || kind === "prelude" ? kind : undefined,
+    tags: tags?.length ? tags : undefined,
     updatedAt: timestamp,
     uri,
   };

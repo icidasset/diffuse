@@ -16,7 +16,8 @@ import { openAddFromURIModal } from "./from-uri.js";
 const FILTER_STORAGE_KEY = "diffuse/dashboard/filter";
 const storedFilter = localStorage.getItem(FILTER_STORAGE_KEY);
 const activeFilter = signal(
-  storedFilter === "prelude" || storedFilter === "interface"
+  storedFilter === "prelude" || storedFilter === "interface" ||
+      storedFilter === "base"
     ? storedFilter
     : "all",
 );
@@ -52,6 +53,12 @@ let stopMonitor;
 /** */
 export async function renderList() {
   if (stopMonitor) stopMonitor();
+  activeFilter.set((() => {
+    const stored = localStorage.getItem(FILTER_STORAGE_KEY);
+    return stored === "prelude" || stored === "interface" || stored === "base"
+      ? stored
+      : "all";
+  })());
 
   /** @type {HTMLElement | null} */
   const listEl = document.querySelector("#list");
@@ -93,8 +100,13 @@ function _renderList(output, listEl) {
   const col = facetsCol.state === "loaded"
     ? [...facetsCol.data]
       .filter((c) =>
-        filter === "all" ||
-        (filter === "prelude" ? c.kind === "prelude" : c.kind !== "prelude")
+        filter === "base"
+          ? !!c.tags?.includes("base")
+          : (filter === "all" ||
+              (filter === "prelude"
+                ? c.kind === "prelude"
+                : c.kind !== "prelude")) &&
+            !c.tags?.includes("base")
       )
       .sort((a, b) => {
         return a.name.toLocaleLowerCase().localeCompare(
@@ -135,6 +147,16 @@ function _renderList(output, listEl) {
         @click="${() => activeFilter.set("interface")}"
       >
         Interfaces
+      </button>
+
+      <button
+        class="button--border button--tiny ${filter === "base"
+          ? ""
+          : "button--transparent"}"
+        title="Show the essential default features"
+        @click="${() => activeFilter.set("base")}"
+      >
+        Base
       </button>
 
       <span class="divider"></span>

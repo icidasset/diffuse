@@ -69,6 +69,8 @@ export function setupFilter() {
     categoriesEl.appendChild(categoryMenuEl);
   }
 
+  const FILTER_KIND_STORAGE_KEY = "diffuse/dashboard/filter";
+
   let activeKind = "all";
   let activeCategory = "all";
 
@@ -87,26 +89,32 @@ export function setupFilter() {
       categoryLabelEl.textContent = category === "all" ? "All" : category;
     }
     items.forEach((item) => {
-      const kindMatch = kind === "all" || item.dataset.kind === kind;
-      const catMatch = category === "all" || item.dataset.category === category;
-      item.hidden = !(kindMatch && catMatch);
+      const isBase = (item.dataset.tags ?? "").split(",").includes("base");
+      if (kind === "base") {
+        item.hidden = !isBase;
+      } else {
+        const kindMatch = kind === "all" || item.dataset.kind === kind;
+        const catMatch = category === "all" || item.dataset.category === category;
+        item.hidden = !(kindMatch && catMatch && !isBase);
+      }
     });
   }
 
   kindButtons.forEach((b) => {
     b.addEventListener("click", () => {
       activeKind = b.dataset.filter ?? "all";
-      const url = new URL(location.href);
-      if (activeKind === "all") url.searchParams.delete("filter");
-      else url.searchParams.set("filter", activeKind);
-      history.replaceState(null, "", url);
+      localStorage.setItem(FILTER_KIND_STORAGE_KEY, activeKind);
       applyFilter(activeKind, activeCategory);
     });
   });
 
-  const params = new URL(location.href).searchParams;
-  activeKind = params.get("filter") ?? "all";
-  activeCategory = params.get("category") ?? "all";
+  const storedKind = localStorage.getItem(FILTER_KIND_STORAGE_KEY);
+  activeKind =
+    storedKind === "prelude" || storedKind === "interface" ||
+      storedKind === "base"
+      ? storedKind
+      : "all";
+  activeCategory = new URL(location.href).searchParams.get("category") ?? "all";
   applyFilter(activeKind, activeCategory);
 }
 
@@ -128,6 +136,8 @@ export function insertToggleButtons() {
       const name = li.getAttribute("data-name");
       const kind = li.getAttribute("data-kind") ?? undefined;
       const description = li.getAttribute("data-description") ?? undefined;
+      const tagsRaw = li.getAttribute("data-tags");
+      const tags = tagsRaw ? tagsRaw.split(",").filter(Boolean) : undefined;
 
       if (!uri || !name) return;
 
@@ -140,7 +150,7 @@ export function insertToggleButtons() {
       if (isActive) {
         out.facets.save(collection.filter((f) => f.uri !== uri));
       } else {
-        const facet = await facetFromURI({ description, kind, name, uri }, {
+        const facet = await facetFromURI({ description, kind, name, tags, uri }, {
           fetchHTML: false,
         });
         out.facets.save([...collection, facet]);

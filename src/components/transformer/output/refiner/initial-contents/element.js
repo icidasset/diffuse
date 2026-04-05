@@ -84,6 +84,7 @@ class InitialContentsTransformer extends OutputTransformer {
                   ? /** @type {const} */ ("prelude")
                   : /** @type {const} */ ("interactive"),
                 name: facet.title,
+                tags: facet.tags?.length ? facet.tags : undefined,
                 uri: "diffuse://" + facet.url,
               }];
             }
