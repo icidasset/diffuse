@@ -17,7 +17,7 @@ const FILTER_STORAGE_KEY = "diffuse/dashboard/filter";
 const storedFilter = localStorage.getItem(FILTER_STORAGE_KEY);
 const activeFilter = signal(
   storedFilter === "prelude" || storedFilter === "interface" ||
-      storedFilter === "base"
+    storedFilter === "base"
     ? storedFilter
     : "all",
 );
@@ -100,13 +100,11 @@ function _renderList(output, listEl) {
   const col = facetsCol.state === "loaded"
     ? [...facetsCol.data]
       .filter((c) =>
-        filter === "base"
-          ? !!c.tags?.includes("base")
-          : (filter === "all" ||
-              (filter === "prelude"
-                ? c.kind === "prelude"
-                : c.kind !== "prelude")) &&
-            !c.tags?.includes("base")
+        filter === "base" ? !!c.tags?.includes("base") : (filter === "all" ||
+          (filter === "prelude"
+            ? c.kind === "prelude"
+            : c.kind !== "prelude")) &&
+          !c.tags?.includes("base")
       )
       .sort((a, b) => {
         return a.name.toLocaleLowerCase().localeCompare(
@@ -153,7 +151,7 @@ function _renderList(output, listEl) {
         class="button--border button--tiny ${filter === "base"
           ? ""
           : "button--transparent"}"
-        title="Show the essential default features"
+        title="Show the hidden essential features"
         @click="${() => activeFilter.set("base")}"
       >
         Base
