@@ -178,20 +178,25 @@ export async function monitorToggleButtonStates() {
 
       if (!button || !icon || !uri) continue;
 
-      button.style.opacity = "revert-layer";
-
       const item = colMap.get(uri);
       const isActive = item && item.html === undefined;
       const isPrelude = li.dataset.kind === "prelude";
 
+      button.style.opacity = "revert-layer";
       button.title = isActive
-        ? (isPrelude ? "Remove feature" : "Remove bookmark")
-        : (isPrelude ? "Add feature" : "Add bookmark");
+        ? (isPrelude ? "Remove feature" : "Unpin interface")
+        : (isPrelude ? "Add feature" : "Pin interface");
+
       icon.className = isActive
-        ? isPrelude ? "ph-bold ph-check" : "ph-fill ph-bookmark-simple"
+        ? isPrelude ? "ph-bold ph-check" : "ph-fill ph-push-pin"
         : isPrelude
         ? "ph-bold ph-plus"
-        : "ph-bold ph-bookmark-simple";
+        : "ph-bold ph-push-pin";
+
+      /** @type {HTMLElement} */ (icon).style.transform = isActive && !isPrelude
+        ? "rotate(-45deg)"
+        : "";
+
       /** @type {HTMLElement} */ (icon).style.color = isActive
         ? li.dataset.activeColor ?? "var(--accent-twist-2)"
         : "";
