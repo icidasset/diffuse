@@ -34,6 +34,7 @@
 
     <li
       class="grid-item"
+      style="--grid-item-color: {{color}}"
       data-active-color="{{color}}"
       data-description="{{item.desc.trim()}}"
       data-name="{{item.title}}"
@@ -42,10 +43,7 @@
       data-tags="{{ item.tags?.join(',') ?? `` }}"
       data-uri="{{ facetUri }}"
     >
-      <div
-        class="grid-item__contents"
-        style="--grid-item-color: {{color}}"
-      >
+      <div class="grid-item__contents">
         <div class="grid-item__title">
           {{ if item.kind === "prelude" }}
             <span style="color: {{ color }}; padding: var(--space-3xs) 0">

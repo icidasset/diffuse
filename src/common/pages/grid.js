@@ -94,7 +94,8 @@ export function setupFilter() {
         item.hidden = !isBase;
       } else {
         const kindMatch = kind === "all" || item.dataset.kind === kind;
-        const catMatch = category === "all" || item.dataset.category === category;
+        const catMatch = category === "all" ||
+          item.dataset.category === category;
         item.hidden = !(kindMatch && catMatch && !isBase);
       }
     });
@@ -109,11 +110,10 @@ export function setupFilter() {
   });
 
   const storedKind = localStorage.getItem(FILTER_KIND_STORAGE_KEY);
-  activeKind =
-    storedKind === "prelude" || storedKind === "interface" ||
+  activeKind = storedKind === "prelude" || storedKind === "interface" ||
       storedKind === "base"
-      ? storedKind
-      : "all";
+    ? storedKind
+    : "all";
   activeCategory = new URL(location.href).searchParams.get("category") ?? "all";
   applyFilter(activeKind, activeCategory);
 }
@@ -150,9 +150,12 @@ export function insertToggleButtons() {
       if (isActive) {
         out.facets.save(collection.filter((f) => f.uri !== uri));
       } else {
-        const facet = await facetFromURI({ description, kind, name, tags, uri }, {
-          fetchHTML: false,
-        });
+        const facet = await facetFromURI(
+          { description, kind, name, tags, uri },
+          {
+            fetchHTML: false,
+          },
+        );
         out.facets.save([...collection, facet]);
       }
     });
@@ -181,16 +184,23 @@ export async function monitorToggleButtonStates() {
 
     for (const li of gridItems) {
       const uri = li.getAttribute("data-uri");
+      const menu = /** @type {HTMLElement | null} */ (
+        li.querySelector(".grid-item__menu")
+      );
+
       const button = /** @type {HTMLElement | null} */ (
         li.querySelector("button[data-action='toggle']")
       );
+
       const icon = button?.querySelector("i");
 
-      if (!button || !icon || !uri) continue;
+      if (!menu || !button || !icon || !uri) continue;
 
       const item = colMap.get(uri);
       const isActive = item && item.html === undefined;
       const isPrelude = li.dataset.kind === "prelude";
+
+      menu.classList.toggle("grid-item__menu--active", isActive ?? false);
 
       button.style.opacity = "revert-layer";
       button.title = isActive
@@ -205,10 +215,6 @@ export async function monitorToggleButtonStates() {
 
       /** @type {HTMLElement} */ (icon).style.transform = isActive && !isPrelude
         ? "rotate(-45deg)"
-        : "";
-
-      /** @type {HTMLElement} */ (icon).style.color = isActive
-        ? li.dataset.activeColor ?? "var(--accent-twist-2)"
         : "";
     }
   });

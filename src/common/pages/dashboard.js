@@ -1,4 +1,5 @@
 import { html, render } from "lit-html";
+import { classMap } from "lit-html/directives/class-map.js";
 import { keyed } from "lit-html/directives/keyed.js";
 import { marked } from "marked";
 import { unsafeHTML } from "lit-html/directives/unsafe-html.js";
@@ -202,11 +203,12 @@ function _renderList(output, listEl) {
           return keyed(
             c.id,
             html`
-              <li class="grid-item" ?data-disabled="${!(c.enabled ?? true)}">
-                <div
-                  class="grid-item__contents"
-                  style="--grid-item-color: ${color}"
-                >
+              <li
+                class="grid-item"
+                style="--grid-item-color: ${color}"
+                ?data-disabled="${!(c.enabled ?? true)}"
+              >
+                <div class="grid-item__contents">
                   <div class="grid-item__title" style="color: ${color}">
                     ${title}
                   </div>
@@ -237,7 +239,9 @@ function _renderList(output, listEl) {
                   </div>
                 </div>
 
-                <div class="grid-item__menu">
+                <div class="grid-item__menu ${classMap({
+                  "grid-item__menu--active": c.enabled ?? true,
+                })}">
                   <button
                     class="button--transparent"
                     title="${(c.enabled ?? true)
@@ -247,11 +251,13 @@ function _renderList(output, listEl) {
                       : "Light"}"
                     @click="${toggleFacetEnabled({ id: c.id })}"
                   >
-                    <i class="ph-bold ${(c.enabled ?? true)
-                      ? c.kind === "prelude" ? "ph-lightning" : "ph-eye"
+                    <i class="${(c.enabled ?? true)
+                      ? c.kind === "prelude"
+                        ? "ph-fill ph-lightning"
+                        : "ph-fill ph-eye"
                       : c.kind === "prelude"
-                      ? "ph-lightning-slash"
-                      : "ph-eye-slash"}"></i>
+                      ? "ph-bold ph-lightning-slash"
+                      : "ph-bold ph-eye-slash"}"></i>
                   </button>
                   <hr />
                   <button

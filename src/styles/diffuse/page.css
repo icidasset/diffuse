@@ -363,7 +363,40 @@ textarea {
     border-left: 1px solid var(--border-color);
     display: flex;
     flex-direction: column;
+    font-size: var(--fs-sm);
     justify-content: space-evenly;
+    position: relative;
+
+    &.grid-item__menu--active {
+      --grid-item-gradient-opacity: 0.375;
+
+      @media (prefers-color-scheme: dark) {
+        --grid-item-gradient-opacity: 0.3;
+      }
+
+      button,
+      .button {
+        color: var(--grid-item-color);
+        opacity: 0.5;
+
+        &:focus,
+        &:hover {
+          opacity: 1;
+        }
+      }
+    }
+
+    &.grid-item__menu--active::before {
+      background: linear-gradient(
+        to bottom,
+        oklch(from var(--grid-item-color, transparent) l c h / var(--grid-item-gradient-opacity)),
+        transparent 65%
+      );
+      content: "";
+      inset: 0;
+      pointer-events: none;
+      position: absolute;
+    }
 
     hr {
       background: var(--border-color);
@@ -864,6 +897,7 @@ nav {
 
 .dither-mask,
 .grid-item__contents::before,
+.grid-item__menu--active::before,
 h2,
 h3 {
   mask:
