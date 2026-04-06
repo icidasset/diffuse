@@ -161,10 +161,12 @@ ul.columns {
   flex: 1;
   margin-bottom: var(--space-xs);
   min-width: var(--container-3xs);
-}
 
-.flex p {
-  max-width: 100%;
+  p,
+  ul,
+  ol {
+    max-width: 100%;
+  }
 }
 
 /**
