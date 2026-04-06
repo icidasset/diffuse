@@ -328,11 +328,11 @@ textarea {
     }
 
     &[data-disabled] {
-      opacity: 0.3;
+      opacity: 0.4;
 
       &:hover,
       &:focus-within {
-        opacity: 0.6;
+        opacity: 0.7;
       }
     }
   }
