@@ -5,7 +5,11 @@ import { batch, computed, signal, untracked } from "~/common/signal.js";
 import { OutputTransformer } from "../../base.js";
 import { defineElement } from "~/common/element.js";
 
-import { STARTING_SET_URIS, TYPE } from "~/common/facets/constants.js";
+import {
+  STARTING_SET_DISABLED,
+  STARTING_SET_URIS,
+  TYPE,
+} from "~/common/facets/constants.js";
 import facets from "~/_data/facets.json" with {
   type: "json",
 };
@@ -80,6 +84,9 @@ class InitialContentsTransformer extends OutputTransformer {
                 $type: TYPE,
                 id: uriToRkey("diffuse://" + facet.url),
                 description: facet.desc,
+                enabled: STARTING_SET_DISABLED.includes(facet.url)
+                  ? false
+                  : true,
                 kind: facet.kind === "prelude"
                   ? /** @type {const} */ ("prelude")
                   : /** @type {const} */ ("interactive"),

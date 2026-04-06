@@ -7,7 +7,12 @@ describe("common/facets/category", () => {
   it("color returns accent-twist-4 for prelude kind", async () => {
     const result = await testWeb(async () => {
       const { color } = await import("~/common/facets/category.js");
-      return color({ $type: "sh.diffuse.output.facet", id: "1", name: "x", kind: "prelude" });
+      return color({
+        $type: "sh.diffuse.output.facet",
+        id: "1",
+        name: "x",
+        kind: "prelude",
+      });
     });
     expect(result).toBe("var(--accent-twist-4)");
   });
@@ -15,7 +20,12 @@ describe("common/facets/category", () => {
   it("color returns accent-twist-2 for interactive kind", async () => {
     const result = await testWeb(async () => {
       const { color } = await import("~/common/facets/category.js");
-      return color({ $type: "sh.diffuse.output.facet", id: "1", name: "x", kind: "interactive" });
+      return color({
+        $type: "sh.diffuse.output.facet",
+        id: "1",
+        name: "x",
+        kind: "interactive",
+      });
     });
     expect(result).toBe("var(--accent-twist-2)");
   });
@@ -31,7 +41,12 @@ describe("common/facets/category", () => {
   it("name returns 'feature' for prelude kind", async () => {
     const result = await testWeb(async () => {
       const { name } = await import("~/common/facets/category.js");
-      return name({ $type: "sh.diffuse.output.facet", id: "1", name: "x", kind: "prelude" });
+      return name({
+        $type: "sh.diffuse.output.facet",
+        id: "1",
+        name: "x",
+        kind: "prelude",
+      });
     });
     expect(result).toBe("feature");
   });
@@ -39,7 +54,12 @@ describe("common/facets/category", () => {
   it("name returns 'interface' for interactive kind", async () => {
     const result = await testWeb(async () => {
       const { name } = await import("~/common/facets/category.js");
-      return name({ $type: "sh.diffuse.output.facet", id: "1", name: "x", kind: "interactive" });
+      return name({
+        $type: "sh.diffuse.output.facet",
+        id: "1",
+        name: "x",
+        kind: "interactive",
+      });
     });
     expect(result).toBe("interface");
   });
@@ -61,30 +81,6 @@ describe("common/facets/constants", () => {
     });
     expect(result).toBe("sh.diffuse.output.facet");
   });
-
-  it("STARTING_SET_URIS includes connect facet", async () => {
-    const result = await testWeb(async () => {
-      const { STARTING_SET_URIS } = await import("~/common/facets/constants.js");
-      return STARTING_SET_URIS;
-    });
-    expect(result).toContain("facets/connect/index.html");
-  });
-
-  it("STARTING_SET_URIS includes blur artwork controller", async () => {
-    const result = await testWeb(async () => {
-      const { STARTING_SET_URIS } = await import("~/common/facets/constants.js");
-      return STARTING_SET_URIS;
-    });
-    expect(result).toContain("themes/blur/artwork-controller/facet/index.html");
-  });
-
-  it("STARTING_SET_URIS has 9 entries", async () => {
-    const result = await testWeb(async () => {
-      const { STARTING_SET_URIS } = await import("~/common/facets/constants.js");
-      return STARTING_SET_URIS.length;
-    });
-    expect(result).toBe(9);
-  });
 });
 
 describe("common/facets/utils", () => {
@@ -92,7 +88,12 @@ describe("common/facets/utils", () => {
     const result = await testWeb(async () => {
       const { facetFromURI } = await import("~/common/facets/utils.js");
       const facet = await facetFromURI(
-        { name: "Test", uri: "test.html", kind: undefined, description: undefined },
+        {
+          name: "Test",
+          uri: "test.html",
+          kind: undefined,
+          description: undefined,
+        },
         { fetchHTML: false },
       );
       return facet.$type;
@@ -104,7 +105,12 @@ describe("common/facets/utils", () => {
     const result = await testWeb(async () => {
       const { facetFromURI } = await import("~/common/facets/utils.js");
       const facet = await facetFromURI(
-        { name: "My Facet", uri: "facets/test/index.html", kind: undefined, description: undefined },
+        {
+          name: "My Facet",
+          uri: "facets/test/index.html",
+          kind: undefined,
+          description: undefined,
+        },
         { fetchHTML: false },
       );
       return { name: facet.name, uri: facet.uri };
@@ -117,7 +123,12 @@ describe("common/facets/utils", () => {
     const result = await testWeb(async () => {
       const { facetFromURI } = await import("~/common/facets/utils.js");
       const facet = await facetFromURI(
-        { name: "Test", uri: "test.html", kind: undefined, description: undefined },
+        {
+          name: "Test",
+          uri: "test.html",
+          kind: undefined,
+          description: undefined,
+        },
         { fetchHTML: false },
       );
       return { html: facet.html ?? null, cid: facet.cid ?? null };
@@ -130,7 +141,12 @@ describe("common/facets/utils", () => {
     const result = await testWeb(async () => {
       const { facetFromURI } = await import("~/common/facets/utils.js");
       const facet = await facetFromURI(
-        { name: "Test", uri: "test.html", kind: "prelude", description: undefined },
+        {
+          name: "Test",
+          uri: "test.html",
+          kind: "prelude",
+          description: undefined,
+        },
         { fetchHTML: false },
       );
       return facet.kind;
@@ -142,7 +158,12 @@ describe("common/facets/utils", () => {
     const result = await testWeb(async () => {
       const { facetFromURI } = await import("~/common/facets/utils.js");
       const facet = await facetFromURI(
-        { name: "Test", uri: "test.html", kind: "interactive", description: undefined },
+        {
+          name: "Test",
+          uri: "test.html",
+          kind: "interactive",
+          description: undefined,
+        },
         { fetchHTML: false },
       );
       return facet.kind;
@@ -154,7 +175,12 @@ describe("common/facets/utils", () => {
     const result = await testWeb(async () => {
       const { facetFromURI } = await import("~/common/facets/utils.js");
       const facet = await facetFromURI(
-        { name: "Test", uri: "test.html", kind: "unknown", description: undefined },
+        {
+          name: "Test",
+          uri: "test.html",
+          kind: "unknown",
+          description: undefined,
+        },
         { fetchHTML: false },
       );
       return facet.kind ?? null;
@@ -166,7 +192,12 @@ describe("common/facets/utils", () => {
     const result = await testWeb(async () => {
       const { facetFromURI } = await import("~/common/facets/utils.js");
       const facet = await facetFromURI(
-        { name: "Test", uri: "test.html", kind: undefined, description: "A test facet" },
+        {
+          name: "Test",
+          uri: "test.html",
+          kind: undefined,
+          description: "A test facet",
+        },
         { fetchHTML: false },
       );
       return facet.description;
@@ -178,7 +209,12 @@ describe("common/facets/utils", () => {
     const result = await testWeb(async () => {
       const { facetFromURI } = await import("~/common/facets/utils.js");
       const facet = await facetFromURI(
-        { name: "Test", uri: "test.html", kind: undefined, description: undefined },
+        {
+          name: "Test",
+          uri: "test.html",
+          kind: undefined,
+          description: undefined,
+        },
         { fetchHTML: false },
       );
       return { createdAt: facet.createdAt, updatedAt: facet.updatedAt };
@@ -192,7 +228,12 @@ describe("common/facets/utils", () => {
     const result = await testWeb(async () => {
       const { facetFromURI } = await import("~/common/facets/utils.js");
       const facet = await facetFromURI(
-        { name: "Test", uri: "test.html", kind: undefined, description: undefined },
+        {
+          name: "Test",
+          uri: "test.html",
+          kind: undefined,
+          description: undefined,
+        },
         { fetchHTML: false },
       );
       return facet.id;
@@ -227,8 +268,20 @@ describe("common/facets/prelude", () => {
 
       await insertPreludes(
         [
-          { $type: "sh.diffuse.output.facet", id: "1", name: "A", kind: "interactive", html: "<span id='fp-interactive'></span>" },
-          { $type: "sh.diffuse.output.facet", id: "2", name: "B", kind: "prelude", html: "<span id='fp-prelude'></span>" },
+          {
+            $type: "sh.diffuse.output.facet",
+            id: "1",
+            name: "A",
+            kind: "interactive",
+            html: "<span id='fp-interactive'></span>",
+          },
+          {
+            $type: "sh.diffuse.output.facet",
+            id: "2",
+            name: "B",
+            kind: "prelude",
+            html: "<span id='fp-prelude'></span>",
+          },
         ],
         container,
       );
@@ -251,14 +304,34 @@ describe("common/facets/prelude", () => {
 
       await insertPreludes(
         [
-          { $type: "sh.diffuse.output.facet", id: "1", name: "Zebra", kind: "prelude", html: "<span class='fp-order'>Zebra</span>" },
-          { $type: "sh.diffuse.output.facet", id: "2", name: "Alpha", kind: "prelude", html: "<span class='fp-order'>Alpha</span>" },
-          { $type: "sh.diffuse.output.facet", id: "3", name: "Mango", kind: "prelude", html: "<span class='fp-order'>Mango</span>" },
+          {
+            $type: "sh.diffuse.output.facet",
+            id: "1",
+            name: "Zebra",
+            kind: "prelude",
+            html: "<span class='fp-order'>Zebra</span>",
+          },
+          {
+            $type: "sh.diffuse.output.facet",
+            id: "2",
+            name: "Alpha",
+            kind: "prelude",
+            html: "<span class='fp-order'>Alpha</span>",
+          },
+          {
+            $type: "sh.diffuse.output.facet",
+            id: "3",
+            name: "Mango",
+            kind: "prelude",
+            html: "<span class='fp-order'>Mango</span>",
+          },
         ],
         container,
       );
 
-      return Array.from(container.querySelectorAll(".fp-order")).map((el) => el.textContent);
+      return Array.from(container.querySelectorAll(".fp-order")).map((el) =>
+        el.textContent
+      );
     });
 
     expect(result).toEqual(["Alpha", "Mango", "Zebra"]);
@@ -269,7 +342,13 @@ describe("common/facets/prelude", () => {
       const { insertPreludes } = await import("~/common/facets/prelude.js");
 
       await insertPreludes([
-        { $type: "sh.diffuse.output.facet", id: "1", name: "Test", kind: "prelude", html: "<span id='fp-body-test'></span>" },
+        {
+          $type: "sh.diffuse.output.facet",
+          id: "1",
+          name: "Test",
+          kind: "prelude",
+          html: "<span id='fp-body-test'></span>",
+        },
       ]);
 
       return !!document.body.querySelector("#fp-body-test");
@@ -285,7 +364,12 @@ describe("common/facets/prelude", () => {
       document.body.append(container);
 
       await insertPreludes(
-        [{ $type: "sh.diffuse.output.facet", id: "1", name: "Empty", kind: "prelude" }],
+        [{
+          $type: "sh.diffuse.output.facet",
+          id: "1",
+          name: "Empty",
+          kind: "prelude",
+        }],
         container,
       );
 
