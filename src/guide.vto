@@ -9,11 +9,136 @@ title: Guide | Diffuse
     font-size: var(--fs-lg);
     opacity: 0.6;
   }
+
+  .getting-started {
+    font-size: var(--fs-md);
+    font-weight: 200;
+
+    li {
+      display: inline-flex;
+    }
+
+    li a {
+      text-decoration: none;
+    }
+
+    .with-icon {
+      gap: var(--space-sm);
+    }
+  }
+
+  .intro {
+    display: flex;
+    flex-wrap: wrap;
+    font-size: var(--fs-xl);
+    font-weight: 100;
+    gap: var(--space-sm) var(--space-xl);
+    margin: var(--space-xl) 0;
+    text-align: center;
+
+    & > div > span {
+      display: block;
+      margin: 0 auto;
+      max-width: var(--container-md);
+    }
+  }
 </style>
 
 <h1 hidden>Guide</h1>
 
-<div class="columns">
+<section class="intro">
+  <div class="flex" style="color: var(--accent-twist-2)">
+    <span>Infinite interfaces to interact with your data.</span>
+  </div>
+  <div class="flex" style="color: var(--accent-twist-4)">
+    <span>Countless features to extend your experience.</span>
+  </div>
+</section>
+
+<section class="getting-started">
+  <div class="columns">
+    <ul class="flex" style="display: flex; flex-direction: column; gap: var(--space-md); max-width: 100%; padding-left: 0">
+      <li class="with-icon">
+        <a class="with-icon" href="{{ ('facets/connect/index.html') |> facetLoaderURL }}">
+          <i class="ph-fill ph-number-circle-one" style="opacity: 0.4"></i>
+          <i class="ph-fill ph-file-audio" style="opacity: 0.4"></i>
+          <span>Add some audio</span>
+        </a>
+      </li>
+
+      <li class="with-icon">
+        <a class="with-icon" href="{{ ('facets/data/process-tracks/index.html') |> facetLoaderURL }}">
+          <i class="ph-fill ph-number-circle-two" style="opacity: 0.4"></i>
+          <i class="ph-fill ph-gear-fine" style="opacity: 0.4"></i>
+          <span>Wait until processed</span>
+        </a>
+      </li>
+
+      <li class="with-icon">
+        <a class="with-icon" href="featured/">
+          <i class="ph-fill ph-number-circle-three" style="opacity: 0.4"></i>
+          <i class="ph-fill ph-paint-brush" style="opacity: 0.4"></i>
+          <span>Explore interfaces</span>
+        </a>
+      </li>
+    </ul>
+
+    <ul class="flex" style="display: flex; flex-direction: column; gap: var(--space-md); max-width: 100%; padding-left: 0">
+      <li>
+        <a class="with-icon" href="featured/">
+          <i class="ph-fill ph-number-circle-four" style="opacity: 0.4"></i>
+          <i class="ph-fill ph-sparkle" style="opacity: 0.4"></i>
+          <span>Enable additional features</span>
+        </a>
+      </li>
+
+      <li>
+        <a class="with-icon" href="{{ ('facets/connect/index.html') |> facetLoaderURL }}">
+          <i class="ph-fill ph-number-circle-five" style="opacity: 0.4"></i>
+          <i class="ph-fill ph-person" style="opacity: 0.4"></i>
+          <span>Sync or share data</span>
+        </a>
+      </li>
+    </ul>
+  </div>
+</section>
+
+<!--<section style="font-size: var(--fs-base);">
+  <h2>Getting started</h2>
+
+  <div class="columns">
+    <ul class="flex" style="display: flex; flex-direction: column; gap: var(--space-md); max-width: 100%; padding-left: 0">
+      <li class="with-icon" style="gap: var(--space-sm)">
+        <i class="ph-fill ph-file-audio" style="opacity: 0.4"></i>
+        <span><strong>Add some audio files or streams.</strong> The wide range of <a href="{{ ('facets/connect/index.html') |> facetLoaderURL }}">connect interfaces</a> can be used for this, or use the demo from the tutorial below.</span>
+      </li>
+
+      <li class="with-icon" style="gap: var(--space-sm)">
+        <i class="ph-fill ph-gear-six" style="opacity: 0.4"></i>
+        <span><strong>Wait until the processing of audio sources into tracks is completed.</strong> You can monitor it using this <a href="{{ ('facets/data/process-tracks/index.html') |> facetLoaderURL }}">interface</a>. The tutorial demo will show it directly.</span>
+      </li>
+
+      <li class="with-icon" style="gap: var(--space-sm)">
+        <i class="ph-fill ph-paint-brush" style="opacity: 0.4"></i>
+        <span><strong style="color: var(--accent-twist-2)">Explore the interfaces that can be used to play and manage your audio.</strong> Check out the <a href="featured/">featured interfaces</a>.</span>
+      </li>
+    </ul>
+
+    <ul class="flex" style="display: flex; flex-direction: column; gap: var(--space-md); max-width: 100%; padding-left: 0">
+      <li class="with-icon" style="gap: var(--space-sm)">
+        <i class="ph-fill ph-sparkle" style="opacity: 0.4"></i>
+        <span><strong>Continue exploring, enable some additional features</strong> such as making played audio available offline automatically.</span>
+      </li>
+
+      <li class="with-icon" style="gap: var(--space-sm)">
+        <i class="ph-fill ph-person" style="opacity: 0.4"></i>
+        <span><strong>Sync your configuration and playlists with your other devices.</strong> Or share it with other people.</span>
+      </li>
+    </ul>
+  </div>
+</section>-->
+
+<!--<div>
   <section class="flex">
     <h2>Concept</h2>
 
@@ -33,45 +158,9 @@ title: Guide | Diffuse
       Finally, facets are just regular web pages so they can live wherever. We save them to the user-data storage that's configured and give the user the option to share it. This means that you can load features and interfaces from other people, <strong>building software cooperatively</strong>.
     </p>
   </section>
+</div>-->
 
-  <section class="flex">
-    <h2>Getting started</h2>
-
-    <ul style="display: flex; flex-direction: column; gap: var(--space-md); margin-top: var(--space-md); padding-left: 0">
-      <!-- 1 -->
-      <li class="with-icon" style="gap: var(--space-sm)">
-        <i class="ph-fill ph-file-audio" style="opacity: 0.4"></i>
-        <span><strong>Add some audio files or streams.</strong> The wide range of <a href="{{ ('facets/connect/index.html') |> facetLoaderURL }}">connect interfaces</a> can be used for this, or use the demo from the tutorial below.</span>
-      </li>
-
-      <!-- 2 -->
-      <li class="with-icon" style="gap: var(--space-sm)">
-        <i class="ph-fill ph-gear-six" style="opacity: 0.4"></i>
-        <span><strong>Wait until the processing of audio sources into tracks is completed.</strong> You can monitor it using this <a href="{{ ('facets/data/process-tracks/index.html') |> facetLoaderURL }}">interface</a>. The tutorial demo will show it directly.</span>
-      </li>
-
-      <!-- 3 -->
-      <li class="with-icon" style="gap: var(--space-sm)">
-        <i class="ph-fill ph-paint-brush" style="opacity: 0.4"></i>
-        <span><strong style="color: var(--accent-twist-2)">Explore the interfaces that can be used to play and manage your audio.</strong> Check out the <a href="featured/">featured interfaces</a>.</span>
-      </li>
-
-      <!-- 4 -->
-      <li class="with-icon" style="gap: var(--space-sm)">
-        <i class="ph-fill ph-sparkle" style="opacity: 0.4"></i>
-        <span><strong>Continue exploring, enable some additional features</strong> such as making played audio available offline automatically.</span>
-      </li>
-
-      <!-- 5 -->
-      <li class="with-icon" style="gap: var(--space-sm)">
-        <i class="ph-fill ph-person" style="opacity: 0.4"></i>
-        <span><strong>Sync your configuration and playlists with your other devices.</strong> Or share it with other people.</span>
-      </li>
-    </ul>
-  </section>
-</div>
-
-<section id="tutorial">
+<!--<section id="tutorial">
   <h2>Tutorial</h2>
 
   <div class="columns">
@@ -129,4 +218,4 @@ title: Guide | Diffuse
       </p>
     </div>
   </div>
-</section>
+</section>-->
