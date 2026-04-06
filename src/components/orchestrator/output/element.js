@@ -1,5 +1,9 @@
 import { ifDefined } from "lit-html/directives/if-defined.js";
-import { DEFAULT_GROUP, defineElement, DiffuseElement } from "~/common/element.js";
+import {
+  DEFAULT_GROUP,
+  defineElement,
+  DiffuseElement,
+} from "~/common/element.js";
 
 import "~/components/configurator/output/element.js";
 import "~/components/transformer/output/refiner/default/element.js";
@@ -126,7 +130,7 @@ class OutputOrchestrator extends DiffuseElement {
     return html`
       <dop-indexed-db
         id="do-output__dop-indexed-db__json"
-        namespace="json"
+        namespace="${this.namespace ? this.namespace + "/" : ""}json"
         group="${ifDefined(group)}"
       ></dop-indexed-db>
 

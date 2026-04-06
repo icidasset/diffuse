@@ -1,0 +1,24 @@
+---
+layout: layouts/diffuse.vto
+
+styles:
+  - styles/base.css
+  - styles/diffuse/page.css
+  - vendor/@phosphor-icons/web/bold/style.css
+  - vendor/@phosphor-icons/web/fill/style.css
+---
+
+<style>
+  main {}
+</style>
+
+<main>
+  <aside>
+    <h1 hidden>Diffuse</h1>
+    <div class="diffuse-logo-container">
+      {{ await comp.diffuse.logo() }}
+    </div>
+  </aside>
+  <div id="container">
+  </div>
+</main>

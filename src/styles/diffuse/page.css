@@ -613,7 +613,7 @@ a.button {
   }
 
   &.button--subtle {
-    --button-bg-opacity: 0.3;
+    --button-bg-opacity: 0.35;
   }
 
   &.button--tag {
@@ -728,6 +728,12 @@ strong {
   align-items: center;
   display: inline-flex;
   gap: var(--space-3xs);
+}
+
+.with-icon--bigger-gap,
+button .with-icon--bigger-gap,
+.button .with-icon--bigger-gap {
+  gap: var(--space-2xs);
 }
 
 /**

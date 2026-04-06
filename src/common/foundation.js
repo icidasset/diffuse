@@ -384,7 +384,11 @@ async function mediaSession() {
   return findExistingOrAdd(mso, signals.orchestrator.mediaSession);
 }
 
-async function output() {
+/**
+ * @param {Object} [options] - Options
+ * @param {string} [options.namespace] - The namespace to use for the output.
+ */
+async function output(options) {
   const { default: OutputOrchestrator } = await import(
     "~/components/orchestrator/output/element.js"
   );
@@ -392,6 +396,8 @@ async function output() {
   const o = new OutputOrchestrator();
   o.setAttribute("group", GROUP);
   o.setAttribute("id", "output");
+
+  if (options?.namespace) o.setAttribute("namespace", options.namespace);
 
   return findExistingOrAdd(o, signals.orchestrator.output);
 }
