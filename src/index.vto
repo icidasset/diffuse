@@ -11,6 +11,32 @@ scripts:
   - common/pages/version-upgrade.js
 ---
 
+<style>
+  .dither-mask {
+    position: relative;
+  }
+
+  .features {
+    color: var(--accent-twist-1);
+    font-size: var(--fs-lg);
+    font-weight: 700;
+    line-height: var(--leading-snug);
+    margin: var(--space-md);
+    opacity: 0.6;
+    text-transform: capitalize;
+
+    @media (min-width: 63rem) {
+      /*inset: 0;*/
+      margin: var(--space-lg);
+      /*position: absolute;*/
+    }
+
+    @media (min-width: 84rem) {
+      margin: var(--space-xl);
+    }
+  }
+</style>
+
 <header>
   <div>
     <h1 hidden>Diffuse</h1>
@@ -55,5 +81,20 @@ scripts:
       </nav>
     </footer>
   </div>
-  <div class="dither-mask filler filler--bg-accent"></div>
+  <div class="dither-mask filler filler--bg-accent" style="border-radius: var(--radius-lg); overflow: hidden"></div>
 </header>
+
+<main>
+  <div class="dither-mask filler filler--bg-accent" style="border-radius: var(--radius-lg); overflow: hidden">
+    <section class="features">
+      <span>Infinite variety of interfaces</span>
+      <span style="opacity: 0.4">Choose what your audio player looks like</span>
+      <span>Endless optional features</span>
+      <span style="opacity: 0.4">Adjust the software to your needs</span>
+      <span>Bring audio from all kinds of sources</span>
+      <span style="opacity: 0.4">Audio files and streams</span>
+      <span>Multiple data syncing options</span>
+      <span style="opacity: 0.4">Export &amp; Import</span>
+    </section>
+  </div>
+</main>

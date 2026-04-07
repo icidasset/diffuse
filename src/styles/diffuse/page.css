@@ -71,9 +71,9 @@ footer nav {
 header {
   display: block;
 
-  @media (min-width: 42rem) {
+  @media (min-width: 56rem) {
     display: flex;
-    gap: var(--space-lg);
+    gap: var(--space-3xl);
   }
 
   .header__nav {
