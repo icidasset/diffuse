@@ -11,9 +11,21 @@ title: Guide | Diffuse
   }
 
   .getting-started {
-    color: var(--accent-twist-2);
     font-size: var(--fs-md);
     font-weight: 500;
+
+    ul {
+      display: flex;
+      flex-direction: column;
+      gap: var(--space-md);
+      margin: var(--space-xl) 0;
+      max-width: 100%;
+      padding-left: 0;
+
+      @media (min-width: 42rem) {
+        margin: var(--space-md) 0;
+      }
+    }
 
     li {
       display: inline-block;
@@ -21,6 +33,12 @@ title: Guide | Diffuse
 
     li a {
       text-decoration: none;
+    }
+
+    i[style] {
+      @media (max-width: 35rem) {
+        display: none;
+      }
     }
 
     .with-icon {
@@ -33,11 +51,55 @@ title: Guide | Diffuse
 
 <section class="getting-started">
   <div class="columns">
-    <ul class="flex" style="display: flex; flex-direction: column; gap: var(--space-md); max-width: 100%; padding-left: 0">
+    <ul class="flex" style="color: oklch(from var(--text-color) l c h / 0.4);">
+      <li>
+        <span class="with-icon">
+          <i class="ph-fill ph-play-circle" style="opacity: 0.25"></i>
+          <i class="ph-fill ph-eye-slash"></i>
+          <span>There's no main audio interface</span>
+        </span>
+      </li>
+
+      <li>
+        <span class="with-icon">
+          <i class="ph-fill ph-asterisk" style="opacity: 0.25"></i>
+          <i class="ph-fill ph-lightning-slash"></i>
+          <span>There's no fixed feature set</span>
+        </span>
+      </li>
+
+      <li>
+        <span class="with-icon">
+          <i class="ph-fill ph-info" style="opacity: 0.25"></i>
+          <i class="ph-fill ph-app-window"></i>
+          <span><a style="color: var(--accent-twist-2)" href="catalogue/?category=Themes">Themes</a> are like traditional "apps"</span>
+        </span>
+      </li>
+
+      <li>
+        <span class="with-icon">
+          <i class="ph-fill ph-plus-circle" style="opacity: 0.25"></i>
+          <i class="ph-fill ph-tabs"></i>
+          <span>
+            Unlike interfaces in <a style="text-decoration: underline; text-decoration-color: var(--accent-twist-2)" href="{{ ('themes/blur/artwork-controller/facet/index.html') |> facetLoaderURL }}">separate</a> <a style="text-decoration: underline; text-decoration-color: var(--accent-twist-2)" href="{{ ('themes/winamp/browser/facet/index.html') |> facetLoaderURL }}">tabs</a>
+          </span>
+        </span>
+      </li>
+
+      <li>
+        <span class="with-icon">
+          <i class="ph-fill ph-person-simple-circle" style="opacity: 0.25"></i>
+          <i class="ph-fill ph-share"></i>
+          <span>Shareable interfaces &amp; features</span>
+        </span>
+      </li>
+    </ul>
+
+    <ul class="flex" style="color: var(--accent-twist-2);">
       <li>
         <a class="with-icon" href="{{ ('facets/connect/index.html') |> facetLoaderURL }}">
           <i class="ph-fill ph-number-circle-one" style="opacity: 0.25"></i>
-          <i class="ph-fill ph-file-audio" style="opacity: 1"></i>
+          <i class="ph-fill ph-file-audio"></i>
           <span>Add some audio</span>
         </a>
       </li>
@@ -45,7 +107,7 @@ title: Guide | Diffuse
       <li>
         <a class="with-icon" href="{{ ('facets/data/process-tracks/index.html') |> facetLoaderURL }}">
           <i class="ph-fill ph-number-circle-two" style="opacity: 0.25"></i>
-          <i class="ph-fill ph-gear-fine" style="opacity: 1"></i>
+          <i class="ph-fill ph-gear-fine"></i>
           <span>Wait until processed</span>
         </a>
       </li>
@@ -53,17 +115,15 @@ title: Guide | Diffuse
       <li>
         <a class="with-icon" href="featured/">
           <i class="ph-fill ph-number-circle-three" style="opacity: 0.25"></i>
-          <i class="ph-fill ph-swatches" style="opacity: 1"></i>
+          <i class="ph-fill ph-swatches"></i>
           <span>Try out interfaces</span>
         </a>
       </li>
-    </ul>
 
-    <ul class="flex" style="display: flex; flex-direction: column; gap: var(--space-md); max-width: 100%; padding-left: 0">
       <li>
         <a class="with-icon" href="featured/">
           <i class="ph-fill ph-number-circle-four" style="opacity: 0.25"></i>
-          <i class="ph-fill ph-sparkle" style="opacity: 1"></i>
+          <i class="ph-fill ph-sparkle"></i>
           <span>Enable additional features</span>
         </a>
       </li>
@@ -71,8 +131,8 @@ title: Guide | Diffuse
       <li>
         <a class="with-icon" href="{{ ('facets/connect/index.html') |> facetLoaderURL }}">
           <i class="ph-fill ph-number-circle-five" style="opacity: 0.25"></i>
-          <i class="ph-fill ph-person" style="opacity: 1"></i>
-          <span>Sync or share data</span>
+          <i class="ph-fill ph-person"></i>
+          <span>Sync your user-data</span>
         </a>
       </li>
     </ul>
