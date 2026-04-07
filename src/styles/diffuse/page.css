@@ -558,8 +558,9 @@ a.button {
   display: inline-block;
   font-family: inherit;
   font-weight: 500;
-  line-height: var(--leading-tight);
-  padding: var(--space-2xs) calc((var(--space-xs) + var(--space-sm)) / 2);
+  line-height: 0.75;
+  padding: var(--space-xs) calc((var(--space-sm) + var(--space-xs)) / 2);
+  text-box: trim-both cap alphabetic;
   transition-duration: 250ms;
   transition-property: background-color, border-color, opacity;
 
@@ -575,6 +576,10 @@ a.button {
   &:hover:not([disabled]),
   &:focus:not([disabled]) {
     --button-bg-opacity: 1;
+  }
+
+  &:has(.with-icon) {
+    padding-top: calc(var(--space-xs) * 1.1);
   }
 
   &.button--bg-accent {
@@ -607,9 +612,7 @@ a.button {
 
   &.button--small {
     font-size: var(--fs-sm);
-    line-height: 0.75;
     padding: var(--space-2xs);
-    text-box: trim-both cap alphabetic;
   }
 
   &.button--subtle {
@@ -619,9 +622,7 @@ a.button {
   &.button--tag {
     font-size: var(--fs-2xs);
     font-weight: 600;
-    line-height: 0.75;
     padding: var(--space-3xs);
-    text-box: trim-both cap alphabetic;
     vertical-align: middle;
 
     &.button--border {
@@ -635,8 +636,7 @@ a.button {
 
   &.button--tiny {
     font-size: var(--fs-xs);
-    line-height: 1;
-    padding: var(--space-3xs) calc((var(--space-2xs) + var(--space-3xs)) / 2);
+    padding: calc(var(--space-2xs) * 0.7) calc(var(--space-2xs) * 0.8);
   }
 
   &.button--transparent {
@@ -679,13 +679,6 @@ a.button {
     @media (min-width: 42rem) {
       display: inline-flex;
     }
-  }
-
-  & > span {
-    align-items: center;
-    display: inline-flex;
-    gap: var(--space-3xs);
-    padding-top: 1px;
   }
 }
 
@@ -734,6 +727,23 @@ strong {
 button .with-icon--bigger-gap,
 .button .with-icon--bigger-gap {
   gap: var(--space-2xs);
+}
+
+.with-repositioned-icon {
+  i {
+    display: inline-block;
+    height: 0;
+    position: relative;
+    width: 1em;
+  }
+
+  i::before {
+    bottom: 0;
+    bottom: 0.35cap;
+    left: 0;
+    position: absolute;
+    transform: translateY(50%);
+  }
 }
 
 /**

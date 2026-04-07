@@ -161,11 +161,13 @@ function _renderList(output, listEl) {
       <span class="divider"></span>
 
       <button
-        class="button--border button--tiny button--bg-accent button--tr-accent button--transparent with-icon"
+        class="button--border button--tiny button--bg-accent button--tr-accent button--transparent"
         @click="${() => openAddFromURIModal()}"
       >
-        <i class="ph-fill ph-plus-circle"></i>
-        <span class="button__supplementary-text">Add from URI</span>
+        <span class="with-repositioned-icon">
+          <i class="ph-fill ph-plus-circle"></i>
+          <span class="button__supplementary-text">Add from URI</span>
+        </span>
       </button>
 
       <div style="flex: 1"></div>
