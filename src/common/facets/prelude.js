@@ -15,7 +15,7 @@ export async function insertPreludes(facets, container) {
   range.selectNode(container);
 
   const preludes = facets
-    .filter((f) => f.kind === "prelude")
+    .filter((f) => f.kind === "prelude" && f.enabled !== false)
     .sort((a, b) => a.name.localeCompare(b.name));
 
   for (const prelude of preludes) {
