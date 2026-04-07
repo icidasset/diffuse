@@ -157,6 +157,7 @@ class ATProtoOutputSyncTransformer extends OutputTransformer {
       const l = this.#localOutput.get();
       const remote = this.base();
       const atproto = this.#atproto();
+
       if (!l || !atproto || !remote.ready()) return;
 
       const remoteRev = await atproto.getLatestCommit();
@@ -212,7 +213,10 @@ class ATProtoOutputSyncTransformer extends OutputTransformer {
 
           this.#trackIds(name, merged);
           await l[name].save(merged);
-          await remote[name].save(merged);
+
+          if (this.#differFromRemote(merged, remoteArr)) {
+            await remote[name].save(merged);
+          }
         }
       }
 
@@ -279,6 +283,17 @@ class ATProtoOutputSyncTransformer extends OutputTransformer {
     }
 
     return [...merged.values()];
+  }
+
+  /**
+   * @param {Array<{ id: string, updatedAt?: string }>} merged
+   * @param {Array<{ id: string, updatedAt?: string }>} remote
+   * @returns {boolean}
+   */
+  #differFromRemote(merged, remote) {
+    if (merged.length !== remote.length) return true;
+    const remoteMap = new Map(remote.map((r) => [r.id, r.updatedAt]));
+    return merged.some((r) => remoteMap.get(r.id) !== r.updatedAt);
   }
 
   // TOMBSTONES & KNOWN IDS

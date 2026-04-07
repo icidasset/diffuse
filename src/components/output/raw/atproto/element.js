@@ -125,7 +125,6 @@ class ATProtoOutput extends BroadcastedOutputElement {
           };
 
           await this.putRecords("sh.diffuse.output.trackBundle", [bundle]);
-
           lastPersistedTracks = data;
         },
       },
@@ -143,6 +142,7 @@ class ATProtoOutput extends BroadcastedOutputElement {
   #isOnline = signal(navigator.onLine);
   #rev = signal(/** @type {string | null} */ (null));
   #revFetchedAt = 0;
+  #ownRevs = new Set();
   #writing = 0;
 
   /** @type {Array<{ fn: () => Promise<void>, resolve: () => void, reject: (err: unknown) => void }>} */
@@ -337,8 +337,8 @@ class ATProtoOutput extends BroadcastedOutputElement {
     if (message.$type !== "com.atproto.sync.subscribeRepos#commit") return;
     if (message.repo !== this.#did.value) return;
 
-    // Skip commits we made ourselves (rev already reflects current state)
-    if (message.rev === this.#rev.value) return;
+    // Skip commits we made ourselves (all intermediate revs, not just the last)
+    if (this.#ownRevs.delete(message.rev)) return;
 
     const touched = new Set(
       (message.ops ?? [])
@@ -642,6 +642,7 @@ class ATProtoOutput extends BroadcastedOutputElement {
 
         if (result?.commit?.rev) {
           this.#rev.value = result.commit.rev;
+          this.#ownRevs.add(result.commit.rev);
         }
       };
 
