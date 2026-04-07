@@ -1,6 +1,6 @@
 import { Client, ClientResponseError, ok } from "@atcute/client";
 import { ComAtprotoSyncSubscribeRepos } from "@atcute/atproto";
-import { encode } from "@atcute/cbor";
+import { decode, encode } from "@atcute/cbor";
 import { xxh32r } from "xxh32/dist/raw.js";
 import * as Repo from "@atcute/repo";
 import * as IDB from "idb-keyval";
@@ -94,9 +94,16 @@ class ATProtoOutput extends BroadcastedOutputElement {
             "sh.diffuse.output.trackBundle",
           );
 
-          const tracks = bundles.flatMap((bundle) => bundle.tracks ?? []);
-          lastPersistedTracks = tracks;
+          /** @type {Track[]} */
+          const tracks = [];
 
+          for (const bundle of bundles) {
+            if (!bundle.data?.ref?.$link) continue;
+            const bytes = await this.#fetchBlob(bundle.data.ref.$link);
+            tracks.push(...decode(bytes));
+          }
+
+          lastPersistedTracks = tracks;
           return tracks;
         },
         put: async (data) => {
@@ -107,21 +114,18 @@ class ATProtoOutput extends BroadcastedOutputElement {
             return;
           }
 
-          /** @type {TrackBundle[]} */
-          const bundles = [];
+          const bytes = encode(data);
+          const blob = await this.#uploadBlob(bytes);
+          const id = xxh32r(bytes).toString(16);
 
-          for (let i = 0; i < data.length; i += 100) {
-            const chunk = data.slice(i, i + 100);
-            bundles.push({
-              $type: "sh.diffuse.output.trackBundle",
-              id: xxh32r(encode(chunk)).toString(16),
-              tracks: chunk,
-            });
-          }
+          /** @type {TrackBundle} */
+          const bundle = {
+            $type: "sh.diffuse.output.trackBundle",
+            id,
+            data: blob,
+          };
 
-          await this.putRecords("sh.diffuse.output.trackBundle", bundles, {
-            upsertBatchSize: 1,
-          });
+          await this.putRecords("sh.diffuse.output.trackBundle", [bundle]);
 
           lastPersistedTracks = data;
         },
@@ -429,6 +433,34 @@ class ATProtoOutput extends BroadcastedOutputElement {
   }
 
   /**
+   * @param {Uint8Array} bytes
+   * @returns {Promise<any>}
+   */
+  async #uploadBlob(bytes) {
+    const rpc = this.#rpc;
+    if (!rpc) return;
+    const result = await ok(rpc.post("com.atproto.repo.uploadBlob", {
+      input: bytes,
+      headers: { "content-type": "application/octet-stream" },
+    }));
+    return result.blob;
+  }
+
+  /**
+   * @param {string} cid
+   * @returns {Promise<Uint8Array>}
+   */
+  async #fetchBlob(cid) {
+    const rpc = this.#rpc;
+    const did = this.#did.value;
+    if (!rpc || !did) return new Uint8Array();
+    return await ok(rpc.get("com.atproto.sync.getBlob", {
+      params: { did, cid },
+      as: "bytes",
+    }));
+  }
+
+  /**
    * @template T
    * @param {string} collection
    * @param {string} [did]
@@ -497,9 +529,10 @@ class ATProtoOutput extends BroadcastedOutputElement {
     this.#writeDraining = true;
 
     while (this.#writeQueue.length > 0) {
-      const { fn, resolve, reject } = /** @type {{ fn: () => Promise<void>, resolve: () => void, reject: (err: unknown) => void }} */ (
-        this.#writeQueue.shift()
-      );
+      const { fn, resolve, reject } =
+        /** @type {{ fn: () => Promise<void>, resolve: () => void, reject: (err: unknown) => void }} */ (
+          this.#writeQueue.shift()
+        );
       try {
         await fn();
         resolve();
@@ -533,7 +566,10 @@ class ATProtoOutput extends BroadcastedOutputElement {
     return this.#enqueueWrite(async () => {
       if (token.cancelled) return;
       try {
-        await this.#doPutRecords(collection, data, { deleteBatchSize, upsertBatchSize }, token);
+        await this.#doPutRecords(collection, data, {
+          deleteBatchSize,
+          upsertBatchSize,
+        }, token);
       } finally {
         if (this.#writeCancels.get(collection) === token) {
           this.#writeCancels.delete(collection);
@@ -548,7 +584,12 @@ class ATProtoOutput extends BroadcastedOutputElement {
    * @param {{ deleteBatchSize: number, upsertBatchSize: number }} options
    * @param {{ cancelled: boolean }} token
    */
-  async #doPutRecords(collection, data, { deleteBatchSize, upsertBatchSize }, token) {
+  async #doPutRecords(
+    collection,
+    data,
+    { deleteBatchSize, upsertBatchSize },
+    token,
+  ) {
     const rpc = this.#rpc;
     const did = this.#did.value;
     if (!rpc || !did) return;
@@ -620,7 +661,8 @@ class ATProtoOutput extends BroadcastedOutputElement {
         if (window.length + batch.length > WRITE_RATE_LIMIT) {
           const needed = window.length + batch.length - WRITE_RATE_LIMIT;
           const sorted = [...window].sort((a, b) => a.ts - b.ts);
-          const waitMs = WRITE_WINDOW_MS - (Date.now() - sorted[needed - 1].ts) + 1;
+          const waitMs = WRITE_WINDOW_MS -
+            (Date.now() - sorted[needed - 1].ts) + 1;
           await new Promise((resolve) => setTimeout(resolve, waitMs));
         }
 

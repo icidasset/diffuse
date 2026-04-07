@@ -10,10 +10,6 @@ export type {
   Transformation,
 } from "./types/sh/diffuse/output/playlistItem.ts";
 
-export type {
-  Main as PlaylistItemBundle,
-} from "./types/sh/diffuse/output/playlistItemBundle.ts";
-
 export type { Main as Theme } from "./types/sh/diffuse/output/theme.ts";
 
 export type { Main as Setting } from "./types/sh/diffuse/output/setting.ts";

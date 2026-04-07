@@ -6,14 +6,14 @@
       "type": "record",
       "record": {
         "type": "object",
-        "required": ["id", "tracks"],
+        "required": ["id", "data"],
         "properties": {
           "id": { "type": "string" },
           "createdAt": { "type": "string", "format": "datetime" },
-          "tracks": {
-            "type": "array",
-            "description": "A bundle of tracks",
-            "items": { "type": "ref", "ref": "sh.diffuse.output.track" }
+          "data": {
+            "type": "blob",
+            "description": "CBOR-encoded tracks",
+            "accept": ["application/octet-stream"]
           },
           "updatedAt": { "type": "string", "format": "datetime" }
         }
