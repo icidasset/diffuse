@@ -11,8 +11,9 @@ title: Guide | Diffuse
   }
 
   .getting-started {
+    color: var(--accent-twist-2);
     font-size: var(--fs-md);
-    font-weight: 200;
+    font-weight: 500;
 
     li {
       display: inline-block;
@@ -35,25 +36,25 @@ title: Guide | Diffuse
     <ul class="flex" style="display: flex; flex-direction: column; gap: var(--space-md); max-width: 100%; padding-left: 0">
       <li>
         <a class="with-icon" href="{{ ('facets/connect/index.html') |> facetLoaderURL }}">
-          <i class="ph-fill ph-number-circle-one" style="opacity: 0.4"></i>
-          <i class="ph-fill ph-file-audio" style="opacity: 0.4"></i>
+          <i class="ph-fill ph-number-circle-one" style="opacity: 0.25"></i>
+          <i class="ph-fill ph-file-audio" style="opacity: 1"></i>
           <span>Add some audio</span>
         </a>
       </li>
 
       <li>
         <a class="with-icon" href="{{ ('facets/data/process-tracks/index.html') |> facetLoaderURL }}">
-          <i class="ph-fill ph-number-circle-two" style="opacity: 0.4"></i>
-          <i class="ph-fill ph-gear-fine" style="opacity: 0.4"></i>
+          <i class="ph-fill ph-number-circle-two" style="opacity: 0.25"></i>
+          <i class="ph-fill ph-gear-fine" style="opacity: 1"></i>
           <span>Wait until processed</span>
         </a>
       </li>
 
       <li>
         <a class="with-icon" href="featured/">
-          <i class="ph-fill ph-number-circle-three" style="opacity: 0.4"></i>
-          <i class="ph-fill ph-paint-brush" style="opacity: 0.4"></i>
-          <span>Explore interfaces</span>
+          <i class="ph-fill ph-number-circle-three" style="opacity: 0.25"></i>
+          <i class="ph-fill ph-swatches" style="opacity: 1"></i>
+          <span>Try out interfaces</span>
         </a>
       </li>
     </ul>
@@ -61,16 +62,16 @@ title: Guide | Diffuse
     <ul class="flex" style="display: flex; flex-direction: column; gap: var(--space-md); max-width: 100%; padding-left: 0">
       <li>
         <a class="with-icon" href="featured/">
-          <i class="ph-fill ph-number-circle-four" style="opacity: 0.4"></i>
-          <i class="ph-fill ph-sparkle" style="opacity: 0.4"></i>
+          <i class="ph-fill ph-number-circle-four" style="opacity: 0.25"></i>
+          <i class="ph-fill ph-sparkle" style="opacity: 1"></i>
           <span>Enable additional features</span>
         </a>
       </li>
 
       <li>
         <a class="with-icon" href="{{ ('facets/connect/index.html') |> facetLoaderURL }}">
-          <i class="ph-fill ph-number-circle-five" style="opacity: 0.4"></i>
-          <i class="ph-fill ph-person" style="opacity: 0.4"></i>
+          <i class="ph-fill ph-number-circle-five" style="opacity: 0.25"></i>
+          <i class="ph-fill ph-person" style="opacity: 1"></i>
           <span>Sync or share data</span>
         </a>
       </li>
@@ -78,64 +79,41 @@ title: Guide | Diffuse
   </div>
 </section>
 
-<!--<section style="font-size: var(--fs-base);">
-  <h2>Getting started</h2>
+<section id="concept">
+  <h2>Concept</h2>
 
   <div class="columns">
-    <ul class="flex" style="display: flex; flex-direction: column; gap: var(--space-md); max-width: 100%; padding-left: 0">
-      <li class="with-icon" style="gap: var(--space-sm)">
-        <i class="ph-fill ph-file-audio" style="opacity: 0.4"></i>
-        <span><strong>Add some audio files or streams.</strong> The wide range of <a href="{{ ('facets/connect/index.html') |> facetLoaderURL }}">connect interfaces</a> can be used for this, or use the demo from the tutorial below.</span>
-      </li>
+    <div class="flex">
+      <p>
+        Diffuse is unlike traditional software; instead of combining several features into a single user interface and producing data output, we do the opposite, we start with the data and work our way up from there.
+      </p>
 
-      <li class="with-icon" style="gap: var(--space-sm)">
-        <i class="ph-fill ph-gear-six" style="opacity: 0.4"></i>
-        <span><strong>Wait until the processing of audio sources into tracks is completed.</strong> You can monitor it using this <a href="{{ ('facets/data/process-tracks/index.html') |> facetLoaderURL }}">interface</a>. The tutorial demo will show it directly.</span>
-      </li>
+      <p>
+        <strong>It provides every user the ability to choose which features and interfaces they want to layer on top of their data.</strong>
+      </p>
 
-      <li class="with-icon" style="gap: var(--space-sm)">
-        <i class="ph-fill ph-paint-brush" style="opacity: 0.4"></i>
-        <span><strong style="color: var(--accent-twist-2)">Explore the interfaces that can be used to play and manage your audio.</strong> Check out the <a href="featured/">featured interfaces</a>.</span>
-      </li>
-    </ul>
+      <p>
+        These features and interfaces are housed into units that we call "facets". They consist of <a href="elements/">Diffuse elements</a> that are connected, they broadcast their state and the parts of your data that have been updated.
+      </p>
 
-    <ul class="flex" style="display: flex; flex-direction: column; gap: var(--space-md); max-width: 100%; padding-left: 0">
-      <li class="with-icon" style="gap: var(--space-sm)">
-        <i class="ph-fill ph-sparkle" style="opacity: 0.4"></i>
-        <span><strong>Continue exploring, enable some additional features</strong> such as making played audio available offline automatically.</span>
-      </li>
-
-      <li class="with-icon" style="gap: var(--space-sm)">
-        <i class="ph-fill ph-person" style="opacity: 0.4"></i>
-        <span><strong>Sync your configuration and playlists with your other devices.</strong> Or share it with other people.</span>
-      </li>
-    </ul>
+      <p>
+        Finally, facets are just regular web pages so they can live wherever. We save them to the user-data storage that's configured and give the user the option to share it. This means that you can load features and interfaces from other people, <strong>building software cooperatively</strong>.
+      </p>
+    </div>
+    <div class="flex">
+      <p>
+        <em>A few things to keep in mind:</em>
+      </p>
+      <ul style="display: flex; flex-direction: column; gap: var(--space-xs);">
+        <li>You can open as many interfaces as you'd like.</li>
+        <li>Interfaces are connected to each other.</li>
+        <li>Interfaces don't have to be pinned in order to be used, unlike features which do have to be added in order to be activated.</li>
+      </ul>
+    </div>
   </div>
-</section>-->
+</section>
 
-<!--<div>
-  <section class="flex">
-    <h2>Concept</h2>
-
-    <p>
-      Diffuse is unlike traditional software; instead of combining several features into a single user interface and producing data output, we do the opposite, we start with the data and work our way up from there.
-    </p>
-
-    <p>
-      <strong>It provides every user the ability to choose which features and interfaces they want to layer on top of their data.</strong>
-    </p>
-
-    <p>
-      These features and interfaces are housed into units that we call "facets". They consist of <a href="elements/">Diffuse elements</a> that are connected, they broadcast their state and the parts of your data that have been updated.
-    </p>
-
-    <p>
-      Finally, facets are just regular web pages so they can live wherever. We save them to the user-data storage that's configured and give the user the option to share it. This means that you can load features and interfaces from other people, <strong>building software cooperatively</strong>.
-    </p>
-  </section>
-</div>-->
-
-<!--<section id="tutorial">
+<section id="tutorial">
   <h2>Tutorial</h2>
 
   <div class="columns">
@@ -193,4 +171,4 @@ title: Guide | Diffuse
       </p>
     </div>
   </div>
-</section>-->
+</section>
