@@ -2,7 +2,6 @@ import { Client, ClientResponseError, ok } from "@atcute/client";
 import { ComAtprotoSyncSubscribeRepos } from "@atcute/atproto";
 import { decode, encode } from "@atcute/cbor";
 import { xxh32r } from "xxh32/dist/raw.js";
-import * as Repo from "@atcute/repo";
 import * as IDB from "idb-keyval";
 
 import { computed, signal } from "~/common/signal.js";
@@ -396,43 +395,6 @@ class ATProtoOutput extends BroadcastedOutputElement {
   }
 
   /**
-   * Fetch the full repo CAR for the authenticated user, cached in IDB by rev.
-   * Returns null if not authenticated or if the commit rev cannot be determined.
-   *
-   * @returns {Promise<Uint8Array | null>}
-   */
-  async #getRepoCar() {
-    const did = this.#did.value;
-    const rpc = this.#rpc;
-    if (!rpc || !did) return null;
-
-    const REV_TTL_MS = 5_000;
-    const latestRev =
-      (Date.now() - this.#revFetchedAt < REV_TTL_MS && this.#rev.value)
-        ? this.#rev.value
-        : await this.getLatestCommit();
-    if (!latestRev) return null;
-
-    const IDB_KEY = `diffuse/output/raw/atproto/repo/${did}`;
-    const cached =
-      /** @type {{ rev: string, bytes: Uint8Array } | undefined} */ (
-        await IDB.get(IDB_KEY)
-      );
-
-    if (cached?.rev === latestRev) {
-      return cached.bytes;
-    }
-
-    const bytes = await ok(rpc.get("com.atproto.sync.getRepo", {
-      params: { did },
-      as: "bytes",
-    }));
-
-    await IDB.set(IDB_KEY, { rev: latestRev, bytes });
-    return bytes;
-  }
-
-  /**
    * @param {Uint8Array} bytes
    * @returns {Promise<any>}
    */
@@ -472,15 +434,15 @@ class ATProtoOutput extends BroadcastedOutputElement {
     if (!this.#rpc || !did) return [];
 
     try {
-      const bytes = await this.#getRepoCar();
-      if (!bytes) return [];
-
       const records = [];
-      for (const entry of Repo.fromUint8Array(bytes)) {
-        if (entry.collection === collection) {
-          records.push(/** @type {T} */ (entry.record));
-        }
-      }
+      let cursor;
+      do {
+        const page = await ok(this.#rpc.get("com.atproto.repo.listRecords", {
+          params: { repo: did, collection, limit: 100, cursor },
+        }));
+        records.push(...page.records.map((r) => /** @type {T} */ (r.value)));
+        cursor = page.cursor;
+      } while (cursor);
       return records;
     } catch (err) {
       if (this.#isSessionError(err)) {
@@ -600,15 +562,18 @@ class ATProtoOutput extends BroadcastedOutputElement {
       /** @type {Map<string, { rkey: string, value: unknown }>} */
       const existing = new Map();
 
-      const repoBytes = await this.#getRepoCar();
-      if (repoBytes) {
-        for (const entry of Repo.fromUint8Array(repoBytes)) {
-          if (entry.collection === collection) {
-            const record = /** @type {any} */ (entry.record);
-            existing.set(record.id, { rkey: entry.rkey, value: record });
-          }
+      let cursor;
+      do {
+        const page = await ok(rpc.get("com.atproto.repo.listRecords", {
+          params: { repo: did, collection, limit: 100, cursor },
+        }));
+        for (const { uri, value } of page.records) {
+          const record = /** @type {any} */ (value);
+          const rkey = uri.split("/").at(-1);
+          existing.set(record.id, { rkey, value: record });
         }
-      }
+        cursor = page.cursor;
+      } while (cursor);
 
       // 2. Build desired state
       const desired = new Map(
