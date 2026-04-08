@@ -204,7 +204,7 @@ dialog {
   color: var(--text-color);
   left: 50%;
   max-height: 85dvh;
-  max-width: min(400px, calc(100vw - 2rem));
+  max-width: min(var(--container-md), calc(100vw - var(--space-md)));
   overflow: hidden;
   padding: 0;
   position: fixed;

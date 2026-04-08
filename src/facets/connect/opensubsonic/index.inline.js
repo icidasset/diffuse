@@ -51,7 +51,7 @@ const { setItems, setError } = setup({
   `,
 
   formFields: html`
-    <label>Host <input id="oss-host" placeholder="music.example.com" required></label>
+    <label>Host* <input id="oss-host" placeholder="music.example.com" required></label>
     <label>Use HTTPS / TLS?
       <select id="oss-tls">
         <option value="true" selected>Yes</option>
