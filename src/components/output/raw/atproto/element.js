@@ -139,6 +139,7 @@ class ATProtoOutput extends BroadcastedOutputElement {
   // SIGNALS
 
   #did = signal(/** @type {`did:${string}:${string}` | null} */ (null));
+  #handle = signal(/** @type {string | null} */ (null));
   #isOnline = signal(navigator.onLine);
   #rev = signal(/** @type {string | null} */ (null));
   #revFetchedAt = 0;
@@ -152,6 +153,7 @@ class ATProtoOutput extends BroadcastedOutputElement {
   #writeCancels = new Map();
 
   did = this.#did.get;
+  handle = this.#handle.get;
   rev = this.#rev.get;
 
   ready = computed(() => {
@@ -204,6 +206,7 @@ class ATProtoOutput extends BroadcastedOutputElement {
       this.#agent = null;
       this.#authenticated = Promise.withResolvers();
       this.#did.value = null;
+      this.#handle.value = null;
       this.#pdsUrl = null;
       this.#rpc = null;
     }
@@ -218,6 +221,7 @@ class ATProtoOutput extends BroadcastedOutputElement {
     this.#agent = null;
     this.#authenticated = Promise.withResolvers();
     this.#did.value = null;
+    this.#handle.value = null;
     this.#pdsUrl = null;
     this.#rpc = null;
 
@@ -285,6 +289,25 @@ class ATProtoOutput extends BroadcastedOutputElement {
     this.#pdsUrl = session.info.aud;
     this.#authenticated.resolve();
     this.#startFirehose();
+    this.#fetchHandle(session.info.sub);
+  }
+
+  /**
+   * @param {string} did
+   */
+  async #fetchHandle(did) {
+    const rpc = this.#rpc;
+    if (!rpc) return;
+    try {
+      const result = await ok(rpc.get("com.atproto.repo.describeRepo", {
+        params: { repo: did },
+      }));
+      if (this.#did.value === did) {
+        this.#handle.value = result.handle ?? null;
+      }
+    } catch {
+      // Non-fatal; handle stays null
+    }
   }
 
   // FIREHOSE

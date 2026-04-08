@@ -5,6 +5,7 @@ export type ATProtoOutputElement =
   & OutputElement
   & {
     did: SignalReader<string | null>;
+    handle: SignalReader<string | null>;
     rev: SignalReader<string | null>;
 
     getLatestCommit(): Promise<string | null>;

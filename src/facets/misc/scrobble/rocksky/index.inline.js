@@ -2,6 +2,11 @@ import { html, nothing, render as litRender } from "lit-html";
 
 import foundation from "~/common/foundation.js";
 import { effect, signal } from "~/common/signal.js";
+import { NAME as ATPROTO_NAME } from "~/components/output/raw/atproto/element.js";
+
+/**
+ * @import { ATProtoOutputElement } from "~/components/output/raw/atproto/types.d.ts"
+ */
 
 ////////////////////////////////////////////
 // SETUP
@@ -25,6 +30,17 @@ if (!rocksky) {
 }
 
 await customElements.whenDefined(rocksky.localName);
+const atprotoEl = signal(
+  /** @type {ATProtoOutputElement | undefined} */ (undefined),
+);
+
+customElements.whenDefined(ATPROTO_NAME).then(async () => {
+  const outputOrchestrator = await foundation.orchestrator.output();
+
+  atprotoEl.value = /** @type {ATProtoOutputElement | undefined} */ (
+    outputOrchestrator.root().querySelector(ATPROTO_NAME)
+  );
+});
 
 ////////////////////////////////////////////
 // REACTIVE UI
@@ -33,12 +49,15 @@ await customElements.whenDefined(rocksky.localName);
 const $signingIn = signal(false);
 
 const main = document.querySelector("main");
+if (!main) throw new Error("main element not found");
 
 effect(() => {
   const isAuthenticated = rocksky.isAuthenticated();
   const isAuthenticating = rocksky.isAuthenticating();
   const handle = rocksky.handle();
   const signingIn = $signingIn.value;
+  const atprotoDid = atprotoEl.value?.did();
+  const atprotoHandle = atprotoEl.value?.handle();
 
   litRender(
     html`
@@ -50,7 +69,8 @@ effect(() => {
               <use
                 xlink:href="images/diffuse-current.svg#diffuse"
                 href="images/diffuse-current.svg#diffuse"
-              ></use>
+              >
+              </use>
             </svg>
           </a>
         </div>
@@ -61,39 +81,58 @@ effect(() => {
       <div class="facet__right">
         ${isAuthenticated
           ? html`
-              <div>
-                ${handle
-                  ? html`<p>Connected as <strong>${handle}</strong>.</p>`
-                  : nothing}
-                <div class="button-row">
-                  <button @click="${() => rocksky.signOut()}">
-                    <i class="ph-bold ph-plugs-connected"></i>
-                    Disconnect
-                  </button>
-                </div>
+            <div>
+              ${handle
+                ? html`
+                  <p>Connected as <strong>${handle}</strong>.</p>
+                `
+                : nothing}
+              <div class="button-row">
+                <button @click="${() => rocksky.signOut()}">
+                  <i class="ph-bold ph-plugs-connected"></i>
+                  Disconnect
+                </button>
               </div>
-            `
+            </div>
+          `
           : html`
-              <div>
-                <p>Sign in with your AT Protocol identity to connect Rocksky.</p>
-                <form @submit="${handleSignIn}">
-                  <label
-                    >Handle
-                    <input placeholder="you.bsky.social" />
-                  </label>
+            <div>
+              <p>Sign in with your AT Protocol identity to connect Rocksky.</p>
+              <form @submit="${handleSignIn}">
+                <label>Handle
+                  <input placeholder="you.bsky.social" />
+                </label>
+                <p class="button-row">
+                  <button ?disabled="${isAuthenticating || signingIn}">
+                    <i
+                      class="ph-bold ${isAuthenticating || signingIn
+                        ? "ph-spinner animate-spin"
+                        : "ph-at"}"
+                    ></i>
+                    Connect with AT Protocol
+                  </button>
+                </p>
+              </form>
+              ${atprotoDid
+                ? html`
                   <p class="button-row">
-                    <button ?disabled="${isAuthenticating || signingIn}">
+                    <button
+                      ?disabled="${isAuthenticating || signingIn}"
+                      @click="${() => handleSignInWithAtproto(atprotoDid)}"
+                      class="button--bg-accent"
+                    >
                       <i
                         class="ph-bold ${isAuthenticating || signingIn
                           ? "ph-spinner animate-spin"
                           : "ph-at"}"
                       ></i>
-                      Connect with AT Protocol
+                      Sign in as ${atprotoHandle ?? atprotoDid}
                     </button>
                   </p>
-                </form>
-              </div>
-            `}
+                `
+                : nothing}
+            </div>
+          `}
       </div>
     `,
     main,
@@ -104,13 +143,28 @@ effect(() => {
 // ACTIONS
 ////////////////////////////////////////////
 
+/**
+ * @param {any} e
+ */
 async function handleSignIn(e) {
   e.preventDefault();
-  const handle = e.target.querySelector("input")?.value?.trim();
+  const handle = e.target?.querySelector("input")?.value?.trim();
   if (!handle) return;
   $signingIn.value = true;
   try {
-    await rocksky.signIn(handle);
+    await rocksky?.signIn(handle);
+  } finally {
+    $signingIn.value = false;
+  }
+}
+
+/**
+ * @param {string} did
+ */
+async function handleSignInWithAtproto(did) {
+  $signingIn.value = true;
+  try {
+    await rocksky?.signIn(did);
   } finally {
     $signingIn.value = false;
   }
