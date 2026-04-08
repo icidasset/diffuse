@@ -1,5 +1,6 @@
 import { BroadcastableDiffuseElement, defineElement } from "~/common/element.js";
 import { computed, signal } from "~/common/signal.js";
+import { clearSession, readSession, saveSession } from "../session.js";
 
 /**
  * @import {Track} from "~/definitions/types.d.ts"
@@ -65,7 +66,7 @@ class ListenBrainzScrobbler extends BroadcastableDiffuseElement {
   async #tryRestore() {
     await this.whenConnected();
 
-    const stored = localStorage.getItem(STORAGE_KEY);
+    const stored = await readSession(this, STORAGE_KEY);
 
     if (stored) {
       try {
@@ -79,7 +80,7 @@ class ListenBrainzScrobbler extends BroadcastableDiffuseElement {
           this.#handle.value = username;
         }
       } catch {
-        localStorage.removeItem(STORAGE_KEY);
+        await clearSession(this, STORAGE_KEY);
       }
     }
   }
@@ -97,7 +98,7 @@ class ListenBrainzScrobbler extends BroadcastableDiffuseElement {
       const username = await this.#validateToken(token);
       this.#userToken.set(token);
       this.#handle.set(username);
-      localStorage.setItem(STORAGE_KEY, JSON.stringify({ token, username }));
+      await saveSession(this, STORAGE_KEY, JSON.stringify({ token, username }));
     } catch (err) {
       console.warn("listenbrainz: failed to authenticate", err);
       throw err;
@@ -109,10 +110,10 @@ class ListenBrainzScrobbler extends BroadcastableDiffuseElement {
   /**
    * Clear the stored session.
    */
-  signOut() {
+  async signOut() {
     this.#userToken.set(null);
     this.#handle.set(null);
-    localStorage.removeItem(STORAGE_KEY);
+    await clearSession(this, STORAGE_KEY);
   }
 
   // SCROBBLE ACTIONS

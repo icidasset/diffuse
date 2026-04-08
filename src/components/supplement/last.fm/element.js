@@ -1,8 +1,12 @@
 import { md5 } from "@noble/hashes/legacy.js";
 import { bytesToHex, utf8ToBytes } from "@noble/hashes/utils.js";
 
-import { BroadcastableDiffuseElement, defineElement } from "~/common/element.js";
+import {
+  BroadcastableDiffuseElement,
+  defineElement,
+} from "~/common/element.js";
 import { computed, signal } from "~/common/signal.js";
+import { clearSession, readSession, saveSession } from "../session.js";
 
 /**
  * @import {Track} from "~/definitions/types.d.ts"
@@ -95,9 +99,10 @@ class LastFmScrobbler extends BroadcastableDiffuseElement {
       );
 
       this.#isAuthenticating.set(true);
+
       try {
         const session = await this.#getSession(urlToken);
-        this.#setSession(session);
+        await this.#setSession(session);
       } catch (err) {
         console.warn("last.fm: failed to exchange token for session", err);
       } finally {
@@ -107,8 +112,7 @@ class LastFmScrobbler extends BroadcastableDiffuseElement {
       return;
     }
 
-    // Restore an existing session from localStorage
-    const stored = localStorage.getItem(STORAGE_KEY);
+    const stored = await readSession(this, STORAGE_KEY);
 
     if (stored) {
       try {
@@ -121,7 +125,7 @@ class LastFmScrobbler extends BroadcastableDiffuseElement {
           this.#handle.value = handle;
         }
       } catch {
-        localStorage.removeItem(STORAGE_KEY);
+        await clearSession(this, STORAGE_KEY);
       }
     }
   }
@@ -146,17 +150,17 @@ class LastFmScrobbler extends BroadcastableDiffuseElement {
   /**
    * Clear the stored session.
    */
-  signOut() {
+  async signOut() {
     this.#sessionKey.set(null);
     this.#handle.set(null);
-    localStorage.removeItem(STORAGE_KEY);
+    await clearSession(this, STORAGE_KEY);
   }
 
   /** @param {{ key: string, name: string }} session */
-  #setSession({ key, name: handle }) {
+  async #setSession({ key, name: handle }) {
     this.#sessionKey.set(key);
     this.#handle.set(handle);
-    localStorage.setItem(STORAGE_KEY, JSON.stringify({ key, name: handle }));
+    await saveSession(this, STORAGE_KEY, JSON.stringify({ key, name: handle }));
   }
 
   // SCROBBLE ACTIONS

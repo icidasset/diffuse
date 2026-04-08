@@ -2,6 +2,7 @@ import { now as tidNow } from "@atcute/tid";
 
 import { BroadcastableDiffuseElement, defineElement } from "~/common/element.js";
 import { signal } from "~/common/signal.js";
+import { clearSession, readSession, saveSession } from "../session.js";
 
 import {
   clearStoredSession,
@@ -91,7 +92,7 @@ class RockskyScrobbler extends BroadcastableDiffuseElement {
           this.#handle.value = did;
         }
 
-        localStorage.setItem(STORAGE_KEY, JSON.stringify({ did }));
+        await saveSession(this, STORAGE_KEY, JSON.stringify({ did }));
         return;
       }
     } catch (err) {
@@ -99,7 +100,7 @@ class RockskyScrobbler extends BroadcastableDiffuseElement {
     }
 
     // Restore previously stored connection state.
-    const stored = localStorage.getItem(STORAGE_KEY);
+    const stored = await readSession(this, STORAGE_KEY);
 
     if (stored) {
       try {
@@ -113,7 +114,7 @@ class RockskyScrobbler extends BroadcastableDiffuseElement {
           this.#handle.value = did;
         }
       } catch {
-        localStorage.removeItem(STORAGE_KEY);
+        await clearSession(this, STORAGE_KEY);
       }
     }
   }
@@ -139,7 +140,7 @@ class RockskyScrobbler extends BroadcastableDiffuseElement {
   /**
    * Disconnect from Rocksky.
    */
-  signOut() {
+  async signOut() {
     const did = localStorage.getItem(DID_STORAGE_KEY);
 
     if (did) {
@@ -152,7 +153,7 @@ class RockskyScrobbler extends BroadcastableDiffuseElement {
 
     this.#connected.set(false);
     this.#handle.set(null);
-    localStorage.removeItem(STORAGE_KEY);
+    await clearSession(this, STORAGE_KEY);
   }
 
   // SCROBBLE ACTIONS

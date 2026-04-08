@@ -19,7 +19,10 @@ function loadCredentials() {
   }
 }
 
-const configurator = await foundation.configurator.scrobbles();
+const [configurator, output] = await Promise.all([
+  foundation.configurator.scrobbles(),
+  foundation.orchestrator.output(),
+]);
 
 /** @type {import("~/components/supplement/last.fm/element.js").CLASS | null} */
 let lastFm = configurator.querySelector("ds-lastfm-scrobbler");
@@ -30,7 +33,10 @@ if (!lastFm) {
 
   lastFm = new LastFmScrobbler();
   lastFm.setAttribute("group", foundation.GROUP);
+  lastFm.setAttribute("output-selector", output.selector);
   configurator.append(lastFm);
+} else {
+  lastFm.setAttribute("output-selector", output.selector);
 }
 
 await customElements.whenDefined(lastFm.localName);

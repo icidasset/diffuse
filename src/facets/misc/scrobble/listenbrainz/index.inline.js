@@ -7,7 +7,10 @@ import { effect } from "~/common/signal.js";
 
 foundation.setup({ title: "ListenBrainz | Scrobble | Diffuse" });
 
-const configurator = await foundation.configurator.scrobbles();
+const [configurator, output] = await Promise.all([
+  foundation.configurator.scrobbles(),
+  foundation.orchestrator.output(),
+]);
 
 /** @type {import("~/components/supplement/listenbrainz/element.js").CLASS | null} */
 let listenBrainz = configurator.querySelector("ds-listenbrainz-scrobbler");
@@ -18,7 +21,10 @@ if (!listenBrainz) {
 
   listenBrainz = new ListenBrainzScrobbler();
   listenBrainz.setAttribute("group", foundation.GROUP);
+  listenBrainz.setAttribute("output-selector", output.selector);
   configurator.append(listenBrainz);
+} else {
+  listenBrainz.setAttribute("output-selector", output.selector);
 }
 
 await customElements.whenDefined(listenBrainz.localName);

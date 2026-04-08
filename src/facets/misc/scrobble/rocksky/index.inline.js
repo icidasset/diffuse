@@ -15,7 +15,10 @@ import { NAME as ATPROTO_NAME } from "~/components/output/raw/atproto/element.js
 // Set doc title
 foundation.setup({ title: "Rocksky | Scrobble | Diffuse" });
 
-const configurator = await foundation.configurator.scrobbles();
+const [configurator, output] = await Promise.all([
+  foundation.configurator.scrobbles(),
+  foundation.orchestrator.output(),
+]);
 
 /** @type {import("~/components/supplement/rocksky/element.js").CLASS | null} */
 let rocksky = configurator.querySelector("ds-rocksky-scrobbler");
@@ -26,7 +29,10 @@ if (!rocksky) {
 
   rocksky = new RockskyScrobbler();
   rocksky.setAttribute("group", foundation.GROUP);
+  rocksky.setAttribute("output-selector", output.selector);
   configurator.append(rocksky);
+} else {
+  rocksky.setAttribute("output-selector", output.selector);
 }
 
 await customElements.whenDefined(rocksky.localName);
