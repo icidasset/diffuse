@@ -563,6 +563,7 @@ a.button {
   text-box: trim-both cap alphabetic;
   transition-duration: 250ms;
   transition-property: background-color, border-color, opacity;
+  white-space: nowrap;
 
   & * {
     pointer-events: none;
@@ -730,6 +731,25 @@ button .with-icon--bigger-gap,
 }
 
 .with-repositioned-icon {
+  position: relative;
+
+  @media (width < 42rem) {
+    &:has(.button__supplementary-text) {
+      display: inline-block;
+      height: 1cap;
+      width: 1em;
+
+      i {
+        height: auto;
+        height: 0.8cap;
+        left: 0;
+        position: absolute;
+        top: 50%;
+        transform: translateY(-50%);
+      }
+    }
+  }
+
   i {
     display: inline-block;
     height: 0;
