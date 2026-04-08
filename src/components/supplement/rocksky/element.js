@@ -196,7 +196,7 @@ class RockskyScrobbler extends BroadcastableDiffuseElement {
       artist: tags.artist,
       album: tags.album,
       albumArtist: tags.albumartist,
-      duration: Math.round(track.stats.duration / 1000), // seconds
+      duration: track.stats.duration,
     };
 
     if (tags.track?.no != null) record.trackNumber = tags.track.no;
