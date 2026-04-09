@@ -49,59 +49,6 @@
   opacity: 0.2;
 }
 
-.dropdown {
-  background: oklch(from var(--bg-color) calc(l + 0.2) c h);
-  border: 0;
-  border-radius: var(--radius-md);
-  box-shadow: var(--box-shadow-xl);
-  color: var(--text-color);
-  font-size: var(--fs-sm);
-  margin: 0;
-  margin-top: var(--space-3xs);
-  padding: 0;
-  position: fixed;
-  position-area: bottom span-left;
-  text-align: left;
-
-  @media (prefers-color-scheme: dark) {
-    background: oklch(from var(--bg-color) calc(l - 0.05) c h);
-  }
-
-  &::backdrop {
-    background: transparent;
-  }
-
-  & > button {
-    align-items: center;
-    background: none;
-    border: 0;
-    border-radius: 0;
-    color: inherit;
-    cursor: pointer;
-    display: flex;
-    font-family: inherit;
-    font-size: inherit;
-    font-weight: inherit;
-    gap: var(--space-xs);
-    min-width: var(--space-3xl);
-    padding: var(--space-xs) var(--space-sm);
-    text-align: left;
-    width: 100%;
-
-    & > * {
-      pointer-events: none;
-    }
-  }
-
-  & > button:not(:last-child) {
-    border-bottom: 1px solid var(--border-color);
-  }
-
-  i {
-    opacity: 0.4;
-  }
-}
-
 .dropzone {
   align-items: center;
   border: 2px dashed var(--border-color);

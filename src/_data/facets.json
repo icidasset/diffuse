@@ -163,6 +163,13 @@
     "desc": "Connect to Rocksky to setup the Rocksky scrobbler."
   },
   {
+    "url": "facets/data/playlists/index.html",
+    "title": "Playlists",
+    "category": "Data",
+    "featured": true,
+    "desc": "An overview of all playlists and their contents."
+  },
+  {
     "url": "facets/data/sources/index.html",
     "title": "Sources",
     "category": "Data",

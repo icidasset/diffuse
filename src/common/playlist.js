@@ -187,7 +187,7 @@ export function sort(items) {
  * @param {any} val
  * @param {string[] | undefined} transformations
  */
-function transform(val, transformations) {
+export function transform(val, transformations) {
   if (!val || !transformations) return val;
   return transformations.reduce((v, t) => {
     try {
