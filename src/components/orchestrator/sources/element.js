@@ -22,14 +22,29 @@ class Sources extends BroadcastableDiffuseElement {
   // SIGNALS
 
   #sources = signal(/** @type {{ [scheme: string]: Source[] }} */ ({}));
+  #disabled = signal(/** @type {string[]} */ ([]));
 
   // STATE
 
   sources = this.#sources.get;
+  disabled = this.#disabled.get;
 
   #output = signal(/** @type {OutputElement | null} */ (null));
 
   // METHODS
+
+  /**
+   * Returns whether the given source URI is disabled.
+   * Strips query params before comparing, matching how {@link toggle} stores keys.
+   *
+   * @param {string} uri
+   * @returns {boolean}
+   */
+  isDisabled(uri) {
+    const q = uri.indexOf("?");
+    const key = q === -1 ? uri : uri.slice(0, q);
+    return this.#disabled.get().includes(key);
+  }
 
   /**
    * @param {string} uri
@@ -104,6 +119,20 @@ class Sources extends BroadcastableDiffuseElement {
 
     // Signals
     this.#output.value = output;
+
+    // Effects
+    this.effect(() => {
+      const col = output.settings.collection();
+      if (col.state !== "loaded") { this.#disabled.value = []; return; }
+      const setting = col.data.find((s) => s.key === DISABLED_KEY);
+      if (!setting) { this.#disabled.value = []; return; }
+      try {
+        const parsed = JSON.parse(setting.value);
+        this.#disabled.value = Array.isArray(parsed) ? parsed : [];
+      } catch {
+        this.#disabled.value = [];
+      }
+    });
 
     // Single input mode + dependencies
     const singleInputMode = !!input.SCHEME;

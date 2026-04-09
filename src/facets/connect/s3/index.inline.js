@@ -144,7 +144,9 @@ effect(() => {
       isInput,
       isOutput,
       isSelectedOutput: isOutput && isSelectedOutput,
+      isDisabled: uri ? sourcesOrchestrator.isDisabled(uri) : false,
       onRemove: () => removeBucket(uri, isOutput),
+      onToggleDisabled: uri ? () => sourcesOrchestrator.toggle(uri) : undefined,
     })),
   );
 });

@@ -5,7 +5,7 @@ import { html, nothing, render as litRender } from "lit-html";
  */
 
 /**
- * @typedef {{ name: string; detail: string; isInput: boolean; isOutput: boolean; isSelectedOutput: boolean; onRemove: () => void }} ConnectItem
+ * @typedef {{ name: string; detail: string; isInput: boolean; isOutput: boolean; isSelectedOutput: boolean; isDisabled?: boolean; onRemove: () => void; onToggleDisabled?: () => void }} ConnectItem
  */
 
 /**
@@ -203,9 +203,9 @@ export function setup(
       litRender(
         html`
           ${items.map(
-            ({ name, detail, isInput, isOutput, isSelectedOutput, onRemove }) =>
+            ({ name, detail, isInput, isOutput, isSelectedOutput, isDisabled, onRemove, onToggleDisabled }, index) =>
               html`
-                <li class="connect-item">
+                <li class="connect-item${isDisabled ? " connect-item--disabled" : ""}">
                   <div class="connect-item__info">
                     <span class="connect-item__name">${name}</span>
                     <span class="connect-item__detail">${detail}</span>
@@ -220,11 +220,35 @@ export function setup(
                   </div>
                   <button
                     class="button--plain button--icon"
-                    aria-label="Remove"
-                    @click="${onRemove}"
+                    aria-label="More"
+                    popovertarget="connect-item-menu-${index}"
                   >
-                    <i class="ph-fill ph-skull"></i>
+                    <i class="ph-fill ph-dots-three-outline-vertical"></i>
                   </button>
+                  <div id="connect-item-menu-${index}" class="dropdown" popover>
+                    ${onToggleDisabled
+                      ? html`
+                        <button
+                          @click="${(/** @type {MouseEvent} */ e) => {
+                            /** @type {HTMLElement | null} */ (/** @type {HTMLElement} */ (e.currentTarget).closest("[popover]"))?.hidePopover();
+                            onToggleDisabled();
+                          }}"
+                        >
+                          <i class="ph-fill ${isDisabled ? "ph-eye" : "ph-eye-slash"}"></i>
+                          ${isDisabled ? "Enable" : "Disable"}
+                        </button>
+                      `
+                      : nothing}
+                    <button
+                      @click="${(/** @type {MouseEvent} */ e) => {
+                        /** @type {HTMLElement | null} */ (/** @type {HTMLElement} */ (e.currentTarget).closest("[popover]"))?.hidePopover();
+                        onRemove();
+                      }}"
+                    >
+                      <i class="ph-fill ph-skull"></i>
+                      Delete
+                    </button>
+                  </div>
                 </li>
               `,
           )}

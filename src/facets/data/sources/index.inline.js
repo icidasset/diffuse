@@ -2,9 +2,7 @@ import { html, render as litRender } from "lit-html";
 
 import * as Output from "~/common/output.js";
 import foundation from "~/common/foundation.js";
-import { computed, effect } from "~/common/signal.js";
-
-import { DISABLED_KEY as DISABLED_SOURCES_KEY } from "~/components/orchestrator/sources/constants.js";
+import { effect } from "~/common/signal.js";
 
 import { SCHEME as SCHEME_EPHEMERAL_CACHE } from "~/components/input/ephemeral-cache/constants.js";
 import { SCHEME as SCHEME_HTTPS } from "~/components/input/https/constants.js";
@@ -42,32 +40,6 @@ await Promise.all([
   customElements.whenDefined(outputOrchestrator.localName),
 ]);
 
-const disabledSources = computed(() => {
-  const col = outputOrchestrator.settings.collection();
-  if (col.state !== "loaded") return /** @type {string[]} */ ([]);
-
-  const setting = col.data.find((s) => s.key === DISABLED_SOURCES_KEY);
-  if (!setting) return /** @type {string[]} */ ([]);
-
-  try {
-    const parsed = JSON.parse(setting.value);
-    return Array.isArray(parsed) ? /** @type {string[]} */ (parsed) : [];
-  } catch {
-    return /** @type {string[]} */ ([]);
-  }
-});
-
-/**
- * Returns the part of a source URI suitable for `startsWith` matching against
- * track URIs. Some inputs (e.g. OpenSubsonic) include query params in the
- * source URI that won't appear at the start of a track URI, so we strip them.
- *
- * @param {string} uri
- */
-function trackPrefix(uri) {
-  const q = uri.indexOf("?");
-  return q === -1 ? uri : uri.slice(0, q);
-}
 
 ////////////////////////////////////////////
 // UI
@@ -78,9 +50,11 @@ const list =
 const empty =
   /** @type {HTMLElement} */ (document.querySelector("#sources-empty"));
 
+/** @param {string} uri */
+const trackPrefix = (uri) => { const q = uri.indexOf("?"); return q === -1 ? uri : uri.slice(0, q); };
+
 effect(() => {
   const sourcesRecord = sourcesOrchestrator.sources();
-  const disabled = disabledSources();
 
   const tracksCol = outputOrchestrator.tracks.collection();
   const tracks = tracksCol.state === "loaded" ? tracksCol.data : [];
@@ -97,9 +71,9 @@ effect(() => {
       ${entries.map(([scheme, sources]) => {
         if (scheme === SCHEME_EPHEMERAL_CACHE) {
           const uri = `${SCHEME_EPHEMERAL_CACHE}://`;
-          const isDisabled = disabled.includes(uri);
+          const isDisabled = sourcesOrchestrator.isDisabled(uri);
           const trackCount = tracks.filter((t) =>
-            t.uri.startsWith(trackPrefix(uri))
+            t.uri.startsWith(uri)
           ).length;
           return html`
             <li class="sources-scheme">${SCHEME_NAMES[scheme] ?? scheme}</li>
@@ -136,7 +110,7 @@ effect(() => {
         return html`
           <li class="sources-scheme">${SCHEME_NAMES[scheme] ?? scheme}</li>
           ${sources.map(({ label, uri }) => {
-            const isDisabled = disabled.includes(trackPrefix(uri));
+            const isDisabled = sourcesOrchestrator.isDisabled(uri);
             const trackCount = tracks.filter((t) =>
               t.uri.startsWith(trackPrefix(uri))
             ).length;

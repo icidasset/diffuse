@@ -172,7 +172,9 @@ effect(() => {
       isInput: true,
       isOutput: false,
       isSelectedOutput: false,
+      isDisabled: sourcesOrchestrator.isDisabled(uri),
       onRemove: () => removeEntry(uri),
+      onToggleDisabled: () => sourcesOrchestrator.toggle(uri),
     })),
   );
 });
