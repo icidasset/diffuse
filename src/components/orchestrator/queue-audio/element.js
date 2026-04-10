@@ -76,11 +76,15 @@ class QueueAudioOrchestrator extends BroadcastableDiffuseElement {
     const tracksCol = this.output?.tracks.collection();
     const tracks = tracksCol?.state === "loaded" ? tracksCol.data : undefined;
 
+    // Read synchronously so leadership changes (e.g. tab takeover) re-trigger this effect.
+    const statusPromise = this.broadcasted ? this.broadcastingStatus() : undefined;
+
     const activeTrack = activeItem
       ? tracks?.find((t) => t.id === activeItem.id)
       : undefined;
 
-    if ((await this.isLeader()) === false) return;
+    const status = statusPromise ? await statusPromise : undefined;
+    if (status && !status.leader) return;
 
     const isPlaying = untracked(audio.isPlaying);
 

@@ -298,8 +298,26 @@ class AudioEngine extends BroadcastableDiffuseElement {
       (a) => existingMap.get(a.id)?.isPreload !== a.isPreload,
     );
 
-    if (hasNewIds || hasPreloadChanges) {
+    const hasUrlChanges = resolvedAudio.some(
+      (a) => existingMap.get(a.id)?.url !== a.url,
+    );
+
+    if (hasNewIds || hasPreloadChanges || hasUrlChanges) {
       this.#items.value = resolvedAudio;
+    }
+
+    // When only the URL changed for an existing item (e.g. tab leadership handoff invalidated
+    // a blob URL), the same <de-audio-item> element is reused via `keyed`. lit-html will
+    // update <source src> but the browser won't reload on its own — call audio.load() if the
+    // element hasn't successfully loaded yet so it picks up the fresh URL.
+    if (hasUrlChanges && !hasNewIds) {
+      for (const a of resolvedAudio) {
+        if (existingMap.has(a.id) && existingMap.get(a.id)?.url !== a.url) {
+          this.#withAudioNode(a.id, (audio) => {
+            if (audio.readyState === 0 || audio.error) audio.load();
+          });
+        }
+      }
     }
 
     if (args.play) this.play(args.play);
