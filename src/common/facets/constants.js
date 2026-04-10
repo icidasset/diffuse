@@ -1,3 +1,11 @@
+/**
+ * @example TYPE is the ATProto type string for facets
+ * ```js
+ * import { TYPE } from "~/common/facets/constants.js";
+ *
+ * if (TYPE !== "sh.diffuse.output.facet") throw new Error(`expected "sh.diffuse.output.facet", got "${TYPE}"`);
+ * ```
+ */
 export const TYPE = /** @type {const} */ ("sh.diffuse.output.facet");
 
 export const STARTING_SET_DISABLED = [

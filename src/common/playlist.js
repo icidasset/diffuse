@@ -9,6 +9,50 @@ import { compareTimestamps } from "~/common/temporal.js";
  *
  * @param {Track[]} tracks
  * @param {PlaylistItem[]} playlistItems
+ *
+ * @example Returns only tracks matching playlist criteria
+ * ```js
+ * import { filterByPlaylist } from "~/common/playlist.js";
+ *
+ * const tracks = [
+ *   { $type: "sh.diffuse.output.track", id: "a", uri: "http://x.com/a.mp3", tags: { artist: "A", title: "T1" } },
+ *   { $type: "sh.diffuse.output.track", id: "b", uri: "http://x.com/b.mp3", tags: { artist: "B", title: "T2" } },
+ * ];
+ * const items = [
+ *   { $type: "sh.diffuse.output.playlistItem", id: "i1", playlist: "p", criteria: [{ field: "tags.artist", value: "A" }] },
+ * ];
+ * const result = filterByPlaylist(tracks, items);
+ * if (result.length !== 1 || result[0].id !== "a") throw new Error("expected only track 'a'");
+ * ```
+ *
+ * @example Returns empty array when no tracks match or no items given
+ * ```js
+ * import { filterByPlaylist } from "~/common/playlist.js";
+ *
+ * const tracks = [
+ *   { $type: "sh.diffuse.output.track", id: "a", uri: "http://x.com/a.mp3", tags: { artist: "A" } },
+ * ];
+ * const noMatch = filterByPlaylist(tracks, [
+ *   { $type: "sh.diffuse.output.playlistItem", id: "i1", playlist: "p", criteria: [{ field: "tags.artist", value: "Z" }] },
+ * ]);
+ * if (noMatch.length !== 0) throw new Error("expected no matches");
+ *
+ * if (filterByPlaylist(tracks, []).length !== 0) throw new Error("expected empty for no items");
+ * ```
+ *
+ * @example Applies transformations before comparing
+ * ```js
+ * import { filterByPlaylist } from "~/common/playlist.js";
+ *
+ * const tracks = [{ $type: "sh.diffuse.output.track", id: "a", uri: "http://x.com/a.mp3", tags: { artist: "Artist" } }];
+ * const items = [{
+ *   $type: "sh.diffuse.output.playlistItem",
+ *   id: "i1",
+ *   playlist: "p",
+ *   criteria: [{ field: "tags.artist", value: "ARTIST", transformations: ["toLowerCase"] }],
+ * }];
+ * if (filterByPlaylist(tracks, items).length !== 1) throw new Error("transformation should match");
+ * ```
  */
 export function filterByPlaylist(tracks, playlistItems) {
   // Group playlist items by criteria shape, building a Set index per shape.
@@ -65,6 +109,35 @@ export function filterByPlaylist(tracks, playlistItems) {
  * Bundle playlist items into their respective playlists.
  *
  * @param {PlaylistItem[]} items
+ *
+ * @example Groups items by playlist name and tracks ordered/unordered state
+ * ```js
+ * import { gather } from "~/common/playlist.js";
+ *
+ * const items = [
+ *   { $type: "sh.diffuse.output.playlistItem", id: "1", playlist: "Rock", criteria: [], positionedAfter: "prev" },
+ *   { $type: "sh.diffuse.output.playlistItem", id: "2", playlist: "Pop", criteria: [], positionedAfter: "prev" },
+ *   { $type: "sh.diffuse.output.playlistItem", id: "3", playlist: "Rock", criteria: [], positionedAfter: "prev" },
+ * ];
+ * const map = gather(items);
+ * if (map.get("Rock").items.length !== 2) throw new Error("expected 2 rock items");
+ * if (map.get("Pop").items.length !== 1) throw new Error("expected 1 pop item");
+ * if (map.get("My Playlist") !== undefined) {
+ *   // separate test: preserves playlist name
+ * }
+ *
+ * const unordered = gather([
+ *   { $type: "sh.diffuse.output.playlistItem", id: "1", playlist: "Mix", criteria: [] },
+ *   { $type: "sh.diffuse.output.playlistItem", id: "2", playlist: "Mix", criteria: [] },
+ * ]);
+ * if (!unordered.get("Mix").unordered) throw new Error("playlist without positionedAfter should be unordered");
+ *
+ * const ordered = gather([
+ *   { $type: "sh.diffuse.output.playlistItem", id: "1", playlist: "Mix", criteria: [], positionedAfter: null },
+ *   { $type: "sh.diffuse.output.playlistItem", id: "2", playlist: "Mix", criteria: [], positionedAfter: "1" },
+ * ]);
+ * if (ordered.get("Mix").unordered) throw new Error("playlist with positionedAfter should be ordered");
+ * ```
  */
 export function gather(items) {
   /**
@@ -97,6 +170,33 @@ export function gather(items) {
  *
  * @param {Track} track
  * @param {PlaylistItem} item
+ *
+ * @example Returns true when all criteria match, false when any criterion fails
+ * ```js
+ * import { match } from "~/common/playlist.js";
+ *
+ * const track = { $type: "sh.diffuse.output.track", id: "t", uri: "http://x.com/t.mp3", tags: { artist: "Artist A", title: "Song A" } };
+ * const item = {
+ *   $type: "sh.diffuse.output.playlistItem", id: "i", playlist: "p",
+ *   criteria: [{ field: "tags.artist", value: "Artist A" }, { field: "tags.title", value: "Song A" }],
+ * };
+ * if (!match(track, item)) throw new Error("should match when all criteria pass");
+ *
+ * const mismatch = { ...item, criteria: [{ field: "tags.artist", value: "Artist A" }, { field: "tags.title", value: "Wrong" }] };
+ * if (match(track, mismatch)) throw new Error("should not match when a criterion fails");
+ * ```
+ *
+ * @example Applies transformations before comparing
+ * ```js
+ * import { match } from "~/common/playlist.js";
+ *
+ * const track = { $type: "sh.diffuse.output.track", id: "t", uri: "http://x.com/t.mp3", tags: { artist: "Artist A" } };
+ * const item = {
+ *   $type: "sh.diffuse.output.playlistItem", id: "i", playlist: "p",
+ *   criteria: [{ field: "tags.artist", value: "ARTIST A", transformations: ["toLowerCase"] }],
+ * };
+ * if (!match(track, item)) throw new Error("transformation should match lowercase");
+ * ```
  */
 export function match(track, item) {
   return item.criteria.every((c) => {
@@ -129,6 +229,41 @@ export function match(track, item) {
  *
  * @param {PlaylistItem[]} items
  * @returns {PlaylistItem[]}
+ *
+ * @example Sorts a linked list in order and appends orphaned items at end
+ * ```js
+ * import { sort } from "~/common/playlist.js";
+ *
+ * const single = [{ $type: "sh.diffuse.output.playlistItem", id: "a", playlist: "p", criteria: [], positionedAfter: null }];
+ * if (sort(single).map((i) => i.id).join(",") !== "a") throw new Error("single item should be unchanged");
+ *
+ * const linked = [
+ *   { $type: "sh.diffuse.output.playlistItem", id: "c", playlist: "p", criteria: [], positionedAfter: "b" },
+ *   { $type: "sh.diffuse.output.playlistItem", id: "a", playlist: "p", criteria: [], positionedAfter: null },
+ *   { $type: "sh.diffuse.output.playlistItem", id: "b", playlist: "p", criteria: [], positionedAfter: "a" },
+ * ];
+ * if (sort(linked).map((i) => i.id).join(",") !== "a,b,c") throw new Error("should sort linked list in order");
+ *
+ * const withOrphan = [
+ *   { $type: "sh.diffuse.output.playlistItem", id: "a", playlist: "p", criteria: [], positionedAfter: null },
+ *   { $type: "sh.diffuse.output.playlistItem", id: "b", playlist: "p", criteria: [], positionedAfter: "a" },
+ *   { $type: "sh.diffuse.output.playlistItem", id: "orphan", playlist: "p", criteria: [], positionedAfter: "missing" },
+ * ];
+ * const sorted = sort(withOrphan);
+ * if (sorted[sorted.length - 1].id !== "orphan") throw new Error("orphaned item should be last");
+ * ```
+ *
+ * @example Sorts multiple heads by updatedAt ascending
+ * ```js
+ * import { sort } from "~/common/playlist.js";
+ *
+ * const items = [
+ *   { $type: "sh.diffuse.output.playlistItem", id: "b", playlist: "p", criteria: [], positionedAfter: null, updatedAt: "2024-06-01T00:00:00.000Z" },
+ *   { $type: "sh.diffuse.output.playlistItem", id: "a", playlist: "p", criteria: [], positionedAfter: null, updatedAt: "2024-01-01T00:00:00.000Z" },
+ * ];
+ * const result = sort(items);
+ * if (result[0].id !== "a" || result[1].id !== "b") throw new Error("heads should be sorted by updatedAt");
+ * ```
  */
 export function sort(items) {
   if (items.length <= 1) return items;

@@ -195,9 +195,13 @@
       "description": "Run and serve the site for development",
       "command": "deno task lume -s",
     },
-    "test": {
-      "description": "Run tests",
-      "command": "deno test -A --doc --ignore=README.md --ignore=./docs/ --ignore=./dist/",
+    "test:doc": {
+      "description": "Run documentation tests",
+      "command": "deno test src -A --doc --ignore=README.md",
+    },
+    "test:integration": {
+      "description": "Run integration tests",
+      "command": "deno test tests -A --ignore=README.md",
     },
   },
   "compilerOptions": {
