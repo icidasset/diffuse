@@ -300,7 +300,7 @@ class ATProtoOutput extends BroadcastedOutputElement {
     if (!rpc) return;
     try {
       const result = await ok(rpc.get("com.atproto.repo.describeRepo", {
-        params: { repo: did },
+        params: { repo: /** @type {import("@atcute/lexicons").ActorIdentifier} */ (did) },
       }));
       if (this.#did.value === did) {
         this.#handle.value = result.handle ?? null;
@@ -458,10 +458,11 @@ class ATProtoOutput extends BroadcastedOutputElement {
 
     try {
       const records = [];
+      /** @type {string | undefined} */
       let cursor;
       do {
         const page = await ok(this.#rpc.get("com.atproto.repo.listRecords", {
-          params: { repo: did, collection, limit: 100, cursor },
+          params: { repo: /** @type {import("@atcute/lexicons").ActorIdentifier} */ (did), collection: /** @type {`${string}.${string}.${string}`} */ (collection), limit: 100, cursor },
         }));
         records.push(...page.records.map((r) => /** @type {T} */ (r.value)));
         cursor = page.cursor;
@@ -585,14 +586,15 @@ class ATProtoOutput extends BroadcastedOutputElement {
       /** @type {Map<string, { rkey: string, value: unknown }>} */
       const existing = new Map();
 
+      /** @type {string | undefined} */
       let cursor;
       do {
         const page = await ok(rpc.get("com.atproto.repo.listRecords", {
-          params: { repo: did, collection, limit: 100, cursor },
+          params: { repo: did, collection: /** @type {`${string}.${string}.${string}`} */ (collection), limit: 100, cursor },
         }));
         for (const { uri, value } of page.records) {
           const record = /** @type {any} */ (value);
-          const rkey = uri.split("/").at(-1);
+          const rkey = /** @type {string} */ (uri.split("/").at(-1));
           existing.set(record.id, { rkey, value: record });
         }
         cursor = page.cursor;

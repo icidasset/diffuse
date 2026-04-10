@@ -152,10 +152,10 @@ async function removeDuplicates(name, items) {
  */
 function showDetails(name, tracks, items) {
   const seenIds = new Set();
-  const found = items
+  const found = /** @type {Track[]} */ (items
     .map((item) => tracks.find((t) => Playlist.match(t, item)))
     .filter((t) => t != null && !seenIds.has(t.id) && seenIds.add(t.id))
-    .sort((a, b) => (a.tags?.title ?? "").localeCompare(b.tags?.title ?? ""));
+    .sort((a, b) => (a?.tags?.title ?? "").localeCompare(b?.tags?.title ?? "")));
 
   const notFound = items
     .filter((item) => !tracks.some((t) => Playlist.match(t, item)))

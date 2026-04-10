@@ -16,7 +16,7 @@ import { html, nothing, render as litRender } from "lit-html";
  * @param {Object} config
  * @param {string} config.title - Card header title
  * @param {TemplateResult | string} config.description - Content shown on the left side
- * @param {TemplateResult} [config.rightContent] - Extra content shown at the top of the right side
+ * @param {TemplateResult | typeof nothing} [config.rightContent] - Extra content shown at the top of the right side
  * @param {TemplateResult} config.formFields - Form body content (inputs, footnotes, etc.)
  * @param {(mode: 'input' | 'output') => Promise<void>} config.onSubmit
  * @param {boolean} [config.hasInput] - Whether to show the "Add audio input" button (default: true)

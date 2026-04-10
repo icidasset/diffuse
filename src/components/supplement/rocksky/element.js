@@ -201,7 +201,7 @@ class RockskyScrobbler extends BroadcastableDiffuseElement {
     };
 
     if (tags.track?.no != null) record.trackNumber = tags.track.no;
-    if (tags.disk?.no != null) record.discNumber = tags.disk.no;
+    if (tags.disc?.no != null) record.discNumber = tags.disc.no;
 
     record.createdAt = new Date(startedAt).toISOString();
 
