@@ -20,7 +20,7 @@ export * from "alien-signals";
  *
  * const a = signal(0);
  * const b = signal(0);
- * const values = [];
+ * const values = [0]; values.length = 0; // typed as number[]
  *
  * effect(() => { values.push(a.get() + b.get()); });
  *
@@ -50,15 +50,16 @@ export const batch = (fn) => {
  * ```js
  * import { signal } from "~/common/signal.js";
  *
- * const s = signal(42);
- * if (s.get() !== 42) throw new Error("get should return initial value");
- * if (s.value !== 42) throw new Error("value getter should return initial value");
+ * const num = signal(42);
+ * if (num.get() !== 42) throw new Error("get should return initial value");
+ * if (num.value !== 42) throw new Error("value getter should return initial value");
  *
- * s.set(99);
- * if (s.get() !== 99) throw new Error("get should return updated value");
+ * num.set(99);
+ * if (num.get() !== 99) throw new Error("get should return updated value");
  *
- * s.value = "b";
- * if (s.value !== "b") throw new Error("value setter should update value");
+ * const str = signal("a");
+ * str.value = "b";
+ * if (str.value !== "b") throw new Error("value setter should update value");
  * ```
  *
  * @example compare option skips update when values are equal by custom comparator

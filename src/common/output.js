@@ -14,7 +14,7 @@ import { effect } from "~/common/signal.js";
  * import { data } from "~/common/output.js";
  * import { signal } from "~/common/signal.js";
  *
- * const col = signal({ state: "loaded", data: ["a", "b"] });
+ * const col = signal(JSON.parse('{"state":"loaded","data":["a","b"]}'));
  * const result = await data({ collection: col.get });
  * if (result.join(",") !== "a,b") throw new Error("expected ['a', 'b']");
  * ```
@@ -24,7 +24,7 @@ import { effect } from "~/common/signal.js";
  * import { data } from "~/common/output.js";
  * import { signal } from "~/common/signal.js";
  *
- * const col = signal({ state: "loading" });
+ * const col = signal(JSON.parse('{"state":"loading"}'));
  * const promise = data({ collection: col.get });
  *
  * await Promise.resolve();

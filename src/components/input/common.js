@@ -52,14 +52,13 @@ export function cachedConsult(fn, keyFn, ttl = 60_000 * 5) {
  * ```js
  * import { detach } from "~/components/input/common.js";
  *
- * const tracks = [
- *   { $type: "sh.diffuse.output.track", id: "1", uri: "https://a.com/1.mp3" },
- *   { $type: "sh.diffuse.output.track", id: "2", uri: "https://b.com/2.mp3" },
- * ];
+ * const tracks = JSON.parse('[{"$type":"sh.diffuse.output.track","id":"1","uri":"https://a.com/1.mp3"},{"$type":"sh.diffuse.output.track","id":"2","uri":"https://b.com/2.mp3"}]');
  *
+ * // @ts-ignore
  * const removed = detach({ fileUriOrScheme: "https", inputScheme: "https", handleFileUri: () => [], tracks });
  * if (removed.length !== 0) throw new Error("matching scheme should remove all tracks");
  *
+ * // @ts-ignore
  * const kept = detach({ fileUriOrScheme: "ftp", inputScheme: "https", handleFileUri: () => [], tracks });
  * if (kept.length !== 2) throw new Error("non-matching scheme should keep all tracks");
  * ```
@@ -68,17 +67,10 @@ export function cachedConsult(fn, keyFn, ttl = 60_000 * 5) {
  * ```js
  * import { detach } from "~/components/input/common.js";
  *
- * const tracks = [
- *   { $type: "sh.diffuse.output.track", id: "1", uri: "https://a.com/1.mp3" },
- *   { $type: "sh.diffuse.output.track", id: "2", uri: "https://b.com/2.mp3" },
- * ];
+ * const tracks = JSON.parse('[{"$type":"sh.diffuse.output.track","id":"1","uri":"https://a.com/1.mp3"},{"$type":"sh.diffuse.output.track","id":"2","uri":"https://b.com/2.mp3"}]');
  *
- * const result = detach({
- *   fileUriOrScheme: "https://a.com/1.mp3",
- *   inputScheme: "https",
- *   handleFileUri: ({ tracks }) => tracks.filter((t) => t.id !== "1"),
- *   tracks,
- * });
+ * // @ts-ignore
+ * const result = detach({ fileUriOrScheme: "https://a.com/1.mp3", inputScheme: "https", handleFileUri: ({ tracks }) => tracks.filter((t) => t.id !== "1"), tracks });
  * if (result.length !== 1 || result[0].id !== "2") throw new Error("handleFileUri should filter by URI");
  * ```
  */

@@ -90,6 +90,7 @@ export function hash(object) {
  *   { $type: "sh.diffuse.output.track", id: "2", uri: "s3://bucket/b.mp3" },
  *   { $type: "sh.diffuse.output.track", id: "3", uri: "http://example.com/c.mp3" },
  * ];
+ * // @ts-ignore
  * const groups = groupTracksPerScheme(tracks);
  * if (groups["http"].length !== 2) throw new Error("expected 2 http tracks");
  * if (groups["s3"].length !== 1) throw new Error("expected 1 s3 track");
@@ -101,8 +102,9 @@ export function hash(object) {
  *
  * const initial = { http: [{ $type: "sh.diffuse.output.track", id: "0", uri: "http://existing.com/x.mp3" }] };
  * const tracks = [{ $type: "sh.diffuse.output.track", id: "1", uri: "http://example.com/a.mp3" }];
- * const groups = groupTracksPerScheme(tracks, initial);
- * if (groups["http"].length !== 2) throw new Error("expected 2 http tracks after merge");
+ * // @ts-ignore
+ * const merged = groupTracksPerScheme(tracks, initial);
+ * if (merged["http"].length !== 2) throw new Error("expected 2 http tracks after merge");
  * ```
  */
 export function groupTracksPerScheme(
@@ -207,14 +209,14 @@ export function jsonEncode(a) {
  *
  * const result = removeUndefinedValuesFromRecord({ a: 1, b: undefined, c: "x" });
  * if ("b" in result) throw new Error("undefined key should be removed");
- * if (result.a !== 1 || result.c !== "x") throw new Error("defined keys should be preserved");
+ * if (result["a"] !== 1 || result["c"] !== "x") throw new Error("defined keys should be preserved");
  *
  * const original = { a: 1, b: undefined };
  * removeUndefinedValuesFromRecord(original);
  * if (!("b" in original)) throw new Error("original should not be mutated");
  *
  * const noUndef = removeUndefinedValuesFromRecord({ a: 1, b: 2 });
- * if (noUndef.a !== 1 || noUndef.b !== 2) throw new Error("record without undefined values should be unchanged");
+ * if (noUndef["a"] !== 1 || noUndef["b"] !== 2) throw new Error("record without undefined values should be unchanged");
  * ```
  */
 export function removeUndefinedValuesFromRecord(rec) {

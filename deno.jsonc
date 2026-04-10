@@ -199,6 +199,10 @@
       "description": "Run documentation tests",
       "command": "deno test src -A --doc --ignore=README.md",
     },
+    "test:unit": {
+      "description": "Run unit tests (documentation tests)",
+      "command": "deno task test:doc",
+    },
     "test:integration": {
       "description": "Run integration tests",
       "command": "deno test tests -A --ignore=README.md",
