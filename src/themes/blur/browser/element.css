@@ -1,0 +1,245 @@
+:host {
+  display: flex;
+  flex-direction: column;
+  font-size: var(--fs-sm);
+  height: 100%;
+  overflow: hidden;
+}
+
+/***********************************
+ * Toolbar
+ ***********************************/
+
+.toolbar {
+  align-items: center;
+  border-bottom: 1px solid color-mix(in oklch, currentColor 12%, transparent);
+  display: flex;
+  gap: var(--space-sm);
+  padding: var(--space-xs);
+}
+
+.search-field {
+  align-items: center;
+  color: color-mix(in oklch, currentColor 45%, transparent);
+  display: flex;
+  flex: 1;
+  gap: var(--space-2xs);
+}
+
+.search-field i {
+  flex-shrink: 0;
+  font-size: var(--fs-sm);
+}
+
+.search-field input {
+  background: transparent;
+  border: none;
+  color: inherit;
+  flex: 1;
+  font-size: var(--fs-sm);
+  min-width: 0;
+  outline: none;
+}
+
+.search-field input::placeholder {
+  color: color-mix(in oklch, currentColor 60%, transparent);
+}
+
+.search-field input:focus {
+  color: currentColor;
+}
+
+.toolbar-actions {
+  align-items: center;
+  display: flex;
+  gap: var(--space-2xs);
+}
+
+.toolbar-actions select {
+  background: transparent;
+  border: 1px solid color-mix(in oklch, currentColor 20%, transparent);
+  border-radius: var(--radius-md);
+  color: inherit;
+  font-size: var(--fs-xs);
+  max-width: 12rem;
+  padding: var(--space-3xs) var(--space-xs);
+}
+
+/***********************************
+ * Table header
+ ***********************************/
+
+.table-header {
+  border-bottom: 1px solid color-mix(in oklch, currentColor 12%, transparent);
+  color: color-mix(in oklch, currentColor 50%, transparent);
+  display: flex;
+  font-size: var(--fs-xs);
+  font-weight: 500;
+  letter-spacing: var(--tracking-wide);
+  padding: 0 var(--space-xs);
+  text-transform: uppercase;
+  user-select: none;
+}
+
+.table-header > div {
+  align-items: center;
+  cursor: pointer;
+  display: flex;
+  gap: var(--space-3xs);
+  padding: var(--space-2xs) var(--space-2xs) var(--space-2xs) 0;
+}
+
+.table-header > div:hover {
+  color: currentColor;
+}
+
+.table-header .col--sorted {
+  color: color-mix(in oklch, currentColor 80%, transparent);
+}
+
+/***********************************
+ * Column widths
+ ***********************************/
+
+.col-fav {
+  flex-shrink: 0;
+  width: 3rem;
+}
+
+.col-title {
+  flex: 2;
+  min-width: 0;
+}
+
+.col-artist {
+  flex: 1.5;
+  min-width: 0;
+}
+
+.col-album {
+  flex: 1.5;
+  min-width: 0;
+}
+
+/***********************************
+ * Scroll panel
+ ***********************************/
+
+.scroll-panel {
+  flex: 1;
+  overflow-y: auto;
+  min-height: 0;
+}
+
+.virtual-scroll {
+  position: relative;
+}
+
+/***********************************
+ * Group header
+ ***********************************/
+
+.group-header {
+  align-items: center;
+  color: color-mix(in oklch, currentColor 45%, transparent);
+  height: 36px;
+  left: 0;
+  position: absolute;
+  right: 0;
+  display: flex;
+  font-size: var(--fs-xs);
+  font-weight: 500;
+  gap: var(--space-2xs);
+  letter-spacing: var(--tracking-wide);
+  padding: 0 var(--space-xs);
+  text-transform: uppercase;
+}
+
+.group-header i {
+  font-size: var(--fs-sm);
+}
+
+/***********************************
+ * Track row
+ ***********************************/
+
+.track-row {
+  align-items: center;
+  border-bottom: 1px solid color-mix(in oklch, currentColor 6%, transparent);
+  cursor: pointer;
+  display: flex;
+  height: 44px;
+  left: 0;
+  position: absolute;
+  right: 0;
+  padding: 0 var(--space-xs);
+  transition: background-color 80ms;
+}
+
+.track-row:hover {
+  background-color: color-mix(in oklch, currentColor 4%, transparent);
+}
+
+.track-row > div {
+  overflow: hidden;
+}
+
+.track-row .col-fav {
+  align-items: center;
+  display: flex;
+  flex-shrink: 0;
+}
+
+.track-row .col-title,
+.track-row .col-artist,
+.track-row .col-album {
+  padding-right: var(--space-sm);
+}
+
+.track-row span {
+  display: block;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.track-row--playing .track-title {
+  font-weight: 600;
+}
+
+/***********************************
+ * Favourite button
+ ***********************************/
+
+.fav-btn {
+  background: none;
+  border: none;
+  color: color-mix(in oklch, currentColor 20%, transparent);
+  cursor: pointer;
+  font-size: 90%;
+  line-height: 0;
+  padding: var(--space-2xs);
+  padding-left: calc(var(--space-xs) - var(--space-2xs));
+}
+
+.fav-btn:hover {
+  color: color-mix(in oklch, currentColor 60%, transparent);
+}
+
+.fav-btn--active {
+  color: oklch(0.55 0.2 25);
+}
+
+.fav-btn--active:hover {
+  color: oklch(0.45 0.2 25);
+}
+
+/***********************************
+ * Loading
+ ***********************************/
+
+.loading {
+  color: color-mix(in oklch, currentColor 40%, transparent);
+  font-size: var(--fs-sm);
+  padding: var(--space-lg) var(--space-md);
+}

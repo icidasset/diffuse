@@ -74,10 +74,18 @@ class ScopedTracksOrchestrator extends BroadcastableDiffuseElement {
   #tracksSearch = signal(/** @type {Track[]} */ ([]));
   #tracksFinal = signal(/** @type {Track[]} */ ([]));
 
+  #tracksGrouped = computed(() => {
+    const tracks = this.#tracksFinal.value;
+    const groupBy = this.#scope.value?.groupBy();
+    if (!groupBy) return undefined;
+    return buildGroups(tracks, groupBy);
+  });
+
   // STATE
 
   supplyFingerprint = this.#supplyFingerprint.get;
   tracks = this.#tracksFinal.get;
+  groups = this.#tracksGrouped.get;
 
   // LIFECYCLE
 
@@ -274,6 +282,65 @@ class ScopedTracksOrchestrator extends BroadcastableDiffuseElement {
 }
 
 export default ScopedTracksOrchestrator;
+
+////////////////////////////////////////////
+// HELPERS
+////////////////////////////////////////////
+
+const MONTHS = [
+  "January", "February", "March", "April", "May", "June",
+  "July", "August", "September", "October", "November", "December",
+];
+
+/**
+ * @param {Track[]} tracks
+ * @param {string} groupBy  dot-path field, e.g. "createdAt" or "tags.artist"
+ * @returns {{ label: string; tracks: Track[] }[]}
+ */
+function buildGroups(tracks, groupBy) {
+  /** @type {{ label: string; tracks: Track[] }[]} */
+  const groups = [];
+  let lastKey = /** @type {string | undefined} */ (undefined);
+  let current = /** @type {{ label: string; tracks: Track[] } | undefined} */ (undefined);
+
+  for (const track of tracks) {
+    const { key, label } = groupKeyLabel(track, groupBy);
+
+    if (key !== lastKey) {
+      current = { label, tracks: [] };
+      groups.push(current);
+      lastKey = key;
+    }
+
+    current?.tracks.push(track);
+  }
+
+  return groups;
+}
+
+/**
+ * @param {Track} track
+ * @param {string} fieldPath
+ * @returns {{ key: string; label: string }}
+ */
+function groupKeyLabel(track, fieldPath) {
+  if (fieldPath === "createdAt") {
+    const iso = track.createdAt;
+    if (!iso) return { key: "unknown", label: "Unknown" };
+    const year = iso.slice(0, 4);
+    const month = iso.slice(5, 7);
+    return {
+      key: `${year}-${month}`,
+      label: `${MONTHS[parseInt(month, 10) - 1]} ${year}`,
+    };
+  }
+
+  // Generic dot-path extraction
+  let val = /** @type {any} */ (track);
+  for (const key of fieldPath.split(".")) val = val?.[key];
+  const str = val != null ? String(val) : "Unknown";
+  return { key: str, label: str };
+}
 
 ////////////////////////////////////////////
 // REGISTER

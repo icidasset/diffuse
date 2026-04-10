@@ -36,6 +36,7 @@
     "@phosphor-icons/web": "npm:@phosphor-icons/web@^2.1.2",
     "@std/html": "jsr:@std/html@^1.0.5",
     "@vicary/debounce-microtask": "jsr:@vicary/debounce-microtask@^0.1.8",
+    "@tanstack/virtual-core": "npm:@tanstack/virtual-core@^3.13.0",
     "alien-signals": "npm:alien-signals@^3.1.2",
     "bs58check": "npm:bs58check@^4.0.0",
     "codemirror": "npm:codemirror@^6.0.2",
