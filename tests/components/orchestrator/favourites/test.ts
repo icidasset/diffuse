@@ -62,11 +62,13 @@ describe("components/orchestrator/favourites", () => {
       return fav.playlistItems();
     });
 
-    expect(favourites.length).toBe(2);
+    expect(favourites.length).toBe(3);
     expect(favourites[0].criteria[0].value).toBe(tracks[0].tags?.artist);
     expect(favourites[0].criteria[1].value).toBe(tracks[0].tags?.title);
     expect(favourites[1].criteria[0].value).toBe(tracks[1].tags?.artist);
     expect(favourites[1].criteria[1].value).toBe(tracks[1].tags?.title);
+    expect(favourites[2].criteria[0].value).toBe(tracks[2].tags?.artist);
+    expect(favourites[2].criteria[1].value).toBe(tracks[2].tags?.title);
   });
 
   it("does not include duplicate tracks", async () => {
@@ -163,9 +165,11 @@ describe("components/orchestrator/favourites", () => {
       return fav.playlistItems();
     });
 
-    expect(favourites.length).toBe(1);
+    expect(favourites.length).toBe(2);
     expect(favourites[0].criteria[0].value).toBe(tracks[1].tags?.artist);
     expect(favourites[0].criteria[1].value).toBe(tracks[1].tags?.title);
+    expect(favourites[1].criteria[0].value).toBe(tracks[2].tags?.artist);
+    expect(favourites[1].criteria[1].value).toBe(tracks[2].tags?.title);
   });
 
   it("expels tracks with different casing", async () => {
@@ -358,8 +362,10 @@ describe("components/orchestrator/favourites", () => {
       return fav.playlistItems();
     });
 
-    expect(favourites.length).toBe(1);
+    expect(favourites.length).toBe(2);
     expect(favourites[0].criteria[0].value).toBe(tracks[1].tags?.artist);
     expect(favourites[0].criteria[1].value).toBe(tracks[1].tags?.title);
+    expect(favourites[1].criteria[0].value).toBe(tracks[2].tags?.artist);
+    expect(favourites[1].criteria[1].value).toBe(tracks[2].tags?.title);
   });
 });
