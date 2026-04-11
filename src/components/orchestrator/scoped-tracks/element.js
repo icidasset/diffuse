@@ -6,6 +6,7 @@ import {
 } from "~/common/element.js";
 import { batch, computed, signal } from "~/common/signal.js";
 import { filterByPlaylist } from "~/common/playlist.js";
+import { safeDecodeURIComponent } from "~/common/utils.js";
 import { listen } from "~/common/worker.js";
 
 /**
@@ -77,15 +78,18 @@ class ScopedTracksOrchestrator extends BroadcastableDiffuseElement {
   #tracksGrouped = computed(() => {
     const tracks = this.#tracksFinal.value;
     const groupBy = this.#scope.value?.groupBy();
+    console.log(groupBy)
     if (!groupBy) return undefined;
-    return buildGroups(tracks, groupBy);
+    const a = buildGroups(tracks, groupBy);
+    console.log(a);
+    return a;
   });
 
   // STATE
 
   supplyFingerprint = this.#supplyFingerprint.get;
   tracks = this.#tracksFinal.get;
-  groups = this.#tracksGrouped.get;
+  groups = this.#tracksGrouped;
 
   // LIFECYCLE
 
@@ -333,6 +337,30 @@ function groupKeyLabel(track, fieldPath) {
       key: `${year}-${month}`,
       label: `${MONTHS[parseInt(month, 10) - 1]} ${year}`,
     };
+  }
+
+  if (fieldPath === "directory") {
+    const uri = track.uri ?? "";
+    let path = uri;
+    try {
+      path = new URL(uri).pathname;
+    } catch {
+      // not a valid URL, use as-is
+    }
+    const slash = path.lastIndexOf("/");
+    const dir = slash > 0 ? path.slice(0, slash) : path;
+    const key = uri.slice(0, uri.lastIndexOf("/"));
+    return { key, label: safeDecodeURIComponent(dir) || "Unknown" };
+  }
+
+  if (fieldPath.startsWith("firstLetter:")) {
+    const dotPath = fieldPath.slice("firstLetter:".length);
+    let val = /** @type {any} */ (track);
+    for (const key of dotPath.split(".")) val = val?.[key];
+    const str = val != null ? String(val) : "";
+    const letter = str.charAt(0).toUpperCase();
+    const key = /[A-Z]/.test(letter) ? letter : "#";
+    return { key, label: key };
   }
 
   // Generic dot-path extraction

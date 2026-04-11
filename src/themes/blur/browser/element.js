@@ -21,7 +21,7 @@ import {
  */
 
 const TRACK_ROW_HEIGHT = 44;
-const GROUP_HEADER_HEIGHT = 36;
+const GROUP_HEADER_HEIGHT = 52;
 const OVERSCAN = 10;
 
 /** @type {Record<string, string[]>} */
@@ -32,6 +32,13 @@ const COLUMN_SORT = {
 };
 
 const DEFAULT_SORT = ["createdAt"];
+
+const GROUP_BY_OPTIONS = [
+  { value: "firstLetter", label: "Group by first letter", icon: "ph-text-aa", sortBy: null, sortDirection: /** @type {"asc" | "desc" | undefined} */ (undefined) },
+  { value: "directory", label: "Group by path", icon: "ph-folder", sortBy: ["uri"], sortDirection: /** @type {"asc" | "desc" | undefined} */ (undefined) },
+  { value: "createdAt", label: "Group by processing date", icon: "ph-clock", sortBy: ["createdAt"], sortDirection: /** @type {"asc" | "desc" | undefined} */ ("desc") },
+  { value: "tags.year", label: "Group by track year", icon: "ph-calendar", sortBy: ["tags.year"], sortDirection: /** @type {"asc" | "desc" | undefined} */ ("desc") },
+];
 
 /**
  * @typedef {{ type: "group"; label: string }} GroupItem
@@ -146,15 +153,6 @@ class Browser extends DiffuseElement {
       });
     });
 
-    // Sync playlist select
-    this.effect(() => {
-      const playlist = this.$scope.value?.playlist();
-      const select = this.root().querySelector("#playlist-select");
-      if (select) {
-        /** @type {HTMLSelectElement} */ (select).value = playlist ?? "";
-      }
-    });
-
     // Set up the virtualizer after the first render, when .scroll-panel exists in the DOM.
     // This mirrors the winamp browser's #setupScrollTracking pattern.
     requestAnimationFrame(() => {
@@ -213,11 +211,17 @@ class Browser extends DiffuseElement {
   };
 
   /**
-   * @param {Event} event
+   * @param {string | undefined} value
    */
-  setSelectedPlaylist = (event) => {
-    const value = /** @type {HTMLSelectElement} */ (event.currentTarget).value;
-    this.$scope.value?.setPlaylist(value === "" ? undefined : value);
+  setGroupBy = (value) => {
+    this.$scope.value?.setGroupBy(value);
+  };
+
+  /**
+   * @param {string | undefined} value
+   */
+  setSelectedPlaylist = (value) => {
+    this.$scope.value?.setPlaylist(value);
   };
 
   /**
@@ -260,6 +264,7 @@ class Browser extends DiffuseElement {
 
     const tracks = this.$provider.value?.tracks() ?? [];
     const playlist = this.$scope.value?.playlist();
+    const groupBy = this.$scope.value?.groupBy();
     const searchTerm = this.$scope.value?.searchTerm() ?? "";
     const sortBy = this.$scope.value?.sortBy() ?? DEFAULT_SORT;
     const sortDirection = this.$scope.value?.sortDirection();
@@ -345,6 +350,7 @@ class Browser extends DiffuseElement {
 
     return html`
       <link rel="stylesheet" href="styles/base.css" />
+      <link rel="stylesheet" href="styles/diffuse/facet.css" />
       <link rel="stylesheet" href="vendor/@phosphor-icons/web/bold/style.css" />
       <link rel="stylesheet" href="vendor/@phosphor-icons/web/fill/style.css" />
       <link rel="stylesheet" href="themes/blur/browser/element.css" />
@@ -362,22 +368,60 @@ class Browser extends DiffuseElement {
         </label>
 
         <div class="toolbar-actions">
-          <select id="playlist-select" @change="${this.setSelectedPlaylist}">
-            <option value="" ?selected="${!playlist || playlist === ``}">All tracks</option>
+          <button class="toolbar-icon-btn" popovertarget="groupby-menu" title="Group by">
+            <i class="ph-fill ph-intersect-three"></i>
+          </button>
+          <div id="groupby-menu" class="dropdown" popover>
+            ${GROUP_BY_OPTIONS.map(({ value, label, icon, sortBy: optSortBy, sortDirection: optSortDirection }) => {
+              // "firstLetter" is dynamic — its stored value includes the sort field
+              const primarySortField = sortBy[0] ?? "tags.title";
+              const resolvedValue = value === "firstLetter"
+                ? `firstLetter:${primarySortField}`
+                : value;
+              const isActive = value === "firstLetter"
+                ? groupBy?.startsWith("firstLetter:")
+                : groupBy === value;
+              return html`
+                <button
+                  class="${isActive ? `dropdown-item--active` : ``}"
+                  @click="${() => {
+                    const scope = this.$scope.value;
+                    if (isActive) {
+                      this.setGroupBy(undefined);
+                    } else {
+                      this.setGroupBy(resolvedValue);
+                      if (optSortBy && scope) {
+                        scope.setSortBy(optSortBy);
+                        scope.setSortDirection(optSortDirection);
+                      }
+                    }
+                    /** @type {HTMLElement | null} */ (this.root().querySelector(`#groupby-menu`))?.hidePopover();
+                  }}"
+                >
+                  <i class="ph-${isActive ? `bold ph-x` : `fill ${icon}`}"></i>
+                  ${label}
+                </button>
+              `;
+            })}
+          </div>
+          <button class="playlist-btn" popovertarget="playlist-menu">
+            <i class="ph-fill ph-playlist"></i>
+            ${playlist ?? `All tracks`}
+          </button>
+          <div id="playlist-menu" class="dropdown" popover>
+            <button @click="${() => { this.setSelectedPlaylist(undefined); /** @type {HTMLElement | null} */ (this.root().querySelector(`#playlist-menu`))?.hidePopover(); }}">
+              All tracks
+            </button>
             ${this.$groupedPlaylists().map((group) =>
-              html`
-                <optgroup label="${group.label}">
-                  ${group.playlists.map((p) =>
-                    html`
-                      <option value="${p.name}" ?selected="${p.name === playlist}">
-                        ${p.name}
-                      </option>
-                    `
-                  )}
-                </optgroup>
-              `
+              group.playlists.map((p) =>
+                html`
+                  <button @click="${() => { this.setSelectedPlaylist(p.name); /** @type {HTMLElement | null} */ (this.root().querySelector(`#playlist-menu`))?.hidePopover(); }}">
+                    ${p.name}
+                  </button>
+                `
+              )
             )}
-          </select>
+          </div>
         </div>
       </div>
 
@@ -430,7 +474,7 @@ class Browser extends DiffuseElement {
                       class="group-header"
                       style="transform: translateY(${vItem.start}px);"
                     >
-                      <i class="ph-bold ph-calendar-blank"></i>
+                      <i class="ph-fill ph-vinyl-record"></i>
                       <span>${item.label}</span>
                     </div>
                   `
