@@ -1,9 +1,21 @@
 :host {
+  --bg-color: oklch(100% 0 0);
+  --text-color: oklch(14% 0 0);
+
+  background: var(--bg-color);
+  color: var(--text-color);
   display: flex;
   flex-direction: column;
   font-size: calc(var(--fs-sm) * 0.85);
   height: 100%;
   overflow: hidden;
+}
+
+@media (prefers-color-scheme: dark) {
+  :host {
+    --bg-color: oklch(19% 0.006 265);
+    --text-color: oklch(86% 0 0);
+  }
 }
 
 /***********************************
@@ -23,7 +35,7 @@
   border-bottom: 1px solid color-mix(in oklch, currentColor 12%, transparent);
   display: flex;
   gap: var(--space-sm);
-  padding: var(--space-2xs) var(--space-xs);
+  padding: var(--space-3xs) var(--space-xs);
 }
 
 .search-field {
@@ -42,10 +54,14 @@
 .search-field input {
   background: transparent;
   border: none;
-  color: inherit;
+  color: var(--text-color);
   flex: 1;
   min-width: 0;
   outline: none;
+}
+
+.search-field input[type="search"]::-webkit-search-cancel-button {
+  display: none;
 }
 
 .search-field input::placeholder {
@@ -59,7 +75,6 @@
 .toolbar-actions {
   align-items: center;
   display: flex;
-  gap: var(--space-2xs);
 }
 
 .playlist-btn {
@@ -73,6 +88,7 @@
   font-family: inherit;
   font-size: 100%;
   gap: var(--space-2xs);
+  margin-left: var(--space-2xs);
   max-width: 12rem;
   overflow: hidden;
   padding: var(--space-3xs) var(--space-2xs);
@@ -270,6 +286,16 @@
 
 .fav-btn--active:hover {
   color: oklch(0.45 0.2 25);
+}
+
+@media (prefers-color-scheme: dark) {
+  .fav-btn--active {
+    color: oklch(0.62 0.22 25);
+  }
+
+  .fav-btn--active:hover {
+    color: oklch(0.52 0.22 25);
+  }
 }
 
 /***********************************

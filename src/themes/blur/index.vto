@@ -3,43 +3,13 @@ layout: layouts/diffuse.vto
 base: ../../
 
 styles:
-  - ../../styles/base.css
-  - index.css
+  - styles/base.css
+  - themes/blur/index.css
 
 scripts:
-  - index.js
+  - themes/blur/index.js
 ---
 
 <!-- UI -->
 <main>
 </main>
-
-<!-- Engines -->
-<de-audio group="shared"></de-audio>
-<de-queue group="shared"></de-queue>
-
-<!-- Input & Processors -->
-<dp-metadata></dp-metadata>
-
-<di-opensubsonic id="input"></di-opensubsonic>
-
-<!-- Orchestrators -->
-<do-output id="output"></do-output>
-
-<do-process-tracks
-  input-selector="#input"
-  metadata-processor-selector="dp-metadata"
-  output-selector="#output"
-></do-process-tracks>
-
-<do-queue-audio
-  input-selector="#input"
-  audio-engine-selector="de-audio"
-  queue-engine-selector="de-queue"
-></do-queue-audio>
-
-<do-queue-tracks
-  input-selector="#input"
-  output-selector="#output"
-  queue-engine-selector="de-queue"
-></do-queue-tracks>

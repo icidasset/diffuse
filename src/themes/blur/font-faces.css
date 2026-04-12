@@ -1,0 +1,15 @@
+@font-face {
+  font-display: swap;
+  font-family: Figtree;
+  font-style: normal;
+  font-weight: 100 900;
+  src: url("../../fonts/Figtree-VariableFont_wght.woff2") format("woff2");
+}
+
+@font-face {
+  font-display: swap;
+  font-family: Figtree;
+  font-style: italic;
+  font-weight: 100 900;
+  src: url("../../fonts/Figtree-Italic-VariableFont_wght.woff2") format("woff2");
+}

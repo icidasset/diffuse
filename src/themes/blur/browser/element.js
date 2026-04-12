@@ -210,6 +210,13 @@ class Browser extends DiffuseElement {
     this.$scope.value?.setSearchTerm(term);
   };
 
+  clearSearch = () => {
+    /** @type {HTMLInputElement | null} */
+    const input = this.root().querySelector("#search-input");
+    if (input) input.value = "";
+    this.$scope.value?.setSearchTerm(undefined);
+  };
+
   /**
    * @param {string | undefined} value
    */
@@ -368,6 +375,11 @@ class Browser extends DiffuseElement {
         </label>
 
         <div class="toolbar-actions">
+          ${searchTerm ? html`
+            <button class="toolbar-icon-btn" @click="${this.clearSearch}" title="Clear search">
+              <i class="ph-bold ph-x"></i>
+            </button>
+          ` : ``}
           <button class="toolbar-icon-btn" popovertarget="groupby-menu" title="Group by">
             <i class="ph-fill ph-intersect-three"></i>
           </button>
@@ -406,7 +418,7 @@ class Browser extends DiffuseElement {
           </div>
           <button class="playlist-btn" popovertarget="playlist-menu">
             <i class="ph-fill ph-playlist"></i>
-            ${playlist ?? `All tracks`}
+            <span>${playlist ?? `All tracks`}</span>
           </button>
           <div id="playlist-menu" class="dropdown" popover>
             <button @click="${() => { this.setSelectedPlaylist(undefined); /** @type {HTMLElement | null} */ (this.root().querySelector(`#playlist-menu`))?.hidePopover(); }}">
