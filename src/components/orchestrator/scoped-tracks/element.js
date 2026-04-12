@@ -78,11 +78,8 @@ class ScopedTracksOrchestrator extends BroadcastableDiffuseElement {
   #tracksGrouped = computed(() => {
     const tracks = this.#tracksFinal.value;
     const groupBy = this.#scope.value?.groupBy();
-    console.log(groupBy)
     if (!groupBy) return undefined;
-    const a = buildGroups(tracks, groupBy);
-    console.log(a);
-    return a;
+    return buildGroups(tracks, groupBy);
   });
 
   // STATE
