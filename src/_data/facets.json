@@ -15,6 +15,13 @@
     "desc": "Automatically put tracks into the queue when this interface is opened. Also allows for controlling shuffle, repeat, search, sorting and playlist selection."
   },
   {
+    "url": "themes/blur/facet/index.html",
+    "title": "Blur",
+    "category": "Themes",
+    "featured": true,
+    "desc": "A modern, blurred glass-style theme for the audio player."
+  },
+  {
     "url": "themes/blur/artwork-controller/facet/index.html",
     "title": "Blur / Artwork Controller",
     "category": "Playback",
@@ -124,6 +131,13 @@
     "desc": "Export all data as a JSON snapshot, or restore from a previously exported file."
   },
   {
+    "url": "facets/data/playlists/index.html",
+    "title": "Playlists",
+    "category": "Data",
+    "featured": true,
+    "desc": "An overview of all playlists and their contents."
+  },
+  {
     "url": "facets/playback/preload/prelude/index.html",
     "title": "Preload Tracks",
     "kind": "prelude",
@@ -168,13 +182,6 @@
     "title": "Scrobble / Rocksky",
     "category": "Miscellaneous",
     "desc": "Connect to Rocksky to setup the Rocksky scrobbler."
-  },
-  {
-    "url": "facets/data/playlists/index.html",
-    "title": "Playlists",
-    "category": "Data",
-    "featured": true,
-    "desc": "An overview of all playlists and their contents."
   },
   {
     "url": "facets/data/sources/index.html",

@@ -1,7 +1,4 @@
 :host {
-  --bg-color: oklch(100% 0 0);
-  --text-color: oklch(14% 0 0);
-
   background: var(--bg-color);
   color: var(--text-color);
   display: flex;
@@ -9,13 +6,6 @@
   font-size: calc(var(--fs-sm) * 0.85);
   height: 100%;
   overflow: hidden;
-}
-
-@media (prefers-color-scheme: dark) {
-  :host {
-    --bg-color: oklch(19% 0.006 265);
-    --text-color: oklch(86% 0 0);
-  }
 }
 
 /***********************************

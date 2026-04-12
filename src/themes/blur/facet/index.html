@@ -1,0 +1,49 @@
+<link rel="stylesheet" href="styles/base.css" />
+<link rel="stylesheet" href="themes/blur/font-faces.css" />
+<link rel="stylesheet" href="themes/blur/variables.css" />
+<link rel="stylesheet" href="themes/blur/facet/index.css" />
+<link rel="stylesheet" href="vendor/@phosphor-icons/web/bold/style.css" />
+<link rel="stylesheet" href="vendor/@phosphor-icons/web/fill/style.css" />
+
+<style>
+  html {
+    font-size: 16px;
+  }
+
+  main,
+  db-artwork-controller,
+  db-browser {
+    font-family: "Public Sans", "Intervariable", sans-serif;
+  }
+</style>
+
+<main>
+  <db-browser
+    output-selector="#output"
+    tracks-selector="do-scoped-tracks"
+    queue-engine-selector="de-queue"
+    scope-engine-selector="de-scope"
+    favourites-orchestrator-selector="do-favourites"
+  ></db-browser>
+
+  <db-artwork-controller
+    artwork-selector="do-artwork"
+    controller-orchestrator-selector="do-controller"
+    input-selector="#input"
+    favourites-orchestrator-selector="do-favourites"
+    repeat-shuffle-engine-selector="de-repeat-shuffle"
+  ></db-artwork-controller>
+
+  <div id="shortcuts">
+    <button id="btn-new-deck">
+      <i class="ph-bold ph-browsers"></i>
+      <span>New Deck</span>
+    </button>
+    <a href="l/?path=facets%2Fdata%2Fsources%2Findex.html" target="_blank">
+      <i class="ph-bold ph-hard-drives"></i>
+      <span>Sources</span>
+    </a>
+  </div>
+</main>
+
+<script type="module" src="themes/blur/facet/index.inline.js"></script>

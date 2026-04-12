@@ -527,7 +527,7 @@ class ArtworkController extends DiffuseElement {
                   data-enabled="${isFav ? `t` : `f`}"
                   @click="${this.toggleFavourite}"
                 >
-                  <i class="ph-${isFav ? `fill` : `bold`} ph-star"></i>
+                  <i class="ph-${isFav ? `fill` : `bold`} ph-heart"></i>
                 </button>
                 <button
                   title="Toggle shuffle"
