@@ -22,7 +22,7 @@
 
 .toolbar {
   align-items: center;
-  border-bottom: 1px solid color-mix(in oklch, currentColor 12%, transparent);
+  border-bottom: 1px solid color-mix(in oklch, currentColor 6%, transparent);
   display: flex;
   gap: var(--space-sm);
   padding: var(--space-3xs) var(--space-xs);
@@ -55,11 +55,7 @@
 }
 
 .search-field input::placeholder {
-  color: color-mix(in oklch, currentColor 60%, transparent);
-}
-
-.search-field input:focus {
-  color: currentColor;
+  color: color-mix(in oklch, currentColor 40%, transparent);
 }
 
 .toolbar-actions {
@@ -70,7 +66,7 @@
 .playlist-btn {
   align-items: center;
   background: transparent;
-  border: 1px solid color-mix(in oklch, currentColor 10%, transparent);
+  border: 1px solid color-mix(in oklch, currentColor 12%, transparent);
   border-radius: var(--radius-md);
   color: inherit;
   cursor: pointer;
@@ -147,7 +143,11 @@
 
 .col-fav {
   flex-shrink: 0;
-  width: 3rem;
+  width: var(--space-lg);
+
+  @media (min-width: 63rem) {
+    width: var(--space-xl);
+  }
 }
 
 .col-title {
@@ -212,7 +212,7 @@
   border-bottom: 1px solid color-mix(in oklch, currentColor 6%, transparent);
   cursor: pointer;
   display: flex;
-  height: 44px;
+  height: 40px;
   left: 0;
   position: absolute;
   right: 0;

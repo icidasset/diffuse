@@ -1,15 +1,20 @@
+:root {
+  --facet-bg-color: var(--color-2);
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --facet-bg-color: var(--color-3);
+  }
+}
+
 body {
-  /*background-color: oklch(from var(--bg-color) calc(l - 0.025) c h);*/
-  background-color: var(--color-2);
+  background-color: oklch(from var(--facet-bg-color) calc(l - 0.025) c h);
   color: var(--text-color);
   display: flex;
   flex-direction: column;
   overflow: hidden;
   height: 100dvh;
-
-  @media (prefers-color-scheme: dark) {
-    background-color: var(--color-3);
-  }
 }
 
 /***********************************
@@ -17,13 +22,30 @@ body {
  ***********************************/
 
 main {
-  display: grid;
-  gap: var(--space-sm);
-  grid-template-columns: repeat(3, 1fr);
-  grid-template-rows: 1fr;
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-xs);
   height: 100dvh;
+  margin: 0 auto;
+  max-width: var(--container-9xl);
   overflow: hidden;
-  padding: var(--space-md) var(--space-md);
+  padding: var(--space-xs);
+
+  @media (min-width: 35rem) {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    grid-template-rows: 1fr;
+  }
+
+  @media (min-width: 63rem) {
+    gap: var(--space-sm);
+    padding: var(--space-md);
+  }
+
+  @media (min-width: 84rem) {
+    gap: var(--space-lg);
+    padding: var(--space-xl);
+  }
 }
 
 /***********************************
@@ -33,7 +55,7 @@ main {
 db-artwork-controller,
 db-browser {
   border-radius: var(--radius-md);
-  height: 100%;
+  box-shadow: var(--box-shadow-md);
   justify-self: end;
   overflow: hidden;
   width: 100%;
@@ -42,28 +64,26 @@ db-browser {
 db-artwork-controller {
   grid-column: 3;
   grid-row: 1;
+  min-height: 50vh;
 }
 
 db-browser {
-  box-shadow: var(--box-shadow-md);
   grid-column: 1 / span 2;
   grid-row: 1 / span 2;
 }
 
 #shortcuts {
-  border-radius: var(--radius-md);
-  box-shadow: var(--box-shadow-md);
   display: flex;
   font-size: var(--fs-sm);
-  gap: 1px;
-  overflow: hidden;
+  gap: var(--space-2xs);
 
   button,
   a {
     align-items: center;
-    background-color: var(--bg-color);
-    border: 0;
-    color: var(--text-color);
+    background-color: transparent;
+    border: 2px dotted oklch(from var(--text-color) l c h / 0.1);
+    border-radius: var(--radius-md);
+    color: oklch(from var(--text-color) l c h / 0.6);
     cursor: pointer;
     display: flex;
     flex: 1;
@@ -71,10 +91,27 @@ db-browser {
     line-height: 0.75;
     justify-content: center;
     overflow: hidden;
-    padding: var(--space-sm) var(--space-3xs);
+    padding: var(--space-xs) var(--space-3xs);
     text-box: trim-both cap alphabetic;
     text-decoration: none;
     text-overflow: ellipsis;
+    transition-duration: 250ms;
+    transition-property: border-color, color;
     white-space: nowrap;
+
+    &:focus,
+    &:hover {
+      border-color: oklch(from var(--text-color) l c h / 0.3);
+      color: oklch(from var(--text-color) l c h / 1);
+    }
+  }
+
+  @media (min-width: 63rem) {
+    gap: var(--space-xs);
+
+    button,
+    a {
+      padding: var(--space-sm) var(--space-3xs);
+    }
   }
 }

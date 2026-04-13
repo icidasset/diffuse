@@ -15,6 +15,12 @@
   db-browser {
     font-family: "Public Sans", "Intervariable", sans-serif;
   }
+
+  @media (orientation: landscape) and (width < 63rem) {
+    db-artwork-controller {
+      font-size: calc((var(--fs-sm) + var(--fs-xs)) / 2);
+    }
+  }
 </style>
 
 <main>
@@ -35,13 +41,15 @@
   ></db-artwork-controller>
 
   <div id="shortcuts">
-    <button id="btn-new-deck">
-      <i class="ph-bold ph-browsers"></i>
-      <span>New Deck</span>
+    <button id="btn-new-deck" title="Open a new deck">
+      <i class="ph-bold ph-circles-three-plus"></i>
     </button>
-    <a href="l/?path=facets%2Fdata%2Fsources%2Findex.html" target="_blank">
-      <i class="ph-bold ph-hard-drives"></i>
-      <span>Sources</span>
+    <a
+      href="l/?path=facets%2Fdata%2Fsources%2Findex.html"
+      target="_blank"
+      title="Sources (Audio Input)"
+    >
+      <i class="ph-bold ph-eject"></i>
     </a>
   </div>
 </main>

@@ -20,7 +20,7 @@ import {
  * @import {OutputElement} from "~/components/output/types.d.ts"
  */
 
-const TRACK_ROW_HEIGHT = 44;
+const TRACK_ROW_HEIGHT = 40;
 const GROUP_HEADER_HEIGHT = 52;
 const OVERSCAN = 10;
 
@@ -382,7 +382,7 @@ class Browser extends DiffuseElement {
             </button>
           ` : ``}
           <button class="toolbar-icon-btn" popovertarget="groupby-menu" title="Group by">
-            <i class="ph-fill ph-intersect-three"></i>
+            <i class="ph-fill ph-stack"></i>
           </button>
           <div id="groupby-menu" class="dropdown" popover>
             ${GROUP_BY_OPTIONS.map(({ value, label, icon, sortBy: optSortBy, sortDirection: optSortDirection }) => {
@@ -411,7 +411,7 @@ class Browser extends DiffuseElement {
                     /** @type {HTMLElement | null} */ (this.root().querySelector(`#groupby-menu`))?.hidePopover();
                   }}"
                 >
-                  <i class="ph-${isActive ? `bold ph-x` : `fill ${icon}`}"></i>
+                  ${isActive ? html`<i class="ph-bold ph-x"></i>` : ``}
                   ${label}
                 </button>
               `;

@@ -402,9 +402,17 @@ class ArtworkController extends DiffuseElement {
       <main style="background-color: ${this.#artworkColor.value ??
         `var(--color-3)`}; opacity: 0;">
         <section class="artwork">
-          <label style="display: ${this.group === DEFAULT_GROUP
-            ? `none`
-            : `block`};">
+          <label
+            style="display: ${this.group === DEFAULT_GROUP ? `none` : `block`}; cursor: pointer;"
+            @click="${() => {
+              const base = document.baseURI;
+              const facetUrl = new URL("themes/blur/artwork-controller/facet/index.html", base);
+              facetUrl.searchParams.set("group", this.group);
+              const loaderUrl = new URL("l/", base);
+              loaderUrl.searchParams.set("path", facetUrl.pathname.slice(1) + facetUrl.search);
+              window.open(loaderUrl.toString(), "_blank");
+            }}"
+          >
             ${this.group}
           </label>
 

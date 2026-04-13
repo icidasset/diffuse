@@ -35,6 +35,7 @@ document.querySelector("#btn-new-deck")?.addEventListener("click", async () => {
   const held = (state.held ?? []).map((l) => l.name);
 
   let nextGroup;
+
   if (!held.some((n) => n.includes("/Deck B"))) {
     nextGroup = "Deck B";
   } else if (!held.some((n) => n.includes("/Deck C"))) {

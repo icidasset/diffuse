@@ -1,6 +1,13 @@
 :host {
+  --spacing: var(--space-sm);
   --transition-durition: 750ms;
   font-size: var(--fs-sm);
+}
+
+@media (min-width: 63rem) {
+  :host {
+    --spacing: var(--space-md);
+  }
 }
 
 main {
@@ -49,7 +56,8 @@ main {
   left: var(--space-xs);
   letter-spacing: var(--tracking-wide);
   line-height: 0.75;
-  padding: 8px 6px 7px;
+  padding: calc(var(--space-2xs) * 0.8) calc(var(--space-2xs) * 0.65);
+  padding-bottom: calc(var(--space-2xs) * 0.8 - 1px);
   position: absolute;
   text-box: trim-both cap alphabetic;
   text-transform: uppercase;
@@ -91,7 +99,7 @@ progress[value]::-moz-progress-bar {
 
 .controller {
   flex-shrink: 0;
-  padding: 0 var(--space-md) var(--space-md);
+  padding: 0 var(--spacing) var(--spacing);
   position: relative;
 }
 
@@ -195,7 +203,7 @@ cite {
   font-size: 230%;
   gap: var(--space-lg);
   justify-content: center;
-  margin: var(--space-md) 0;
+  margin: var(--spacing) 0;
   padding: 0;
   text-align: center;
 }
