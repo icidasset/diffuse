@@ -48,6 +48,7 @@
   flex: 1;
   min-width: 0;
   outline: none;
+  padding: var(--space-2xs) var(--space-3xs);
 }
 
 .search-field input[type="search"]::-webkit-search-cancel-button {
@@ -111,7 +112,7 @@
   display: flex;
   font-size: 75%;
   font-weight: 500;
-  letter-spacing: var(--tracking-wide);
+  letter-spacing: var(--tracking-wider);
   padding: 0 var(--space-xs);
   text-transform: uppercase;
   user-select: none;
@@ -122,7 +123,7 @@
   cursor: pointer;
   display: flex;
   gap: var(--space-3xs);
-  padding: var(--space-2xs) var(--space-2xs) var(--space-2xs) 0;
+  padding: var(--space-3xs) var(--space-2xs) var(--space-3xs) 0;
 }
 
 .table-header > div:hover {
@@ -144,10 +145,6 @@
 .col-fav {
   flex-shrink: 0;
   width: var(--space-lg);
-
-  @media (min-width: 63rem) {
-    width: var(--space-xl);
-  }
 }
 
 .col-title {
@@ -209,7 +206,6 @@
 
 .track-row {
   align-items: center;
-  border-bottom: 1px solid color-mix(in oklch, currentColor 6%, transparent);
   cursor: pointer;
   display: flex;
   height: 40px;
@@ -220,8 +216,12 @@
   transition: background-color 80ms;
 }
 
+.track-row--alt {
+  background-color: color-mix(in oklch, currentColor 1.5%, transparent);
+}
+
 .track-row:hover {
-  background-color: color-mix(in oklch, currentColor 4%, transparent);
+  background-color: color-mix(in oklch, currentColor 6%, transparent);
 }
 
 .track-row > div {

@@ -15,6 +15,8 @@ body {
   flex-direction: column;
   overflow: hidden;
   height: 100dvh;
+  transition-duration: 750ms;
+  transition-property: background-color;
 }
 
 /***********************************

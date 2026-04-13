@@ -323,13 +323,14 @@ class Browser extends DiffuseElement {
     /**
      * @param {Track} track
      * @param {number} top
+     * @param {number} index
      */
-    const renderTrackRow = (track, top) => {
+    const renderTrackRow = (track, top, index) => {
       const key = `${String(track.tags?.artist ?? "").toLowerCase()}|${String(track.tags?.title ?? "").toLowerCase()}`;
       const isFav = favSet.has(key);
       return html`
         <div
-          class="track-row"
+          class="track-row ${index % 2 === 1 ? `track-row--alt` : ``}"
           style="transform: translateY(${top}px);"
           @dblclick="${() => this.playTrack(track)}"
         >
@@ -492,7 +493,7 @@ class Browser extends DiffuseElement {
                     </div>
                   `
                   : item?.type === "track"
-                  ? renderTrackRow(item.track, vItem.start)
+                  ? renderTrackRow(item.track, vItem.start, vItem.index)
                   : ``;
               })
           }
