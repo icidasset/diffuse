@@ -201,7 +201,7 @@ export default config;
 // Configurators
 
 async function configuratorArtwork() {
-  const { default: ArtworkConfigurator } = await import(
+  const { CLASS: ArtworkConfigurator } = await import(
     "~/components/configurator/artwork/element.js"
   );
 
@@ -213,7 +213,7 @@ async function configuratorArtwork() {
 }
 
 async function configuratorMetadata() {
-  const { default: MetadataConfigurator } = await import(
+  const { CLASS: MetadataConfigurator } = await import(
     "~/components/configurator/metadata/element.js"
   );
 
@@ -225,7 +225,7 @@ async function configuratorMetadata() {
 }
 
 async function input() {
-  const { default: InputConfigurator } = await import(
+  const { CLASS: InputConfigurator } = await import(
     "~/components/configurator/input/element.js"
   );
 
@@ -240,7 +240,7 @@ async function input() {
  * @returns {Promise<ScrobbleElement>}
  */
 async function scrobbles() {
-  const { default: ScrobblesConfigurator } = await import(
+  const { CLASS: ScrobblesConfigurator } = await import(
     "~/components/configurator/scrobbles/element.js"
   );
 
@@ -260,7 +260,7 @@ async function scrobbles() {
 
 // Engines
 async function audio() {
-  const { default: AudioEngine } = await import(
+  const { CLASS: AudioEngine } = await import(
     "~/components/engine/audio/element.js"
   );
 
@@ -271,7 +271,7 @@ async function audio() {
 }
 
 async function queue() {
-  const { default: Queue } = await import(
+  const { CLASS: Queue } = await import(
     "~/components/engine/queue/element.js"
   );
 
@@ -282,7 +282,7 @@ async function queue() {
 }
 
 async function repeatShuffle() {
-  const { default: RepeatShuffleEngine } = await import(
+  const { CLASS: RepeatShuffleEngine } = await import(
     "~/components/engine/repeat-shuffle/element.js"
   );
 
@@ -293,7 +293,7 @@ async function repeatShuffle() {
 }
 
 async function scope() {
-  const { default: ScopeEngine } = await import(
+  const { CLASS: ScopeEngine } = await import(
     "~/components/engine/scope/element.js"
   );
 
@@ -305,7 +305,7 @@ async function scope() {
 
 // Orchestrators (cont.)
 async function artwork() {
-  const [{ default: ArtworkOrchestrator }, ac] = await Promise.all([
+  const [{ CLASS: ArtworkOrchestrator }, ac] = await Promise.all([
     import("~/components/orchestrator/artwork/element.js"),
     configuratorArtwork(),
   ]);
@@ -319,7 +319,7 @@ async function artwork() {
 
 // Orchestrators
 async function autoQueue() {
-  const [{ default: AutoQueueOrchestrator }, q, r, t] = await Promise.all([
+  const [{ CLASS: AutoQueueOrchestrator }, q, r, t] = await Promise.all([
     import("~/components/orchestrator/auto-queue/element.js"),
     queue(),
     repeatShuffle(),
@@ -336,7 +336,7 @@ async function autoQueue() {
 }
 
 async function controller() {
-  const [{ default: ControllerOrchestrator }, a, o, q] = await Promise.all([
+  const [{ CLASS: ControllerOrchestrator }, a, o, q] = await Promise.all([
     import("~/components/orchestrator/controller/element.js"),
     audio(),
     output(),
@@ -352,7 +352,7 @@ async function controller() {
 }
 
 async function favourites() {
-  const [{ default: FavouritesOrchestrator }, o] = await Promise.all([
+  const [{ CLASS: FavouritesOrchestrator }, o] = await Promise.all([
     import("~/components/orchestrator/favourites/element.js"),
     output(),
   ]);
@@ -365,7 +365,7 @@ async function favourites() {
 }
 
 async function mediaSession() {
-  const [{ default: MediaSessionOrchestrator }, a, aw, o, q] = await Promise
+  const [{ CLASS: MediaSessionOrchestrator }, a, aw, o, q] = await Promise
     .all([
       import("~/components/orchestrator/media-session/element.js"),
       audio(),
@@ -389,7 +389,7 @@ async function mediaSession() {
  * @param {string} [options.namespace] - The namespace to use for the output.
  */
 async function output(options) {
-  const { default: OutputOrchestrator } = await import(
+  const { CLASS: OutputOrchestrator } = await import(
     "~/components/orchestrator/output/element.js"
   );
 
@@ -407,7 +407,7 @@ async function output(options) {
  * @param {boolean} [opts.disableWhenReady] - Whether to disable processing when ready.
  */
 async function processTracks(opts = { disableWhenReady: false }) {
-  const [{ default: ProcessTracksOrchestrator }, i, o, m] = await Promise.all([
+  const [{ CLASS: ProcessTracksOrchestrator }, i, o, m] = await Promise.all([
     import("~/components/orchestrator/process-tracks/element.js"),
     input(),
     output(),
@@ -428,7 +428,7 @@ async function processTracks(opts = { disableWhenReady: false }) {
 }
 
 async function queueAudio() {
-  const [{ default: QueueAudioOrchestrator }, a, i, o, q, r] = await Promise
+  const [{ CLASS: QueueAudioOrchestrator }, a, i, o, q, r] = await Promise
     .all([
       import("~/components/orchestrator/queue-audio/element.js"),
       audio(),
@@ -450,7 +450,7 @@ async function queueAudio() {
 }
 
 async function scopedTracks() {
-  const [{ default: ScopedTracksOrchestrator }, i, o, e] = await Promise.all([
+  const [{ CLASS: ScopedTracksOrchestrator }, i, o, e] = await Promise.all([
     import("~/components/orchestrator/scoped-tracks/element.js"),
     input(),
     output(),
@@ -467,7 +467,7 @@ async function scopedTracks() {
 }
 
 async function scrobbleAudio() {
-  const [{ default: ScrobbleAudioOrchestrator }, a, sc] = await Promise.all([
+  const [{ CLASS: ScrobbleAudioOrchestrator }, a, sc] = await Promise.all([
     import("~/components/orchestrator/scrobble-audio/element.js"),
     audio(),
     scrobbles(),
@@ -482,7 +482,7 @@ async function scrobbleAudio() {
 }
 
 async function pathCollections() {
-  const [{ default: PathCollectionsOrchestrator }, o] = await Promise.all([
+  const [{ CLASS: PathCollectionsOrchestrator }, o] = await Promise.all([
     import("~/components/orchestrator/path-collections/element.js"),
     output(),
   ]);
@@ -495,7 +495,7 @@ async function pathCollections() {
 }
 
 async function sources() {
-  const [{ default: SourcesOrchestrator }, i, o] = await Promise.all([
+  const [{ CLASS: SourcesOrchestrator }, i, o] = await Promise.all([
     import("~/components/orchestrator/sources/element.js"),
     input(),
     output(),
