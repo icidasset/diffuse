@@ -19,7 +19,7 @@
     "title": "Blur",
     "category": "Themes",
     "featured": true,
-    "desc": "A modern, blurred glass-style theme for the audio player."
+    "desc": "A combination of the classic Diffuse browser and the Apple Music iOS playback screen."
   },
   {
     "url": "themes/blur/artwork-controller/facet/index.html",
@@ -213,7 +213,6 @@
     "url": "themes/winamp/browser/facet/index.html",
     "title": "Winamp / Browser",
     "category": "Browsing",
-    "featured": true,
     "desc": "Collection browser and search."
   }
 ]

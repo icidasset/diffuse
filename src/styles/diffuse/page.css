@@ -47,6 +47,7 @@ ul,
 ol {
   margin: var(--space-sm) 0;
   max-width: var(--container-sm);
+  text-wrap: balance;
 }
 
 footer nav {

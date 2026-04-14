@@ -48,7 +48,7 @@ main {
 }
 
 .artwork label {
-  background: oklch(0 0 0);
+  background: oklch(14% 0 0);
   border-radius: var(--radius-sm);
   box-shadow: var(--box-shadow-lg);
   font-size: 64%;
