@@ -32,7 +32,7 @@ document.querySelector("db-browser")?.setAttribute("group", group);
 
 document.querySelector("#btn-new-deck")?.addEventListener("click", async () => {
   const state = await navigator.locks.query();
-  const held = (state.held ?? []).map((l) => l.name);
+  const held = (state.held ?? []).flatMap((l) => l.name ? [l.name] : []);
 
   let nextGroup;
 
