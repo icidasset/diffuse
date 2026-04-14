@@ -11,7 +11,6 @@
     "url": "facets/playback/auto-queue/index.html",
     "title": "Automatic Queue",
     "category": "Playback",
-    "featured": true,
     "desc": "Automatically put tracks into the queue when this interface is opened. Also allows for controlling shuffle, repeat, search, sorting and playlist selection."
   },
   {
@@ -155,7 +154,6 @@
     "url": "facets/data/process-tracks/index.html",
     "title": "Process Tracks",
     "category": "Data",
-    "featured": true,
     "desc": "Process all your audio sources into tracks. Shows a progress bar when processing is occuring."
   },
   {

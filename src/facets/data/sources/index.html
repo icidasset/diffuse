@@ -76,7 +76,19 @@
     </div>
     <h1>Sources</h1>
     <p>
-      An overview of all audio inputs. Disable a source to hide its tracks without removing them.
+      An overview of all your audio inputs. Remember that these need to be processed into tracks
+      before they become useful. This should happen automatically when you have that feature enabled
+      (on by default), otherwise click the button below.
+    </p>
+    <p class="button-row" style="margin-top: var(--space-md)">
+      <a href="../../l/?path=facets/connect/index.html" class="button button--accent">
+        <i class="ph-fill ph-plugs"></i>
+        Add a source
+      </a>
+      <button id="process-btn">
+        <i id="process-icon" class="ph-fill ph-arrows-clockwise"></i>
+        <span id="process-label">Process</span>
+      </button>
     </p>
   </div>
 

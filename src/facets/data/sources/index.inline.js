@@ -27,11 +27,12 @@ foundation.setup({ title: "Sources | Diffuse" });
 // SETUP
 ////////////////////////////////////////////
 
-const [inputConfigurator, sourcesOrchestrator, outputOrchestrator] =
+const [inputConfigurator, sourcesOrchestrator, outputOrchestrator, processOrchestrator] =
   await Promise.all([
     foundation.configurator.input(),
     foundation.orchestrator.sources(),
     foundation.orchestrator.output(),
+    foundation.orchestrator.processTracks({ disableWhenReady: true }),
   ]);
 
 await Promise.all([
@@ -40,6 +41,30 @@ await Promise.all([
   customElements.whenDefined(outputOrchestrator.localName),
 ]);
 
+
+////////////////////////////////////////////
+// PROCESS BUTTON
+////////////////////////////////////////////
+
+const processBtn = /** @type {HTMLButtonElement} */ (document.querySelector("#process-btn"));
+const processIcon = /** @type {HTMLElement} */ (document.querySelector("#process-icon"));
+const processLabel = /** @type {HTMLElement} */ (document.querySelector("#process-label"));
+
+effect(() => {
+  const isProcessing = processOrchestrator.isProcessing();
+
+  processBtn.disabled = isProcessing;
+  processIcon.className = isProcessing
+    ? "ph-fill ph-arrows-clockwise animate-spin"
+    : "ph-fill ph-arrows-clockwise";
+  processLabel.textContent = isProcessing ? "Processing" : "Process";
+});
+
+processBtn.addEventListener("click", async () => {
+  const output = await foundation.orchestrator.output();
+  await Output.data(output.tracks);
+  await processOrchestrator.process();
+});
 
 ////////////////////////////////////////////
 // UI
