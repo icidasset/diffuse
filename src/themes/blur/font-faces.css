@@ -1,15 +1,15 @@
 @font-face {
   font-display: swap;
-  font-family: "Public Sans";
+  font-family: "Source Sans 3";
   font-style: normal;
   font-weight: 100 900;
-  src: url("../../fonts/PublicSans[wght].woff2") format("woff2");
+  src: url("../../fonts/SourceSans3VF-Upright.otf.woff2") format("woff2");
 }
 
 @font-face {
   font-display: swap;
-  font-family: "Public Sans";
+  font-family: "Source Sans 3";
   font-style: italic;
   font-weight: 100 900;
-  src: url("../../fonts/PublicSans-Italic[wght].woff2") format("woff2");
+  src: url("../../fonts/SourceSans3VF-Italic.otf.woff2") format("woff2");
 }

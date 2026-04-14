@@ -67,7 +67,7 @@
 .playlist-btn {
   align-items: center;
   background: transparent;
-  border: 1px solid color-mix(in oklch, currentColor 12%, transparent);
+  border: 1px solid color-mix(in oklch, currentColor 6%, transparent);
   border-radius: var(--radius-md);
   color: inherit;
   cursor: pointer;
@@ -78,7 +78,8 @@
   margin-left: var(--space-2xs);
   max-width: 12rem;
   overflow: hidden;
-  padding: var(--space-3xs) var(--space-2xs);
+  padding: var(--space-3xs) var(--space-2xs) calc(var(--space-3xs) - 1px);
+  text-box: trim-both cap alphabetic;
   text-overflow: ellipsis;
   white-space: nowrap;
 }
@@ -108,22 +109,32 @@
 
 .table-header {
   border-bottom: 1px solid color-mix(in oklch, currentColor 12%, transparent);
-  color: color-mix(in oklch, currentColor 50%, transparent);
+  color: color-mix(in oklch, currentColor 40%, transparent);
   display: flex;
   font-size: 75%;
   font-weight: 500;
   letter-spacing: var(--tracking-wider);
+  line-height: 1;
   padding: 0 var(--space-xs);
+  text-box: trim-both cap alphabetic;
   text-transform: uppercase;
   user-select: none;
 }
 
 .table-header > div {
   align-items: center;
+  border-left: 1px solid color-mix(in oklch, currentColor 12%, transparent);
   cursor: pointer;
   display: flex;
   gap: var(--space-3xs);
-  padding: var(--space-3xs) var(--space-2xs) var(--space-3xs) 0;
+  margin-right: var(--space-2xs);
+  padding: calc(var(--space-3xs) + 1px) 0 var(--space-3xs) var(--space-2xs);
+  position: relative;
+
+  & > i {
+    position: absolute;
+    right: 0;
+  }
 }
 
 .table-header > div:hover {
@@ -135,7 +146,9 @@
 }
 
 .table-header .col-fav {
+  border-left: none;
   cursor: default;
+  margin-right: 0;
 }
 
 /***********************************
@@ -144,7 +157,7 @@
 
 .col-fav {
   flex-shrink: 0;
-  width: var(--space-lg);
+  width: var(--space-md);
 }
 
 .col-title {
@@ -237,7 +250,7 @@
 .track-row .col-title,
 .track-row .col-artist,
 .track-row .col-album {
-  padding-right: var(--space-sm);
+  padding-left: var(--space-2xs);
 }
 
 .track-row span {
