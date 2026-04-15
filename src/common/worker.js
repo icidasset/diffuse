@@ -21,8 +21,9 @@ export { getTransferables } from "@okikio/transferables";
 // happens before any top-level `await` pause) and replays them once `ostiary`
 // sets up the real handler.
 //
-// Detection: regular Workers have `globalThis.onmessage === null`; the main
-// thread and SharedWorkers do not.
+// Detection: regular Workers are instances of DedicatedWorkerGlobalScope.
+// Previously we checked `globalThis.onmessage === null`, but Safari initialises
+// that property as `undefined` rather than `null`, causing the check to fail.
 
 /** @type {MessageEvent[]} */
 const _earlyMessages = [];
@@ -30,7 +31,10 @@ const _earlyMessages = [];
 /** @type {null | (() => void)} */
 let _flushEarlyMessages = null;
 
-if (/** @type {any} */ (globalThis).onmessage === null) {
+if (
+  typeof DedicatedWorkerGlobalScope !== "undefined" &&
+  globalThis instanceof DedicatedWorkerGlobalScope
+) {
   const handler = /** @type {EventListener} */ ((event) => {
     _earlyMessages.push(/** @type {MessageEvent} */ (event));
   });
@@ -58,7 +62,10 @@ export function ostiary(
   callback,
   context = /** @type {T} */ (/** @type {unknown} */ (globalThis)),
 ) {
-  if (/** @type {any} */ (context).onmessage === null) {
+  if (
+    typeof DedicatedWorkerGlobalScope !== "undefined" &&
+    context instanceof DedicatedWorkerGlobalScope
+  ) {
     callback(context, true, crypto.randomUUID());
 
     // Replay any messages that arrived before the handler was registered.
