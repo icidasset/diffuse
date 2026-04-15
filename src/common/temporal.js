@@ -1,5 +1,6 @@
-export const Temporal = /** @type {any} */ (globalThis).Temporal ??
-  (await import("temporal-polyfill")).Temporal;
+import { Temporal as _polyfill } from "temporal-polyfill";
+
+export const Temporal = /** @type {any} */ (globalThis).Temporal ?? _polyfill;
 
 /**
  * @param {string} a
