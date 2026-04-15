@@ -31,9 +31,13 @@ await foundation.orchestrator.favourites();
 await import("~/themes/blur/artwork-controller/element.js");
 await import("~/themes/blur/browser/element.js");
 
-const group = foundation.GROUP === "facets" ? "Deck A" : foundation.GROUP;
-document.querySelector("db-artwork-controller")?.setAttribute("group", group);
-document.querySelector("db-browser")?.setAttribute("group", group);
+const groupLabel = foundation.GROUP === "facets" ? "Deck A" : foundation.GROUP;
+const controller = document.querySelector("db-artwork-controller");
+
+controller?.setAttribute("group", foundation.GROUP);
+controller?.setAttribute("group-label", groupLabel);
+
+document.querySelector("db-browser")?.setAttribute("group", foundation.GROUP);
 
 ////////////////////////////////////////////
 // BACKGROUND SETTINGS
@@ -183,8 +187,9 @@ document.querySelector("#bg-color-clear-btn")?.addEventListener(
 
 // Mix: toggle
 document.querySelector("#bg-mix-btn")?.addEventListener("click", async () => {
-  const isMixed =
-    !(document.querySelector("#bg-overlay")?.classList.contains("bg-overlay--no-mix") ?? false);
+  const isMixed = !(document.querySelector("#bg-overlay")?.classList.contains(
+    "bg-overlay--no-mix",
+  ) ?? false);
   const next = !isMixed;
   applyBackgroundMix(next);
   updateMixSelected(next);

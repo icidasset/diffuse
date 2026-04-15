@@ -25,6 +25,8 @@ import { signal, untracked } from "~/common/signal.js";
  */
 
 class ArtworkController extends DiffuseElement {
+  static observedAttributes = ["group-label"];
+
   constructor() {
     super();
     this.attachShadow({ mode: "open" });
@@ -413,7 +415,7 @@ class ArtworkController extends DiffuseElement {
               window.open(loaderUrl.toString(), "_blank");
             }}"
           >
-            ${this.group}
+            ${this.getAttribute("group-label") ?? this.group}
           </label>
 
           ${artwork}

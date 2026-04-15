@@ -59,12 +59,12 @@ main {
 
   @media (min-width: 63rem) {
     gap: var(--space-sm);
-    padding: var(--space-xl) var(--space-md);
+    padding: var(--space-lg) var(--space-md);
   }
 
   @media (min-width: 84rem) {
     gap: var(--space-lg);
-    padding: var(--space-3xl) var(--space-xl);
+    padding: var(--space-2xl) var(--space-xl);
   }
 }
 

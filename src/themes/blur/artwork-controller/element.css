@@ -1,13 +1,8 @@
 :host {
-  --spacing: var(--space-sm);
   --transition-durition: 750ms;
+  container-type: inline-size;
+  display: block;
   font-size: var(--fs-sm);
-}
-
-@media (min-width: 63rem) {
-  :host {
-    --spacing: var(--space-md);
-  }
 }
 
 main {
@@ -51,7 +46,7 @@ main {
   background: oklch(14% 0 0);
   border-radius: var(--radius-sm);
   box-shadow: var(--box-shadow-lg);
-  font-size: 64%;
+  font-size: 65%;
   font-weight: 600;
   left: var(--space-xs);
   letter-spacing: var(--tracking-wide);
@@ -99,8 +94,14 @@ progress[value]::-moz-progress-bar {
 
 .controller {
   flex-shrink: 0;
-  padding: 0 var(--spacing) var(--spacing);
+  padding: var(--space-sm);
+  padding-top: 0;
   position: relative;
+
+  @container (min-width: 35em) {
+    padding: var(--space-md);
+    padding-top: 0;
+  }
 }
 
 .controller__background {
@@ -112,6 +113,7 @@ progress[value]::-moz-progress-bar {
 }
 
 .controller__inner {
+  margin-top: calc(var(--space-sm) * -1);
   position: relative;
   transition-duration: var(--transition-durition);
   transition-property: color;
@@ -133,7 +135,7 @@ progress[value]::-moz-progress-bar {
     border: 0;
     color: color-mix(in oklch, currentColor 50%, transparent);
     cursor: pointer;
-    font-size: 113%;
+    font-size: 110%;
     padding: calc(var(--space-2xs) + 1px) var(--space-sm) var(--space-2xs);
 
     &[data-enabled="t"] {
@@ -177,8 +179,12 @@ cite {
 
 .progress {
   cursor: pointer;
-  margin: var(--space-xs) 0;
+  margin: var(--space-2xs) 0;
   padding-top: var(--space-2xs);
+
+  @container (min-width: 35em) {
+    margin: var(--space-xs) 0;
+  }
 }
 
 .timestamps {
@@ -203,9 +209,17 @@ cite {
   font-size: 230%;
   gap: var(--space-lg);
   justify-content: center;
-  margin: var(--spacing) 0;
+  margin: var(--space-xs) 0;
   padding: 0;
   text-align: center;
+
+  @container (min-width: 28em) {
+    margin: var(--space-sm) 0;
+  }
+
+  @container (min-width: 35em) {
+    margin: var(--space-md) 0;
+  }
 }
 
 .controller .menu__loader {
