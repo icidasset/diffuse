@@ -330,7 +330,7 @@ class Browser extends DiffuseElement {
       const isFav = favSet.has(key);
       return html`
         <div
-          class="track-row ${index % 2 === 1 ? `track-row--alt` : ``}"
+          class="track-row ${index === 0 ? `track-row--top` : ``} ${index % 2 === 1 ? `track-row--alt` : ``}"
           style="transform: translateY(${top}px);"
           @dblclick="${() => this.playTrack(track)}"
         >
@@ -485,7 +485,7 @@ class Browser extends DiffuseElement {
                 return item?.type === "group"
                   ? html`
                     <div
-                      class="group-header"
+                      class="group-header ${vItem.index === 0 ? `group-header--top` : ``}"
                       style="transform: translateY(${vItem.start}px);"
                     >
                       <i class="ph-fill ph-vinyl-record"></i>

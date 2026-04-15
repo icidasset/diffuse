@@ -1,4 +1,6 @@
 :host {
+  --border-color: color-mix(in oklch, var(--text-color) 6%, transparent);
+
   background: var(--bg-color);
   color: var(--text-color);
   display: flex;
@@ -22,10 +24,13 @@
 
 .toolbar {
   align-items: center;
-  border-bottom: 1px solid color-mix(in oklch, currentColor 6%, transparent);
+  background: var(--bg-color);
+  border-bottom: 1px solid var(--border-color);
   display: flex;
   gap: var(--space-sm);
   padding: var(--space-3xs) var(--space-xs);
+  position: relative;
+  z-index: 10;
 }
 
 .search-field {
@@ -67,7 +72,7 @@
 .playlist-btn {
   align-items: center;
   background: transparent;
-  border: 1px solid color-mix(in oklch, currentColor 6%, transparent);
+  border: 1px solid var(--border-color);
   border-radius: var(--radius-md);
   color: inherit;
   cursor: pointer;
@@ -108,7 +113,9 @@
  ***********************************/
 
 .table-header {
-  border-bottom: 1px solid color-mix(in oklch, currentColor 12%, transparent);
+  box-shadow:
+    0 4px 12px -1px rgba(0, 0, 0, 0.1),
+    0 2px 2px -2px rgba(0, 0, 0, 0.1);
   color: color-mix(in oklch, currentColor 40%, transparent);
   display: flex;
   font-size: 75%;
@@ -119,11 +126,18 @@
   text-box: trim-both cap alphabetic;
   text-transform: uppercase;
   user-select: none;
+
+  @media (prefers-color-scheme: dark) {
+    border-bottom: 1px solid var(--border-color);
+    box-shadow:
+      0 4px 12px -1px rgba(0, 0, 0, 0.45),
+      0 2px 2px -2px rgba(0, 0, 0, 0.45);
+  }
 }
 
 .table-header > div {
   align-items: center;
-  border-left: 1px solid color-mix(in oklch, currentColor 12%, transparent);
+  border-left: 1px solid var(--border-color);
   cursor: pointer;
   display: flex;
   gap: var(--space-3xs);
@@ -183,6 +197,7 @@
   flex: 1;
   overflow-y: auto;
   min-height: 0;
+  user-select: none;
 }
 
 .virtual-scroll {
@@ -234,7 +249,7 @@
 }
 
 .track-row:hover {
-  background-color: color-mix(in oklch, currentColor 6%, transparent);
+  background-color: color-mix(in oklch, currentColor 6%, var(--bg-color));
 }
 
 .track-row > div {
@@ -298,6 +313,30 @@
 
   .fav-btn--active:hover {
     color: oklch(0.52 0.22 25);
+  }
+}
+
+/***********************************
+ * Group header + Track row
+ ***********************************/
+
+.group-header--top,
+.track-row--top {
+  background: var(--bg-color);
+
+  &::before {
+    border-top: 1px solid var(--border-color);
+    content: "";
+    height: 0;
+    left: 0;
+    pointer-events: none;
+    position: absolute;
+    right: 0;
+    top: 0;
+
+    @media (prefers-color-scheme: dark) {
+      border-top-color: transparent;
+    }
   }
 }
 
