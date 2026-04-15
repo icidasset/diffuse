@@ -1,5 +1,5 @@
 :host {
-  --border-color: color-mix(in oklch, var(--text-color) 6%, transparent);
+  --border-color: color-mix(in oklch, var(--text-color) 9%, transparent);
 
   background: var(--bg-color);
   color: var(--text-color);

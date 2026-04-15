@@ -1,15 +1,9 @@
 :root {
-  --facet-bg-color: var(--color-2);
-}
-
-@media (prefers-color-scheme: dark) {
-  :root {
-    --facet-bg-color: var(--color-3);
-  }
+  --facet-bg-color: #565450;
 }
 
 body {
-  background-color: oklch(from var(--facet-bg-color) calc(l - 0.025) c h);
+  background-color: var(--facet-bg-color);
   color: var(--text-color);
   display: flex;
   flex-direction: column;
@@ -17,6 +11,30 @@ body {
   height: 100dvh;
   transition-duration: 750ms;
   transition-property: background-color;
+}
+
+/***********************************
+ * Background overlay
+ ***********************************/
+
+#bg-overlay {
+  background-position: center;
+  background-size: cover;
+  inset: 0;
+  mix-blend-mode: luminosity;
+  opacity: 0;
+  pointer-events: none;
+  position: fixed;
+  transition: opacity 750ms;
+  z-index: -1;
+}
+
+#bg-overlay.bg-overlay--visible {
+  opacity: 1;
+}
+
+#bg-overlay.bg-overlay--no-mix {
+  mix-blend-mode: normal;
 }
 
 /***********************************
@@ -41,12 +59,12 @@ main {
 
   @media (min-width: 63rem) {
     gap: var(--space-sm);
-    padding: var(--space-md);
+    padding: var(--space-xl) var(--space-md);
   }
 
   @media (min-width: 84rem) {
     gap: var(--space-lg);
-    padding: var(--space-xl);
+    padding: var(--space-3xl) var(--space-xl);
   }
 }
 
@@ -55,7 +73,8 @@ main {
  ***********************************/
 
 db-artwork-controller,
-db-browser {
+db-browser,
+#settings-panel {
   border-radius: var(--radius-md);
   box-shadow: var(--box-shadow-md);
   justify-self: end;
@@ -63,7 +82,8 @@ db-browser {
   width: 100%;
 }
 
-db-artwork-controller {
+db-artwork-controller,
+#settings-panel {
   grid-column: 3;
   grid-row: 1;
   min-height: 50vh;
@@ -74,7 +94,264 @@ db-browser {
   grid-row: 1 / span 2;
 }
 
+/***********************************
+ * Settings panel
+ ***********************************/
+
+#settings-panel {
+  display: none;
+}
+
+main.settings-open db-artwork-controller {
+  display: none;
+}
+
+main.settings-open #settings-panel {
+  display: flex;
+  flex-direction: column;
+}
+
+.settings-scroll {
+  background: var(--bg-color);
+  color: var(--text-color);
+  flex: 1;
+  font-size: var(--fs-sm);
+  overflow-y: auto;
+  padding: var(--space-md);
+}
+
+.settings-section {
+  &:not(:last-child) {
+    margin-bottom: var(--space-lg);
+  }
+
+  h2 {
+    font-size: 65%;
+    font-weight: 500;
+    letter-spacing: var(--tracking-wider);
+    margin: 0 0 var(--space-xs) 0;
+    opacity: 0.4;
+    text-transform: uppercase;
+  }
+}
+
+/* Background image grid */
+
+.bg-images {
+  display: grid;
+  gap: var(--space-3xs);
+  grid-template-columns: repeat(5, 1fr);
+  margin-bottom: var(--space-2xs);
+}
+
+.bg-thumb {
+  aspect-ratio: 16 / 10;
+  background: oklch(from var(--text-color) l c h / 0.07);
+  border: 0;
+  border-radius: var(--radius-sm);
+  color: white;
+  cursor: pointer;
+  overflow: hidden;
+  padding: 0;
+  position: relative;
+  transition: opacity 150ms;
+
+  img {
+    display: block;
+    height: 100%;
+    object-fit: cover;
+    width: 100%;
+  }
+
+  .bg-thumb-check {
+    display: none;
+  }
+
+  &[data-selected] .bg-thumb-check {
+    align-items: center;
+    background: oklch(from black l c h / 0.4);
+    display: flex;
+    inset: 0;
+    justify-content: center;
+    position: absolute;
+  }
+
+  &:hover {
+    opacity: 0.8;
+  }
+}
+
+/* Special option buttons */
+
+.bg-special-options {
+  display: flex;
+  gap: var(--space-2xs);
+  margin-bottom: var(--space-2xs);
+}
+
+.bg-special-btn {
+  align-items: center;
+  background: oklch(from var(--text-color) l c h / 0.07);
+  border: 2px solid oklch(from var(--text-color) l c h / 0.1);
+  border-radius: var(--radius-md);
+  color: oklch(from var(--text-color) l c h / 0.6);
+  cursor: pointer;
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  font-family: inherit;
+  gap: var(--space-2xs);
+  justify-content: center;
+  overflow: hidden;
+  padding: var(--space-xs) 0;
+  position: relative;
+  transition-duration: 150ms;
+  transition-property: border-color, color;
+
+  i {
+    font-size: 120%;
+    line-height: 0.75;
+  }
+
+  span {
+    font-size: 70%;
+    font-weight: 600;
+    letter-spacing: var(--tracking-wide);
+    text-box: trim-both cap alphabetic;
+    text-transform: uppercase;
+  }
+
+  &[data-selected],
+  &:hover,
+  &:focus {
+    border-color: oklch(from var(--text-color) l c h / 0.4);
+    color: var(--text-color);
+  }
+
+  /* Hide the color input; label click still activates it */
+  input[type="color"] {
+    height: 1px;
+    left: 0;
+    opacity: 0;
+    pointer-events: none;
+    position: absolute;
+    top: 0;
+    width: 1px;
+  }
+}
+
+/* URL input row */
+
+.bg-url-row {
+  display: flex;
+  gap: var(--space-2xs);
+
+  input {
+    background: oklch(from var(--text-color) l c h / 0.07);
+    border: 2px solid oklch(from var(--text-color) l c h / 0.1);
+    border-radius: var(--radius-md);
+    color: var(--text-color);
+    flex: 1;
+    font-family: inherit;
+    font-size: inherit;
+    padding: var(--space-xs) var(--space-sm);
+
+    &::placeholder {
+      color: oklch(from var(--text-color) l c h / 0.4);
+    }
+
+    &:focus {
+      border-color: oklch(from var(--text-color) l c h / 0.4);
+      outline: none;
+    }
+  }
+
+  button {
+    background: oklch(from var(--text-color) l c h / 0.12);
+    border: 0;
+    border-radius: var(--radius-md);
+    color: var(--text-color);
+    cursor: pointer;
+    padding: var(--space-xs) var(--space-sm);
+    transition: background 150ms;
+
+    &:hover {
+      background: oklch(from var(--text-color) l c h / 0.22);
+    }
+  }
+}
+
+/* Mix toggle */
+
+.bg-mix-btn {
+  align-items: center;
+  background: oklch(from var(--text-color) l c h / 0.07);
+  border: 2px solid oklch(from var(--text-color) l c h / 0.1);
+  border-radius: var(--radius-md);
+  color: oklch(from var(--text-color) l c h / 0.6);
+  cursor: pointer;
+  display: flex;
+  font-family: inherit;
+  font-size: 70%;
+  font-weight: 600;
+  gap: var(--space-2xs);
+  letter-spacing: var(--tracking-wide);
+  margin-top: var(--space-2xs);
+  padding: var(--space-xs) var(--space-sm);
+  text-transform: uppercase;
+  transition-duration: 150ms;
+  transition-property: border-color, color;
+  width: 100%;
+
+  &[data-selected],
+  &:hover,
+  &:focus {
+    border-color: oklch(from var(--text-color) l c h / 0.4);
+    color: var(--text-color);
+  }
+}
+
+/* Background color section */
+
+.bg-color-row {
+  display: flex;
+  gap: var(--space-2xs);
+}
+
+.bg-color-swatch {
+  border: 2px solid oklch(from var(--text-color) l c h / 0.1);
+  border-radius: var(--radius-md);
+  cursor: pointer;
+  display: block;
+  flex: 1;
+  min-height: 2.5rem;
+  overflow: hidden;
+  position: relative;
+  transition-duration: 150ms;
+  transition-property: border-color, background-color;
+
+  input[type="color"] {
+    height: 1px;
+    left: 0;
+    opacity: 0;
+    pointer-events: none;
+    position: absolute;
+    top: 0;
+    width: 1px;
+  }
+
+  &[data-selected] {
+    border-color: oklch(from var(--text-color) l c h / 0.4);
+  }
+}
+
+/***********************************
+ * Shortcuts
+ ***********************************/
+
 #shortcuts {
+  --shortcut-color: oklch(100% 0 0);
+
   display: flex;
   font-size: var(--fs-sm);
   gap: var(--space-2xs);
@@ -83,15 +360,16 @@ db-browser {
   a {
     align-items: center;
     background-color: transparent;
-    border: 2px dotted oklch(from var(--text-color) l c h / 0.1);
+    border: 2px dotted oklch(from var(--shortcut-color) l c h / 0.3);
     border-radius: var(--radius-md);
-    color: oklch(from var(--text-color) l c h / 0.6);
+    color: oklch(from var(--shortcut-color) l c h / 0.7);
     cursor: pointer;
     display: flex;
     flex: 1;
     gap: var(--space-3xs);
     line-height: 0.75;
     justify-content: center;
+    mix-blend-mode: difference;
     overflow: hidden;
     padding: var(--space-xs) var(--space-3xs);
     text-box: trim-both cap alphabetic;
@@ -102,9 +380,10 @@ db-browser {
     white-space: nowrap;
 
     &:focus,
-    &:hover {
-      border-color: oklch(from var(--text-color) l c h / 0.3);
-      color: oklch(from var(--text-color) l c h / 1);
+    &:hover,
+    &[data-active="t"] {
+      border-color: oklch(from var(--shortcut-color) l c h / 0.5);
+      color: oklch(from var(--shortcut-color) l c h / 1);
     }
   }
 
