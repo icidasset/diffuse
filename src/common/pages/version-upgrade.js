@@ -1,7 +1,7 @@
-import { greaterThan, parse as parseSemver } from "@std/semver";
+import { canParse, greaterThan, parse as parseSemver } from "@std/semver";
 
 // Version upgrade (only works with `diffuse-artifacts` deployments)
-if (true || document.location.hostname.endsWith("diffuse.sh")) {
+if (document.location.hostname.endsWith("diffuse.sh")) {
   document.querySelectorAll("#status").forEach(async (status) => {
     const versionOrCid =
       document.location.pathname.slice(1).split("/")[0]?.toLowerCase() ?? "";
@@ -11,10 +11,14 @@ if (true || document.location.hostname.endsWith("diffuse.sh")) {
       { with: { type: "json" } }
     ).catch(() => ({ default: {} }));
 
-    // Latest by semver
+    // Latest by semver (ignore non-semver versions)
     const lastArtifact = Object.values(artifacts).reduce((max, artifact) => {
+      if (!canParse(artifact.version)) return max;
       if (!max) return artifact;
-      return greaterThan(parseSemver(artifact.version), parseSemver(max.version))
+      return greaterThan(
+          parseSemver(artifact.version),
+          parseSemver(max.version),
+        )
         ? artifact
         : max;
     }, null);
