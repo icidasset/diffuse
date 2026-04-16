@@ -52,7 +52,7 @@ main {
   letter-spacing: var(--tracking-wide);
   line-height: 0.75;
   padding: calc(var(--space-2xs) * 0.8) calc(var(--space-2xs) * 0.65);
-  padding-bottom: calc(var(--space-2xs) * 0.8 - 1px);
+  padding-bottom: calc(var(--space-2xs) * 0.575);
   position: absolute;
   text-box: trim-both cap alphabetic;
   text-transform: uppercase;
@@ -98,7 +98,7 @@ progress[value]::-moz-progress-bar {
   padding-top: 0;
   position: relative;
 
-  @container (min-width: 35em) {
+  @container (min-width: 28em) {
     padding: var(--space-md);
     padding-top: 0;
   }
@@ -113,7 +113,7 @@ progress[value]::-moz-progress-bar {
 }
 
 .controller__inner {
-  margin-top: calc(var(--space-sm) * -1);
+  margin-top: calc(var(--space-lg) * -1);
   position: relative;
   transition-duration: var(--transition-durition);
   transition-property: color;
@@ -124,42 +124,19 @@ progress[value]::-moz-progress-bar {
   color: rgba(0, 0, 0, 0.6);
 }
 
-/* Button row */
-
-.button-row {
-  display: inline-flex;
-  gap: 1px;
-
-  button {
-    background: color-mix(in oklch, currentColor 7.5%, transparent);
-    border: 0;
-    color: color-mix(in oklch, currentColor 50%, transparent);
-    cursor: pointer;
-    font-size: 110%;
-    padding: calc(var(--space-2xs) + 1px) var(--space-sm) var(--space-2xs);
-
-    &[data-enabled="t"] {
-      background-color: color-mix(in oklch, currentColor 25%, transparent);
-      color: currentColor;
-    }
-  }
-
-  button:first-child {
-    border-bottom-left-radius: var(--radius-xl);
-    border-top-left-radius: var(--radius-xl);
-  }
-
-  button:last-child {
-    border-bottom-right-radius: var(--radius-xl);
-    border-top-right-radius: var(--radius-xl);
-  }
-}
-
 /* Now playing */
+
+.now-playing {
+  align-items: center;
+  display: flex;
+  gap: var(--space-xs);
+}
 
 cite {
   display: block;
+  flex: 1;
   font-style: normal;
+  min-width: 0;
   text-shadow: var(--text-shadow-sm);
 
   & > span,
@@ -168,6 +145,22 @@ cite {
     overflow: hidden;
     text-overflow: ellipsis;
     white-space: nowrap;
+  }
+}
+
+.fav-button {
+  background: color-mix(in oklch, currentColor 7.5%, transparent);
+  border: 0;
+  border-radius: var(--radius-xl);
+  color: color-mix(in oklch, currentColor 50%, transparent);
+  cursor: pointer;
+  flex-shrink: 0;
+  font-size: 110%;
+  padding: calc(var(--space-2xs) + 1px) var(--space-sm) var(--space-2xs);
+
+  &[data-enabled="t"] {
+    background-color: color-mix(in oklch, currentColor 25%, transparent);
+    color: currentColor;
   }
 }
 
@@ -207,18 +200,23 @@ cite {
   align-items: center;
   display: flex;
   font-size: 230%;
-  gap: var(--space-lg);
+  gap: var(--space-md);
   justify-content: center;
   margin: var(--space-xs) 0;
   padding: 0;
   text-align: center;
 
   @container (min-width: 28em) {
+    gap: var(--space-lg);
     margin: var(--space-sm) 0;
   }
 
   @container (min-width: 35em) {
     margin: var(--space-md) 0;
+  }
+
+  @container (min-width: 70em) {
+    gap: var(--space-xl);
   }
 }
 
@@ -233,12 +231,21 @@ cite {
   list-style: none;
   transition-duration: var(--transition-durition);
   transition-property: opacity;
+
+  &[data-enabled="f"] {
+    opacity: 0.4;
+  }
 }
 
 .controller .ph-pause,
 .controller .ph-play,
 .controller .menu__loader {
   font-size: 130%;
+}
+
+.controller .ph-shuffle,
+.controller .ph-repeat {
+  font-size: 55%;
 }
 
 /* Volume */
@@ -259,16 +266,6 @@ cite {
 
 .volume i {
   cursor: pointer;
-}
-
-/* Footer */
-
-footer {
-  align-items: center;
-  display: flex;
-  gap: var(--space-2xs);
-  justify-content: center;
-  margin-top: var(--space-sm);
 }
 
 /* Gradient blur */

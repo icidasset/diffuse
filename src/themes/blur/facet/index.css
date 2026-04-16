@@ -53,7 +53,7 @@ main {
 
   @media (min-width: 35rem) {
     display: grid;
-    grid-template-columns: repeat(3, 1fr);
+    grid-template-columns: repeat(10, 1fr);
     grid-template-rows: 1fr;
   }
 
@@ -64,7 +64,11 @@ main {
 
   @media (min-width: 84rem) {
     gap: var(--space-lg);
-    padding: var(--space-2xl) var(--space-xl);
+    padding: var(--space-2xl) var(--space-md);
+  }
+
+  @media (min-width: 126rem) {
+    padding: var(--space-3xl) 0;
   }
 }
 
@@ -84,13 +88,13 @@ db-browser,
 
 db-artwork-controller,
 #settings-panel {
-  grid-column: 3;
+  grid-column: 8 / span 3;
   grid-row: 1;
   min-height: 50vh;
 }
 
 db-browser {
-  grid-column: 1 / span 2;
+  grid-column: 1 / span 7;
   grid-row: 1 / span 2;
 }
 
@@ -355,6 +359,8 @@ main.settings-open #settings-panel {
   display: flex;
   font-size: var(--fs-sm);
   gap: var(--space-2xs);
+  grid-column: 8 / span 3;
+  grid-row: 2;
 
   button,
   a {

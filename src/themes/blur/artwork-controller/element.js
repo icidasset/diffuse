@@ -95,7 +95,13 @@ class ArtworkController extends DiffuseElement {
     /** @type {RepeatShuffleEngine} */
     const repeatShuffle = query(this, "repeat-shuffle-engine-selector");
 
-    whenElementsDefined({ artwork, controller, favourites, input, repeatShuffle })
+    whenElementsDefined({
+      artwork,
+      controller,
+      favourites,
+      input,
+      repeatShuffle,
+    })
       .then(
         () => {
           this.$artwork.value = artwork;
@@ -191,7 +197,9 @@ class ArtworkController extends DiffuseElement {
               index: (currArtwork.current?.index ?? 0) + 1,
               loaded: false,
               url: URL.createObjectURL(
-                new Blob([/** @type {ArrayBuffer} */ (bytes.buffer)], { type: mime }),
+                new Blob([/** @type {ArrayBuffer} */ (bytes.buffer)], {
+                  type: mime,
+                }),
               ),
             };
           })()
@@ -326,7 +334,9 @@ class ArtworkController extends DiffuseElement {
     const percentage = target ? event.offsetX / target.clientWidth : 0;
     const audioId = this.$controller.value?.$queue.value?.now()?.id;
 
-    if (audioId) this.$controller.value?.$audio.value?.seek({ audioId, percentage });
+    if (audioId) {
+      this.$controller.value?.$audio.value?.seek({ audioId, percentage });
+    }
   };
 
   /**
@@ -390,7 +400,9 @@ class ArtworkController extends DiffuseElement {
           @load="${this.artworkLoaded}"
           data-hash="${art.hash}"
           src="${art.url}"
-          style="opacity: ${art.loaded ? `1` : `0`}"
+          style="opacity: ${art.loaded
+            ? `1`
+            : `0`}; pointer-events: ${art.loaded ? `auto` : `none`};"
         />
       `);
     });
@@ -405,13 +417,21 @@ class ArtworkController extends DiffuseElement {
         `var(--color-3)`}; opacity: 0;">
         <section class="artwork">
           <label
-            style="display: ${this.group === DEFAULT_GROUP ? `none` : `block`}; cursor: pointer;"
+            style="display: ${this.group === DEFAULT_GROUP
+              ? `none`
+              : `block`}; cursor: pointer;"
             @click="${() => {
               const base = document.baseURI;
-              const facetUrl = new URL("themes/blur/artwork-controller/facet/index.html", base);
+              const facetUrl = new URL(
+                "themes/blur/artwork-controller/facet/index.html",
+                base,
+              );
               facetUrl.searchParams.set("group", this.group);
               const loaderUrl = new URL("l/", base);
-              loaderUrl.searchParams.set("path", facetUrl.pathname.slice(1) + facetUrl.search);
+              loaderUrl.searchParams.set(
+                "path",
+                facetUrl.pathname.slice(1) + facetUrl.search,
+              );
               window.open(loaderUrl.toString(), "_blank");
             }}"
           >
@@ -443,16 +463,26 @@ class ArtworkController extends DiffuseElement {
           <section class="controller__inner">
             <!-- NOW PLAYING -->
 
-            <cite>
-              <strong>${activeQueueItem?.tags?.title ||
-                "Diffuse"}</strong>
-              <span style="font-style: ${activeQueueItem
-                ? `normal`
-                : `italic`}">
-                ${activeQueueItem?.tags?.artist ??
-                  (activeQueueItem ? `` : `Waiting on queue ...`)}
-              </span>
-            </cite>
+            <div class="now-playing">
+              <cite>
+                <strong>${activeQueueItem?.tags?.title ||
+                  "Diffuse"}</strong>
+                <span style="font-style: ${activeQueueItem
+                  ? `normal`
+                  : `italic`}">
+                  ${activeQueueItem?.tags?.artist ??
+                    (activeQueueItem ? `` : `Waiting on queue ...`)}
+                </span>
+              </cite>
+              <button
+                class="fav-button"
+                title="Toggle favourite"
+                data-enabled="${isFav ? `t` : `f`}"
+                @click="${this.toggleFavourite}"
+              >
+                <i class="ph-${isFav ? `fill` : `bold`} ph-heart"></i>
+              </button>
+            </div>
 
             <!-- PROGRESS -->
 
@@ -471,6 +501,15 @@ class ArtworkController extends DiffuseElement {
             <!-- CONTROLS -->
 
             <menu>
+              <!-- repeat -->
+              <li @click="${this.toggleRepeat}" data-enabled="${isRepeat
+                ? `t`
+                : `f`}">
+                <i class="ph-${isRepeat
+                  ? `fill`
+                  : `bold`} ph-repeat" title="Toggle repeat"></i>
+              </li>
+
               <!-- previous -->
               <li @click="${this.previous}">
                 <i class="ph-fill ph-rewind" title="Previous track"></i>
@@ -509,6 +548,15 @@ class ArtworkController extends DiffuseElement {
               <li @click="${this.next}">
                 <i class="ph-fill ph-fast-forward" title="Next track"></i>
               </li>
+
+              <!-- shuffle -->
+              <li @click="${this.toggleShuffle}" data-enabled="${isShuffle
+                ? `t`
+                : `f`}">
+                <i class="ph-${isShuffle
+                  ? `fill`
+                  : `bold`} ph-shuffle" title="Toggle shuffle"></i>
+              </li>
             </menu>
 
             <!-- VOLUME -->
@@ -516,38 +564,13 @@ class ArtworkController extends DiffuseElement {
             <div class="volume">
               <i @click="${this.mute}" class="ph-fill ph-speaker-none"></i>
               <div @click="${this.setVolume}" class="progress-bar">
-                <progress max="100" value="${(this.$controller.value?.$audio.value?.volume() ??
+                <progress max="100" value="${(this.$controller.value?.$audio
+                  .value?.volume() ??
                   0) * 100}"></progress>
               </div>
               <i @click="${this
                 .fullVolume}" class="ph-fill ph-speaker-high"></i>
             </div>
-
-            <footer>
-              <div class="button-row">
-                <button
-                  title="Toggle repeat"
-                  data-enabled="${isRepeat ? `t` : `f`}"
-                  @click="${this.toggleRepeat}"
-                >
-                  <i class="ph-${isRepeat ? `fill` : `bold`} ph-repeat"></i>
-                </button>
-                <button
-                  title="Toggle favourite"
-                  data-enabled="${isFav ? `t` : `f`}"
-                  @click="${this.toggleFavourite}"
-                >
-                  <i class="ph-${isFav ? `fill` : `bold`} ph-heart"></i>
-                </button>
-                <button
-                  title="Toggle shuffle"
-                  data-enabled="${isShuffle ? `t` : `f`}"
-                  @click="${this.toggleShuffle}"
-                >
-                  <i class="ph-${isShuffle ? `fill` : `bold`} ph-shuffle"></i>
-                </button>
-              </div>
-            </footer>
           </section>
         </section>
       </main>
