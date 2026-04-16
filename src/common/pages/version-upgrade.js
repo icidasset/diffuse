@@ -28,6 +28,8 @@ if (document.location.hostname.endsWith("diffuse.sh")) {
       ? true
       : usesCid
       ? versionOrCid === lastArtifact.cid
+      : !canParse(versionOrCid)
+      ? true
       : versionOrCid === lastArtifact.version;
 
     // Remove loading animation
