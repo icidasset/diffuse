@@ -35,6 +35,7 @@
     "@orama/orama": "npm:@orama/orama@^3.1.18",
     "@phosphor-icons/web": "npm:@phosphor-icons/web@^2.1.2",
     "@std/html": "jsr:@std/html@^1.0.5",
+    "@std/semver": "jsr:@std/semver@^1.0.8",
     "@vicary/debounce-microtask": "jsr:@vicary/debounce-microtask@^0.1.8",
     "@tanstack/virtual-core": "npm:@tanstack/virtual-core@^3.13.0",
     "alien-signals": "npm:alien-signals@^3.1.2",

@@ -1,5 +1,7 @@
+import { greaterThan, parse as parseSemver } from "@std/semver";
+
 // Version upgrade (only works with `diffuse-artifacts` deployments)
-if (document.location.hostname.endsWith("diffuse.sh")) {
+if (true || document.location.hostname.endsWith("diffuse.sh")) {
   document.querySelectorAll("#status").forEach(async (status) => {
     const versionOrCid =
       document.location.pathname.slice(1).split("/")[0]?.toLowerCase() ?? "";
@@ -7,13 +9,20 @@ if (document.location.hostname.endsWith("diffuse.sh")) {
     const { default: artifacts } = await import(
       `${document.location.origin}/artifacts.json`,
       { with: { type: "json" } }
-    );
+    ).catch(() => ({ default: {} }));
 
-    // Latest is located at the end
-    const lastArtifact = Object.values(artifacts).reverse()[0];
+    // Latest by semver
+    const lastArtifact = Object.values(artifacts).reduce((max, artifact) => {
+      if (!max) return artifact;
+      return greaterThan(parseSemver(artifact.version), parseSemver(max.version))
+        ? artifact
+        : max;
+    }, null);
 
     // Check if using latest
-    const isLatest = usesCid
+    const isLatest = !lastArtifact
+      ? true
+      : usesCid
       ? versionOrCid === lastArtifact.cid
       : versionOrCid === lastArtifact.version;
 
@@ -42,8 +51,4 @@ if (document.location.hostname.endsWith("diffuse.sh")) {
   document.querySelectorAll("#status a").forEach((el) => {
     el.classList.add("hidden");
   });
-
-  // document.querySelectorAll("#status").forEach((status) => {
-  //   status.remove();
-  // });
 }

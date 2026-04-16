@@ -22,7 +22,9 @@ scripts:
         <a href="./" style="display: inline-block;">
           {{ await comp.diffuse.logo() }}
         </a>
-        {{ await comp.diffuse.status() }}
+        <span style="direction: rtl">
+          {{ await comp.diffuse.status() }}
+        </span>
       </div>
     </div>
     {{ await comp.nav({ url, facets }) }}
