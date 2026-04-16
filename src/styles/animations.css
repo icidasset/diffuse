@@ -5,9 +5,37 @@
   --animate-bounce: bounce 1s infinite;
 }
 
+/* Default: animate the element itself */
 .animate-spin {
   animation: var(--animate-spin);
+  display: inline-block;
 }
+
+/* When animate-spin is directly on a Phosphor <i>, animate ::before instead */
+i[class^="ph-"].animate-spin {
+  animation: none;
+}
+
+i[class^="ph-"].animate-spin::before {
+  display: inline-block;
+  animation: var(--animate-spin);
+  line-height: 0;
+  transform-origin: center;
+}
+
+/* When animate-spin is on a parent of a Phosphor <i>,
+   don't rotate the parent — rotate the icon's ::before instead */
+.animate-spin:has(> i[class^="ph-"]) {
+  animation: none;
+}
+
+.animate-spin > i[class^="ph-"]::before {
+  display: inline-block;
+  animation: var(--animate-spin);
+  line-height: 0;
+  transform-origin: center;
+}
+
 
 .animate-ping {
   animation: var(--animate-ping);
