@@ -25,9 +25,11 @@ export function update() {
 
   const items = /** @type {HTMLElement[]} */ ([...nav.children]);
 
-  // Reset: show all items, hide button
+  // Reset: show all items, hide button, restore default icon
   for (const item of items) item.style.display = "";
   btn.style.display = "none";
+  const span = btn.querySelector("span");
+  if (span) span.innerHTML = `<i class="ph-fill ph-dots-three-outline"></i>`;
 
   // Available width is the nav-container's width (nav may be content-sized in column layouts)
   const availableWidth = (nav.parentElement ?? nav).clientWidth;
@@ -38,22 +40,31 @@ export function update() {
   const gap = parseFloat(getComputedStyle(nav).columnGap) || 0;
   const contentWidth = () => {
     const visible = items.filter((el) => el.style.display !== "none");
-    return visible.reduce((acc, el) => acc + el.offsetWidth, 0)
-      + gap * Math.max(0, visible.length - 1);
+    return visible.reduce((acc, el) => acc + el.offsetWidth, 0) +
+      gap * Math.max(0, visible.length - 1);
   };
 
   // No overflow — nothing to do
   if (contentWidth() <= availableWidth) return;
 
-  // Show button (takes up space; subtract its width from available)
+  // Show button (takes up space; subtract its width + container gap from available)
   btn.style.display = "";
+  const containerGap = parseFloat(getComputedStyle(nav.parentElement ?? nav).columnGap) || 0;
 
   // Hide items from right until content fits
   const hidden = [];
   for (let i = items.length - 1; i >= 0; i--) {
-    if (contentWidth() <= availableWidth - btn.offsetWidth) break;
+    if (contentWidth() <= availableWidth - btn.offsetWidth - containerGap) break;
     items[i].style.display = "none";
     hidden.unshift(items[i]);
+  }
+
+  // Update button label: show "Menu" when all items are hidden
+  const allHidden = hidden.length === items.length;
+  if (span) {
+    span.innerHTML = allHidden
+      ? `<i class="ph-bold ph-list"></i> Menu`
+      : `<i class="ph-fill ph-dots-three-outline"></i>`;
   }
 
   // Populate dropdown with clones (stripped of button styling)

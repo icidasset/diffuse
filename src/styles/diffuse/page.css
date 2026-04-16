@@ -82,7 +82,11 @@ header {
     border-bottom: 1px solid var(--border-color);
     display: flex;
     flex: 1;
-    gap: var(--space-lg);
+    gap: var(--space-md);
+
+    @media (min-width: 42rem) {
+      gap: var(--space-lg);
+    }
   }
 }
 
@@ -835,6 +839,7 @@ ul li::marker {
   align-items: center;
   display: flex;
   font-size: var(--fs-lg);
+  gap: var(--space-sm);
   justify-content: space-between;
   margin: var(--space-lg) 0 var(--space-xl);
 
@@ -863,6 +868,7 @@ ul li::marker {
   align-items: center;
   display: flex;
   flex: 1;
+  font-size: var(--fs-sm);
   gap: var(--space-xs);
   min-width: 0;
 }
@@ -872,7 +878,6 @@ nav {
   display: flex;
   flex: 1;
   flex-wrap: nowrap;
-  font-size: var(--fs-sm);
   gap: var(--space-xs);
   justify-content: flex-end;
   overflow: hidden;
@@ -915,18 +920,6 @@ nav {
   .ph-spinner {
     position: relative;
     top: 1px;
-  }
-}
-
-#status--filler-container {
-  align-items: center;
-  display: flex;
-  height: var(--space-xl);
-  justify-content: end;
-  padding: 0 var(--space-lg);
-
-  @media (min-width: 42rem) {
-    height: 100%;
   }
 }
 

@@ -39,7 +39,11 @@ if (document.location.hostname.endsWith("diffuse.sh")) {
     });
   });
 } else {
-  document.querySelectorAll("#status").forEach((status) => {
-    status.remove();
+  document.querySelectorAll("#status a").forEach((el) => {
+    el.classList.add("hidden");
   });
+
+  // document.querySelectorAll("#status").forEach((status) => {
+  //   status.remove();
+  // });
 }
