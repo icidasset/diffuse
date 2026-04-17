@@ -218,6 +218,7 @@ definitions:
       <a href="./" style="display: inline-block;">
         {{ await comp.diffuse.logo() }}
       </a>
+      {{ await comp.diffuse.status() }}
     </div>
     <p class="construct dither-mask">
       Elements
@@ -328,3 +329,8 @@ definitions:
     {{ await comp.list({ items: definitions }) }}
   </section>
 </main>
+
+<script type="module">
+  import { versionUpgrade } from "./common/pages/version-upgrade.js";
+  versionUpgrade();
+</script>
