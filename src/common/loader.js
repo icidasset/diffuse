@@ -161,6 +161,8 @@ export async function ensureHTML(item) {
  * @param {{ context?: Error; throw?: boolean }} [options]
  */
 export function renderError(container, error, options) {
+  document.querySelector("#diffuse-loader")?.classList.add("loaded");
+  container.classList.add("has-loaded");
   container.innerHTML = `
     <div class="diffuse">
       <a href="./" class="flex" style="color: inherit; text-decoration: none;">

@@ -2,7 +2,8 @@
   --transition-durition: 750ms;
   container-type: inline-size;
   display: block;
-  font-size: var(--fs-sm);
+  font-size: var(--fs-xs);
+  font-size: calc((var(--fs-xs) + var(--fs-sm)) / 2);
 }
 
 main {
@@ -52,7 +53,7 @@ main {
   letter-spacing: var(--tracking-wide);
   line-height: 0.75;
   padding: calc(var(--space-2xs) * 0.8) calc(var(--space-2xs) * 0.65);
-  padding-bottom: calc(var(--space-2xs) * 0.575);
+  padding-bottom: calc(var(--space-2xs) * 0.675);
   position: absolute;
   text-box: trim-both cap alphabetic;
   text-transform: uppercase;

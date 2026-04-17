@@ -56,8 +56,8 @@ const storedBg = getSettingValue(BACKGROUND_KEY);
 const storedBgColor = getSettingValue(BACKGROUND_COLOR_KEY);
 const storedBgMix = getSettingValue(BACKGROUND_MIX_KEY);
 
-const activeBg = storedBg ?? "builtin:13";
-const activeMix = storedBgMix !== null ? storedBgMix === "true" : true;
+const activeBg = storedBg ?? "builtin:12";
+const activeMix = storedBgMix !== null ? storedBgMix === "true" : false;
 
 applyBackgroundMix(activeMix);
 if (storedBgColor) applyBackgroundColor(storedBgColor);
@@ -298,12 +298,39 @@ async function applyBackgroundImage(value) {
     });
 
     overlay.style.backgroundImage = `url('${imageUrl.replace(/'/g, "\\'")}')`;
+    overlay.style.backgroundPosition = value.startsWith("builtin:")
+      ? backgroundPositioning(`${value.slice(8)}.jpg`)
+      : "";
 
     await new Promise((resolve) => {
       requestAnimationFrame(() => resolve(undefined));
     });
 
     overlay.classList.add("bg-overlay--visible");
+  }
+}
+
+/**
+ * Returns the background-position value for a given image filename.
+ * @param {string} filename
+ * @returns {string}
+ */
+function backgroundPositioning(filename) {
+  switch (filename) {
+    case "2.jpg": return "center 68%";
+    case "3.jpg": return "center 30%";
+    case "4.jpg": return "center 96.125%";
+    case "6.jpg": return "center 40%";
+    case "11.jpg": return "center 67.25%";
+    case "19.jpg": return "center 13%";
+    case "20.jpg": return "center 39.75%";
+    case "21.jpg": return "center 52.5%";
+    case "22.jpg": return "center top";
+    case "23.jpg": return "center 92.5%";
+    case "24.jpg": return "center top";
+    case "25.jpg": return "center 50%";
+    case "27.jpg": return "center top";
+    default: return "center bottom";
   }
 }
 

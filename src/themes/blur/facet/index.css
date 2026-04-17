@@ -37,6 +37,17 @@ body {
   mix-blend-mode: normal;
 }
 
+#bg-overlay::after {
+  background: linear-gradient(#0000, rgba(0, 0, 0, 0.175));
+  bottom: 0;
+  content: "";
+  height: 16rem;
+  left: 0;
+  pointer-events: none;
+  position: absolute;
+  right: 0;
+}
+
 /***********************************
  * Main
  ***********************************/
