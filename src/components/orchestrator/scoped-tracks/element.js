@@ -233,6 +233,7 @@ class ScopedTracksOrchestrator extends BroadcastableDiffuseElement {
       const disabledSources = this.#disabledSources();
       const sortBy = this.#scope.value?.sortBy();
       const sortDirection = this.#scope.value?.sortDirection();
+      const groupBy = this.#scope.value?.groupBy();
 
       if ((await this.isLeader()) === false) return;
 
@@ -246,35 +247,47 @@ class ScopedTracksOrchestrator extends BroadcastableDiffuseElement {
         );
       }
 
-      if (sortBy?.length) {
-        const dir = sortDirection === "desc" ? -1 : 1;
-        final = [...final].sort((a, b) => {
-          for (const field of sortBy) {
-            let aVal = /** @type {any} */ (a);
-            let bVal = /** @type {any} */ (b);
+      // When groupBy is active, sort by group key first using the group's
+      // canonical direction (from GROUP_BY_SORT_OVERRIDES, or user's direction
+      // for firstLetter). Within each group, sort by the user's sortBy and
+      // sortDirection as normal.
+      //
+      // Schwartzian transform: precompute all keys once (O(N)) so the
+      // comparator never re-parses URLs or re-splits dot-paths (O(N log N)).
+      const groupOverride = groupBy
+        ? GROUP_BY_SORT_OVERRIDES[groupBy]
+        : undefined;
+      const groupDir =
+        (groupOverride?.sortDirection ?? sortDirection) === "desc" ? -1 : 1;
+      const userFields = sortBy ?? [];
+      const userDir = sortDirection === "desc" ? -1 : 1;
+      const splitPaths = userFields.map((f) => f.split("."));
 
-            for (const key of field.split(".")) {
-              aVal = aVal?.[key];
-              bVal = bVal?.[key];
-            }
+      if (groupBy || userFields.length) {
+        const decorated = final.map((track) => ({
+          track,
+          groupKey: groupBy ? groupKeyLabel(track, groupBy).key : "",
+          fieldVals: splitPaths.map((parts) => {
+            let v = /** @type {any} */ (track);
+            for (const p of parts) v = v?.[p];
+            return v;
+          }),
+        }));
 
-            if (aVal == null && bVal == null) continue;
-            if (aVal == null) return 1;
-            if (bVal == null) return -1;
-
-            const cmp = typeof aVal === "string" && typeof bVal === "string"
-              ? aVal.localeCompare(bVal)
-              : aVal < bVal
-              ? -1
-              : aVal > bVal
-              ? 1
-              : 0;
-
-            if (cmp !== 0) return cmp * dir;
+        decorated.sort((a, b) => {
+          if (groupBy && a.groupKey !== b.groupKey) {
+            if (!a.groupKey) return 1;
+            if (!b.groupKey) return -1;
+            return a.groupKey.localeCompare(b.groupKey) * groupDir;
           }
-
+          for (let i = 0; i < a.fieldVals.length; i++) {
+            const cmp = compareValues(a.fieldVals[i], b.fieldVals[i]);
+            if (cmp !== 0) return cmp * userDir;
+          }
           return 0;
         });
+
+        final = decorated.map((d) => d.track);
       }
 
       this.#tracksFinal.set(final);
@@ -289,9 +302,27 @@ export default ScopedTracksOrchestrator;
 ////////////////////////////////////////////
 
 const MONTHS = [
-  "January", "February", "March", "April", "May", "June",
-  "July", "August", "September", "October", "November", "December",
+  "January",
+  "February",
+  "March",
+  "April",
+  "May",
+  "June",
+  "July",
+  "August",
+  "September",
+  "October",
+  "November",
+  "December",
 ];
+
+/** @type {Record<string, { sortDirection: "asc" | "desc" }>} */
+const GROUP_BY_SORT_OVERRIDES = {
+  createdAt: { sortDirection: "desc" },
+  directory: { sortDirection: "asc" },
+  firstLetter: { sortDirection: "asc" },
+  "tags.year": { sortDirection: "desc" },
+};
 
 /**
  * @param {Track[]} tracks
@@ -302,7 +333,8 @@ function buildGroups(tracks, groupBy) {
   /** @type {{ label: string; tracks: Track[] }[]} */
   const groups = [];
   let lastKey = /** @type {string | undefined} */ (undefined);
-  let current = /** @type {{ label: string; tracks: Track[] } | undefined} */ (undefined);
+  let current =
+    /** @type {{ label: string; tracks: Track[] } | undefined} */ (undefined);
 
   for (const track of tracks) {
     const { key, label } = groupKeyLabel(track, groupBy);
@@ -327,7 +359,7 @@ function buildGroups(tracks, groupBy) {
 function groupKeyLabel(track, fieldPath) {
   if (fieldPath === "createdAt") {
     const iso = track.createdAt;
-    if (!iso) return { key: "unknown", label: "Unknown" };
+    if (!iso) return { key: "", label: "Unknown" };
     const year = iso.slice(0, 4);
     const month = iso.slice(5, 7);
     return {
@@ -363,8 +395,26 @@ function groupKeyLabel(track, fieldPath) {
   // Generic dot-path extraction
   let val = /** @type {any} */ (track);
   for (const key of fieldPath.split(".")) val = val?.[key];
-  const str = val != null ? String(val) : "Unknown";
-  return { key: str, label: str };
+  const str = val != null ? String(val) : "";
+  return { key: str, label: str || "Unknown" };
+}
+
+/**
+ * @param {any} aVal
+ * @param {any} bVal
+ * @returns {number}
+ */
+function compareValues(aVal, bVal) {
+  if (aVal == null && bVal == null) return 0;
+  if (aVal == null) return 1;
+  if (bVal == null) return -1;
+  return typeof aVal === "string" && typeof bVal === "string"
+    ? aVal.localeCompare(bVal)
+    : aVal < bVal
+    ? -1
+    : aVal > bVal
+    ? 1
+    : 0;
 }
 
 ////////////////////////////////////////////

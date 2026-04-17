@@ -38,34 +38,10 @@ const COLUMN_SORT = {
 const DEFAULT_SORT = ["createdAt"];
 
 const GROUP_BY_OPTIONS = [
-  {
-    value: "firstLetter",
-    label: "Group by first letter",
-    icon: "ph-text-aa",
-    sortBy: null,
-    sortDirection: /** @type {"asc" | "desc" | undefined} */ (undefined),
-  },
-  {
-    value: "directory",
-    label: "Group by path",
-    icon: "ph-folder",
-    sortBy: ["uri"],
-    sortDirection: /** @type {"asc" | "desc" | undefined} */ (undefined),
-  },
-  {
-    value: "createdAt",
-    label: "Group by processing date",
-    icon: "ph-clock",
-    sortBy: ["createdAt"],
-    sortDirection: /** @type {"asc" | "desc" | undefined} */ ("desc"),
-  },
-  {
-    value: "tags.year",
-    label: "Group by track year",
-    icon: "ph-calendar",
-    sortBy: ["tags.year"],
-    sortDirection: /** @type {"asc" | "desc" | undefined} */ ("desc"),
-  },
+  { value: "firstLetter", label: "Group by first letter", icon: "ph-text-aa" },
+  { value: "directory", label: "Group by path", icon: "ph-folder" },
+  { value: "createdAt", label: "Group by processing date", icon: "ph-clock" },
+  { value: "tags.year", label: "Group by track year", icon: "ph-calendar" },
 ];
 
 /**
@@ -886,7 +862,7 @@ class Browser extends DiffuseElement {
 
     const allTracks = this.$provider.value?.tracks() ?? [];
 
-    let key, name, subtitle, detailTracks;
+    let key = "", name = "", subtitle = "", detailTracks = /** @type {Track[]} */ ([]);
 
     if (item.type === "album") {
       key = item.albumKey;
@@ -1046,14 +1022,7 @@ class Browser extends DiffuseElement {
       </button>
       <div id="groupby-menu" class="dropdown" popover>
         ${GROUP_BY_OPTIONS.map(
-          (
-            {
-              value,
-              label,
-              sortBy: optSortBy,
-              sortDirection: optSortDirection,
-            },
-          ) => {
+          ({ value, label }) => {
             const primarySortField = sortBy[0] ?? "tags.title";
             const resolvedValue = value === "firstLetter"
               ? `firstLetter:${primarySortField}`
@@ -1065,15 +1034,10 @@ class Browser extends DiffuseElement {
               <button
                 class="${isActive ? `dropdown-item--active` : ``}"
                 @click="${() => {
-                  const scope = this.$scope.value;
                   if (isActive) {
                     this.setGroupBy(undefined);
                   } else {
                     this.setGroupBy(resolvedValue);
-                    if (optSortBy && scope) {
-                      scope.setSortBy(optSortBy);
-                      scope.setSortDirection(optSortDirection);
-                    }
                   }
                   /** @type {HTMLElement | null} */ (this.root().querySelector(
                     `#groupby-menu`,
