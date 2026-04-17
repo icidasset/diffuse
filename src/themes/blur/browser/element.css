@@ -438,6 +438,8 @@
 }
 
 .cover-card {
+  contain-intrinsic-size: auto 11rem;
+  content-visibility: auto;
   cursor: pointer;
   display: flex;
   flex-direction: column;

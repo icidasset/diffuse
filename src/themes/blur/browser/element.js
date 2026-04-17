@@ -1,4 +1,11 @@
 import {
+  elementScroll,
+  observeElementOffset,
+  observeElementRect,
+  Virtualizer,
+} from "@tanstack/virtual-core";
+
+import {
   defineElement,
   DiffuseElement,
   query,
@@ -7,12 +14,6 @@ import {
 } from "~/common/element.js";
 import { computed, signal, untracked } from "~/common/signal.js";
 import * as Playlist from "~/common/playlist.js";
-import {
-  elementScroll,
-  observeElementOffset,
-  observeElementRect,
-  Virtualizer,
-} from "@tanstack/virtual-core";
 
 /**
  * @import {RenderArg} from "~/common/element.d.ts"
@@ -483,8 +484,14 @@ class Browser extends DiffuseElement {
     const sortDirection = this.$scope.value?.sortDirection() ?? "asc";
 
     const totalCount = coverViewMode === "artists"
-      ? (this.$coverGroups.value?.artistGroups() ?? []).reduce((n, g) => n + g.groups.length, 0)
-      : (this.$coverGroups.value?.coverGroups() ?? []).reduce((n, g) => n + g.groups.length, 0);
+      ? (this.$coverGroups.value?.artistGroups() ?? []).reduce(
+        (n, g) => n + g.groups.length,
+        0,
+      )
+      : (this.$coverGroups.value?.coverGroups() ?? []).reduce(
+        (n, g) => n + g.groups.length,
+        0,
+      );
 
     const countLabel = coverViewMode === "artists"
       ? `${totalCount} ${totalCount === 1 ? "artist" : "artists"}`
@@ -519,11 +526,17 @@ class Browser extends DiffuseElement {
             @click="${() => {
               const scope = this.$scope.value;
               if (!scope) return;
-              scope.setSortDirection(scope.sortDirection() === `asc` ? `desc` : `asc`);
+              scope.setSortDirection(
+                scope.sortDirection() === `asc` ? `desc` : `asc`,
+              );
             }}"
-            title="${sortDirection === `desc` ? `Sort ascending` : `Sort descending`}"
+            title="${sortDirection === `desc`
+              ? `Sort ascending`
+              : `Sort descending`}"
           >
-            <i class="ph-bold ph-arrow-${sortDirection === `desc` ? `down` : `up`}"></i>
+            <i class="ph-bold ph-arrow-${sortDirection === `desc`
+              ? `down`
+              : `up`}"></i>
           </button>
         </div>
       </div>
@@ -862,7 +875,10 @@ class Browser extends DiffuseElement {
 
     const allTracks = this.$provider.value?.tracks() ?? [];
 
-    let key = "", name = "", subtitle = "", detailTracks = /** @type {Track[]} */ ([]);
+    let key = "",
+      name = "",
+      subtitle = "",
+      detailTracks = /** @type {Track[]} */ ([]);
 
     if (item.type === "album") {
       key = item.albumKey;

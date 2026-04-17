@@ -22,21 +22,23 @@ class CoverGroupsOrchestrator extends DiffuseElement {
   // STATE
 
   artistGroups = computed(() => {
-    const groups = /** @type {any} */ (this.#provider.value)?.groups?.();
-    const allTracks = this.#provider.value?.tracks() ?? [];
-
-    // Total track counts per artist across all groups
-    /** @type {Map<string, number>} */
-    const totalCounts = new Map();
-    for (const track of allTracks) {
-      const key = String(track.tags?.artist ?? "").toLowerCase();
-      totalCounts.set(key, (totalCounts.get(key) ?? 0) + 1);
-    }
+    const provider = this.#provider.value;
+    const groups = /** @type {any} */ (provider)?.groups?.();
 
     /** @type {{ label: string; groups: ArtistGroup[] }[]} */
     const result = [];
 
     if (groups?.length) {
+      const allTracks = provider?.tracks() ?? [];
+
+      // Total track counts per artist across all groups
+      /** @type {Map<string, number>} */
+      const totalCounts = new Map();
+      for (const track of allTracks) {
+        const key = String(track.tags?.artist ?? "").toLowerCase();
+        totalCounts.set(key, (totalCounts.get(key) ?? 0) + 1);
+      }
+
       for (
         const group
           of /** @type {{ label: string; tracks: Track[] }[]} */ (groups)
@@ -48,6 +50,7 @@ class CoverGroupsOrchestrator extends DiffuseElement {
         if (artists.length) result.push({ label: group.label, groups: artists });
       }
     } else {
+      const allTracks = provider?.tracks() ?? [];
       const artists = deduplicateArtists(allTracks);
       if (artists.length) result.push({ label: "", groups: artists });
     }
@@ -56,7 +59,8 @@ class CoverGroupsOrchestrator extends DiffuseElement {
   });
 
   coverGroups = computed(() => {
-    const groups = /** @type {any} */ (this.#provider.value)?.groups?.();
+    const provider = this.#provider.value;
+    const groups = /** @type {any} */ (provider)?.groups?.();
 
     /** @type {{ label: string; groups: CoverGroup[] }[]} */
     const result = [];
@@ -70,7 +74,7 @@ class CoverGroupsOrchestrator extends DiffuseElement {
         if (albums.length) result.push({ label: group.label, groups: albums });
       }
     } else {
-      const tracks = this.#provider.value?.tracks() ?? [];
+      const tracks = provider?.tracks() ?? [];
       const albums = deduplicateAlbums(tracks);
       if (albums.length) result.push({ label: "", groups: albums });
     }
@@ -113,16 +117,10 @@ export default CoverGroupsOrchestrator;
  * @returns {CoverGroup[]}
  */
 function deduplicateAlbums(tracks) {
-  const sorted = [...tracks].sort((a, b) => {
-    const aAlbum = String(a.tags?.album ?? "").toLowerCase();
-    const bAlbum = String(b.tags?.album ?? "").toLowerCase();
-    return aAlbum.localeCompare(bAlbum);
-  });
-
   /** @type {Map<string, { track: Track; artists: Set<string> }>} */
   const albumMap = new Map();
 
-  for (const track of sorted) {
+  for (const track of tracks) {
     const albumKey = String(track.tags?.album ?? "").toLowerCase();
     const existing = albumMap.get(albumKey);
     if (existing) {
@@ -135,12 +133,14 @@ function deduplicateAlbums(tracks) {
     }
   }
 
-  return [...albumMap.entries()].map(([albumKey, { track, artists }]) => ({
-    albumKey,
-    albumName: track.tags?.album ?? "Unknown album",
-    artist: artists.size > 1 ? "Various Artists" : /** @type {string} */ ([...artists][0]),
-    track,
-  }));
+  return [...albumMap.entries()]
+    .sort(([a], [b]) => a.localeCompare(b))
+    .map(([albumKey, { track, artists }]) => ({
+      albumKey,
+      albumName: track.tags?.album ?? "Unknown album",
+      artist: artists.size > 1 ? "Various Artists" : /** @type {string} */ (artists.values().next().value),
+      track,
+    }));
 }
 
 /**
@@ -148,29 +148,30 @@ function deduplicateAlbums(tracks) {
  * @returns {ArtistGroup[]}
  */
 function deduplicateArtists(tracks) {
-  /** @type {Map<string, { artistName: string; tracks: Track[] }>} */
+  /** @type {Map<string, { artistName: string; count: number; track: Track }>} */
   const map = new Map();
 
   for (const track of tracks) {
     const artistKey = String(track.tags?.artist ?? "").toLowerCase();
     const existing = map.get(artistKey);
     if (existing) {
-      existing.tracks.push(track);
+      existing.count++;
     } else {
       map.set(artistKey, {
         artistName: track.tags?.artist ?? "Unknown artist",
-        tracks: [track],
+        count: 1,
+        track,
       });
     }
   }
 
   return [...map.entries()]
     .sort(([a], [b]) => a.localeCompare(b))
-    .map(([artistKey, { artistName, tracks }]) => ({
+    .map(([artistKey, { artistName, count, track }]) => ({
       artistKey,
       artistName,
-      trackCount: tracks.length,
-      track: tracks[0],
+      trackCount: count,
+      track,
     }));
 }
 
