@@ -165,6 +165,12 @@ class Browser extends DiffuseElement {
 
   #observedCards = new WeakSet();
 
+  /** @type {Map<string, Track>} */
+  #pendingVisibleCards = new Map();
+
+  /** @type {ReturnType<typeof setTimeout> | undefined} */
+  #artFetchDebounce = undefined;
+
   /** @type {VirtualItem[]} */
   #flatItems = [];
 
@@ -421,9 +427,16 @@ class Browser extends DiffuseElement {
               /** @type {HTMLElement} */ (entry.target).dataset.albumKey;
             if (!albumKey) continue;
             const track = this.$albumTrackMap().get(albumKey);
-            if (track) this.#fetchAlbumArt(albumKey, track);
+            if (track) this.#pendingVisibleCards.set(albumKey, track);
             this.#coverObserver?.unobserve(entry.target);
           }
+          clearTimeout(this.#artFetchDebounce);
+          this.#artFetchDebounce = setTimeout(() => {
+            for (const [albumKey, track] of this.#pendingVisibleCards) {
+              this.#fetchAlbumArt(albumKey, track);
+            }
+            this.#pendingVisibleCards.clear();
+          }, 150);
         },
         { root, rootMargin: "200px" },
       );
@@ -469,6 +482,8 @@ class Browser extends DiffuseElement {
     this.#coverObserver?.disconnect();
     this.#coverObserver = undefined;
     this.#observedCards = new WeakSet();
+    clearTimeout(this.#artFetchDebounce);
+    this.#pendingVisibleCards.clear();
   }
 
   // RENDER
@@ -593,7 +608,7 @@ class Browser extends DiffuseElement {
                       <div class="cover-art">
                         ${artUrl
                           ? html`
-                            <img src="${artUrl}" alt="${artistName}" loading="lazy" />
+                            <img src="${artUrl}" alt="${artistName}" loading="lazy" @error="${() => { this.#coverArtCache.set(artistKey, null); this.#scheduleArtRender(); }}" />
                           `
                           : html`
                             <div class="cover-art-placeholder"><i class="ph-fill ph-vinyl-record"></i></div>
@@ -660,7 +675,7 @@ class Browser extends DiffuseElement {
                     <div class="cover-art">
                       ${artUrl
                         ? html`
-                          <img src="${artUrl}" alt="${albumName}" loading="lazy" />
+                          <img src="${artUrl}" alt="${albumName}" loading="lazy" @error="${() => { this.#coverArtCache.set(albumKey, null); this.#scheduleArtRender(); }}" />
                         `
                         : html`
                           <div class="cover-art-placeholder"><i class="ph-fill ph-vinyl-record"></i></div>
@@ -956,7 +971,7 @@ class Browser extends DiffuseElement {
             <div class="album-detail-art">
               ${artUrl
                 ? html`
-                  <img src="${artUrl}" alt="${name}" />
+                  <img src="${artUrl}" alt="${name}" @error="${() => { this.#coverArtCache.set(key, null); this.#scheduleArtRender(); }}" />
                 `
                 : html`
                   <div class="cover-art-placeholder"><i class="ph-fill ph-vinyl-record"></i></div>
