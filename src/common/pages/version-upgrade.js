@@ -87,14 +87,62 @@ export function checkIsLatest(versionOrCid, lastArtifact) {
 }
 
 /**
- * @param {{ version: string, cid: string }[]} artifacts
+ * @param {Record<string, { version: string, cid: string }>} artifacts
+ * @param {{ includePrerelease?: boolean }} [options]
  * @returns {{ version: string, cid: string } | null}
+ *
+ * @example Returns null for an empty artifact list
+ * ```js
+ * import { getLatestArtifact } from "~/common/pages/version-upgrade.js";
+ *
+ * if (getLatestArtifact({}) !== null) throw new Error("empty artifacts should return null");
+ * ```
+ *
+ * @example Returns the highest semver artifact
+ * ```js
+ * import { getLatestArtifact } from "~/common/pages/version-upgrade.js";
+ *
+ * const artifacts = {
+ *   a: { cid: "a", version: "4.0.0" },
+ *   b: { cid: "b", version: "4.1.0" },
+ *   c: { cid: "c", version: "3.9.0" },
+ * };
+ * if (getLatestArtifact(artifacts)?.cid !== "b") throw new Error("should return highest version");
+ * ```
+ *
+ * @example Ignores non-semver versions
+ * ```js
+ * import { getLatestArtifact } from "~/common/pages/version-upgrade.js";
+ *
+ * const artifacts = {
+ *   a: { cid: "a", version: "4.0.0" },
+ *   b: { cid: "b", version: "some-branch" },
+ * };
+ * if (getLatestArtifact(artifacts)?.cid !== "a") throw new Error("should ignore non-semver versions");
+ * ```
+ *
+ * @example Excludes prerelease artifacts when includePrerelease is false
+ * ```js
+ * import { getLatestArtifact } from "~/common/pages/version-upgrade.js";
+ *
+ * const artifacts = {
+ *   a: { cid: "a", version: "4.1.0" },
+ *   b: { cid: "b", version: "4.2.0-nightly.1" },
+ * };
+ * if (getLatestArtifact(artifacts, { includePrerelease: false })?.cid !== "a") {
+ *   throw new Error("should exclude prerelease artifacts");
+ * }
+ * if (getLatestArtifact(artifacts, { includePrerelease: true })?.cid !== "b") {
+ *   throw new Error("should include prerelease artifacts when opted in");
+ * }
+ * ```
  */
-function getLatestArtifact(artifacts) {
+export function getLatestArtifact(artifacts, { includePrerelease = true } = {}) {
   return Object.values(artifacts).reduce(
     /** @param {{ version: string, cid: string } | null} max */
     (max, artifact) => {
       if (!canParse(artifact.version)) return max;
+      if (!includePrerelease && parseSemver(artifact.version).prerelease?.length) return max;
       if (!max) return artifact;
       return greaterThan(parseSemver(artifact.version), parseSemver(max.version))
         ? artifact
@@ -151,7 +199,11 @@ export async function versionUpgrade() {
     { with: { type: "json" } }
   ).catch(() => ({ default: {} }));
 
-  const lastArtifact = getLatestArtifact(artifacts);
+  const currentIsStable =
+    canParse(versionOrCid) && !parseSemver(versionOrCid).prerelease?.length;
+  const lastArtifact = getLatestArtifact(artifacts, {
+    includePrerelease: !currentIsStable,
+  });
   const isLatest = checkIsLatest(versionOrCid, lastArtifact);
 
   document.querySelectorAll("#status").forEach((status) => {
