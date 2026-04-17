@@ -37,6 +37,9 @@ class ArtworkController extends DiffuseElement {
   /** @type {number | undefined} */
   #isLoadingTimeout = undefined;
 
+  #isIOS = /iPhone|iPad|iPod/.test(navigator.userAgent) ||
+    (navigator.platform === "MacIntel" && navigator.maxTouchPoints > 1);
+
   // SIGNALS
 
   #artwork = signal(
@@ -561,12 +564,18 @@ class ArtworkController extends DiffuseElement {
 
             <!-- VOLUME -->
 
-            <div class="volume">
+            <div
+              class="volume"
+              style="opacity: ${this.#isIOS
+                ? `0.3`
+                : `1`}; pointer-events: ${this.#isIOS ? `none` : `auto`};"
+            >
               <i @click="${this.mute}" class="ph-fill ph-speaker-none"></i>
               <div @click="${this.setVolume}" class="progress-bar">
-                <progress max="100" value="${(this.$controller.value?.$audio
-                  .value?.volume() ??
-                  0) * 100}"></progress>
+                <progress max="100" value="${this.#isIOS
+                  ? 100
+                  : (this.$controller.value?.$audio.value?.volume() ?? 0) *
+                    100}"></progress>
               </div>
               <i @click="${this
                 .fullVolume}" class="ph-fill ph-speaker-high"></i>
