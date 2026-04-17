@@ -12,7 +12,6 @@ styles:
 
 scripts:
   - common/pages/ppr.js
-  - common/pages/version-upgrade.js
 ---
 
 <header>
@@ -34,3 +33,8 @@ scripts:
 <main>
   {{ content }}
 </main>
+
+<script>
+  import { versionUpgrade } from "./common/pages/version-upgrade.js";
+  versionUpgrade();
+</script>

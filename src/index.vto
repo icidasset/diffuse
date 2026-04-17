@@ -6,9 +6,6 @@ styles:
   - styles/diffuse/page.css
   - vendor/@phosphor-icons/web/bold/style.css
   - vendor/@phosphor-icons/web/fill/style.css
-
-scripts:
-  - common/pages/version-upgrade.js
 ---
 
 <style>
@@ -98,3 +95,8 @@ scripts:
     </section>
   </div>
 </main>
+
+<script>
+  import { versionUpgrade } from "./common/pages/version-upgrade.js";
+  versionUpgrade();
+</script>
