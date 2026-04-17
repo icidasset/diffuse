@@ -478,19 +478,6 @@
   width: 100%;
 }
 
-.cover-art-loading {
-  animation: cover-pulse 1.2s ease-in-out infinite;
-}
-
-@keyframes cover-pulse {
-  0%,
-  100% {
-    opacity: 1;
-  }
-  50% {
-    opacity: 0.4;
-  }
-}
 
 .cover-info {
   display: flex;

@@ -595,12 +595,8 @@ class Browser extends DiffuseElement {
                           ? html`
                             <img src="${artUrl}" alt="${artistName}" loading="lazy" />
                           `
-                          : artUrl === null
-                          ? html`
-                            <div class="cover-art-placeholder"><i class="ph-bold ph-music-note"></i></div>
-                          `
                           : html`
-                            <div class="cover-art-placeholder cover-art-loading"></div>
+                            <div class="cover-art-placeholder"><i class="ph-fill ph-vinyl-record"></i></div>
                           `}
                       </div>
                       <div class="cover-info">
@@ -666,12 +662,8 @@ class Browser extends DiffuseElement {
                         ? html`
                           <img src="${artUrl}" alt="${albumName}" loading="lazy" />
                         `
-                        : artUrl === null
-                        ? html`
-                          <div class="cover-art-placeholder"><i class="ph-bold ph-music-note"></i></div>
-                        `
                         : html`
-                          <div class="cover-art-placeholder cover-art-loading"></div>
+                          <div class="cover-art-placeholder"><i class="ph-fill ph-vinyl-record"></i></div>
                         `}
                     </div>
                     <div class="cover-info">
@@ -966,12 +958,8 @@ class Browser extends DiffuseElement {
                 ? html`
                   <img src="${artUrl}" alt="${name}" />
                 `
-                : artUrl === null
-                ? html`
-                  <div class="cover-art-placeholder"><i class="ph-bold ph-music-note"></i></div>
-                `
                 : html`
-                  <div class="cover-art-placeholder cover-art-loading"></div>
+                  <div class="cover-art-placeholder"><i class="ph-fill ph-vinyl-record"></i></div>
                 `}
             </div>
             <div class="album-detail-info">
