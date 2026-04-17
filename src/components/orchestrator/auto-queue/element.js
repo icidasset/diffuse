@@ -74,7 +74,7 @@ class AutoTracksOrchestrator extends BroadcastableDiffuseElement {
         if (shuffled !== lastShuffle || fingerprint !== lastFingerprint) {
           lastShuffle = shuffled;
           lastFingerprint = fingerprint;
-          queue.clear({ manualOnly: true });
+          queue.clear({ keepManual: true });
         }
 
         queue.fill({ amount: 10, shuffled: repeatShuffle.shuffle() });

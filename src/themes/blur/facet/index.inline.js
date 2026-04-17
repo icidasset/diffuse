@@ -26,6 +26,7 @@ await foundation.orchestrator.processTracks({ disableWhenReady: true });
 await foundation.orchestrator.queueAudio();
 await foundation.orchestrator.controller();
 await foundation.orchestrator.artwork();
+await foundation.orchestrator.coverGroups();
 await foundation.orchestrator.favourites();
 
 await import("~/themes/blur/artwork-controller/element.js");

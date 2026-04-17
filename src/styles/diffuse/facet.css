@@ -321,7 +321,7 @@ p,
     font-family: inherit;
     font-size: inherit;
     font-weight: inherit;
-    gap: var(--space-xs);
+    gap: var(--space-2xs);
     min-width: var(--space-3xl);
     padding: var(--space-xs) var(--space-sm);
     text-align: left;

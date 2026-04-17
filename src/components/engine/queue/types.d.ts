@@ -5,7 +5,7 @@ export type Actions = {
   /**
    * Clear the `future()` items.
    */
-  clear: (args: { manualOnly?: boolean }) => void;
+  clear: (args: { keepManual?: boolean }) => void;
   fill: (
     args: {
       /** Always keep adding, even if the amount of non-manual items in the queue are passed the given `amount` */

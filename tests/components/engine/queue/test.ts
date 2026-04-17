@@ -82,7 +82,7 @@ describe("components/engine/queue", () => {
     expect(items[1].id).toBe(tracks[1].id);
   });
 
-  it("clears only auto-filled items when manualOnly is true", async () => {
+  it("clears only auto-filled items when keepManual is true", async () => {
     const items = await testWeb(async () => {
       const QueueEngine = await import("~/components/engine/queue/element.js");
       const engine = new QueueEngine.CLASS();
@@ -94,7 +94,7 @@ describe("components/engine/queue", () => {
       await engine.supply({ trackIds: tracks.map((t) => t.id) });
       await engine.add({ trackIds: [tracks[0].id] });
       await engine.fill({ amount: 2, shuffled: false });
-      await engine.clear({ manualOnly: true });
+      await engine.clear({ keepManual: true });
       return engine.future();
     });
 
@@ -102,7 +102,7 @@ describe("components/engine/queue", () => {
     expect(items[0].manualEntry).toBe(true);
   });
 
-  it("clears all items when manualOnly is false", async () => {
+  it("clears all items when keepManual is false", async () => {
     const count = await testWeb(async () => {
       const QueueEngine = await import("~/components/engine/queue/element.js");
       const engine = new QueueEngine.CLASS();
@@ -112,7 +112,7 @@ describe("components/engine/queue", () => {
       const { tracks } = await import("~/testing/sample/tracks.js");
 
       await engine.add({ trackIds: tracks.map((t) => t.id) });
-      await engine.clear({ manualOnly: false });
+      await engine.clear({ keepManual: false });
       return (await engine.future()).length;
     });
 

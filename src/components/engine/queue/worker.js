@@ -66,7 +66,7 @@ export function add({ inFront, trackIds }) {
 /**
  * @type {Actions['clear']}
  *
- * @example Keeps manual entries when manualOnly is true
+ * @example Keeps manual entries when keepManual is true
  * ```js
  * import { clear, $future } from "~/components/engine/queue/worker.js";
  *
@@ -74,13 +74,13 @@ export function add({ inFront, trackIds }) {
  *   { id: "manual", manualEntry: true },
  *   { id: "auto", manualEntry: false },
  * ];
- * clear({ manualOnly: true });
+ * clear({ keepManual: true });
  *
  * if ($future.value.length !== 1) throw new Error("expected 1 item remaining");
  * if ($future.value[0].id !== "manual") throw new Error("manual entry should remain");
  * ```
  *
- * @example Clears all items when manualOnly is false
+ * @example Clears all items when keepManual is false
  * ```js
  * import { clear, $future } from "~/components/engine/queue/worker.js";
  *
@@ -88,13 +88,13 @@ export function add({ inFront, trackIds }) {
  *   { id: "manual", manualEntry: true },
  *   { id: "auto", manualEntry: false },
  * ];
- * clear({ manualOnly: false });
+ * clear({ keepManual: false });
  *
  * if ($future.value.length !== 0) throw new Error("expected empty queue");
  * ```
  */
-export function clear({ manualOnly }) {
-  $future.value = manualOnly
+export function clear({ keepManual }) {
+  $future.value = keepManual
     ? $future.value.filter((i) => i.manualEntry === true)
     : [];
 }

@@ -50,6 +50,9 @@ const signals = {
     controller: signal(
       /** @type {import("~/components/orchestrator/controller/element.js").CLASS | null} */ (null),
     ),
+    coverGroups: signal(
+      /** @type {import("~/components/orchestrator/cover-groups/element.js").CLASS | null} */ (null),
+    ),
     autoQueue: signal(
       /** @type {import("~/components/orchestrator/auto-queue/element.js").CLASS | null} */ (null),
     ),
@@ -107,6 +110,7 @@ export const config = {
   orchestrator: {
     artwork,
     controller,
+    coverGroups,
     autoQueue,
     favourites,
     mediaSession,
@@ -140,6 +144,7 @@ export const config = {
     orchestrator: {
       artwork: signals.orchestrator.artwork.get,
       controller: signals.orchestrator.controller.get,
+      coverGroups: signals.orchestrator.coverGroups.get,
       autoQueue: signals.orchestrator.autoQueue.get,
       favourites: signals.orchestrator.favourites.get,
       mediaSession: signals.orchestrator.mediaSession.get,
@@ -303,7 +308,8 @@ async function scope() {
   return findExistingOrAdd(s, signals.engine.scope);
 }
 
-// Orchestrators (cont.)
+// Orchestrators
+
 async function artwork() {
   const [{ CLASS: ArtworkOrchestrator }, ac] = await Promise.all([
     import("~/components/orchestrator/artwork/element.js"),
@@ -317,7 +323,6 @@ async function artwork() {
   return findExistingOrAdd(a, signals.orchestrator.artwork);
 }
 
-// Orchestrators
 async function autoQueue() {
   const [{ CLASS: AutoQueueOrchestrator }, q, r, t] = await Promise.all([
     import("~/components/orchestrator/auto-queue/element.js"),
@@ -349,6 +354,18 @@ async function controller() {
   co.setAttribute("queue-engine-selector", q.selector);
 
   return findExistingOrAdd(co, signals.orchestrator.controller);
+}
+
+async function coverGroups() {
+  const [{ CLASS: CoverGroupsOrchestrator }, t] = await Promise.all([
+    import("~/components/orchestrator/cover-groups/element.js"),
+    scopedTracks(),
+  ]);
+
+  const cgo = new CoverGroupsOrchestrator();
+  cgo.setAttribute("tracks-selector", t.selector);
+
+  return findExistingOrAdd(cgo, signals.orchestrator.coverGroups);
 }
 
 async function favourites() {
