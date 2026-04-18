@@ -23,6 +23,16 @@ import * as Playlist from "~/common/playlist.js";
  * @import {ArtworkElement} from "~/components/artwork/types.d.ts"
  */
 
+/**
+ * @param {Track} track
+ */
+function trackTitle(track) {
+  if (track.tags?.title) return track.tags.title;
+  const path = track.uri.split("?")[0];
+  const filename = path.split("/").filter(Boolean).at(-1);
+  return filename ? decodeURIComponent(filename) : track.uri;
+}
+
 const MAX_ART_CONCURRENT = 8;
 
 const TRACK_ROW_HEIGHT = 40;
@@ -780,7 +790,7 @@ class Browser extends DiffuseElement {
             </button>
           </div>
           <div class="col-title">
-            <span class="track-title">${track.tags?.title}</span>
+            <span class="track-title">${trackTitle(track)}</span>
           </div>
           <div class="col-artist">
             <span>${track.tags?.artist}</span>
@@ -1012,7 +1022,7 @@ class Browser extends DiffuseElement {
                     </button>
                   </div>
                   <div class="col-title">
-                    <span class="track-title">${t.tags?.title}</span>
+                    <span class="track-title">${trackTitle(t)}</span>
                   </div>
                   <div class="col-artist">
                     <span>${t.tags?.artist}</span>

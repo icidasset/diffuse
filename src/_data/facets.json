@@ -62,6 +62,12 @@
     "desc": "Use your AT Protocol identity for user-data storage."
   },
   {
+    "url": "facets/connect/dropbox/index.html",
+    "title": "Connect / Dropbox",
+    "category": "Data",
+    "desc": "Add Dropbox as an audio source."
+  },
+  {
     "url": "facets/connect/https/index.html",
     "title": "Connect / HTTPS",
     "category": "Data",
@@ -105,7 +111,7 @@
     "kind": "prelude",
     "category": "Data",
     "tags": ["base"],
-    "desc": "The default setup for audio input sources. Adds support for: HTTPS, Icecast, the local filesystem, OpenSubsonic, and S3-compatible storage."
+    "desc": "The default setup for audio input sources. Adds support for: Dropbox, HTTPS, Icecast, the local filesystem, OpenSubsonic, and S3-compatible storage."
   },
   {
     "url": "facets/data/metadata-bundle/index.html",

@@ -40,8 +40,14 @@ export async function musicMetadataTags({
 
     // FUCKAROUND: Not sure of the downsides of this
     httpClient.getHeadInfo = async () => {
-      const info = await getHeadInfo.call(httpClient);
-      return { ...info, acceptPartialRequests: true };
+      try {
+        const info = await getHeadInfo.call(httpClient);
+        return { ...info, acceptPartialRequests: true };
+      } catch {
+        // Some servers (e.g. Dropbox temporary links) don't return Content-Length.
+        // Fall back to downloading the full file without range requests.
+        return { size: undefined, acceptPartialRequests: false };
+      }
     };
 
     /** @type {any} */

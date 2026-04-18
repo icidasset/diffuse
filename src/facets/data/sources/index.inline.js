@@ -4,6 +4,7 @@ import * as Output from "~/common/output.js";
 import foundation from "~/common/foundation.js";
 import { effect } from "~/common/signal.js";
 
+import { SCHEME as SCHEME_DROPBOX } from "~/components/input/dropbox/constants.js";
 import { SCHEME as SCHEME_EPHEMERAL_CACHE } from "~/components/input/ephemeral-cache/constants.js";
 import { SCHEME as SCHEME_HTTPS } from "~/components/input/https/constants.js";
 import { SCHEME as SCHEME_ICECAST } from "~/components/input/icecast/constants.js";
@@ -13,6 +14,7 @@ import { SCHEME as SCHEME_S3 } from "~/components/input/s3/constants.js";
 
 /** @type {Record<string, string>} */
 const SCHEME_NAMES = {
+  [SCHEME_DROPBOX]: "Dropbox",
   [SCHEME_EPHEMERAL_CACHE]: "Browser storage",
   [SCHEME_HTTPS]: "HTTPS",
   [SCHEME_ICECAST]: "Icecast",

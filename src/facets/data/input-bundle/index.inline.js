@@ -1,6 +1,7 @@
 import foundation from "~/common/foundation.js";
 import { effect } from "~/common/signal.js";
 
+import { NAME as DROPBOX_NAME } from "~/components/input/dropbox/element.js";
 import { NAME as EPHEMERAL_CACHE_NAME } from "~/components/input/ephemeral-cache/element.js";
 import { NAME as HTTPS_NAME } from "~/components/input/https/element.js";
 import { NAME as ICECAST_NAME } from "~/components/input/icecast/element.js";
@@ -20,6 +21,7 @@ effect(() => {
   const input = foundation.signals.configurator.input();
   if (!input) return;
 
+  dropbox(input);
   ephemeralCache(input);
   https(input);
   icecast(input);
@@ -27,6 +29,17 @@ effect(() => {
   opensubsonic(input);
   s3(input);
 });
+
+////////////////////////////////////////////
+// DROPBOX
+////////////////////////////////////////////
+
+/**
+ * @param {InputConfigurator} input
+ */
+export function dropbox(input) {
+  input.append(document.createElement(DROPBOX_NAME));
+}
 
 ////////////////////////////////////////////
 // EPHEMERAL CACHE
