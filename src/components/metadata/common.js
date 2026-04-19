@@ -39,7 +39,7 @@ export async function musicMetadataTags({
     const getHeadInfo = httpClient.getHeadInfo;
 
     // FUCKAROUND: Not sure of the downsides of this
-    httpClient.getHeadInfo = async () => {
+    /** @type {any} */ (httpClient).getHeadInfo = async () => {
       try {
         const info = await getHeadInfo.call(httpClient);
         return { ...info, acceptPartialRequests: true };

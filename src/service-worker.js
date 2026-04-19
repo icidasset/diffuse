@@ -51,12 +51,55 @@ self.addEventListener("fetch", (_event) => {
   const event = /** @type {FetchEvent} */ (_event);
   const { request } = event;
 
-  // Only intercept GET requests over http(s).
-  if (request.method !== "GET") return;
   if (!request.url.startsWith("http")) return;
+
+  // Intercept credentialed URLs before the offline cache (any method).
+  const intercepted = interceptCredentials(request);
+  if (intercepted) {
+    event.respondWith(intercepted);
+    return;
+  }
+
+  // Only cache GET requests.
+  if (request.method !== "GET") return;
 
   event.respondWith(handleFetch(request));
 });
+
+////////////////////////////////////////////
+// CREDENTIAL INTERCEPT
+////////////////////////////////////////////
+
+/**
+ * If the request URL contains a `_auth` query parameter (base64 Basic credentials),
+ * strip it and re-issue the request with a proper Authorization header instead.
+ * Also handles the legacy `user:pass@host` form for any callers that still use it.
+ *
+ * Returns a Promise<Response> when credentials are detected, or null to fall through.
+ *
+ * @param {Request} request
+ * @returns {Promise<Response> | null}
+ */
+function interceptCredentials(request) {
+  const url = new URL(request.url);
+
+  if (url.username) {
+    const credentials = `${decodeURIComponent(url.username)}:${decodeURIComponent(url.password)}`;
+    url.username = "";
+    url.password = "";
+    const headers = new Headers(request.headers);
+    headers.set("Authorization", `Basic ${btoa(unescape(encodeURIComponent(credentials)))}`);
+    return fetch(url.href, { method: request.method, headers, signal: request.signal });
+  }
+
+  const auth = url.searchParams.get("diffuse:basic-auth");
+  if (!auth) return null;
+
+  url.searchParams.delete("diffuse:basic-auth");
+  const headers = new Headers(request.headers);
+  headers.set("Authorization", `Basic ${auth}`);
+  return fetch(url.href, { method: request.method, headers, signal: request.signal });
+}
 
 ////////////////////////////////////////////
 // CONTENT-ADDRESSED CACHE

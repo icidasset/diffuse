@@ -26,9 +26,10 @@ const $progress = signal({ processed: 0, total: 0 }, {
 ////////////////////////////////////////////
 
 /**
- * @type {ActionsWithTunnel<Actions>["process"]}
+ * @param {any} context
+ * @returns {ActionsWithTunnel<Actions>["process"]}
  */
-export async function process({ data, ports }) {
+const process = (context) => /** @type {ActionsWithTunnel<Actions>["process"]} */ (async ({ data, ports }) => {
   const cachedTracks = data;
 
   // Reset progress
@@ -46,11 +47,17 @@ export async function process({ data, ports }) {
   // List
   const tracks = await input.list(cachedTracks);
 
+  // Persist the full track list immediately so that an interrupted metadata
+  // processing run doesn't lose discovered tracks. On next run they'll come
+  // back as cachedTracks and only the ones without metadata need reprocessing.
+  announce("batch", tracks, context);
+
   // Reset progress
   $progress.value = { processed: 0, total: tracks.length };
 
   // Fetch metadata if needed
   let processed = 0;
+  const BATCH_SIZE = 100;
 
   const tracksWithMetadata = await tracks.reduce(
     /**
@@ -63,7 +70,9 @@ export async function process({ data, ports }) {
       if ((track.tags && track.stats) || track.kind === "placeholder") {
         processed++;
         $progress.value = { processed, total: tracks.length };
-        return [...acc, track];
+        const result = [...acc, track];
+        if (processed % BATCH_SIZE === 0) announce("batch", result, context);
+        return result;
       }
 
       const patched = await metadata.patch(track);
@@ -71,7 +80,9 @@ export async function process({ data, ports }) {
       processed++;
       $progress.value = { processed, total: tracks.length };
 
-      return [...acc, patched];
+      const result = [...acc, patched];
+      if (processed % BATCH_SIZE === 0) announce("batch", result, context);
+      return result;
     },
     Promise.resolve([]),
   );
@@ -83,14 +94,14 @@ export async function process({ data, ports }) {
   // Save if changed
   if (changed) return tracksWithMetadata;
   return null;
-}
+});
 
 ////////////////////////////////////////////
 // ⚡️
 ////////////////////////////////////////////
 
 ostiary((context) => {
-  rpc(context, { process, progress: $progress.get });
+  rpc(context, { process: process(context), progress: $progress.get });
 
   // Communicate state
   effect(() => announce("progress", $progress.value, context));

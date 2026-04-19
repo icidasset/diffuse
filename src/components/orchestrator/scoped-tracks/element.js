@@ -200,7 +200,7 @@ class ScopedTracksOrchestrator extends BroadcastableDiffuseElement {
       });
 
       const availableTracks = tracks.filter((t) => {
-        return availableUris.has(t.uri);
+        return availableUris.has(t.uri) && !!t.tags;
       });
 
       // Set pool
@@ -281,7 +281,13 @@ class ScopedTracksOrchestrator extends BroadcastableDiffuseElement {
             return a.groupKey.localeCompare(b.groupKey) * groupDir;
           }
           for (let i = 0; i < a.fieldVals.length; i++) {
-            const cmp = compareValues(a.fieldVals[i], b.fieldVals[i]);
+            const av = a.fieldVals[i];
+            const bv = b.fieldVals[i];
+            // Null/undefined always sorts last regardless of direction
+            if (av == null && bv == null) continue;
+            if (av == null) return 1;
+            if (bv == null) return -1;
+            const cmp = compareValues(av, bv);
             if (cmp !== 0) return cmp * userDir;
           }
           return 0;

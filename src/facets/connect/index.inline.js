@@ -17,6 +17,7 @@ const icons = {
   "facets/connect/local/index.html": "folder-open",
   "facets/connect/opensubsonic/index.html": "broadcast",
   "facets/connect/s3/index.html": "hard-drives",
+  "facets/connect/webdav/index.html": "hard-drive",
 };
 
 const facets = facetsData

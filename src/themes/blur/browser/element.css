@@ -208,6 +208,7 @@
 
 .scroll-panel {
   flex: 1;
+  overflow-anchor: none;
   overflow-y: auto;
   min-height: 0;
   user-select: none;

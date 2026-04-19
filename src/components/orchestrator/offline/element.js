@@ -35,7 +35,7 @@ class OfflineOrchestrator extends DiffuseElement {
     const src = this.getAttribute("src");
 
     const swUrl = new URL(
-      src ?? import.meta.resolve("../../../service-worker-offline.js"),
+      src ?? import.meta.resolve("../../../service-worker.js"),
     );
 
     swUrl.searchParams.set("cache-name", cacheName);

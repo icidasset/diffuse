@@ -462,14 +462,13 @@ class Browser extends DiffuseElement {
   }
 
   #setupVirtualizer() {
-    const panel = this.root().querySelector(".scroll-panel");
-    if (!panel) return;
+    if (!this.root().querySelector(".scroll-panel")) return;
 
     this.#virtualizerCleanup?.();
 
     this.#virtualizer = new Virtualizer({
       count: 0,
-      getScrollElement: () => panel,
+      getScrollElement: () => this.root().querySelector(".scroll-panel"),
       estimateSize: (i) =>
         this.#flatItems[i]?.type === "group"
           ? GROUP_HEADER_HEIGHT
@@ -486,6 +485,14 @@ class Browser extends DiffuseElement {
     this.#virtualizerCleanup = this.#virtualizer._didMount();
     this.#virtualizer._willUpdate();
     this.forceRender();
+
+    // Reset scroll after browser scroll restoration, which fires asynchronously
+    requestAnimationFrame(() => {
+      requestAnimationFrame(() => {
+        const panel = this.root().querySelector(".scroll-panel");
+        if (panel && panel.scrollTop !== 0) panel.scrollTop = 0;
+      });
+    });
   }
 
   #disconnectCoverObserver() {

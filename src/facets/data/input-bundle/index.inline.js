@@ -8,6 +8,7 @@ import { NAME as ICECAST_NAME } from "~/components/input/icecast/element.js";
 import { NAME as LOCAL_NAME } from "~/components/input/local/element.js";
 import { NAME as OPENSUBSONIC_NAME } from "~/components/input/opensubsonic/element.js";
 import { NAME as S3_NAME } from "~/components/input/s3/element.js";
+import { NAME as WEBDAV_NAME } from "~/components/input/webdav/element.js";
 
 
 /**
@@ -28,6 +29,7 @@ effect(() => {
   local(input);
   opensubsonic(input);
   s3(input);
+  webdav(input);
 });
 
 ////////////////////////////////////////////
@@ -105,4 +107,15 @@ export function opensubsonic(input) {
  */
 export function s3(input) {
   input.append(document.createElement(S3_NAME));
+}
+
+////////////////////////////////////////////
+// WEBDAV
+////////////////////////////////////////////
+
+/**
+ * @param {InputConfigurator} input
+ */
+export function webdav(input) {
+  input.append(document.createElement(WEBDAV_NAME));
 }

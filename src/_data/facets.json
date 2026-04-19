@@ -98,6 +98,12 @@
     "desc": "Connect to an S3-compatible storage for audio input or user-data storage."
   },
   {
+    "url": "facets/connect/webdav/index.html",
+    "title": "Connect / WebDAV",
+    "category": "Data",
+    "desc": "Connect to a WebDAV server for audio input."
+  },
+  {
     "url": "facets/data/artwork-bundle/index.html",
     "title": "Default Artwork Bundle",
     "kind": "prelude",
@@ -111,7 +117,7 @@
     "kind": "prelude",
     "category": "Data",
     "tags": ["base"],
-    "desc": "The default setup for audio input sources. Adds support for: Dropbox, HTTPS, Icecast, the local filesystem, OpenSubsonic, and S3-compatible storage."
+    "desc": "The default setup for audio input sources. Adds support for: Dropbox, HTTPS, Icecast, the local filesystem, OpenSubsonic, S3-compatible storage, and WebDAV."
   },
   {
     "url": "facets/data/metadata-bundle/index.html",

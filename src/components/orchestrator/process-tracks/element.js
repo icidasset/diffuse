@@ -119,6 +119,9 @@ class ProcessTracksOrchestrator extends BroadcastableDiffuseElement {
     listen("progress", this.#progress.set, link);
     this.#proxy.progress().then(this.#progress.set);
 
+    // Save intermediate batches as they arrive so progress isn't lost
+    listen("batch", (tracks) => this.output?.tracks.save(tracks), link);
+
     // Process whenever tracks are initially loaded;
     // unless already done so (possibly through another instance of this element)
     if (this.hasAttribute("process-when-ready")) {

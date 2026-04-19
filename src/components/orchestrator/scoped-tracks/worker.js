@@ -66,7 +66,7 @@ export async function supply({ tracks }) {
   const tracksMap = new Map();
 
   for (const track of tracks) {
-    if (!track.tags) return;
+    if (!track.tags) continue;
     tracksMap.set(track.id, track);
   }
 

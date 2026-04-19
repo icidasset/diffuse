@@ -1,0 +1,1 @@
+export const SCHEME = "webdav";
