@@ -20,6 +20,11 @@ Diffuse is a few things:
 - Every interface facet MUST remove the loading animation using `foundation.ready()`, and ideally it would set the document title as well using `foundation.setup({ title })`.
 - Elements that are configured to be part of a `group` use a `BroadcastChannel` to communicate and/or use a `SharedWorker`.
 - Data schemas are originally defined as lexicon JSON files. From this Typescript files/types are generated.
+- HTML is injected into a `<div id="container"></div>` element in the body. Facets don't have a doctype or `<html>` element or `<head>` element.
+- The loader configures a `<base>` element, every relative url is relative to the root of the project. Every Diffuse page defines an import map which specifies `~` as the root.
+- Most elements use the signal functions from `~/common/signals.js` which turn uses the `alien-signals` library.
+- An example of a facet you should check is `~/themes/blur/artwork-controller/facet/index.html`
+- Signals are usually not exposed in their entirery from the custom elements, just their getter.
 
 
 
