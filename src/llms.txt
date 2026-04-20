@@ -17,6 +17,7 @@ Diffuse is a few things:
   * `id`: Load from local user-data storage cache (indexedDB)
   * `path`: Load from default Diffuse set, path to HTML file in the project.
 - Feature facets that are enabled in the user's storage are loaded automatically before any interface is loaded through the loader.
+- Every interface facet MUST remove the loading animation using `foundation.ready()`, and ideally it would set the document title as well using `foundation.setup({ title })`.
 - Elements that are configured to be part of a `group` use a `BroadcastChannel` to communicate and/or use a `SharedWorker`.
 - Data schemas are originally defined as lexicon JSON files. From this Typescript files/types are generated.
 
