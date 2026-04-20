@@ -277,6 +277,8 @@ site.add([".html"]);
 site.add([".json"]);
 site.add([".webmanifest"]);
 
+site.add("llms.txt");
+
 site.use(brotli());
 site.use(sourceMaps());
 
