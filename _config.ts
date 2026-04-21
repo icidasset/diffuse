@@ -277,7 +277,12 @@ site.add([".html"]);
 site.add([".json"]);
 site.add([".webmanifest"]);
 
-site.add("llms.txt");
+site.remoteFile(
+  "architecture.txt",
+  import.meta.resolve("./docs/ARCHITECTURE.md"),
+);
+
+site.add("architecture.txt");
 
 site.use(brotli());
 site.use(sourceMaps());

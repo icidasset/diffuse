@@ -1,20 +1,21 @@
 # Diffuse
 
-**Construct your audio player by composing web components.**
+_Diffuse is a few things:_
 
-Diffuse provides a range of custom elements: audio input, data output, metadata & artwork processing, audio playback, a queue system, and much more.
+- A collection of custom DOM elements (aka. framework-agnostic web components) that allow you to build an audio player, do audio metadata processing and browsing, list audio files and streams from various sources/APIs/servers, define how to save or sync user-data, etc.
+- A HTML loader that loads "interfaces" from the local user-data cache, the default set from Diffuse, HTTP(S) URLs, or [AT Protocol](https://atproto.com) URIs. When you load an interface, it's supplied with optional "features" which are also pieces of HTML. These pieces are called "facets" and are loaded from the local user-data cache as well.
+- A default configuration of the custom elements that's called "the foundation". This is used throughout the default set of facets. This foundation is configured so that the facets can communicate across tabs/frames; this is done by setting the element's `group` attribute.
+- A collection of data schemas in the form of atproto [lexicons](https://atproto.com/specs/lexicon). These live in the `definitions` directory.
 
-It is also aimed at consumers, providing themes and facets, preconfigured component compositions; while simultaneously trying to be [malleable software](https://www.inkandswitch.com/essay/malleable-software/).
-
-More information on the [website](https://elements.diffuse.sh/latest/).
+Putting all of this together to make cooperative and [malleable](https://www.inkandswitch.com/essay/malleable-software/) software. More information on the [website](https://elements.diffuse.sh/).
 
 
 ## Developer usage
 
-You can either consume the Diffuse library via the [deployed instance](https://elements.diffuse.sh/latest/) (the listed elements link to Javascript files) or the [Javascript package](https://jsr.io/@toko/diffuse). From there you can use the custom elements as with any other custom DOM element, by writing HTML or creating a `Class` instance.
+You can either consume the Diffuse library via the [deployed instance](https://elements.diffuse.sh/elements/) (the listed elements link to Javascript files) or the [Javascript package](https://jsr.io/@toko/diffuse). From there you can use the custom elements as with any other custom DOM element, by writing HTML or creating a `Class` instance.
 
 ```html
-<script src="https://elements.diffuse.sh/bafybeiexuhqumeljxdmmsdfet5oh2h7pam6fy7gbktqfbsai5qfu2ze6hq/components/engine/queue/element.js"></script>
+<script src="https://elements.diffuse.sh/latest/components/engine/queue/element.js"></script>
 
 <de-queue></de-queue>
 ```
