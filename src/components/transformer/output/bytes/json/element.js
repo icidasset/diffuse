@@ -126,6 +126,6 @@ export default JsonStringOutputTransformer;
 ////////////////////////////////////////////
 
 export const CLASS = JsonStringOutputTransformer;
-export const NAME = "dtos-json";
+export const NAME = "dtob-json";
 
 defineElement(NAME, CLASS);
