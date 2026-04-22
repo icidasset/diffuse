@@ -156,7 +156,6 @@
     "./components/orchestrator/cover-groups/element.js": "./src/components/orchestrator/cover-groups/element.js",
     "./components/orchestrator/favourites/element.js": "./src/components/orchestrator/favourites/element.js",
     "./components/orchestrator/media-session/element.js": "./src/components/orchestrator/media-session/element.js",
-    "./components/orchestrator/offline/element.js": "./src/components/orchestrator/offline/element.js",
     "./components/orchestrator/output/element.js": "./src/components/orchestrator/output/element.js",
     "./components/orchestrator/path-collections/element.js": "./src/components/orchestrator/path-collections/element.js",
     "./components/orchestrator/process-tracks/element.js": "./src/components/orchestrator/process-tracks/element.js",

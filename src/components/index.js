@@ -26,7 +26,6 @@ import * as _OrchestratorController from "./orchestrator/controller/element.js"
 import * as _OrchestratorCoverGroups from "./orchestrator/cover-groups/element.js"
 import * as _OrchestratorFavourites from "./orchestrator/favourites/element.js"
 import * as _OrchestratorMediaSession from "./orchestrator/media-session/element.js"
-import * as _OrchestratorOffline from "./orchestrator/offline/element.js"
 import * as _OrchestratorOutput from "./orchestrator/output/element.js"
 import * as _OrchestratorPathCollections from "./orchestrator/path-collections/element.js"
 import * as _OrchestratorProcessTracks from "./orchestrator/process-tracks/element.js"
@@ -93,7 +92,6 @@ export const orchestrator = {
   coverGroups: _OrchestratorCoverGroups,
   favourites: _OrchestratorFavourites,
   mediaSession: _OrchestratorMediaSession,
-  offline: _OrchestratorOffline,
   output: _OrchestratorOutput,
   pathCollections: _OrchestratorPathCollections,
   processTracks: _OrchestratorProcessTracks,
