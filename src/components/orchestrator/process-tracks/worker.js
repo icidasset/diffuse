@@ -61,6 +61,7 @@ const process = (
 
   // Fetch metadata if needed
   let processed = 0;
+  let patchedCount = 0;
   const BATCH_SIZE = 100;
 
   const tracksWithMetadata = await tracks.reduce(
@@ -74,18 +75,17 @@ const process = (
       if ((track.tags && track.stats) || track.kind === "placeholder") {
         processed++;
         $progress.value = { processed, total: tracks.length };
-        const result = [...acc, track];
-        if (processed % BATCH_SIZE === 0) announce("batch", result, context);
-        return result;
+        return [...acc, track];
       }
 
       const patched = await metadata.patch(track);
 
       processed++;
+      patchedCount++;
       $progress.value = { processed, total: tracks.length };
 
       const result = [...acc, patched];
-      if (processed % BATCH_SIZE === 0) announce("batch", result, context);
+      if (patchedCount % BATCH_SIZE === 0) announce("patch", result, context);
       return result;
     },
     Promise.resolve([]),

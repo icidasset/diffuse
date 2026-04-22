@@ -131,12 +131,14 @@ class ProcessTracksOrchestrator extends BroadcastableDiffuseElement {
       this.output.tracks.save(tracks);
     }, link);
 
-    // Save intermediate batches as they arrive so progress isn't lost.
-    // Merge with tracks not present in the batch to avoid overwriting them.
-    listen("batch", /** @param {Track[]} tracks */ async (tracks) => {
+    // Save patched tracks as they arrive so progress isn't lost.
+    // Merge with existing tracks to avoid overwriting ones not yet patched.
+    listen("patch", /** @param {Track[]} tracks */ async (tracks) => {
       if (!this.output) return;
       const existing = await data(this.output.tracks);
-      this.output.tracks.save(mergeTracks(existing, tracks));
+      const merged = mergeTracks(existing, tracks);
+      console.log(merged.filter((t) => !!t.tags));
+      this.output.tracks.save(merged);
     }, link);
 
     // Process whenever tracks are initially loaded;
