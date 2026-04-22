@@ -1,2 +1,2 @@
 export const SCHEME = "dropbox";
-export const APP_KEY = "kwsydtrzban41zr";
+export const DEFAULT_APP_KEY = "kwsydtrzban41zr";

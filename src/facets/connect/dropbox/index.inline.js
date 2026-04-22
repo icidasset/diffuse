@@ -1,10 +1,13 @@
 import * as TID from "@atcute/tid";
-import { html, nothing } from "lit-html";
+import { html } from "lit-html";
 
 import * as Output from "~/common/output.js";
 import { SCHEME } from "~/components/input/dropbox/constants.js";
-import { accountId, buildURI, parseURI } from "~/components/input/dropbox/common.js";
-import { APP_KEY } from "~/components/input/dropbox/constants.js";
+import {
+  accountId,
+  buildURI,
+  parseURI,
+} from "~/components/input/dropbox/common.js";
 import { effect } from "~/common/signal.js";
 import foundation from "~/common/foundation.js";
 
@@ -51,8 +54,8 @@ const { setItems, setError } = setup({
 
   description: html`
     <p>
-      Add your Dropbox as an audio source. Authorize with Dropbox, then
-      optionally specify which directory to scan for music.
+      Add your Dropbox as an audio source. Authorize with Dropbox, then optionally
+      specify which directory to scan for music.
     </p>
   `,
 
@@ -79,13 +82,18 @@ const { setItems, setError } = setup({
     </div>
   `,
 
-  formFields: html``,
+  formFields: html`
+
+  `,
   onSubmit: async () => {},
 });
 
-const authSection = /** @type {HTMLElement} */ (document.querySelector("#dropbox-auth-section"));
-const addSection = /** @type {HTMLElement} */ (document.querySelector("#dropbox-add-section"));
-const dirInput = /** @type {HTMLInputElement} */ (document.querySelector("#dropbox-dir"));
+const authSection =
+  /** @type {HTMLElement} */ (document.querySelector("#dropbox-auth-section"));
+const addSection =
+  /** @type {HTMLElement} */ (document.querySelector("#dropbox-add-section"));
+const dirInput =
+  /** @type {HTMLInputElement} */ (document.querySelector("#dropbox-dir"));
 
 if (currentToken) {
   authSection.hidden = true;
@@ -131,53 +139,51 @@ effect(() => {
 ////////////////////////////////////////////
 
 document.querySelector("#dropbox-auth-btn")?.addEventListener("click", () => {
-  sessionStorage.setItem("oauth/callback/redirect_path", location.pathname + location.search);
-
-  const params = new URLSearchParams({
-    response_type: "token",
-    client_id: APP_KEY,
-    redirect_uri: location.origin + "/oauth/callback/",
-  });
-
-  location.assign(`https://www.dropbox.com/oauth2/authorize?${params}`);
+  const dropboxInput = /** @type {import("~/components/input/dropbox/element.js").default} */ (inputConfigurator.inputs()[SCHEME]);
+  dropboxInput.authorize();
 });
 
-document.querySelector("#dropbox-add-btn")?.addEventListener("click", async () => {
-  if (!currentToken) return;
+document.querySelector("#dropbox-add-btn")?.addEventListener(
+  "click",
+  async () => {
+    if (!currentToken) return;
 
-  setError(null);
-  try {
-    const rawDir = dirInput?.value?.trim() || "/";
-    const directoryPath = rawDir.startsWith("/") ? rawDir : "/" + rawDir;
+    setError(null);
+    try {
+      const rawDir = dirInput?.value?.trim() || "/";
+      const directoryPath = rawDir.startsWith("/") ? rawDir : "/" + rawDir;
 
-    const account = { accessToken: currentToken, directoryPath };
-    const uri = buildURI(account);
-    const now = new Date().toISOString();
+      const account = { accessToken: currentToken, directoryPath };
+      const uri = buildURI(account);
+      const now = new Date().toISOString();
 
-    const tracksCol = outputOrchestrator.tracks.collection();
-    const existingTracks = tracksCol.state === "loaded" ? tracksCol.data : [];
+      const tracksCol = outputOrchestrator.tracks.collection();
+      const existingTracks = tracksCol.state === "loaded" ? tracksCol.data : [];
 
-    await outputOrchestrator.tracks.save([
-      ...existingTracks,
-      {
-        $type: "sh.diffuse.output.track",
-        id: TID.now(),
-        createdAt: now,
-        updatedAt: now,
-        kind: "placeholder",
-        uri,
-      },
-    ]);
+      await outputOrchestrator.tracks.save([
+        ...existingTracks,
+        {
+          $type: "sh.diffuse.output.track",
+          id: TID.now(),
+          createdAt: now,
+          updatedAt: now,
+          kind: "placeholder",
+          uri,
+        },
+      ]);
 
-    // Reset UI after adding
-    if (dirInput) dirInput.value = "";
-    currentToken = null;
-    authSection.hidden = false;
-    addSection.hidden = true;
-  } catch (err) {
-    setError(err instanceof Error ? err.message : "Failed to add Dropbox source");
-  }
-});
+      // Reset UI after adding
+      if (dirInput) dirInput.value = "";
+      currentToken = null;
+      authSection.hidden = false;
+      addSection.hidden = true;
+    } catch (err) {
+      setError(
+        err instanceof Error ? err.message : "Failed to add Dropbox source",
+      );
+    }
+  },
+);
 
 /** @param {string} uri */
 async function removeSource(uri) {

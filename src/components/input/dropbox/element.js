@@ -1,5 +1,5 @@
 import { defineElement, DiffuseElement } from "~/common/element.js";
-import { SCHEME } from "./constants.js";
+import { DEFAULT_APP_KEY, SCHEME } from "./constants.js";
 import { accountsFromTracks, buildURI } from "./common.js";
 
 /**
@@ -22,6 +22,22 @@ class DropboxInput extends DiffuseElement {
 
   SCHEME = SCHEME;
 
+  /** @type {string} */
+  appKey = DEFAULT_APP_KEY;
+
+  static observedAttributes = ["app-key"];
+
+  /**
+   * @override
+   * @param {string} name
+   * @param {string} old
+   * @param {string} next
+   */
+  attributeChangedCallback(name, old, next) {
+    super.attributeChangedCallback(name, old, next);
+    if (name === "app-key" && next !== null) this.appKey = next;
+  }
+
   constructor() {
     super();
 
@@ -37,6 +53,18 @@ class DropboxInput extends DiffuseElement {
   }
 
   // 🛠️
+
+  authorize() {
+    sessionStorage.setItem("oauth/callback/redirect_path", location.pathname + location.search);
+
+    const params = new URLSearchParams({
+      response_type: "token",
+      client_id: this.appKey,
+      redirect_uri: location.origin + "/oauth/callback/",
+    });
+
+    location.assign(`https://www.dropbox.com/oauth2/authorize?${params}`);
+  }
 
   /** @param {Track[]} tracks */
   sources(tracks) {
