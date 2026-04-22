@@ -137,7 +137,6 @@ class ProcessTracksOrchestrator extends BroadcastableDiffuseElement {
       if (!this.output) return;
       const existing = await data(this.output.tracks);
       const merged = mergeTracks(existing, tracks);
-      console.log(merged.filter((t) => !!t.tags));
       this.output.tracks.save(merged);
     }, link);
 
