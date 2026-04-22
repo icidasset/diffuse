@@ -1,3 +1,4 @@
+/// <reference lib="webworker" />
 import { getTransferables } from "@okikio/transferables";
 import { debounceMicrotask } from "@vicary/debounce-microtask";
 import { xxh32 } from "xxh32";

@@ -1,6 +1,7 @@
 import { walk } from "@std/fs/walk";
 
 const srcDir = new URL("../", import.meta.url).pathname;
+/** @type {Record<string, string>} */
 const sources = {};
 
 for await (const entry of walk(srcDir + "components", { match: [/element\.js$/] })) {
