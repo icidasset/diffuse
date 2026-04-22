@@ -1,4 +1,9 @@
-import { BroadcastableDiffuseElement, defineElement, query } from "~/common/element.js";
+import {
+  BroadcastableDiffuseElement,
+  defineElement,
+  query,
+} from "~/common/element.js";
+import { data, mergeTracks } from "~/common/output.js";
 import { signal, untracked } from "~/common/signal.js";
 import { listen } from "~/common/worker.js";
 
@@ -6,6 +11,7 @@ import { listen } from "~/common/worker.js";
  * @import {ProxiedActions} from "~/common/worker.d.ts"
  * @import {InputElement} from "~/components/input/types.d.ts"
  * @import {OutputElement} from "~/components/output/types.d.ts"
+ * @import {Track} from "~/definitions/types.d.ts"
  * @import MetadataConfigurator from "~/components/configurator/metadata/element.js"
  *
  * @import {Actions, Progress} from "./types.d.ts"
@@ -119,8 +125,19 @@ class ProcessTracksOrchestrator extends BroadcastableDiffuseElement {
     listen("progress", this.#progress.set, link);
     this.#proxy.progress().then(this.#progress.set);
 
-    // Save intermediate batches as they arrive so progress isn't lost
-    listen("batch", (tracks) => this.output?.tracks.save(tracks), link);
+    //
+    listen("list", /** @param {Track[]} tracks */ async (tracks) => {
+      if (!this.output) return;
+      this.output.tracks.save(tracks);
+    }, link);
+
+    // Save intermediate batches as they arrive so progress isn't lost.
+    // Merge with tracks not present in the batch to avoid overwriting them.
+    listen("batch", /** @param {Track[]} tracks */ async (tracks) => {
+      if (!this.output) return;
+      const existing = await data(this.output.tracks);
+      this.output.tracks.save(mergeTracks(existing, tracks));
+    }, link);
 
     // Process whenever tracks are initially loaded;
     // unless already done so (possibly through another instance of this element)
@@ -151,7 +168,6 @@ class ProcessTracksOrchestrator extends BroadcastableDiffuseElement {
         untracked(() => this.process());
       });
     }
-
   }
 
   // WORKERS
@@ -181,12 +197,12 @@ class ProcessTracksOrchestrator extends BroadcastableDiffuseElement {
     this.#isProcessing.set(true);
     console.log("🪵 Processing initiated");
 
-    const tracksCol = this.output.tracks.collection();
-    const cachedTracks = tracksCol.state === "loaded" ? tracksCol.data : [];
+    const cachedTracks = await data(this.output.tracks);
     const result = await this.#proxy.process(cachedTracks);
 
-    // Save if collection changed
-    if (result) await this.output.tracks.save(result);
+    if (result) {
+      await this.output.tracks.save(mergeTracks(cachedTracks, result));
+    }
 
     // Fin
     console.log("🪵 Processing completed");

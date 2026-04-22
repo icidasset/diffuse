@@ -29,7 +29,11 @@ const $progress = signal({ processed: 0, total: 0 }, {
  * @param {any} context
  * @returns {ActionsWithTunnel<Actions>["process"]}
  */
-const process = (context) => /** @type {ActionsWithTunnel<Actions>["process"]} */ (async ({ data, ports }) => {
+const process = (
+  context,
+) => /** @type {ActionsWithTunnel<Actions>["process"]} */ (async (
+  { data, ports },
+) => {
   const cachedTracks = data;
 
   // Reset progress
@@ -50,7 +54,7 @@ const process = (context) => /** @type {ActionsWithTunnel<Actions>["process"]} *
   // Persist the full track list immediately so that an interrupted metadata
   // processing run doesn't lose discovered tracks. On next run they'll come
   // back as cachedTracks and only the ones without metadata need reprocessing.
-  announce("batch", tracks, context);
+  announce("list", tracks, context);
 
   // Reset progress
   $progress.value = { processed: 0, total: tracks.length };
