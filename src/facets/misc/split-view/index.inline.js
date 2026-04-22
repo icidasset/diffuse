@@ -373,8 +373,9 @@ ${indent}</div>`;
 
 /**
  * @param {string} id
+ * @param {string} name
  */
-function generateSimplifiedHTML(id) {
+function generateSimplifiedHTML(id, name) {
   const scriptClose = "</" + "script>";
   return `\
 <link rel="stylesheet" href="vendor/@awesome.me/webawesome/styles/themes/default.css" />
@@ -396,6 +397,9 @@ ${generateNodeHTML(state, "  ")}
 <script type="module">
   import "@awesome.me/webawesome/dist/components/split-panel/split-panel.js";
   import "~/common/webawesome/detect-dark.js";
+  import foundation from "~/common/foundation.js";
+
+  foundation.setup({ title: ${JSON.stringify(name + " | Diffuse")} });
 
   const layout = document.querySelector("#layout");
 
@@ -423,13 +427,16 @@ ${generateNodeHTML(state, "  ")}
       localStorage.setItem(POSITIONS_KEY, JSON.stringify(savedPositions));
     });
   });
+
+  foundation.ready();
 ${scriptClose}`;
 }
 
 async function saveSimplifiedCopy() {
   const output = await foundation.orchestrator.output();
   const id = crypto.randomUUID();
-  const html = generateSimplifiedHTML(id);
+  const name = `Split View (${Temporal.Now.instant().toLocaleString()})`;
+  const html = generateSimplifiedHTML(id, name);
   const now = new Date().toISOString();
 
   await output.facets.save([
@@ -437,7 +444,7 @@ async function saveSimplifiedCopy() {
     {
       $type: "sh.diffuse.output.facet",
       id,
-      name: `Split View (${Temporal.Now.instant().toLocaleString()})`,
+      name,
       html,
       createdAt: now,
       updatedAt: now,
