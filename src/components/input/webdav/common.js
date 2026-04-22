@@ -2,6 +2,8 @@ import { parse as parseXml } from "@std/xml";
 import * as URI from "fast-uri";
 import QS from "query-string";
 
+import { safeDecodeURIComponent } from "~/common/utils.js";
+
 import { cachedConsult } from "~/components/input/common.js";
 import { SCHEME } from "./constants.js";
 
@@ -50,15 +52,9 @@ export function buildURI(server, filePath = "") {
     [protocol, host] = host.split("://");
   }
 
-  return URI.serialize({
-    scheme: SCHEME,
-    userinfo: `${encodeURIComponent(server.username)}:${
-      encodeURIComponent(server.password)
-    }`,
-    host,
-    path: filePath,
-    query: QS.stringify({ dir: server.dir, protocol }),
-  });
+  const userinfo = `${encodeURIComponent(server.username)}:${encodeURIComponent(server.password)}`;
+  const query = QS.stringify({ dir: server.dir, protocol });
+  return `${SCHEME}://${userinfo}@${host}${filePath}${query ? `?${query}` : ""}`;
 }
 
 /**
@@ -280,13 +276,13 @@ async function propfindDir(server, dir, paths) {
     } catch {
       rawPath = href;
     }
-    const path = decodeURIComponent(rawPath);
+    const path = safeDecodeURIComponent(rawPath);
 
     // Skip the directory entry itself.
     // Normalise both sides to have a leading slash — server hrefs always do,
     // but `dir` may not when the user omitted the leading slash in the form.
     const normPath = path.replace(/\/$/, "");
-    const normDir = ("/" + decodeURIComponent(dir).replace(/^\//, "")).replace(
+    const normDir = ("/" + safeDecodeURIComponent(dir).replace(/^\//, "")).replace(
       /\/$/,
       "",
     );
@@ -298,7 +294,7 @@ async function propfindDir(server, dir, paths) {
     if (isCollection) {
       subdirs.push(rawPath);
     } else {
-      paths.push(path);
+      paths.push(rawPath);
     }
   }
 

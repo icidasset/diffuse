@@ -5,6 +5,7 @@ import {
   groupKey,
   isAudioFile,
 } from "~/components/input/common.js";
+import { safeDecodeURIComponent } from "~/common/utils.js";
 
 import {
   buildTrackUrl,
@@ -109,7 +110,7 @@ export async function list(cachedTracks = []) {
       if (!parsed) return;
 
       if (!cache[id]) cache[id] = {};
-      cache[id][parsed.path] = track;
+      cache[id][safeDecodeURIComponent(parsed.path)] = track;
     });
   });
 
@@ -119,7 +120,7 @@ export async function list(cachedTracks = []) {
     let tracks = files
       .filter((path) => isAudioFile(path))
       .map((path) => {
-        const cachedTrack = cache[id]?.[path];
+        const cachedTrack = cache[id]?.[safeDecodeURIComponent(path)];
 
         const trackId = cachedTrack?.id || TID.now();
         const stats = cachedTrack?.stats;
