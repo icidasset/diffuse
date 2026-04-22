@@ -486,10 +486,8 @@ class ArtworkController extends DiffuseElement {
             <!-- PROGRESS -->
 
             <div class="progress" @click="${this.seek}">
-              <progress max="100" value="${(this.audio()?.loadingState() ===
-                  "loaded"
-                ? (this.audio()?.progress() ?? 0)
-                : 0) * 100}"></progress>
+              <progress max="100" value="${(this.audio()?.progress() ?? 0) *
+                100}"></progress>
               <div class="timestamps">
                 <time datetime="${this.#time.value}">${this.#time.value}</time>
                 <time datetime="${this.#time.value}">${this.#duration

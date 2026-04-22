@@ -2032,9 +2032,7 @@ class WinampElement extends DiffuseElement {
             max="100"
             .value="${(this.#seekingProgress.value !== null
               ? this.#seekingProgress.value
-              : this.audio()?.loadingState() === "loaded"
-              ? (this.audio()?.progress() ?? 0)
-              : 0) * 100}"
+              : (this.audio()?.progress() ?? 0)) * 100}"
             @input="${this.#onPositionInput}"
             @change="${this.#onPositionChange}"
           >
