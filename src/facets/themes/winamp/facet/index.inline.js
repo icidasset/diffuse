@@ -1,7 +1,7 @@
 import foundation from "~/common/foundation.js";
 import { effect } from "~/common/signal.js";
 
-import WindowManager from "~/themes/winamp/window-manager/element.js";
+import WindowManager from "~/facets/themes/winamp/window-manager/element.js";
 
 // Set doc title
 foundation.setup({ title: "Winamp | Diffuse" });
@@ -19,11 +19,11 @@ await foundation.orchestrator.processTracks({ disableWhenReady: true });
 await foundation.orchestrator.queueAudio();
 await foundation.orchestrator.controller();
 
-await import("~/themes/winamp/browser/element.js");
-await import("~/themes/winamp/window/element.js");
+await import("~/facets/themes/winamp/browser/element.js");
+await import("~/facets/themes/winamp/window/element.js");
 
 const { default: WinampElement } = await import(
-  "~/themes/winamp/winamp/element.js"
+  "~/facets/themes/winamp/winamp/element.js"
 );
 
 /** @type {OutputElement | null} */

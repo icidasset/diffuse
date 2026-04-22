@@ -1153,8 +1153,8 @@ class Browser extends DiffuseElement {
       <link rel="stylesheet" href="styles/diffuse/facet.css" />
       <link rel="stylesheet" href="vendor/@phosphor-icons/web/bold/style.css" />
       <link rel="stylesheet" href="vendor/@phosphor-icons/web/fill/style.css" />
-      <link rel="stylesheet" href="themes/blur/variables.css" />
-      <link rel="stylesheet" href="themes/blur/browser/element.css" />
+      <link rel="stylesheet" href="facets/themes/blur/variables.css" />
+      <link rel="stylesheet" href="facets/themes/blur/browser/element.css" />
 
       <div class="toolbar">
         <label class="search-field">

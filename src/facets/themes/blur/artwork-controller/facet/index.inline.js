@@ -1,5 +1,5 @@
 import foundation from "~/common/foundation.js";
-import ArtworkController from "~/themes/blur/artwork-controller/element.js";
+import ArtworkController from "~/facets/themes/blur/artwork-controller/element.js";
 
 // Set doc title
 foundation.setup({ title: "Artwork controller | Blur | Diffuse" });

@@ -14,21 +14,21 @@
     "desc": "Automatically put tracks into the queue when this interface is opened. Also allows for controlling shuffle, repeat, search, sorting and playlist selection."
   },
   {
-    "url": "themes/blur/facet/index.html",
+    "url": "facets/themes/blur/facet/index.html",
     "title": "Blur",
     "category": "Themes",
     "featured": true,
     "desc": "A combination of the classic Diffuse browser and the Apple Music iOS playback screen."
   },
   {
-    "url": "themes/blur/artwork-controller/facet/index.html",
+    "url": "facets/themes/blur/artwork-controller/facet/index.html",
     "title": "Blur / Artwork Controller",
     "category": "Playback",
     "featured": true,
     "desc": "Audio playback controller with an artwork display. Play audio from the queue, add tracks to your favourites, control the queue and volume."
   },
   {
-    "url": "themes/blur/browser/facet/index.html",
+    "url": "facets/themes/blur/browser/facet/index.html",
     "title": "Blur / Browser",
     "category": "Browsing",
     "featured": true,
@@ -213,14 +213,14 @@
     "desc": "Import data from Diffuse v3."
   },
   {
-    "url": "themes/winamp/facet/index.html",
+    "url": "facets/themes/winamp/facet/index.html",
     "title": "Winamp",
     "category": "Themes",
     "featured": true,
     "desc": "Windows 98 inspired theme with a classic Winamp skin for the audio player. The Winamp playlist is a combination of the queue's history, the track that's currently playing and the future queue items."
   },
   {
-    "url": "themes/winamp/browser/facet/index.html",
+    "url": "facets/themes/winamp/browser/facet/index.html",
     "title": "Winamp / Browser",
     "category": "Browsing",
     "desc": "Collection browser and search."

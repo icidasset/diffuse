@@ -291,7 +291,7 @@ class Browser extends DiffuseElement {
       <link rel="stylesheet" href="vendor/98.css" />
 
       <style>
-      @import "./themes/winamp/98-vars.css";
+      @import "./facets/themes/winamp/98-vars.css";
 
       :host {
         display: flex;

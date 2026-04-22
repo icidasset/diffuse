@@ -414,7 +414,7 @@ class ArtworkController extends DiffuseElement {
       <link rel="stylesheet" href="vendor/@phosphor-icons/web/bold/style.css" />
       <link rel="stylesheet" href="vendor/@phosphor-icons/web/fill/style.css" />
       <link rel="stylesheet" href="styles/animations.css" />
-      <link rel="stylesheet" href="themes/blur/artwork-controller/element.css" />
+      <link rel="stylesheet" href="facets/themes/blur/artwork-controller/element.css" />
 
       <main style="background-color: ${this.#artworkColor.value ??
         `var(--color-3)`}; opacity: 0;">
@@ -426,7 +426,7 @@ class ArtworkController extends DiffuseElement {
             @click="${() => {
               const base = document.baseURI;
               const facetUrl = new URL(
-                "themes/blur/artwork-controller/facet/index.html",
+                "facets/themes/blur/artwork-controller/facet/index.html",
                 base,
               );
               facetUrl.searchParams.set("group", this.group);

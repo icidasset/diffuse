@@ -20,7 +20,7 @@ import { guard } from "lit-html/directives/guard.js";
 // UI STATE
 ////////////////////////////////////////////
 
-const UI_STATE_KEY = "themes/winamp/winamp/ui";
+const UI_STATE_KEY = "facets/themes/winamp/winamp/ui";
 
 /** @returns {{ eqOpen: boolean, playlistOpen: boolean, milkdropOpen: boolean, eqOn: boolean, eqSliders: Record<string, number> | null, mainShade: boolean, eqShade: boolean, playlistShade: boolean, positions: Record<string, {x:number,y:number}> | null, sizes: Record<string, {width:number,height:number}> | null }} */
 function loadUiState() {
@@ -1895,8 +1895,8 @@ class WinampElement extends DiffuseElement {
 
     return html`
       <style>
-      @import "./themes/winamp/vendor/webamp.css";
-      @import "./themes/winamp/vendor/gen-window.css";
+      @import "./facets/themes/winamp/vendor/webamp.css";
+      @import "./facets/themes/winamp/vendor/gen-window.css";
 
       #webamp .playlist-track-titles > div {
         padding-left: 3px;

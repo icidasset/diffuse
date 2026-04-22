@@ -29,8 +29,8 @@ await foundation.orchestrator.artwork();
 await foundation.orchestrator.coverGroups();
 await foundation.orchestrator.favourites();
 
-await import("~/themes/blur/artwork-controller/element.js");
-await import("~/themes/blur/browser/element.js");
+await import("~/facets/themes/blur/artwork-controller/element.js");
+await import("~/facets/themes/blur/browser/element.js");
 
 const groupLabel = foundation.GROUP === "facets" ? "Deck A" : foundation.GROUP;
 const controller = document.querySelector("db-artwork-controller");

@@ -1,5 +1,5 @@
 import foundation from "~/common/foundation.js";
-import BrowserElement from "~/themes/winamp/browser/element.js";
+import BrowserElement from "~/facets/themes/winamp/browser/element.js";
 
 // Set doc title
 foundation.setup({ title: "Browser | Winamp | Diffuse" });

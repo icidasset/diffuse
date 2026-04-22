@@ -2,16 +2,19 @@
   @import "./vendor/@phosphor-icons/web/bold/style.css";
   @import "./vendor/@phosphor-icons/web/fill/style.css";
   @import "./styles/base.css";
-  @import "./styles/diffuse/facet.css";
-  @import "./themes/blur/variables.css";
-  @import "./themes/blur/font-faces.css";
+  @import "./facets/themes/blur/font-faces.css";
 
-  db-browser {
+  db-artwork-controller {
     font-family: "Source Sans 3", ui-sans-serif, system-ui, sans-serif;
     font-feature-settings: normal;
     font-optical-sizing: auto;
-    height: 100vh;
+  }
+
+  @media (min-width: 70em) {
+    db-artwork-controller {
+      font-size: var(--fs-sm);
+    }
   }
 </style>
 
-<script type="module" src="themes/blur/browser/facet/index.inline.js"></script>
+<script type="module" src="facets/themes/blur/artwork-controller/facet/index.inline.js"></script>

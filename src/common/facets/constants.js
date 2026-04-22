@@ -16,7 +16,7 @@ export const STARTING_SET_URIS = [
   // INTERACTIVE
   "facets/connect/index.html",
   "facets/data/sources/index.html",
-  "themes/blur/artwork-controller/facet/index.html",
+  "facets/themes/blur/artwork-controller/facet/index.html",
 
   // PRELUDES
   "facets/data/metadata-bundle/index.html",
