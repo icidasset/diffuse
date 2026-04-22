@@ -2,6 +2,11 @@ import * as IDB from "idb-keyval";
 import * as URI from "fast-uri";
 import * as Cid from "~/common/cid.js";
 
+import {
+  CACHE_KEY_PREFIX,
+  SCHEME as CACHE_SCHEME,
+} from "~/components/input/ephemeral-cache/constants.js";
+
 import { groupTracksPerScheme, groupUrisPerScheme } from "~/common/utils.js";
 import { ostiary, rpc, workerProxy } from "~/common/worker.js";
 
@@ -11,12 +16,6 @@ import { ostiary, rpc, workerProxy } from "~/common/worker.js";
  * @import {ActionsWithTunnel, ProxiedActions} from "~/common/worker.d.ts"
  * @import {Actions} from "./types.d.ts"
  */
-
-////////////////////////////////////////////
-// LOCAL CACHE
-////////////////////////////////////////////
-
-const CACHE_KEY_PREFIX = "diffuse/components/configurator/input/cache/";
 
 ////////////////////////////////////////////
 // INPUT ACTIONS
@@ -209,7 +208,7 @@ export async function cacheBlob({ data }) {
   const buffer = await blob.arrayBuffer();
   const bytes = new Uint8Array(buffer);
   const cid = await Cid.create(0x55, bytes);
-  const uri = `ephemeral+cache://${cid}`;
+  const uri = `${CACHE_SCHEME}://${cid}`;
   if (await IDB.get(CACHE_KEY_PREFIX + uri) === undefined) {
     await IDB.set(CACHE_KEY_PREFIX + uri, blob);
   }

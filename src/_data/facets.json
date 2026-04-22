@@ -57,7 +57,7 @@
   },
   {
     "url": "facets/connect/atproto/index.html",
-    "title": "Connect / AT Protocol",
+    "title": "Connect / Atmosphere",
     "category": "Data",
     "desc": "Use your AT Protocol identity for user-data storage."
   },
@@ -89,7 +89,7 @@
     "url": "facets/connect/opensubsonic/index.html",
     "title": "Connect / OpenSubsonic",
     "category": "Data",
-    "desc": "Connect to an OpenSubsonic server for audio input."
+    "desc": "Add an OpenSubsonic server as an audio source."
   },
   {
     "url": "facets/connect/s3/index.html",
@@ -101,7 +101,7 @@
     "url": "facets/connect/webdav/index.html",
     "title": "Connect / WebDAV",
     "category": "Data",
-    "desc": "Connect to a WebDAV server for audio input."
+    "desc": "Add a WebDAV server as an audio source."
   },
   {
     "url": "facets/data/artwork-bundle/index.html",

@@ -16,7 +16,7 @@ import { SCHEME } from "./constants.js";
 
 /**
  * Build an HTTP(S) URL with credentials in a query param for the service worker to intercept.
- * Credentials go in `?_auth=<base64>` rather than `user:pass@host` because browsers
+ * Credentials go in `?diffuse:basic-auth=<base64>` rather than `user:pass@host` because browsers
  * block `new Request()` with credentials in the URL authority (which music-metadata uses).
  *
  * @param {Server} server
@@ -24,7 +24,10 @@ import { SCHEME } from "./constants.js";
  */
 export function buildTrackUrl(server, filePath = "") {
   const url = new URL(toHttpUrl(server, filePath));
-  url.searchParams.set("diffuse:basic-auth", btoa(unescape(encodeURIComponent(`${server.username}:${server.password}`))));
+  url.searchParams.set(
+    "diffuse:basic-auth",
+    btoa(unescape(encodeURIComponent(`${server.username}:${server.password}`))),
+  );
   return url.href;
 }
 
@@ -49,7 +52,9 @@ export function buildURI(server, filePath = "") {
 
   return URI.serialize({
     scheme: SCHEME,
-    userinfo: `${encodeURIComponent(server.username)}:${encodeURIComponent(server.password)}`,
+    userinfo: `${encodeURIComponent(server.username)}:${
+      encodeURIComponent(server.password)
+    }`,
     host,
     path: filePath,
     query: QS.stringify({ dir: server.dir, protocol }),
@@ -67,8 +72,12 @@ export function parseURI(uriString) {
 
   const userinfo = uri.userinfo ?? "";
   const colonIdx = userinfo.indexOf(":");
-  const username = decodeURIComponent(colonIdx >= 0 ? userinfo.slice(0, colonIdx) : userinfo);
-  const password = decodeURIComponent(colonIdx >= 0 ? userinfo.slice(colonIdx + 1) : "");
+  const username = decodeURIComponent(
+    colonIdx >= 0 ? userinfo.slice(0, colonIdx) : userinfo,
+  );
+  const password = decodeURIComponent(
+    colonIdx >= 0 ? userinfo.slice(colonIdx + 1) : "",
+  );
 
   const qs = QS.parse(uri.query || "");
   const dir = typeof qs.dir === "string" ? qs.dir : "/";
@@ -89,7 +98,12 @@ export function parseURI(uriString) {
 export function toHttpUrl(server, path = "") {
   const base = server.host.includes("://")
     ? server.host
-    : `${server.host.split(":")[0] === "localhost" || server.host.split(":")[0] === "127.0.0.1" ? "http" : "https"}://${server.host}`;
+    : `${
+      server.host.split(":")[0] === "localhost" ||
+        server.host.split(":")[0] === "127.0.0.1"
+        ? "http"
+        : "https"
+    }://${server.host}`;
 
   return base.replace(/\/$/, "") + (path ? "/" + path.replace(/^\//, "") : "");
 }
@@ -98,7 +112,9 @@ export function toHttpUrl(server, path = "") {
  * @param {Server} server
  */
 export function authHeader(server) {
-  return `Basic ${btoa(unescape(encodeURIComponent(`${server.username}:${server.password}`)))}`;
+  return `Basic ${
+    btoa(unescape(encodeURIComponent(`${server.username}:${server.password}`)))
+  }`;
 }
 
 /**
@@ -244,7 +260,8 @@ async function propfindDir(server, dir, paths) {
       if (child.type !== "element") continue;
 
       if (child.name.local === "href") {
-        href = (child.children?.find((n) => n.type === "text")?.text ?? "").trim();
+        href = (child.children?.find((n) => n.type === "text")?.text ?? "")
+          .trim();
       } else if (child.name.local === "propstat") {
         if (propstatHasCollection(child)) isCollection = true;
       }
@@ -269,7 +286,10 @@ async function propfindDir(server, dir, paths) {
     // Normalise both sides to have a leading slash — server hrefs always do,
     // but `dir` may not when the user omitted the leading slash in the form.
     const normPath = path.replace(/\/$/, "");
-    const normDir = ("/" + decodeURIComponent(dir).replace(/^\//, "")).replace(/\/$/, "");
+    const normDir = ("/" + decodeURIComponent(dir).replace(/^\//, "")).replace(
+      /\/$/,
+      "",
+    );
     if (normPath === normDir) continue;
 
     // Skip Synology extended-attribute metadata folders
@@ -298,9 +318,13 @@ function propstatHasCollection(propstat) {
   for (const prop of propstat.children ?? []) {
     if (prop.type !== "element" || prop.name?.local !== "prop") continue;
     for (const child of prop.children ?? []) {
-      if (child.type !== "element" || child.name?.local !== "resourcetype") continue;
+      if (child.type !== "element" || child.name?.local !== "resourcetype") {
+        continue;
+      }
       for (const rt of child.children ?? []) {
-        if (rt.type === "element" && rt.name?.local === "collection") return true;
+        if (rt.type === "element" && rt.name?.local === "collection") {
+          return true;
+        }
       }
     }
   }

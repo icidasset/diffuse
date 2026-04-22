@@ -7,7 +7,7 @@ import foundation from "~/common/foundation.js";
 
 import { setup } from "~/facets/connect/common.js";
 
-foundation.setup({ title: "Connect AT Protocol | Diffuse" });
+foundation.setup({ title: "Connect Atmosphere | Diffuse" });
 
 /**
  * @import { ATProtoOutputElement } from "~/components/output/raw/atproto/types.d.ts"
@@ -48,7 +48,7 @@ const $passkeyWorking = signal(false);
 ////////////////////////////////////////////
 
 const { setItems } = setup({
-  title: "AT Protocol",
+  title: "Atmosphere",
   hasInput: false,
 
   description: html`
