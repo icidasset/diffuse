@@ -97,16 +97,27 @@ db-browser,
   width: 100%;
 }
 
+db-browser {
+  flex: 1;
+  min-height: 0;
+}
+
 db-artwork-controller,
 #settings-panel {
-  grid-column: 8 / span 3;
-  grid-row: 1;
+  flex-shrink: 0;
   min-height: 50vh;
+
+  @media (min-width: 35rem) {
+    grid-column: 8 / span 3;
+    grid-row: 1;
+  }
 }
 
 db-browser {
-  grid-column: 1 / span 7;
-  grid-row: 1 / span 2;
+  @media (min-width: 35rem) {
+    grid-column: 1 / span 7;
+    grid-row: 1 / span 2;
+  }
 }
 
 /***********************************
