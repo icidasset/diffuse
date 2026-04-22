@@ -1745,16 +1745,12 @@ class WinampElement extends DiffuseElement {
     const isMono = channels === 1;
     const kbpsChars = kbps != null
       ? [...String(kbps)].map((c) =>
-        html`
-          <span class="character character-${c.charCodeAt(0)}">${c}</span>
-        `
+        html`<span class="character character-${c.charCodeAt(0)}">${c}</span>`
       )
       : [];
     const khzChars = khz != null
       ? [...String(khz)].map((c) =>
-        html`
-          <span class="character character-${c.charCodeAt(0)}">${c}</span>
-        `
+        html`<span class="character character-${c.charCodeAt(0)}">${c}</span>`
       )
       : [];
 
@@ -1846,9 +1842,7 @@ class WinampElement extends DiffuseElement {
     };
     const runningTimeStr = `${fmtDur(nowTrackSec)}/${fmtDur(totalSec)}`;
     const totalTimeChars = [...runningTimeStr].map((c) =>
-      html`
-        <span class="character character-${c.charCodeAt(0)}">${c}</span>
-      `
+      html`<span class="character character-${c.charCodeAt(0)}">${c}</span>`
     );
 
     const isPaused = !!audio && !this.isPlaying() && !this.#stopped.value;
@@ -1869,9 +1863,7 @@ class WinampElement extends DiffuseElement {
       ? `${shadeArtist} - ${nowTrack?.tags?.title ?? ""}`.toLowerCase()
       : (nowTrack?.tags?.title ?? "").toLowerCase();
     const shadeTitleChars = [...shadeTitle].map((c) =>
-      html`
-        <span class="character character-${c.charCodeAt(0)}">${c}</span>
-      `
+      html`<span class="character character-${c.charCodeAt(0)}">${c}</span>`
     );
     const shadeTimeChars = [...miniTimeStr].map((c, i) =>
       c === ":" ? null : html`
@@ -1886,11 +1878,7 @@ class WinampElement extends DiffuseElement {
     const loopedMarquee = WinampElement.#marqueeLoopText(activeMarquee);
 
     const marqueeChars = [...loopedMarquee].map((char) =>
-      html`
-        <span class="character character-${char.toLowerCase().charCodeAt(
-          0,
-        )}">${char}</span>
-      `
+      html`<span class="character character-${char.toLowerCase().charCodeAt(0)}">${char}</span>`
     );
 
     return html`
