@@ -425,16 +425,12 @@ class ArtworkController extends DiffuseElement {
               : `block`}; cursor: pointer;"
             @click="${() => {
               const base = document.baseURI;
-              const facetUrl = new URL(
-                "facets/themes/blur/artwork-controller/facet/index.html",
-                base,
-              );
-              facetUrl.searchParams.set("group", this.group);
               const loaderUrl = new URL("l/", base);
               loaderUrl.searchParams.set(
                 "path",
-                facetUrl.pathname.slice(1) + facetUrl.search,
+                "facets/themes/blur/artwork-controller/facet/index.html",
               );
+              loaderUrl.searchParams.set("group", this.group);
               window.open(loaderUrl.toString(), "_blank");
             }}"
           >
