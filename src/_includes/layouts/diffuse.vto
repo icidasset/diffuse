@@ -34,9 +34,6 @@ base: "./"
     {{ for url of styles }}
       <link rel="stylesheet" href="{{ url }}" />
     {{ /for }}
-  </head>
-  <body>
-    {{ content }}
 
     <!-- Import map -->
     <script type="importmap">
@@ -58,6 +55,9 @@ base: "./"
         }
       }
     </script>
+  </head>
+  <body>
+    {{ content }}
 
     <script src="default-layout.js" type="module"></script>
 
