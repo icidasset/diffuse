@@ -431,8 +431,10 @@ class Browser extends DiffuseElement {
     if (!this.#coverObserver) {
       this.#coverObserver = new IntersectionObserver(
         (entries) => {
+          let hasNew = false;
           for (const entry of entries) {
             if (!entry.isIntersecting) continue;
+            hasNew = true;
             const albumKey =
               /** @type {HTMLElement} */ (entry.target).dataset.albumKey;
             if (!albumKey) continue;
@@ -440,6 +442,7 @@ class Browser extends DiffuseElement {
             if (track) this.#pendingVisibleCards.set(albumKey, track);
             this.#coverObserver?.unobserve(entry.target);
           }
+          if (!hasNew) return;
           clearTimeout(this.#artFetchDebounce);
           this.#artFetchDebounce = setTimeout(() => {
             for (const [albumKey, track] of this.#pendingVisibleCards) {
