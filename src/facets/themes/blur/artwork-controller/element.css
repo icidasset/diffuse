@@ -12,7 +12,6 @@ main {
   display: flex;
   flex-direction: column;
   height: 100%;
-  opacity: 1 !important;
   overflow: hidden;
   position: relative;
   transition:

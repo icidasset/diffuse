@@ -105,11 +105,12 @@ db-browser {
 db-artwork-controller,
 #settings-panel {
   flex-shrink: 0;
-  min-height: 50vh;
+  height: 50vh;
 
   @media (min-width: 35rem) {
     grid-column: 8 / span 3;
     grid-row: 1;
+    height: auto;
   }
 }
 

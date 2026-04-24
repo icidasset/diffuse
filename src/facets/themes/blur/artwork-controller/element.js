@@ -417,7 +417,7 @@ class ArtworkController extends DiffuseElement {
       <link rel="stylesheet" href="facets/themes/blur/artwork-controller/element.css" />
 
       <main style="background-color: ${this.#artworkColor.value ??
-        `var(--color-3)`}; opacity: 0;">
+        `var(--color-3)`};">
         <section class="artwork">
           <label
             style="display: ${this.group === DEFAULT_GROUP
