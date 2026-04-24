@@ -23,7 +23,7 @@ const site = lume({
   src: "./src",
   server: {
     debugBar: false,
-    middlewares: [facetHtmlMiddleware],
+    middlewares: [],
   },
 });
 
@@ -284,9 +284,6 @@ site.remoteFile(
 
 site.add("architecture.txt");
 
-site.use(brotli());
-site.use(sourceMaps());
-
 site.script("copy-type-defs", () => {
   for (
     const f of walkSync(
@@ -306,73 +303,8 @@ site.addEventListener("afterBuild", () => {
 });
 
 ////////////////////////////////////////////
-// MIDDLEWARE
+// FILE TREE
 ////////////////////////////////////////////
-
-// Facet HTML files are HTML fragments fetched via JS, not full pages.
-// Serving them as text/plain prevents Lume's dev server from injecting
-// its live-reload <script> tag into the fetched content.
-//
-// Also inlines any <script type="module" src="./foo.inline.js"> references so
-// that forked facets contain readable JS rather than an external file reference.
-async function facetHtmlMiddleware(
-  request: Request,
-  next: RequestHandler,
-): Promise<Response> {
-  const { pathname } = new URL(request.url);
-  const isFacetHtml = pathname.endsWith(".html") &&
-    !pathname.startsWith("/testing/");
-  const response = await next(request);
-
-  if (!isFacetHtml || !response.headers.get("content-type")?.includes("html")) {
-    return response;
-  }
-
-  let content = await response.text();
-  content = await inlineScriptSrc(content);
-
-  const headers = new Headers(response.headers);
-  headers.set("content-type", "text/plain; charset=utf-8");
-  return new Response(content, {
-    status: response.status,
-    statusText: response.statusText,
-    headers,
-  });
-}
-
-const SCRIPT_SRC_RE =
-  /<script type="module" src="([^"]+\.inline\.js)"><\/script>/;
-
-async function inlineScriptSrc(content: string): Promise<string> {
-  const match = SCRIPT_SRC_RE.exec(content);
-  if (!match) return content;
-
-  const jsPath = path.join("src", match[1]);
-  try {
-    return htmlWithInlineJs({ content, jsPath, match: match[0] });
-  } catch {
-    return content;
-  }
-}
-
-site.addEventListener("afterBuild", async () => {
-  for (
-    const f of walkSync("./dist/", { includeDirs: false, exts: [".html"] })
-  ) {
-    const content = Deno.readTextFileSync(f.path);
-    const match = SCRIPT_SRC_RE.exec(content);
-    if (!match) continue;
-
-    const jsPath = path.join("src", match[1]);
-
-    try {
-      const newContent = htmlWithInlineJs({ content, jsPath, match: match[0] });
-      Deno.writeTextFileSync(f.path, newContent);
-    } catch {
-      // leave as-is if the source file can't be read
-    }
-  }
-});
 
 site.addEventListener("afterBuild", async () => {
   const RAW = 0x55;
@@ -408,6 +340,29 @@ site.addEventListener("afterBuild", async () => {
   );
 });
 
+////////////////////////////////////////////
+// INLINE JS FOR FACETS
+////////////////////////////////////////////
+
+const SCRIPT_SRC_RE =
+  /<script type="module" src="([^"]+\.inline\.js)"><\/script>/;
+
+site.process([".html"], (pages) => {
+  for (const page of pages) {
+    const content = page.text;
+    if (!content) continue;
+    const match = SCRIPT_SRC_RE.exec(content);
+    if (!match) continue;
+
+    const jsPath = path.join("src", match[1]);
+    try {
+      page.text = htmlWithInlineJs({ content, jsPath, match: match[0] });
+    } catch {
+      // leave as-is if the source file can't be read
+    }
+  }
+});
+
 function htmlWithInlineJs({ content, match, jsPath }: {
   content: string;
   match: string;
@@ -419,3 +374,10 @@ function htmlWithInlineJs({ content, match, jsPath }: {
     ).trimEnd() + "\n";
   return content.replace(match, `<script type="module">\n${js}</script>`);
 }
+
+////////////////////////////////////////////
+// COMPRESSION
+////////////////////////////////////////////
+
+site.use(brotli());
+site.use(sourceMaps());
