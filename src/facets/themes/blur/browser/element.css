@@ -178,6 +178,13 @@
   margin-right: 0;
 }
 
+.table-header .col-menu {
+  border-left: none;
+  cursor: default;
+  margin-right: 0;
+  padding: 0;
+}
+
 /***********************************
  * Column widths
  ***********************************/
@@ -457,6 +464,7 @@
   background: color-mix(in oklch, currentColor 6%, transparent);
   border-radius: var(--radius-md);
   overflow: hidden;
+  position: relative;
   width: 100%;
 }
 
@@ -665,4 +673,72 @@
   .album-track-row .col-artist {
     display: none;
   }
+}
+
+/***********************************
+ * Track menu button
+ ***********************************/
+
+.col-menu {
+  align-items: center;
+  display: flex;
+  flex-shrink: 0;
+  justify-content: center;
+  overflow: visible !important;
+  width: var(--space-md);
+}
+
+.track-row .col-menu,
+.album-track-row .col-menu {
+  padding-left: var(--space-2xs);
+}
+
+.track-menu-btn {
+  background: none;
+  border: none;
+  color: color-mix(in oklch, currentColor 20%, transparent);
+  cursor: pointer;
+  font-size: 90%;
+  line-height: 0;
+  margin: calc(-1 * var(--space-2xs));
+  opacity: 0;
+  padding: var(--space-2xs);
+  transition: opacity 80ms;
+}
+
+.track-row:hover .track-menu-btn,
+.album-track-row:hover .track-menu-btn {
+  opacity: 1;
+}
+
+.track-menu-btn:hover {
+  color: color-mix(in oklch, currentColor 70%, transparent);
+}
+
+/***********************************
+ * Cover card menu button
+ ***********************************/
+
+.cover-menu-btn {
+  background: oklch(0 0 0 / 0.5);
+  border: none;
+  border-radius: var(--radius-sm);
+  bottom: var(--space-2xs);
+  color: oklch(1 0 0 / 0.85);
+  cursor: pointer;
+  font-size: 90%;
+  line-height: 0;
+  opacity: 0;
+  padding: var(--space-2xs);
+  position: absolute;
+  right: var(--space-2xs);
+  transition: opacity 80ms;
+}
+
+.cover-card:hover .cover-menu-btn {
+  opacity: 1;
+}
+
+.cover-menu-btn:hover {
+  color: oklch(1 0 0);
 }

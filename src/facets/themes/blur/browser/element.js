@@ -141,6 +141,64 @@ class Browser extends DiffuseElement {
     return map;
   });
 
+  $tracksByAlbum = computed(() => {
+    /** @type {Map<string, Track[]>} */
+    const map = new Map();
+    for (const t of this.$provider.value?.tracks() ?? []) {
+      const key = String(t.tags?.album ?? "").toLowerCase();
+      if (!map.has(key)) map.set(key, []);
+      map.get(key)?.push(t);
+    }
+    return map;
+  });
+
+  $tracksByArtist = computed(() => {
+    /** @type {Map<string, Track[]>} */
+    const map = new Map();
+    for (const t of this.$provider.value?.tracks() ?? []) {
+      const key = String(t.tags?.artist ?? "").toLowerCase();
+      if (!map.has(key)) map.set(key, []);
+      map.get(key)?.push(t);
+    }
+    return map;
+  });
+
+  $favouritesSet = computed(() => {
+    const favItems = this.$favourites.value?.playlistItems() ?? [];
+    return new Set(
+      favItems.map((item) => {
+        const a = item.criteria.find((c) => c.field === "tags.artist");
+        const t = item.criteria.find((c) => c.field === "tags.title");
+        return `${String(a?.value ?? "").toLowerCase()}|${
+          String(t?.value ?? "").toLowerCase()
+        }`;
+      }),
+    );
+  });
+
+  $sortedArtistGroups = computed(() => {
+    const groups = this.$coverGroups.value?.artistGroups() ?? [];
+    return this.$scope.value?.sortDirection() === "desc"
+      ? groups.map((g) => ({ ...g, groups: [...g.groups].reverse() }))
+      : groups;
+  });
+
+  $sortedCoverGroups = computed(() => {
+    const groups = this.$coverGroups.value?.coverGroups() ?? [];
+    return this.$scope.value?.sortDirection() === "desc"
+      ? groups.map((g) => ({ ...g, groups: [...g.groups].reverse() }))
+      : groups;
+  });
+
+  $detailTracks = computed(() => {
+    const item = this.#openCoverItem.value;
+    if (!item) return /** @type {Track[]} */ ([]);
+    if (item.type === "album") {
+      return this.$tracksByAlbum().get(item.albumKey) ?? [];
+    }
+    return this.$tracksByArtist().get(item.artistKey) ?? [];
+  });
+
   $groupedPlaylists = computed(() => {
     const col = this.$output.value?.playlistItems.collection();
     if (!col || col.state !== "loaded" || !col.data.length) return [];
@@ -359,6 +417,51 @@ class Browser extends DiffuseElement {
     this.$favourites.value?.toggle(track);
   };
 
+  /**
+   * @param {Function} html
+   * @param {string} menuId
+   * @param {Track[]} tracks
+   */
+  #renderTrackMenu(html, menuId, tracks) {
+    const uris = tracks.map((t) => t.uri);
+    const allCached = uris.length > 0 && uris.every((u) => this.#cachedUris.value.has(u));
+    return html`
+      <div id="${menuId}" class="dropdown" popover>
+        <button @click="${() => {
+          if (!tracks.length) return;
+          this.$queue.value?.add({ inFront: true, trackIds: tracks.map((t) => t.id) });
+          /** @type {HTMLElement | null} */ (this.root().querySelector(`#${menuId}`))?.hidePopover();
+        }}">
+          <i class="ph-bold ph-clock-counter-clockwise"></i>
+          Play next
+        </button>
+        <button @click="${() => {
+          if (!tracks.length) return;
+          this.$queue.value?.add({ trackIds: tracks.map((t) => t.id) });
+          /** @type {HTMLElement | null} */ (this.root().querySelector(`#${menuId}`))?.hidePopover();
+        }}">
+          <i class="ph-bold ph-clock-counter-clockwise"></i>
+          Add to queue
+        </button>
+        <button @click="${async () => {
+          if (!uris.length) return;
+          const isCached = uris.every((u) => this.#cachedUris.value.has(u));
+          if (isCached) {
+            await this.$input.value?.removeFromCache(uris);
+          } else {
+            await this.$input.value?.cache(uris);
+          }
+          const updated = await this.$input.value?.listCached();
+          if (updated) this.#cachedUris.value = new Set(updated);
+          /** @type {HTMLElement | null} */ (this.root().querySelector(`#${menuId}`))?.hidePopover();
+        }}">
+          <i class="ph-fill ph-lightning"></i>
+          ${allCached ? `Remove from cache` : `Store in cache`}
+        </button>
+      </div>
+    `;
+  }
+
   toggleViewMode = () => {
     if (this.#viewMode.value === "cover") {
       this.#disconnectCoverObserver();
@@ -535,15 +638,10 @@ class Browser extends DiffuseElement {
     const coverViewMode = this.#coverViewMode.value;
     const sortDirection = this.$scope.value?.sortDirection() ?? "asc";
 
-    const totalCount = coverViewMode === "artists"
-      ? (this.$coverGroups.value?.artistGroups() ?? []).reduce(
-        (n, g) => n + g.groups.length,
-        0,
-      )
-      : (this.$coverGroups.value?.coverGroups() ?? []).reduce(
-        (n, g) => n + g.groups.length,
-        0,
-      );
+    const groups = coverViewMode === "artists"
+      ? this.$sortedArtistGroups()
+      : this.$sortedCoverGroups();
+    const totalCount = groups.reduce((n, g) => n + g.groups.length, 0);
 
     const countLabel = coverViewMode === "artists"
       ? `${totalCount} ${totalCount === 1 ? "artist" : "artists"}`
@@ -601,21 +699,16 @@ class Browser extends DiffuseElement {
       `;
     }
 
-    if (coverViewMode === "artists") {
-      const rawArtistGroups = this.$coverGroups.value?.artistGroups() ?? [];
-      const artistGroups = sortDirection === "desc"
-        ? rawArtistGroups.map((g) => ({
-          ...g,
-          groups: [...g.groups].reverse(),
-        }))
-        : rawArtistGroups;
+    const albumTracksMap = this.$tracksByAlbum();
+    const artistTracksMap = this.$tracksByArtist();
 
+    if (coverViewMode === "artists") {
       requestAnimationFrame(() => this.#setupCoverObserver());
 
       return html`
         ${tabs}
         <div class="scroll-panel cover-scroll-panel">
-          ${artistGroups.map(({ label, groups }, groupIndex) =>
+          ${this.$sortedArtistGroups().map(({ label, groups }, groupIndex) =>
             html`
               ${label
                 ? html`
@@ -630,6 +723,7 @@ class Browser extends DiffuseElement {
               <div class="cover-grid">
                 ${groups.map(({ artistKey, artistName, trackCount, track }) => {
                   const artUrl = this.#coverArtCache.get(artistKey);
+                  const cardTracks = artistTracksMap.get(artistKey) ?? [];
                   return html`
                     <div
                       class="cover-card"
@@ -659,6 +753,14 @@ class Browser extends DiffuseElement {
                           : html`
                             <div class="cover-art-placeholder"><i class="ph-fill ph-vinyl-record"></i></div>
                           `}
+                        <button
+                          class="cover-menu-btn"
+                          popovertarget="artist-card-menu-${track.id}"
+                          @click="${(/** @type {Event} */ e) => e.stopPropagation()}"
+                        >
+                          <i class="ph-fill ph-dots-three-outline"></i>
+                        </button>
+                        ${this.#renderTrackMenu(html, `artist-card-menu-${track.id}`, cardTracks)}
                       </div>
                       <div class="cover-info">
                         <span class="cover-album">${artistName}</span>
@@ -678,17 +780,12 @@ class Browser extends DiffuseElement {
     }
 
     // Albums mode
-    const rawCoverGroups = this.$coverGroups.value?.coverGroups() ?? [];
-    const coverGroups = sortDirection === "desc"
-      ? rawCoverGroups.map((g) => ({ ...g, groups: [...g.groups].reverse() }))
-      : rawCoverGroups;
-
     requestAnimationFrame(() => this.#setupCoverObserver());
 
     return html`
       ${tabs}
       <div class="scroll-panel cover-scroll-panel">
-        ${coverGroups.map(({ label, groups }, groupIndex) =>
+        ${this.$sortedCoverGroups().map(({ label, groups }, groupIndex) =>
           html`
             ${label
               ? html`
@@ -703,6 +800,7 @@ class Browser extends DiffuseElement {
             <div class="cover-grid">
               ${groups.map(({ albumKey, albumName, artist, track }) => {
                 const artUrl = this.#coverArtCache.get(albumKey);
+                const cardTracks = albumTracksMap.get(albumKey) ?? [];
                 return html`
                   <div
                     class="cover-card"
@@ -732,6 +830,14 @@ class Browser extends DiffuseElement {
                         : html`
                           <div class="cover-art-placeholder"><i class="ph-fill ph-vinyl-record"></i></div>
                         `}
+                      <button
+                        class="cover-menu-btn"
+                        popovertarget="album-card-menu-${track.id}"
+                        @click="${(/** @type {Event} */ e) => e.stopPropagation()}"
+                      >
+                        <i class="ph-fill ph-dots-three-outline"></i>
+                      </button>
+                      ${this.#renderTrackMenu(html, `album-card-menu-${track.id}`, cardTracks)}
                     </div>
                     <div class="cover-info">
                       <span class="cover-album">${albumName}</span>
@@ -789,17 +895,7 @@ class Browser extends DiffuseElement {
     const virtualItems = this.#virtualizer?.getVirtualItems() ?? [];
     const totalSize = this.#virtualizer?.getTotalSize() ?? 0;
 
-    // Build O(1) favourite lookup — one subscription regardless of visible row count
-    const favItems = this.$favourites.value?.playlistItems() ?? [];
-    const favSet = new Set(
-      favItems.map((item) => {
-        const a = item.criteria.find((c) => c.field === "tags.artist");
-        const t = item.criteria.find((c) => c.field === "tags.title");
-        return `${String(a?.value ?? "").toLowerCase()}|${
-          String(t?.value ?? "").toLowerCase()
-        }`;
-      }),
-    );
+    const favSet = this.$favouritesSet();
 
     /**
      * @param {Track} track
@@ -839,6 +935,16 @@ class Browser extends DiffuseElement {
           </div>
           <div class="col-album">
             <span>${track.tags?.album}</span>
+          </div>
+          <div class="col-menu">
+            <button
+              class="track-menu-btn"
+              popovertarget="list-track-menu-${track.id}"
+              @click="${(/** @type {Event} */ e) => e.stopPropagation()}"
+            >
+              <i class="ph-bold ph-dots-three-outline"></i>
+            </button>
+            ${this.#renderTrackMenu(html, `list-track-menu-${track.id}`, [track])}
           </div>
         </div>
       `;
@@ -886,6 +992,7 @@ class Browser extends DiffuseElement {
             `
             : ``}
         </div>
+        <div class="col-menu"></div>
       </div>
 
       <div class="scroll-panel">
@@ -932,43 +1039,26 @@ class Browser extends DiffuseElement {
       `;
     }
 
-    const allTracks = this.$provider.value?.tracks() ?? [];
+    const detailTracks = this.$detailTracks();
+    const favSet = this.$favouritesSet();
 
     let key = "",
       name = "",
-      subtitle = "",
-      detailTracks = /** @type {Track[]} */ ([]);
+      subtitle = "";
 
     if (item.type === "album") {
       key = item.albumKey;
       name = item.albumName;
       subtitle = item.artist;
-      detailTracks = allTracks.filter((t) => {
-        return String(t.tags?.album ?? "").toLowerCase() === key;
-      });
     } else {
       key = item.artistKey;
       name = item.artistName;
       subtitle = `${item.trackCount} ${
         item.trackCount === 1 ? "track" : "tracks"
       }`;
-      detailTracks = allTracks.filter((t) =>
-        String(t.tags?.artist ?? "").toLowerCase() === key
-      );
     }
 
     const artUrl = this.#coverArtCache.get(key);
-
-    const favItems = this.$favourites.value?.playlistItems() ?? [];
-    const favSet = new Set(
-      favItems.map((fav) => {
-        const a = fav.criteria.find((c) => c.field === "tags.artist");
-        const t = fav.criteria.find((c) => c.field === "tags.title");
-        return `${String(a?.value ?? "").toLowerCase()}|${
-          String(t?.value ?? "").toLowerCase()
-        }`;
-      }),
-    );
 
     return html`
       <div class="album-detail">
@@ -989,55 +1079,7 @@ class Browser extends DiffuseElement {
           >
             <i class="ph-fill ph-dots-three-outline"></i>
           </button>
-          <div id="album-actions-menu" class="dropdown" popover>
-            <button @click="${() => {
-              if (!detailTracks.length) return;
-              this.$queue.value?.add({
-                inFront: true,
-                trackIds: detailTracks.map((t) => t.id),
-              });
-              /** @type {HTMLElement | null} */ (this.root().querySelector(
-                `#album-actions-menu`,
-              ))?.hidePopover();
-            }}">
-              <i class="ph-bold ph-clock-counter-clockwise"></i>
-              Play next
-            </button>
-            <button @click="${() => {
-              if (!detailTracks.length) return;
-              this.$queue.value?.add({
-                trackIds: detailTracks.map((t) => t.id),
-              });
-              /** @type {HTMLElement | null} */ (this.root().querySelector(
-                `#album-actions-menu`,
-              ))?.hidePopover();
-            }}">
-              <i class="ph-bold ph-clock-counter-clockwise"></i>
-              Add to queue
-            </button>
-            ${(() => {
-              const uris = detailTracks.map((t) => t.uri);
-              const allCached = uris.length > 0 && uris.every((u) => this.#cachedUris.value.has(u));
-              return html`
-                <button @click="${async () => {
-                  if (!uris.length) return;
-                  if (allCached) {
-                    await this.$input.value?.removeFromCache(uris);
-                  } else {
-                    await this.$input.value?.cache(uris);
-                  }
-                  const updated = await this.$input.value?.listCached();
-                  if (updated) this.#cachedUris.value = new Set(updated);
-                  /** @type {HTMLElement | null} */ (this.root().querySelector(
-                    `#album-actions-menu`,
-                  ))?.hidePopover();
-                }}">
-                  <i class="ph-fill ph-lightning"></i>
-                  ${allCached ? `Remove from cache` : `Store in cache`}
-                </button>
-              `;
-            })()}
-          </div>
+          ${this.#renderTrackMenu(html, `album-actions-menu`, detailTracks)}
         </div>
         <div class="album-detail-main">
           <div class="album-detail-sidebar">
@@ -1092,6 +1134,16 @@ class Browser extends DiffuseElement {
                   </div>
                   <div class="col-artist">
                     <span>${t.tags?.artist}</span>
+                  </div>
+                  <div class="col-menu">
+                    <button
+                      class="track-menu-btn"
+                      popovertarget="detail-track-menu-${t.id}"
+                      @click="${(/** @type {Event} */ e) => e.stopPropagation()}"
+                    >
+                      <i class="ph-bold ph-dots-three-outline"></i>
+                    </button>
+                    ${this.#renderTrackMenu(html, `detail-track-menu-${t.id}`, [t])}
                   </div>
                 </div>
               `;
