@@ -28,6 +28,7 @@ await foundation.orchestrator.controller();
 await foundation.orchestrator.artwork();
 await foundation.orchestrator.coverGroups();
 await foundation.orchestrator.favourites();
+await foundation.configurator.input();
 
 await import("~/facets/themes/blur/artwork-controller/element.js");
 await import("~/facets/themes/blur/browser/element.js");

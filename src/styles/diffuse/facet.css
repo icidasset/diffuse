@@ -324,6 +324,7 @@ p,
     min-width: var(--space-3xl);
     padding: var(--space-xs) var(--space-sm);
     text-align: left;
+    white-space: nowrap;
     width: 100%;
 
     & > * {

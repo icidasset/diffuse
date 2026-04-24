@@ -103,6 +103,12 @@ class Browser extends DiffuseElement {
     /** @type {import("~/components/orchestrator/favourites/element.js").CLASS | undefined} */ (undefined),
   );
 
+  $input = signal(
+    /** @type {import("~/components/configurator/input/element.js").CLASS | undefined} */ (undefined),
+  );
+
+  #cachedUris = signal(/** @type {Set<string>} */ (new Set()));
+
   // SIGNALS - Pt. 2
 
   #viewMode = signal(
@@ -228,6 +234,9 @@ class Browser extends DiffuseElement {
     /** @type {import("~/components/orchestrator/favourites/element.js").CLASS} */
     const favourites = query(this, "favourites-orchestrator-selector");
 
+    /** @type {import("~/components/configurator/input/element.js").CLASS | null} */
+    const input = queryOptional(this, "input-selector");
+
     whenElementsDefined({ output, provider, queue, scope, favourites }).then(
       () => {
         this.$output.value = output;
@@ -237,6 +246,14 @@ class Browser extends DiffuseElement {
         this.$favourites.value = favourites;
       },
     );
+
+    if (input) {
+      whenElementsDefined({ input }).then(async () => {
+        this.$input.value = input;
+        const uris = await input.listCached();
+        this.#cachedUris.value = new Set(uris);
+      });
+    }
 
     if (artwork) {
       whenElementsDefined({ artwork }).then(() => {
@@ -587,7 +604,10 @@ class Browser extends DiffuseElement {
     if (coverViewMode === "artists") {
       const rawArtistGroups = this.$coverGroups.value?.artistGroups() ?? [];
       const artistGroups = sortDirection === "desc"
-        ? rawArtistGroups.map((g) => ({ ...g, groups: [...g.groups].reverse() }))
+        ? rawArtistGroups.map((g) => ({
+          ...g,
+          groups: [...g.groups].reverse(),
+        }))
         : rawArtistGroups;
 
       requestAnimationFrame(() => this.#setupCoverObserver());
@@ -631,7 +651,10 @@ class Browser extends DiffuseElement {
                       <div class="cover-art">
                         ${artUrl
                           ? html`
-                            <img src="${artUrl}" alt="${artistName}" loading="lazy" @error="${() => { this.#coverArtCache.set(artistKey, null); this.#scheduleArtRender(); }}" />
+                            <img src="${artUrl}" alt="${artistName}" loading="lazy" @error="${() => {
+                              this.#coverArtCache.set(artistKey, null);
+                              this.#scheduleArtRender();
+                            }}" />
                           `
                           : html`
                             <div class="cover-art-placeholder"><i class="ph-fill ph-vinyl-record"></i></div>
@@ -701,7 +724,10 @@ class Browser extends DiffuseElement {
                     <div class="cover-art">
                       ${artUrl
                         ? html`
-                          <img src="${artUrl}" alt="${albumName}" loading="lazy" @error="${() => { this.#coverArtCache.set(albumKey, null); this.#scheduleArtRender(); }}" />
+                          <img src="${artUrl}" alt="${albumName}" loading="lazy" @error="${() => {
+                            this.#coverArtCache.set(albumKey, null);
+                            this.#scheduleArtRender();
+                          }}" />
                         `
                         : html`
                           <div class="cover-art-placeholder"><i class="ph-fill ph-vinyl-record"></i></div>
@@ -944,8 +970,6 @@ class Browser extends DiffuseElement {
       }),
     );
 
-    const menuLabel = item.type === "album" ? "Play album" : "Play all";
-
     return html`
       <div class="album-detail">
         <div class="album-detail-actions">
@@ -972,12 +996,12 @@ class Browser extends DiffuseElement {
                 inFront: true,
                 trackIds: detailTracks.map((t) => t.id),
               });
-              this.$queue.value?.shift();
               /** @type {HTMLElement | null} */ (this.root().querySelector(
                 `#album-actions-menu`,
               ))?.hidePopover();
             }}">
-              ${menuLabel}
+              <i class="ph-bold ph-clock-counter-clockwise"></i>
+              Play next
             </button>
             <button @click="${() => {
               if (!detailTracks.length) return;
@@ -988,8 +1012,31 @@ class Browser extends DiffuseElement {
                 `#album-actions-menu`,
               ))?.hidePopover();
             }}">
+              <i class="ph-bold ph-clock-counter-clockwise"></i>
               Add to queue
             </button>
+            ${(() => {
+              const uris = detailTracks.map((t) => t.uri);
+              const allCached = uris.length > 0 && uris.every((u) => this.#cachedUris.value.has(u));
+              return html`
+                <button @click="${async () => {
+                  if (!uris.length) return;
+                  if (allCached) {
+                    await this.$input.value?.removeFromCache(uris);
+                  } else {
+                    await this.$input.value?.cache(uris);
+                  }
+                  const updated = await this.$input.value?.listCached();
+                  if (updated) this.#cachedUris.value = new Set(updated);
+                  /** @type {HTMLElement | null} */ (this.root().querySelector(
+                    `#album-actions-menu`,
+                  ))?.hidePopover();
+                }}">
+                  <i class="ph-fill ph-lightning"></i>
+                  ${allCached ? `Remove from cache` : `Store in cache`}
+                </button>
+              `;
+            })()}
           </div>
         </div>
         <div class="album-detail-main">
@@ -997,7 +1044,10 @@ class Browser extends DiffuseElement {
             <div class="album-detail-art">
               ${artUrl
                 ? html`
-                  <img src="${artUrl}" alt="${name}" @error="${() => { this.#coverArtCache.set(key, null); this.#scheduleArtRender(); }}" />
+                  <img src="${artUrl}" alt="${name}" @error="${() => {
+                    this.#coverArtCache.set(key, null);
+                    this.#scheduleArtRender();
+                  }}" />
                 `
                 : html`
                   <div class="cover-art-placeholder"><i class="ph-fill ph-vinyl-record"></i></div>
