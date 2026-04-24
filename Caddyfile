@@ -1,0 +1,7 @@
+:8080 {
+	root * dist
+	file_server {
+		precompressed br gzip
+	}
+	try_files {path} {path}/index.html /index.html
+}
