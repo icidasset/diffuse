@@ -7,7 +7,7 @@
 @media (prefers-color-scheme: dark) {
   :root,
   :host {
-    --bg-color: oklch(19% 0.006 265);
+    --bg-color: oklch(26.03% 0 0);
     --text-color: oklch(86% 0 0);
   }
 }
