@@ -389,7 +389,7 @@ main.settings-open #settings-panel {
   a {
     align-items: center;
     background-color: transparent;
-    border: 2px dotted oklch(from var(--shortcut-color) l c h / 0.3);
+    border: 2px dotted oklch(from var(--shortcut-color) l c h / 0.15);
     border-radius: var(--radius-md);
     color: oklch(from var(--shortcut-color) l c h / 0.7);
     cursor: pointer;

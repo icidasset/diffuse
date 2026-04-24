@@ -472,7 +472,7 @@
   align-items: center;
   color: color-mix(in oklch, currentColor 20%, transparent);
   display: flex;
-  font-size: 2rem;
+  font-size: 225%;
   height: 100%;
   justify-content: center;
   transition: opacity 80ms;
@@ -580,6 +580,7 @@
 
 .album-detail-tracks {
   flex: 1;
+  margin-bottom: var(--space-xs);
   min-width: 0;
   overflow-y: auto;
   user-select: none;
