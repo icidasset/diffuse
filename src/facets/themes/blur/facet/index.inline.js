@@ -57,7 +57,7 @@ const storedBg = getSettingValue(BACKGROUND_KEY);
 const storedBgColor = getSettingValue(BACKGROUND_COLOR_KEY);
 const storedBgMix = getSettingValue(BACKGROUND_MIX_KEY);
 
-const activeBg = storedBg ?? "builtin:12";
+const activeBg = storedBg ?? "builtin:7";
 const activeMix = storedBgMix !== null ? storedBgMix === "true" : false;
 
 applyBackgroundMix(activeMix);

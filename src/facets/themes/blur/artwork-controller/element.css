@@ -46,7 +46,7 @@ main {
   background: oklch(14% 0 0);
   border-radius: var(--radius-sm);
   box-shadow: var(--box-shadow-lg);
-  font-size: 65%;
+  font-size: 75%;
   font-weight: 600;
   left: var(--space-xs);
   letter-spacing: var(--tracking-wide);
@@ -135,6 +135,7 @@ progress[value]::-moz-progress-bar {
 cite {
   display: block;
   flex: 1;
+  font-size: 110%;
   font-style: normal;
   min-width: 0;
   text-shadow: var(--text-shadow-sm);
@@ -182,7 +183,7 @@ cite {
 
 .timestamps {
   display: flex;
-  font-size: 60%;
+  font-size: 80%;
   font-weight: 500;
   justify-content: space-between;
   margin-top: var(--space-3xs);

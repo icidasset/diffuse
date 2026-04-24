@@ -107,9 +107,9 @@ class Browser extends DiffuseElement {
 
   #viewMode = signal(
     /** @type {"list" | "cover"} */ (
-      localStorage.getItem("diffuse:browser:view-mode") === "cover"
-        ? "cover"
-        : "list"
+      localStorage.getItem("diffuse:browser:view-mode") === "list"
+        ? "list"
+        : "cover"
     ),
   );
 
@@ -567,8 +567,8 @@ class Browser extends DiffuseElement {
               : `Sort descending`}"
           >
             <i class="ph-bold ph-arrow-${sortDirection === `desc`
-              ? `down`
-              : `up`}"></i>
+              ? `up`
+              : `down`}"></i>
           </button>
         </div>
       </div>
@@ -582,7 +582,10 @@ class Browser extends DiffuseElement {
     }
 
     if (coverViewMode === "artists") {
-      const artistGroups = this.$coverGroups.value?.artistGroups() ?? [];
+      const rawArtistGroups = this.$coverGroups.value?.artistGroups() ?? [];
+      const artistGroups = sortDirection === "desc"
+        ? rawArtistGroups.map((g) => ({ ...g, groups: [...g.groups].reverse() }))
+        : rawArtistGroups;
 
       requestAnimationFrame(() => this.#setupCoverObserver());
 
@@ -649,7 +652,10 @@ class Browser extends DiffuseElement {
     }
 
     // Albums mode
-    const coverGroups = this.$coverGroups.value?.coverGroups() ?? [];
+    const rawCoverGroups = this.$coverGroups.value?.coverGroups() ?? [];
+    const coverGroups = sortDirection === "desc"
+      ? rawCoverGroups.map((g) => ({ ...g, groups: [...g.groups].reverse() }))
+      : rawCoverGroups;
 
     requestAnimationFrame(() => this.#setupCoverObserver());
 

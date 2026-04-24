@@ -508,6 +508,7 @@
  ***********************************/
 
 .album-detail {
+  container-type: inline-size;
   display: flex;
   flex-direction: column;
   flex: 1;
@@ -621,4 +622,46 @@
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
+}
+
+@container (max-width: 42rem) {
+  .album-detail-main {
+    flex-direction: column;
+    overflow-y: auto;
+  }
+
+  .album-detail-sidebar {
+    align-items: center;
+    display: flex;
+    flex-direction: row;
+    gap: var(--space-sm);
+    overflow-y: unset;
+    padding: var(--space-xs) var(--space-sm);
+    width: auto;
+  }
+
+  .album-detail-art {
+    flex: 0 0 auto;
+    width: 9rem;
+  }
+
+  .album-detail-info {
+    margin-top: 0;
+    min-width: 0;
+  }
+
+  .album-detail-name,
+  .album-detail-artist {
+    white-space: normal;
+  }
+
+  .album-detail-tracks {
+    overflow-y: unset;
+  }
+}
+
+@container (max-width: 21rem) {
+  .album-track-row .col-artist {
+    display: none;
+  }
 }
