@@ -29,13 +29,17 @@ foundation.setup({ title: "Sources | Diffuse" });
 // SETUP
 ////////////////////////////////////////////
 
-const [inputConfigurator, sourcesOrchestrator, outputOrchestrator, processOrchestrator] =
-  await Promise.all([
-    foundation.configurator.input(),
-    foundation.orchestrator.sources(),
-    foundation.orchestrator.output(),
-    foundation.orchestrator.processTracks({ disableWhenReady: true }),
-  ]);
+const [
+  inputConfigurator,
+  sourcesOrchestrator,
+  outputOrchestrator,
+  processOrchestrator,
+] = await Promise.all([
+  foundation.configurator.input(),
+  foundation.orchestrator.sources(),
+  foundation.orchestrator.output(),
+  foundation.orchestrator.processTracks({ disableWhenReady: true }),
+]);
 
 await Promise.all([
   customElements.whenDefined(inputConfigurator.localName),
@@ -43,23 +47,29 @@ await Promise.all([
   customElements.whenDefined(outputOrchestrator.localName),
 ]);
 
-
 ////////////////////////////////////////////
 // PROCESS BUTTON
 ////////////////////////////////////////////
 
-const processBtn = /** @type {HTMLButtonElement} */ (document.querySelector("#process-btn"));
-const processIcon = /** @type {HTMLElement} */ (document.querySelector("#process-icon"));
-const processLabel = /** @type {HTMLElement} */ (document.querySelector("#process-label"));
+const processBtn =
+  /** @type {HTMLButtonElement} */ (document.querySelector("#process-btn"));
+const processIcon =
+  /** @type {HTMLElement} */ (document.querySelector("#process-icon"));
+const processLabel =
+  /** @type {HTMLElement} */ (document.querySelector("#process-label"));
 
 effect(() => {
   const isProcessing = processOrchestrator.isProcessing();
+  const { processed, total } = processOrchestrator.progress();
+  const pct = total > 0 ? Math.round((processed / total) * 100) : null;
 
   processBtn.disabled = isProcessing;
   processIcon.className = isProcessing
     ? "ph-fill ph-arrows-clockwise animate-spin"
     : "ph-fill ph-arrows-clockwise";
-  processLabel.textContent = isProcessing ? "Processing" : "Process";
+  processLabel.textContent = isProcessing
+    ? (pct !== null ? `Processing (${pct}%)` : "Listing")
+    : "Process";
 });
 
 processBtn.addEventListener("click", async () => {
@@ -78,7 +88,10 @@ const empty =
   /** @type {HTMLElement} */ (document.querySelector("#sources-empty"));
 
 /** @param {string} uri */
-const trackPrefix = (uri) => { const q = uri.indexOf("?"); return q === -1 ? uri : uri.slice(0, q); };
+const trackPrefix = (uri) => {
+  const q = uri.indexOf("?");
+  return q === -1 ? uri : uri.slice(0, q);
+};
 
 effect(() => {
   const sourcesRecord = sourcesOrchestrator.sources();
@@ -99,9 +112,7 @@ effect(() => {
         if (scheme === SCHEME_EPHEMERAL_CACHE) {
           const uri = `${SCHEME_EPHEMERAL_CACHE}://`;
           const isDisabled = sourcesOrchestrator.isDisabled(uri);
-          const trackCount = tracks.filter((t) =>
-            t.uri.startsWith(uri)
-          ).length;
+          const trackCount = tracks.filter((t) => t.uri.startsWith(uri)).length;
           return html`
             <li class="sources-scheme">${SCHEME_NAMES[scheme] ?? scheme}</li>
             <li class="sources-item ${isDisabled
