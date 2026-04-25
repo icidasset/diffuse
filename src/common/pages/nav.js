@@ -85,6 +85,16 @@ export function update() {
   }
 }
 
+export function setupOverflowMenuClose() {
+  const menu = document.getElementById("nav-overflow-menu");
+  if (!menu) return;
+  menu.addEventListener("click", (e) => {
+    if (/** @type {HTMLElement} */ (e.target).closest("a")) {
+      /** @type {any} */ (menu).hidePopover?.();
+    }
+  });
+}
+
 let _observer = /** @type {ResizeObserver | undefined} */ (undefined);
 
 export function watchResize() {

@@ -30,6 +30,7 @@ async function initJsBasedOnPage(url) {
   Nav.update();
   Nav.updateActiveLinks();
   Nav.watchResize();
+  Nav.setupOverflowMenuClose();
 
   Grid.setupFilter();
   Grid.insertToggleButtons();
