@@ -53,11 +53,33 @@
   }
 
   .sources-item__detail {
+    align-items: center;
     color: oklch(from var(--text-color) l c h / 0.6);
+    display: flex;
     font-size: var(--fs-xs);
+    gap: var(--space-3xs);
     overflow: hidden;
     text-overflow: ellipsis;
     white-space: nowrap;
+  }
+
+  .sources-item__status {
+    border-radius: 50%;
+    flex-shrink: 0;
+    height: 6px;
+    width: 6px;
+  }
+
+  .sources-item__status--online {
+    background-color: var(--accent);
+  }
+
+  .sources-item__status--offline {
+    background-color: var(--accent-twist-4);
+  }
+
+  .sources-item__status--unknown {
+    background-color: oklch(from var(--text-color) l c h / 0.2);
   }
 </style>
 

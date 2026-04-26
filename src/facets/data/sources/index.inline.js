@@ -2,7 +2,7 @@ import { html, render as litRender } from "lit-html";
 
 import * as Output from "~/common/output.js";
 import foundation from "~/common/foundation.js";
-import { effect } from "~/common/signal.js";
+import { effect, signal } from "~/common/signal.js";
 
 import { SCHEME as SCHEME_DROPBOX } from "~/components/input/dropbox/constants.js";
 import { SCHEME as SCHEME_EPHEMERAL_CACHE } from "~/components/input/ephemeral-cache/constants.js";
@@ -93,11 +93,55 @@ const trackPrefix = (uri) => {
   return q === -1 ? uri : uri.slice(0, q);
 };
 
+////////////////////////////////////////////
+// ONLINE STATUS
+////////////////////////////////////////////
+
+
+const onlineMap = signal(/** @type {Record<string, boolean | null>} */ ({}));
+
+/** @param {{ [scheme: string]: import("~/components/input/types.d.ts").Source[] }} sourcesRecord */
+async function checkOnlineStatus(sourcesRecord) {
+  const sources = Object.values(sourcesRecord).flat();
+  const entries = await Promise.all(
+    sources.map(async ({ uri }) => {
+      const result = await inputConfigurator.consult(uri);
+      const online =
+        result.supported && result.consult !== "undetermined"
+          ? result.consult
+          : null;
+      return /** @type {[string, boolean | null]} */ ([trackPrefix(uri), online]);
+    }),
+  );
+  onlineMap.value = Object.fromEntries(entries);
+}
+
+effect(() => {
+  checkOnlineStatus(sourcesOrchestrator.sources());
+});
+
 effect(() => {
   const sourcesRecord = sourcesOrchestrator.sources();
+  const statusMap = onlineMap.get();
 
   const tracksCol = outputOrchestrator.tracks.collection();
   const tracks = tracksCol.state === "loaded" ? tracksCol.data : [];
+
+  /** @param {string} uri */
+  const statusClass = (uri) => {
+    const status = statusMap[trackPrefix(uri)];
+    if (status === true) return "sources-item__status--online";
+    if (status === false) return "sources-item__status--offline";
+    return "sources-item__status--unknown";
+  };
+
+  /** @param {string} uri */
+  const statusTitle = (uri) => {
+    const status = statusMap[trackPrefix(uri)];
+    if (status === true) return "Online";
+    if (status === false) return "Offline";
+    return "Status unknown";
+  };
 
   const entries = Object.entries(sourcesRecord).filter(
     ([, sources]) => sources.length > 0,
@@ -120,10 +164,10 @@ effect(() => {
               : ""}">
               <div class="sources-item__info">
                 <span class="sources-item__name">Files stored in the browser</span>
-                <span class="sources-item__detail">${trackCount} track${trackCount ===
-                    1
-                  ? ""
-                  : "s"}</span>
+                <span class="sources-item__detail">
+                  <span class="sources-item__status ${statusClass(uri)}" title="${statusTitle(uri)}"></span>
+                  ${trackCount} track${trackCount === 1 ? "" : "s"}
+                </span>
               </div>
               <button
                 class="button--plain"
@@ -158,10 +202,10 @@ effect(() => {
                 : ""}">
                 <div class="sources-item__info">
                   <span class="sources-item__name">${label}</span>
-                  <span class="sources-item__detail">${trackCount} track${trackCount ===
-                      1
-                    ? ""
-                    : "s"}</span>
+                  <span class="sources-item__detail">
+                    <span class="sources-item__status ${statusClass(uri)}" title="${statusTitle(uri)}"></span>
+                    ${trackCount} track${trackCount === 1 ? "" : "s"}
+                  </span>
                 </div>
                 <button
                   class="button--plain button--icon"
