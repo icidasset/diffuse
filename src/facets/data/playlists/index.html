@@ -1,7 +1,9 @@
 <style>
+  @import "./vendor/@phosphor-icons/web/bold/style.css";
+  @import "./vendor/@phosphor-icons/web/fill/style.css";
+
   @import "./styles/base.css";
   @import "./styles/diffuse/facet.css";
-  @import "./vendor/@phosphor-icons/web/fill/style.css";
 
   @layer base, diffuse;
 
@@ -98,6 +100,7 @@
 </style>
 
 <dialog id="playlists-dialog"></dialog>
+<dialog id="create-playlist-dialog"></dialog>
 
 <main>
   <div class="facet__left">
@@ -114,6 +117,12 @@
     </div>
     <h1>Playlists</h1>
     <p>An overview of all playlists and their contents.</p>
+    <p class="button-row" style="margin-top: var(--space-md)">
+      <button id="create-playlist-btn" class="button button--accent">
+        <i class="ph-bold ph-plus"></i>
+        Create playlist
+      </button>
+    </p>
   </div>
 
   <div class="facet__right">

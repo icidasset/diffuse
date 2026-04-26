@@ -286,6 +286,30 @@ p,
   margin: var(--space-sm) 0;
 }
 
+.create-form {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-sm);
+}
+
+.create-form__label {
+  font-size: var(--fs-xs);
+  font-weight: 600;
+  letter-spacing: var(--tracking-wider);
+  opacity: 0.5;
+  text-transform: uppercase;
+}
+
+.create-form__checkbox-row {
+  align-items: center;
+  flex-direction: row;
+  gap: var(--space-2xs);
+
+  input {
+    width: auto;
+  }
+}
+
 .dropdown {
   background: oklch(from var(--bg-color) calc(l + 0.2) c h / 0.975);
   border: 1px solid var(--border-color);

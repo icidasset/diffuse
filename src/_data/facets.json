@@ -146,7 +146,7 @@
     "title": "Playlists",
     "category": "Data",
     "featured": true,
-    "desc": "An overview of all playlists and their contents."
+    "desc": "Manage your playlists."
   },
   {
     "url": "facets/playback/preload/prelude/index.html",
