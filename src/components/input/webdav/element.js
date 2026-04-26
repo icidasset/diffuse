@@ -41,7 +41,7 @@ class WebdavInput extends DiffuseElement {
   /** @param {Track[]} tracks */
   sources(tracks) {
     return Object.values(serversFromTracks(tracks)).map((server) => ({
-      label: `WebDAV (${server.host}${server.dir})`,
+      label: `${server.host}${server.dir}`,
       uri: buildURI(server),
     }));
   }
