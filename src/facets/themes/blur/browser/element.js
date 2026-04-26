@@ -676,6 +676,7 @@ class Browser extends DiffuseElement {
             @click="${() => {
               const scope = this.$scope.value;
               if (!scope) return;
+              this.#disconnectCoverObserver();
               scope.setSortDirection(
                 scope.sortDirection() === `asc` ? `desc` : `asc`,
               );
