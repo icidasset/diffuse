@@ -43,6 +43,20 @@
     white-space: nowrap;
   }
 
+  .playlists-category {
+    font-size: var(--fs-xs);
+    font-weight: 600;
+    letter-spacing: var(--tracking-wider);
+    opacity: 0.4;
+    padding-block: var(--space-2xs);
+    text-transform: uppercase;
+  }
+
+  .playlists-category + .playlists-category,
+  .playlists-item + .playlists-category {
+    margin-top: var(--space-xs);
+  }
+
   .tracks-section {
     display: flex;
     flex-direction: column;
@@ -81,7 +95,6 @@
     text-overflow: ellipsis;
     white-space: nowrap;
   }
-
 </style>
 
 <dialog id="playlists-dialog"></dialog>
@@ -100,9 +113,7 @@
       </a>
     </div>
     <h1>Playlists</h1>
-    <p>
-      An overview of all playlists and their contents.
-    </p>
+    <p>An overview of all playlists and their contents.</p>
   </div>
 
   <div class="facet__right">

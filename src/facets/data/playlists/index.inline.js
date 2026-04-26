@@ -40,62 +40,71 @@ effect(() => {
 
   const playlists = [...Playlist.gather(playlistItems).values()]
     .sort((a, b) => a.name.localeCompare(b.name));
-  const stats = computeStats(tracks, playlists);
+
+  const orderedPlaylists = playlists.filter((p) => !p.unordered);
+  const unorderedPlaylists = playlists.filter((p) => p.unordered);
 
   list.hidden = playlists.length === 0;
   empty.hidden = playlists.length > 0;
 
+  /** @param {typeof playlists} group @param {number} offset */
+  const renderGroup = (group, offset) => group.map(({ name, items }, index) => {
+    const menuId = `playlists-menu-${offset + index}`;
+    return html`
+      <li class="playlists-item">
+          <div class="playlists-item__info">
+            <span class="playlists-item__name">${name}</span>
+          </div>
+          <button
+            class="button--plain button--icon"
+            aria-label="More"
+            popovertarget="${menuId}"
+          >
+            <i class="ph-fill ph-dots-three-outline-vertical"></i>
+          </button>
+          <div id="${menuId}" class="dropdown" popover>
+            <button
+              @click="${(/** @type {MouseEvent} */ e) => {
+                /** @type {HTMLElement | null} */ (/** @type {HTMLElement} */ (e.currentTarget).closest("[popover]"))?.hidePopover();
+                showDetails(name, tracks, items);
+              }}"
+            >
+              <i class="ph-fill ph-binoculars"></i>
+              View tracks
+            </button>
+            <button
+              @click="${(/** @type {MouseEvent} */ e) => {
+                /** @type {HTMLElement | null} */ (/** @type {HTMLElement} */ (e.currentTarget).closest("[popover]"))?.hidePopover();
+                removeDuplicates(name, items);
+              }}"
+            >
+              <i class="ph-fill ph-copy"></i>
+              Remove duplicates
+            </button>
+            <button
+              @click="${(/** @type {MouseEvent} */ e) => {
+                /** @type {HTMLElement | null} */ (/** @type {HTMLElement} */ (e.currentTarget).closest("[popover]"))?.hidePopover();
+                removePlaylist(name);
+              }}"
+            >
+              <i class="ph-fill ph-skull"></i>
+              Delete
+            </button>
+          </div>
+        </li>
+      `;
+  });
+
   litRender(
     html`
-      ${playlists.map(({ name, items }, index) => {
-        const { matchedCount, missingCount } = stats.get(name) ??
-          { matchedCount: 0, missingCount: 0 };
-        const menuId = `playlists-menu-${index}`;
-        return html`
-          <li class="playlists-item">
-            <div class="playlists-item__info">
-              <span class="playlists-item__name">${name}</span>
-              <span class="playlists-item__detail">${matchedCount} found · ${missingCount} not found</span>
-            </div>
-            <button
-              class="button--plain button--icon"
-              aria-label="More"
-              popovertarget="${menuId}"
-            >
-              <i class="ph-fill ph-dots-three-outline-vertical"></i>
-            </button>
-            <div id="${menuId}" class="dropdown" popover>
-              <button
-                @click="${(/** @type {MouseEvent} */ e) => {
-                  /** @type {HTMLElement | null} */ (/** @type {HTMLElement} */ (e.currentTarget).closest("[popover]"))?.hidePopover();
-                  showDetails(name, tracks, items);
-                }}"
-              >
-                <i class="ph-fill ph-binoculars"></i>
-                View tracks
-              </button>
-              <button
-                @click="${(/** @type {MouseEvent} */ e) => {
-                  /** @type {HTMLElement | null} */ (/** @type {HTMLElement} */ (e.currentTarget).closest("[popover]"))?.hidePopover();
-                  removeDuplicates(name, items);
-                }}"
-              >
-                <i class="ph-fill ph-copy"></i>
-                Remove duplicates
-              </button>
-              <button
-                @click="${(/** @type {MouseEvent} */ e) => {
-                  /** @type {HTMLElement | null} */ (/** @type {HTMLElement} */ (e.currentTarget).closest("[popover]"))?.hidePopover();
-                  removePlaylist(name);
-                }}"
-              >
-                <i class="ph-fill ph-skull"></i>
-                Delete
-              </button>
-            </div>
-          </li>
-        `;
-      })}
+      ${orderedPlaylists.length > 0 ? html`
+        <li class="playlists-category">Ordered</li>
+        ${renderGroup(orderedPlaylists, 0)}
+      ` : null}
+      ${unorderedPlaylists.length > 0 ? html`
+        <li class="playlists-category">Not ordered</li>
+        ${renderGroup(unorderedPlaylists, orderedPlaylists.length)}
+      ` : null}
     `,
     list,
   );
@@ -151,14 +160,62 @@ async function removeDuplicates(name, items) {
  * @param {PlaylistItem[]} items
  */
 function showDetails(name, tracks, items) {
-  const seenIds = new Set();
-  const found = /** @type {Track[]} */ (items
-    .map((item) => tracks.find((t) => Playlist.match(t, item)))
-    .filter((t) => t != null && !seenIds.has(t.id) && seenIds.add(t.id))
-    .sort((a, b) => (a?.tags?.title ?? "").localeCompare(b?.tags?.title ?? "")));
+  // Build per-shape track indexes so each item resolves in O(1) instead of O(tracks).
+  /** @type {Map<string, { parts: string[][], transformations: (string[] | undefined)[], trackMap: Map<string, Track> }>} */
+  const shapes = new Map();
 
-  const notFound = items
-    .filter((item) => !tracks.some((t) => Playlist.match(t, item)))
+  for (const item of items) {
+    const shapeKey = item.criteria
+      .map((c) => `${c.field}\0${(c.transformations ?? []).join(",")}`)
+      .join("\0\0");
+    if (!shapes.has(shapeKey)) {
+      shapes.set(shapeKey, {
+        parts: item.criteria.map((c) => c.field.split(".")),
+        transformations: item.criteria.map((c) => c.transformations),
+        trackMap: new Map(),
+      });
+    }
+  }
+
+  for (const track of tracks) {
+    for (const shape of shapes.values()) {
+      const key = shape.parts
+        .map((parts, i) => {
+          let v = /** @type {any} */ (track);
+          for (const p of parts) v = v?.[p];
+          return Playlist.transform(v, shape.transformations[i]);
+        })
+        .join("\0");
+      if (!shape.trackMap.has(key)) shape.trackMap.set(key, track);
+    }
+  }
+
+  /** @type {Track[]} */
+  const found = [];
+  /** @type {PlaylistItem[]} */
+  const notFoundItems = [];
+  const seenIds = new Set();
+
+  for (const item of items) {
+    const shapeKey = item.criteria
+      .map((c) => `${c.field}\0${(c.transformations ?? []).join(",")}`)
+      .join("\0\0");
+    const itemKey = item.criteria
+      .map((c) => Playlist.transform(c.value, c.transformations))
+      .join("\0");
+    const track = shapes.get(shapeKey)?.trackMap.get(itemKey);
+
+    if (track && !seenIds.has(track.id)) {
+      seenIds.add(track.id);
+      found.push(track);
+    } else if (!track) {
+      notFoundItems.push(item);
+    }
+  }
+
+  found.sort((a, b) => (a.tags?.title ?? "").localeCompare(b.tags?.title ?? ""));
+
+  const notFound = notFoundItems
     .map((item) => ({
       title: String(item.criteria.find((c) => c.field === "tags.title")?.value ?? ""),
       artist: String(item.criteria.find((c) => c.field === "tags.artist")?.value ?? "") || null,
@@ -211,93 +268,6 @@ function showDetails(name, tracks, items) {
 
   dialog.showModal();
 }
-
-////////////////////////////////////////////
-// STATS
-////////////////////////////////////////////
-
-/**
- * Compute matched/missing counts for all playlists in a single pass over tracks.
- * O(tracks × playlists + items_total) instead of O(tracks × items × playlists).
- *
- * @param {Track[]} tracks
- * @param {Array<{ name: string, items: PlaylistItem[] }>} playlists
- * @returns {Map<string, { matchedCount: number, missingCount: number }>}
- */
-function computeStats(tracks, playlists) {
-  // Build a shape index per playlist.
-  const indexes = playlists.map(({ name, items }) => {
-    /** @type {Map<string, { fields: { parts: string[], transformations: string[] | undefined }[], trackKeys: Set<string>, itemKeys: Set<string> }>} */
-    const shapeMap = new Map();
-
-    for (const item of items) {
-      const shapeKey = item.criteria
-        .map((c) => `${c.field}\0${(c.transformations ?? []).join(",")}`)
-        .join("\0\0");
-
-      if (!shapeMap.has(shapeKey)) {
-        shapeMap.set(shapeKey, {
-          fields: item.criteria.map((c) => ({
-            parts: c.field.split("."),
-            transformations: /** @type {string[] | undefined} */ (c.transformations),
-          })),
-          trackKeys: new Set(),
-          itemKeys: new Set(),
-        });
-      }
-
-      const shape = shapeMap.get(shapeKey);
-      const itemKey = item.criteria
-        .map((c) => Playlist.transform(c.value, c.transformations))
-        .join("\0");
-      shape?.itemKeys.add(itemKey);
-    }
-
-    return { name, shapeMap, shapes: [...shapeMap.values()], items };
-  });
-
-  // Single pass over tracks — update all playlist indexes at once.
-  const matchedCounts = new Map(playlists.map((p) => [p.name, 0]));
-  for (const track of tracks) {
-    for (const { name, shapes } of indexes) {
-      let trackMatched = false;
-      for (const shape of shapes) {
-        const trackKey = shape.fields
-          .map(({ parts, transformations }) =>
-            Playlist.transform(
-              parts.reduce((v, f) => /** @type {any} */ (v)?.[f], /** @type {any} */ (track)),
-              transformations,
-            )
-          )
-          .join("\0");
-        if (shape.itemKeys.has(trackKey)) {
-          shape.trackKeys.add(trackKey);
-          trackMatched = true;
-        }
-      }
-      if (trackMatched) matchedCounts.set(name, (matchedCounts.get(name) ?? 0) + 1);
-    }
-  }
-
-  // Derive missing counts from the now-populated trackKeys sets.
-  const result = new Map();
-  for (const { name, shapeMap, items } of indexes) {
-    let missingCount = 0;
-    for (const item of items) {
-      const shapeKey = item.criteria
-        .map((c) => `${c.field}\0${(c.transformations ?? []).join(",")}`)
-        .join("\0\0");
-      const itemKey = item.criteria
-        .map((c) => Playlist.transform(c.value, c.transformations))
-        .join("\0");
-      if (!shapeMap.get(shapeKey)?.trackKeys.has(itemKey)) missingCount++;
-    }
-    result.set(name, { matchedCount: matchedCounts.get(name) ?? 0, missingCount });
-  }
-
-  return result;
-}
-
 
 ////////////////////////////////////////////
 // 🚀
