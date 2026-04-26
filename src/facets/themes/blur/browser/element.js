@@ -5,6 +5,8 @@ import {
   Virtualizer,
 } from "@tanstack/virtual-core";
 
+import * as TID from "@atcute/tid";
+
 import {
   defineElement,
   DiffuseElement,
@@ -122,6 +124,10 @@ class Browser extends DiffuseElement {
   #coverViewMode = signal(/** @type {"albums" | "artists"} */ ("albums"));
 
   #openCoverItem = signal(/** @type {OpenCoverItem | null} */ (null));
+
+  #playlistPickerState = signal(
+    /** @type {{ mode: "filter" } | { mode: "add"; tracks: Track[] } | { mode: "create"; tracks: Track[] } | null} */ (null),
+  );
 
   // SIGNALS - Pt. 3
 
@@ -385,6 +391,7 @@ class Browser extends DiffuseElement {
    * @param {string | undefined} value
    */
   setSelectedPlaylist = (value) => {
+    this.#disconnectCoverObserver();
     this.$scope.value?.setPlaylist(value);
   };
 
@@ -418,6 +425,90 @@ class Browser extends DiffuseElement {
   };
 
   /**
+   * @param {string} playlistName
+   * @param {Track[]} tracks
+   */
+  addTracksToPlaylist = async (playlistName, tracks) => {
+    const output = this.$output.value;
+    if (!output || !tracks.length) return;
+
+    const col = output.playlistItems.collection();
+    const existing = col.state === "loaded" ? col.data : [];
+
+    const existingKeys = new Set(
+      existing
+        .filter((item) => item.playlist === playlistName)
+        .map((item) => {
+          const a = item.criteria.find((c) => c.field === "tags.artist")?.value ?? "";
+          const t = item.criteria.find((c) => c.field === "tags.title")?.value ?? "";
+          return `${String(a).toLowerCase()}.${String(t).toLowerCase()}`;
+        }),
+    );
+
+    const transformations = /** @type {string[]} */ (["toLowerCase"]);
+    const now = new Date().toISOString();
+
+    const newItems = tracks
+      .filter((track) => {
+        const key = `${String(track.tags?.artist ?? "").toLowerCase()}.${String(track.tags?.title ?? "").toLowerCase()}`;
+        return !existingKeys.has(key);
+      })
+      .map((track) => /** @type {import("~/definitions/types.d.ts").PlaylistItem} */ ({
+        $type: "sh.diffuse.output.playlistItem",
+        id: TID.now(),
+        playlist: playlistName,
+        criteria: [
+          { field: "tags.artist", value: /** @type {unknown} */ (track.tags?.artist), transformations },
+          { field: "tags.title", value: /** @type {unknown} */ (track.tags?.title), transformations },
+        ],
+        createdAt: now,
+        updatedAt: now,
+      }));
+
+    if (!newItems.length) return;
+    await output.playlistItems.save([...existing, ...newItems]);
+  };
+
+  /**
+   * @param {string} playlistName
+   * @param {Track[]} tracks
+   * @param {boolean} ordered
+   */
+  createPlaylistWithTracks = async (playlistName, tracks, ordered) => {
+    const output = this.$output.value;
+    if (!output || !tracks.length) return;
+
+    const col = output.playlistItems.collection();
+    const existing = col.state === "loaded" ? col.data : [];
+
+    const transformations = /** @type {string[]} */ (["toLowerCase"]);
+    const now = new Date().toISOString();
+
+    /** @type {import("~/definitions/types.d.ts").PlaylistItem[]} */
+    const newItems = [];
+    let prevId = /** @type {string | undefined} */ (undefined);
+
+    for (const track of tracks) {
+      const id = TID.now();
+      newItems.push(/** @type {import("~/definitions/types.d.ts").PlaylistItem} */ ({
+        $type: "sh.diffuse.output.playlistItem",
+        id,
+        playlist: playlistName,
+        criteria: [
+          { field: "tags.artist", value: /** @type {unknown} */ (track.tags?.artist), transformations },
+          { field: "tags.title", value: /** @type {unknown} */ (track.tags?.title), transformations },
+        ],
+        ...(ordered ? { positionedAfter: prevId } : {}),
+        createdAt: now,
+        updatedAt: now,
+      }));
+      if (ordered) prevId = id;
+    }
+
+    await output.playlistItems.save([...existing, ...newItems]);
+  };
+
+  /**
    * @param {Function} html
    * @param {string} menuId
    * @param {Track[]} tracks
@@ -426,7 +517,7 @@ class Browser extends DiffuseElement {
     const uris = tracks.map((t) => t.uri);
     const allCached = uris.length > 0 && uris.every((u) => this.#cachedUris.value.has(u));
     return html`
-      <div id="${menuId}" class="dropdown" popover>
+      <div id="${menuId}" class="dropdown" popover @click="${(/** @type {MouseEvent} */ e) => e.stopPropagation()}">
         <button @click="${() => {
           if (!tracks.length) return;
           this.$queue.value?.add({ inFront: true, trackIds: tracks.map((t) => t.id) });
@@ -442,6 +533,14 @@ class Browser extends DiffuseElement {
         }}">
           <i class="ph-bold ph-clock-counter-clockwise"></i>
           Add to queue
+        </button>
+        <button @click="${() => {
+          if (!tracks.length) return;
+          /** @type {HTMLElement | null} */ (this.root().querySelector(`#${menuId}`))?.hidePopover();
+          this.#playlistPickerState.value = { mode: "add", tracks };
+        }}">
+          <i class="ph-bold ph-playlist"></i>
+          Add to playlist
         </button>
         <button @click="${async () => {
           if (!uris.length) return;
@@ -627,6 +726,169 @@ class Browser extends DiffuseElement {
   }
 
   // RENDER
+
+  /**
+   * @param {Function} html
+   */
+  #renderPlaylistPicker(html) {
+    const state = this.#playlistPickerState.value;
+    if (!state) return html``;
+
+    const isCreate = state.mode === "create";
+    const title = state.mode === "filter"
+      ? "Filter by playlist"
+      : isCreate
+      ? "New playlist"
+      : "Add to playlist";
+
+    const groups = this.$groupedPlaylists();
+
+    const headerBackBtn = isCreate
+      ? html`
+        <button
+          class="toolbar-icon-btn"
+          @click="${() => {
+            this.#playlistPickerState.value = { mode: "add", tracks: /** @type {any} */ (state).tracks };
+          }}"
+          title="Back"
+        >
+          <i class="ph-bold ph-arrow-left"></i>
+        </button>
+      `
+      : ``;
+
+    const closeBtn = html`
+      <a
+        class="toolbar-icon-btn toolbar-icon-btn--link"
+        href="l/?path=facets%2Fdata%2Fplaylists%2Findex.html"
+        target="_blank"
+        title="Open playlist manager"
+      >
+        <i class="ph-bold ph-gear"></i>
+      </a>
+      <button
+        class="toolbar-icon-btn"
+        @click="${() => { this.#playlistPickerState.value = null; }}"
+        title="Close"
+      >
+        <i class="ph-bold ph-x"></i>
+      </button>
+    `;
+
+    const body = isCreate
+      ? html`
+        <form
+          class="playlist-picker-create-form"
+          @submit="${async (/** @type {SubmitEvent} */ e) => {
+            e.preventDefault();
+            const form = /** @type {HTMLFormElement} */ (e.currentTarget);
+            const name = /** @type {HTMLInputElement} */ (form.elements.namedItem(`playlist-name`))?.value.trim();
+            const ordered = /** @type {HTMLInputElement} */ (form.elements.namedItem(`playlist-ordered`))?.checked ?? false;
+            if (!name) return;
+            await this.createPlaylistWithTracks(name, /** @type {any} */ (state).tracks, ordered);
+            this.#playlistPickerState.value = null;
+          }}"
+        >
+          <label class="playlist-picker-create-label">
+            Name
+            <input
+              class="playlist-picker-create-input"
+              name="playlist-name"
+              type="text"
+              placeholder="My playlist"
+              autocomplete="off"
+              autofocus
+              required
+            />
+          </label>
+          <label class="playlist-picker-create-label playlist-picker-create-label--checkbox">
+            <input
+              class="playlist-picker-create-checkbox"
+              name="playlist-ordered"
+              type="checkbox"
+            />
+            Ordered
+          </label>
+          <button class="playlist-picker-create-submit" type="submit">
+            Create playlist
+          </button>
+        </form>
+      `
+      : html`
+        <div class="playlist-picker-list">
+          ${state.mode === "filter"
+            ? html`
+              <button
+                class="playlist-picker-item ${!this.$scope.value?.playlist()
+                  ? `playlist-picker-item--active`
+                  : ``}"
+                @click="${() => {
+                  this.setSelectedPlaylist(undefined);
+                  this.#playlistPickerState.value = null;
+                }}"
+              >
+                All tracks
+              </button>
+            `
+            : ``}
+          ${state.mode === "add"
+            ? html`
+              <button
+                class="playlist-picker-item playlist-picker-item--create"
+                @click="${() => {
+                  this.#playlistPickerState.value = { mode: "create", tracks: state.tracks };
+                }}"
+              >
+                <i class="ph-bold ph-plus"></i>
+                Create new playlist
+              </button>
+              ${groups.length > 0 ? html`<div class="playlist-picker-divider"></div>` : ``}
+            `
+            : ``}
+          ${groups.length === 0
+            ? (state.mode === "add" ? `` : html`<div class="playlist-picker-empty">No playlists yet</div>`)
+            : groups.map(({ label, playlists }) => html`
+              <div class="playlist-picker-group-label">${label}</div>
+              ${playlists.map((p) => html`
+                <button
+                  class="playlist-picker-item ${state.mode === `filter` &&
+                      this.$scope.value?.playlist() === p.name
+                    ? `playlist-picker-item--active`
+                    : ``}"
+                  @click="${async () => {
+                    if (state.mode === "add") {
+                      await this.addTracksToPlaylist(p.name, state.tracks);
+                    } else {
+                      this.setSelectedPlaylist(p.name);
+                    }
+                    this.#playlistPickerState.value = null;
+                  }}"
+                >
+                  ${p.name}
+                </button>
+              `)}
+            `)}
+        </div>
+      `;
+
+    return html`
+      <div
+        class="playlist-picker-overlay"
+        @click="${(/** @type {MouseEvent} */ e) => {
+          if (e.target === e.currentTarget) this.#playlistPickerState.value = null;
+        }}"
+      >
+        <div class="playlist-picker-panel">
+          <div class="playlist-picker-header">
+            ${headerBackBtn}
+            <span class="playlist-picker-title">${title}</span>
+            ${closeBtn}
+          </div>
+          ${body}
+        </div>
+      </div>
+    `;
+  }
 
   /**
    * @param {Function} html
@@ -1215,35 +1477,11 @@ class Browser extends DiffuseElement {
         class="browser-button browser-button--playlist ${playlist
           ? `browser-button--active`
           : ``}"
-        popovertarget="playlist-menu"
+        @click="${() => { this.#playlistPickerState.value = { mode: "filter" }; }}"
       >
         <i class="ph-fill ph-playlist"></i>
         <span>${playlist ?? `All tracks`}</span>
       </button>
-      <div id="playlist-menu" class="dropdown" popover>
-        <button @click="${() => {
-          this.setSelectedPlaylist(undefined);
-          /** @type {HTMLElement | null} */ (this.root().querySelector(
-            `#playlist-menu`,
-          ))?.hidePopover();
-        }}">
-          All tracks
-        </button>
-        ${this.$groupedPlaylists().map((group) =>
-          group.playlists.map((p) =>
-            html`
-              <button @click="${() => {
-                this.setSelectedPlaylist(p.name);
-                /** @type {HTMLElement | null} */ (this.root().querySelector(
-                  `#playlist-menu`,
-                ))?.hidePopover();
-              }}">
-                ${p.name}
-              </button>
-            `
-          )
-        )}
-      </div>
     `;
   }
 
@@ -1313,6 +1551,8 @@ class Browser extends DiffuseElement {
       ${viewMode === `cover`
         ? this.#renderCoverView(html, isLoading)
         : this.#renderListView(html, isLoading, sortBy)}
+
+      ${this.#renderPlaylistPicker(html)}
     `;
   }
 }

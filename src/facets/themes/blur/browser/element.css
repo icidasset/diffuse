@@ -8,6 +8,7 @@
   font-size: calc(var(--fs-sm) * 0.85);
   height: 100%;
   overflow: hidden;
+  position: relative;
 }
 
 /***********************************
@@ -119,6 +120,10 @@
 
 .toolbar-icon-btn:hover {
   color: currentColor;
+}
+
+.toolbar-icon-btn--link {
+  text-decoration: none;
 }
 
 /***********************************
@@ -741,4 +746,183 @@
 
 .cover-menu-btn:hover {
   color: oklch(1 0 0);
+}
+
+/***********************************
+ * Playlist picker overlay
+ ***********************************/
+
+.playlist-picker-overlay {
+  background: color-mix(in oklch, var(--bg-color) 60%, transparent);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  bottom: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  left: 0;
+  position: absolute;
+  right: 0;
+  top: 0;
+  z-index: 100;
+}
+
+.playlist-picker-panel {
+  background: var(--bg-color);
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-lg);
+  box-shadow:
+    0 8px 32px -4px rgba(0, 0, 0, 0.18),
+    0 2px 8px -2px rgba(0, 0, 0, 0.12);
+  display: flex;
+  flex-direction: column;
+  max-height: 70%;
+  overflow: hidden;
+  width: min(20rem, 90%);
+
+  @media (prefers-color-scheme: dark) {
+    box-shadow:
+      0 8px 32px -4px rgba(0, 0, 0, 0.5),
+      0 2px 8px -2px rgba(0, 0, 0, 0.4);
+  }
+}
+
+.playlist-picker-header {
+  align-items: center;
+  border-bottom: 1px solid var(--border-color);
+  display: flex;
+  gap: var(--space-3xs);
+  justify-content: space-between;
+  padding: var(--space-xs) var(--space-xs) var(--space-xs) var(--space-xs);
+}
+
+.playlist-picker-title {
+  flex: 1;
+  font-weight: 600;
+  text-box: trim-both cap alphabetic;
+}
+
+.playlist-picker-list {
+  display: flex;
+  flex-direction: column;
+  overflow-y: auto;
+  padding: var(--space-2xs) 0;
+}
+
+.playlist-picker-group-label {
+  color: color-mix(in oklch, currentColor 40%, transparent);
+  font-size: 75%;
+  font-weight: 500;
+  letter-spacing: var(--tracking-wider);
+  padding: var(--space-xs) var(--space-sm) var(--space-3xs);
+  text-box: trim-both cap alphabetic;
+  text-transform: uppercase;
+}
+
+.playlist-picker-item {
+  background: transparent;
+  border: none;
+  border-radius: 0;
+  color: inherit;
+  cursor: pointer;
+  font-family: inherit;
+  font-size: 100%;
+  padding: var(--space-2xs) var(--space-sm);
+  text-align: left;
+  transition: background-color 80ms;
+}
+
+.playlist-picker-item:hover {
+  background: color-mix(in oklch, currentColor 6%, transparent);
+}
+
+.playlist-picker-item--active {
+  background: color-mix(in oklch, currentColor 8%, transparent);
+  font-weight: 500;
+}
+
+.playlist-picker-item--create {
+  align-items: center;
+  color: color-mix(in oklch, currentColor 60%, transparent);
+  display: flex;
+  gap: var(--space-2xs);
+}
+
+.playlist-picker-item--create:hover {
+  color: currentColor;
+}
+
+.playlist-picker-divider {
+  border-top: 1px solid var(--border-color);
+  margin: var(--space-2xs) 0;
+}
+
+.playlist-picker-empty {
+  color: color-mix(in oklch, currentColor 40%, transparent);
+  padding: var(--space-sm) var(--space-sm);
+}
+
+/***********************************
+ * Playlist picker — create form
+ ***********************************/
+
+.playlist-picker-create-form {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-sm);
+  padding: var(--space-sm);
+}
+
+.playlist-picker-create-label {
+  display: flex;
+  flex-direction: column;
+  font-size: 90%;
+  font-weight: 500;
+  gap: var(--space-3xs);
+  color: color-mix(in oklch, currentColor 60%, transparent);
+}
+
+.playlist-picker-create-label--checkbox {
+  align-items: center;
+  cursor: pointer;
+  flex-direction: row;
+  gap: var(--space-2xs);
+}
+
+.playlist-picker-create-input {
+  background: color-mix(in oklch, currentColor 5%, transparent);
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-sm);
+  color: var(--text-color);
+  font-family: inherit;
+  font-size: calc(100% / 0.85);
+  outline: none;
+  padding: var(--space-2xs) var(--space-xs);
+  width: 100%;
+}
+
+.playlist-picker-create-input:focus {
+  border-color: color-mix(in oklch, currentColor 30%, transparent);
+}
+
+.playlist-picker-create-checkbox {
+  cursor: pointer;
+  width: auto;
+}
+
+.playlist-picker-create-submit {
+  background: color-mix(in oklch, currentColor 10%, transparent);
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-sm);
+  color: inherit;
+  cursor: pointer;
+  font-family: inherit;
+  font-size: 100%;
+  font-weight: 500;
+  padding: var(--space-2xs) var(--space-sm);
+  transition: background-color 80ms;
+}
+
+.playlist-picker-create-submit:hover {
+  background: color-mix(in oklch, currentColor 15%, transparent);
 }

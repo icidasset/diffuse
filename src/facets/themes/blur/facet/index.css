@@ -1,9 +1,9 @@
-:root {
+/*:root {
   --facet-bg-color: #140c04;
-}
+}*/
 
 body {
-  background-color: var(--facet-bg-color);
+  /*background-color: var(--facet-bg-color);*/
   color: var(--text-color);
   display: flex;
   flex-direction: column;
