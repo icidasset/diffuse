@@ -266,6 +266,8 @@ class Browser extends DiffuseElement {
   /** @type {(() => void) | undefined} */
   #virtualizerCleanup;
 
+  #virtualizerCount = 0;
+
   // LIFECYCLE
 
   /**
@@ -687,6 +689,7 @@ class Browser extends DiffuseElement {
     if (!this.root().querySelector(".scroll-panel")) return;
 
     this.#virtualizerCleanup?.();
+    this.#virtualizerCount = 0;
 
     this.#virtualizer = new Virtualizer({
       count: 0,
@@ -1148,10 +1151,13 @@ class Browser extends DiffuseElement {
     // The virtualizer is set up in connectedCallback after first render;
     // until then virtualItems is empty and totalSize is 0.
     if (this.#virtualizer) {
-      this.#virtualizer.setOptions({
-        ...this.#virtualizer.options,
-        count,
-      });
+      if (count !== this.#virtualizerCount) {
+        this.#virtualizerCount = count;
+        this.#virtualizer.setOptions({
+          ...this.#virtualizer.options,
+          count,
+        });
+      }
       this.#virtualizer._willUpdate();
     }
 
