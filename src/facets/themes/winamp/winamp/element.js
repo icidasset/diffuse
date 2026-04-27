@@ -256,6 +256,7 @@ class WinampElement extends DiffuseElement {
   #balance = signal(0);
   #stopped = signal(false);
   #seekingProgress = signal(/** @type {number | null} */ (null));
+  #timeCountdown = signal(false);
   #focusedWindow = signal(
     /** @type {"main" | "eq" | "playlist" | "milkdrop"} */ ("main"),
   );
@@ -1556,6 +1557,10 @@ class WinampElement extends DiffuseElement {
     );
   };
 
+  #toggleTimeCountdown = () => {
+    this.#timeCountdown.value = !this.#timeCountdown.value;
+  };
+
   #toggleMainShade = () => {
     this.#mainShade.value = !this.#mainShade.value;
     const ui = loadUiState();
@@ -1755,9 +1760,10 @@ class WinampElement extends DiffuseElement {
       : [];
 
     const seekPct = this.#seekingProgress.value;
-    const timeSeconds = seekPct !== null
-      ? seekPct * (audio?.duration() ?? 0)
-      : audio?.currentTime() ?? 0;
+    const duration = audio?.duration() ?? 0;
+    const elapsed = seekPct !== null ? seekPct * duration : audio?.currentTime() ?? 0;
+    const isCountdown = this.#timeCountdown.value;
+    const timeSeconds = isCountdown ? Math.max(0, duration - elapsed) : elapsed;
     const timeMinutes = Math.floor(timeSeconds / 60);
     const timeSecs = Math.floor(timeSeconds % 60);
     const miniTimeStr = `${String(timeMinutes).padStart(2, "0")}:${
@@ -1980,7 +1986,7 @@ class WinampElement extends DiffuseElement {
             </div>
             <div id="play-pause"></div>
             <div id="work-indicator"></div>
-            <div id="time">
+            <div id="time" class="${isCountdown ? "countdown" : ""}" @click="${this.#toggleTimeCountdown}" style="cursor: pointer;">
               <div id="minus-sign"></div>
               <div id="minute-first-digit" class="digit digit-${d
                 .mFirst}"></div>
