@@ -111,10 +111,23 @@
   }
 
   .connect-item__name {
+    align-items: center;
+    display: flex;
     font-weight: 600;
-    overflow: hidden;
-    text-overflow: ellipsis;
-    white-space: nowrap;
+    gap: var(--space-xs);
+  }
+
+  .connect-item__badge {
+    background: oklch(from var(--text-color) l c h / 0.075);
+    border-radius: 9999px;
+    color: oklch(from var(--text-color) l c h / 0.5);
+    flex-shrink: 0;
+    font-size: 50%;
+    font-weight: 500;
+    letter-spacing: var(--tracking-wide);
+    padding: var(--space-3xs);
+    text-box: trim-both cap alphabetic;
+    text-transform: uppercase;
   }
 
   .connect-item__detail {

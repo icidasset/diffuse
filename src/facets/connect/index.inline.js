@@ -20,6 +20,12 @@ const icons = {
   "facets/connect/webdav/index.html": "hard-drive",
 };
 
+const recommended = new Set([
+  "facets/connect/atproto/index.html",
+  "facets/connect/dropbox/index.html",
+  "facets/connect/local/index.html",
+]);
+
 const facets = facetsData
   .filter(
     (f) =>
@@ -31,7 +37,9 @@ const facets = facetsData
     description: f.desc,
     icon: icons[f.url] ?? "plug",
     href: loaderHref(f.url),
-  }));
+    isRecommended: recommended.has(f.url),
+  }))
+;
 
 const main = document.querySelector("main");
 if (!main) throw new Error("No <main> element");
@@ -59,13 +67,16 @@ litRender(
     </div>
     <div class="connect-index__right">
       <ul class="connect-list">
-        ${facets.map(({ name, description, icon, href }) =>
+        ${facets.map(({ name, description, icon, href, isRecommended }) =>
           html`
             <li>
               <a class="connect-item" href="${href}">
                 <i class="ph-fill ph-${icon} connect-item__icon"></i>
                 <div class="connect-item__info">
-                  <span class="connect-item__name">${name}</span>
+                  <span class="connect-item__name">
+                    ${name}
+                    ${isRecommended ? html`<span class="connect-item__badge">Recommended</span>` : ""}
+                  </span>
                   <span class="connect-item__detail">${description}</span>
                 </div>
               </a>
