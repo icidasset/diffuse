@@ -82,6 +82,22 @@
         ></dtw-browser>
       </dtw-window>
 
+      <!-- 🖼️ -->
+      <dtw-window
+        id="artwork-window"
+        window-style="min-width: 0; width: 275px; height: 275px;"
+      >
+        <span slot="title-icon"
+          ><img src="images/icons/windows_98/imagwmf-1.png" height="14"
+        /></span>
+        <span slot="title">Artwork</span>
+
+        <dtw-winamp-artwork
+          artwork-selector="do-artwork"
+          controller-orchestrator-selector="do-controller"
+        ></dtw-winamp-artwork>
+      </dtw-window>
+
       <!-- ⚡️ -->
       <dtw-winamp
         controller-orchestrator-selector="do-controller"
@@ -118,6 +134,12 @@
     <a class="button desktop__item">
       <img src="images/icons/windows_98/directory_explorer-5.png" height="32" />
       <label for="browser-window">Browse collection</label>
+    </a>
+
+    <!-- ARTWORK -->
+    <a class="button desktop__item">
+      <img src="images/icons/windows_98/imagwmf-1.png" height="32" />
+      <label for="artwork-window">Artwork</label>
     </a>
 
     <!-- INSERT -->

@@ -18,9 +18,11 @@ await foundation.orchestrator.sources();
 await foundation.orchestrator.processTracks({ disableWhenReady: true });
 await foundation.orchestrator.queueAudio();
 await foundation.orchestrator.controller();
+await foundation.orchestrator.artwork();
 
 await import("~/facets/themes/winamp/browser/element.js");
 await import("~/facets/themes/winamp/window/element.js");
+await import("~/facets/themes/winamp/artwork/element.js");
 
 const { default: WinampElement } = await import(
   "~/facets/themes/winamp/winamp/element.js"
