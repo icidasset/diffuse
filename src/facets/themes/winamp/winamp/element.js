@@ -1924,6 +1924,7 @@ class WinampElement extends DiffuseElement {
         right: auto;
       }
       #webamp .gen-top-title {
+        display: flex;
         margin-top: 4px;
       }
       #webamp .gen-middle-left,
