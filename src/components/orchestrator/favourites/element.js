@@ -1,7 +1,12 @@
-import { BroadcastableDiffuseElement, defineElement, query } from "~/common/element.js";
+import {
+  BroadcastableDiffuseElement,
+  defineElement,
+  query,
+} from "~/common/element.js";
 import { match as matchPlaylistItem } from "~/common/playlist.js";
 import { computed, signal } from "~/common/signal.js";
 import { filterFavourites } from "./common.js";
+import * as Output from "~/common/output.js";
 
 /**
  * @import {Track} from "~/definitions/types.d.ts"
@@ -20,6 +25,8 @@ class FavouritesOrchestrator extends BroadcastableDiffuseElement {
 
   /** @type {ProxiedActions<Actions>} */
   #proxy;
+
+  #toggleInFlight = false;
 
   constructor() {
     super();
@@ -99,8 +106,7 @@ class FavouritesOrchestrator extends BroadcastableDiffuseElement {
       return;
     }
 
-    const col = output.playlistItems.collection();
-    const playlistItems = col.state === "loaded" ? col.data : [];
+    const playlistItems = await Output.data(output.playlistItems);
     const result = await this.#proxy.include({
       playlistItems,
       tracks: tracksArray,
@@ -123,8 +129,7 @@ class FavouritesOrchestrator extends BroadcastableDiffuseElement {
       return;
     }
 
-    const col = output.playlistItems.collection();
-    const playlistItems = col.state === "loaded" ? col.data : [];
+    const playlistItems = await Output.data(output.playlistItems);
     const result = await this.#proxy.expel({
       playlistItems,
       tracks: tracksArray,
@@ -139,23 +144,29 @@ class FavouritesOrchestrator extends BroadcastableDiffuseElement {
    * @param {Track | Track[]} tracks
    */
   async toggle(tracks) {
-    const tracksArray = Array.isArray(tracks) ? tracks : [tracks];
-    if (tracksArray.length === 0) return;
+    if (this.#toggleInFlight) return;
+    this.#toggleInFlight = true;
 
-    const output = this.#output.value;
-    if (!output) {
-      console.warn("Favourites orchestrator: output element not ready");
-      return;
+    try {
+      const tracksArray = Array.isArray(tracks) ? tracks : [tracks];
+      if (tracksArray.length === 0) return;
+
+      const output = this.#output.value;
+      if (!output) {
+        console.warn("Favourites orchestrator: output element not ready");
+        return;
+      }
+
+      const playlistItems = await Output.data(output.playlistItems);
+      const result = await this.#proxy.toggle({
+        playlistItems,
+        tracks: tracksArray,
+      });
+
+      if (result) await output.playlistItems.save(result);
+    } finally {
+      this.#toggleInFlight = false;
     }
-
-    const col = output.playlistItems.collection();
-    const playlistItems = col.state === "loaded" ? col.data : [];
-    const result = await this.#proxy.toggle({
-      playlistItems,
-      tracks: tracksArray,
-    });
-
-    if (result) await output.playlistItems.save(result);
   }
 
   // 🛠️
