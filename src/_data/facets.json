@@ -31,7 +31,6 @@
     "url": "facets/themes/blur/browser/facet/index.html",
     "title": "Blur / Browser",
     "category": "Browsing",
-    "featured": true,
     "desc": "Collection browser and search with favourite toggling, date grouping, and virtual scrolling."
   },
   {
@@ -167,6 +166,13 @@
     "title": "Process Tracks",
     "category": "Data",
     "desc": "Process all your audio sources into tracks. Shows a progress bar when processing is occuring."
+  },
+  {
+    "url": "facets/playback/queue/index.html",
+    "title": "Queue",
+    "category": "Playback",
+    "featured": true,
+    "desc": "Manage your playback queue. Reorder upcoming tracks, clear the queue, and view playback history."
   },
   {
     "url": "facets/misc/scrobble/index.html",
