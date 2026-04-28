@@ -640,11 +640,11 @@ class Browser extends DiffuseElement {
       }
 
       table th[aria-sort="ascending"]::after {
-        content: " ▲";
+        content: " ▼";
       }
 
       table th[aria-sort="descending"]::after {
-        content: " ▼";
+        content: " ▲";
       }
 
       .virtual-scroll table {
