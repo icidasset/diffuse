@@ -72,12 +72,17 @@ export async function detach({ fileUriOrScheme, tracks }) {
   const { tid } = parsed;
   const groups = groupTracksByTid(tracks);
   delete groups[tid];
+  const filteredTracks = Object.values(groups).map((g) => g.tracks).flat(1);
 
-  const handles = await loadHandles();
-  delete handles[tid];
-  await saveHandles(handles);
+  try {
+    const handles = await loadHandles();
+    delete handles[tid];
+    await saveHandles(handles);
+  } catch {
+    // IDB cleanup failure must not prevent track removal
+  }
 
-  return Object.values(groups).map((g) => g.tracks).flat(1);
+  return filteredTracks;
 }
 
 /**
