@@ -29,7 +29,7 @@ export const $supplyFingerprint = signal(
 /**
  * @type {Actions['add']}
  *
- * @example Appends tracks to the back of the queue
+ * @example Adds tracks after the last manual entry, before any auto-filled items
  * ```js
  * import { add, $future } from "~/components/engine/queue/worker.js";
  *
@@ -41,11 +41,27 @@ export const $supplyFingerprint = signal(
  * if (!$future.value[0].manualEntry) throw new Error("items should be manualEntry: true");
  * ```
  *
+ * @example Inserts before auto-filled items when they are present
+ * ```js
+ * import { add, $future } from "~/components/engine/queue/worker.js";
+ *
+ * $future.value = [
+ *   { id: "manual", manualEntry: true },
+ *   { id: "auto", manualEntry: false },
+ * ];
+ *
+ * add({ trackIds: ["new"] });
+ *
+ * if ($future.value[0].id !== "manual") throw new Error("expected 'manual' first");
+ * if ($future.value[1].id !== "new") throw new Error("expected 'new' second");
+ * if ($future.value[2].id !== "auto") throw new Error("expected 'auto' last");
+ * ```
+ *
  * @example Prepends tracks to the front with inFront: true
  * ```js
  * import { add, $future } from "~/components/engine/queue/worker.js";
  *
- * add({ inFront: false, trackIds: ["c"] });
+ * add({ trackIds: ["c"] });
  * add({ inFront: true, trackIds: ["a", "b"] });
  *
  * if ($future.value[0].id !== "a") throw new Error("expected 'a' first");
@@ -58,9 +74,19 @@ export function add({ inFront, trackIds }) {
     return { id, manualEntry: true };
   });
 
-  $future.value = inFront
-    ? [...items, ...$future.value]
-    : [...$future.value, ...items];
+  if (inFront) {
+    $future.value = [...items, ...$future.value];
+  } else {
+    let lastManualIdx = -1;
+    for (let i = 0; i < $future.value.length; i++) {
+      if ($future.value[i].manualEntry) lastManualIdx = i;
+    }
+    $future.value = [
+      ...$future.value.slice(0, lastManualIdx + 1),
+      ...items,
+      ...$future.value.slice(lastManualIdx + 1),
+    ];
+  }
 }
 
 /**

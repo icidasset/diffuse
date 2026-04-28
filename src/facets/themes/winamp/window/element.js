@@ -41,6 +41,7 @@ class WindowElement extends DiffuseElement {
       dialog {
         background: transparent;
         border: 0;
+        outline: none;
         padding: 0;
       }
 

@@ -115,7 +115,7 @@ class Browser extends DiffuseElement {
 
   #viewMode = signal(
     /** @type {"list" | "cover"} */ (
-      localStorage.getItem("diffuse:browser:view-mode") === "list"
+      localStorage.getItem("diffuse/browser/view-mode") === "list"
         ? "list"
         : "cover"
     ),
@@ -570,7 +570,7 @@ class Browser extends DiffuseElement {
       requestAnimationFrame(() => this.#setupVirtualizer());
     }
     const next = this.#viewMode.value === "list" ? "cover" : "list";
-    localStorage.setItem("diffuse:browser:view-mode", next);
+    localStorage.setItem("diffuse/browser/view-mode", next);
     this.#viewMode.value = next;
   };
 

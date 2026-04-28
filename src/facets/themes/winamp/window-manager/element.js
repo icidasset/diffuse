@@ -12,6 +12,8 @@ import WindowElement from "../window/element.js";
 // ELEMENT
 ////////////////////////////////////////////
 
+const STORAGE_PREFIX = "diffuse/winamp/window/";
+
 class WindowManager extends DiffuseElement {
   constructor() {
     super();
@@ -26,6 +28,42 @@ class WindowManager extends DiffuseElement {
   $activeWindow = signal(/** @type {string | null} */ (null));
   #lastZindex = 1000;
 
+  // STORAGE
+
+  /**
+   * @param {string} id
+   * @param {string} left
+   * @param {string} top
+   */
+  #savePosition(id, left, top) {
+    localStorage.setItem(`${STORAGE_PREFIX}${id}`, JSON.stringify({ left, top }));
+  }
+
+  /**
+   * @param {string} id
+   * @returns {{ left: string; top: string } | null}
+   */
+  #loadPosition(id) {
+    try {
+      const raw = localStorage.getItem(`${STORAGE_PREFIX}${id}`);
+      if (!raw) return null;
+      return JSON.parse(raw);
+    } catch {
+      return null;
+    }
+  }
+
+  #restorePositions() {
+    this.querySelectorAll("dtw-window[id]").forEach((w) => {
+      if (!(w instanceof HTMLElement) || !w.id) return;
+      const pos = this.#loadPosition(w.id);
+      if (pos) {
+        w.style.left = pos.left;
+        w.style.top = pos.top;
+      }
+    });
+  }
+
   // LIFECYCLE
 
   /**
@@ -33,6 +71,8 @@ class WindowManager extends DiffuseElement {
    */
   async connectedCallback() {
     super.connectedCallback();
+
+    this.#restorePositions();
 
     // Events
     this.root().addEventListener("mousedown", this.focusOnWindow);
@@ -130,6 +170,11 @@ class WindowManager extends DiffuseElement {
       document.removeEventListener("mousemove", moveFn);
       document.removeEventListener("mouseup", stopMove);
       document.removeEventListener("mouseleave", stopMove);
+
+      const target = ogEvent.detail.element;
+      if (target instanceof HTMLElement && target.id) {
+        this.#savePosition(target.id, target.style.left, target.style.top);
+      }
     };
 
     document.addEventListener("mousemove", moveFn);
@@ -167,6 +212,21 @@ class WindowManager extends DiffuseElement {
       this.activateWindow(id);
       this.#lastZindex++;
       w.style.zIndex = this.#lastZindex.toString();
+
+      if (!this.#loadPosition(id)) {
+        const placeWindow = () => {
+          const dialog = w.shadowRoot?.querySelector("dialog[open]");
+          if (!dialog) { requestAnimationFrame(placeWindow); return; }
+          const { width, height } = dialog.getBoundingClientRect();
+          if (width === 0 || height === 0) { requestAnimationFrame(placeWindow); return; }
+          const index = [...this.children].indexOf(w);
+          const stagger = index * 12;
+          w.style.left = `${Math.round(Math.max(0, (window.innerWidth - width) / 2) + stagger)}px`;
+          w.style.top = `${Math.round(Math.max(0, (window.innerHeight - height) / 2) + stagger)}px`;
+          this.#savePosition(id, w.style.left, w.style.top);
+        };
+        requestAnimationFrame(placeWindow);
+      }
     }
   }
 

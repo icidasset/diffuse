@@ -1,7 +1,10 @@
+import * as TID from "@atcute/tid";
+
 import {
   defineElement,
   DiffuseElement,
   query,
+  queryOptional,
   whenElementsDefined,
 } from "~/common/element.js";
 import { computed, signal, untracked } from "~/common/signal.js";
@@ -49,6 +52,16 @@ class Browser extends DiffuseElement {
   );
 
   $highlightedTrack = signal(/** @type {string | null} */ (null));
+
+  $input = signal(
+    /** @type {import("~/components/configurator/input/element.js").CLASS | undefined} */ (undefined),
+  );
+
+  #cachedUris = signal(/** @type {Set<string>} */ (new Set()));
+
+  #playlistPickerState = signal(
+    /** @type {{ mode: "add"; tracks: Track[] } | { mode: "create"; tracks: Track[] } | null} */ (null),
+  );
 
   $groupedPlaylists = computed(() => {
     const col = this.$output.value?.playlistItems.collection();
@@ -102,6 +115,9 @@ class Browser extends DiffuseElement {
     /** @type {import("~/components/engine/scope/element.js").CLASS} */
     const scope = query(this, "scope-engine-selector");
 
+    /** @type {import("~/components/configurator/input/element.js").CLASS | null} */
+    const input = queryOptional(this, "input-selector");
+
     // Wait for the above dependencies to be defined, then render again.
     whenElementsDefined({ output, provider, queue, scope }).then(() => {
       this.$output.value = output;
@@ -109,6 +125,14 @@ class Browser extends DiffuseElement {
       this.$queue.value = queue;
       this.$scope.value = scope;
     });
+
+    if (input) {
+      whenElementsDefined({ input }).then(async () => {
+        this.$input.value = input;
+        const uris = await input.listCached();
+        this.#cachedUris.value = new Set(uris);
+      });
+    }
 
     // Effects
     this.effect(() => {
@@ -251,7 +275,250 @@ class Browser extends DiffuseElement {
     }
   };
 
+  /**
+   * @param {string} playlistName
+   * @param {Track[]} tracks
+   */
+  addTracksToPlaylist = async (playlistName, tracks) => {
+    const output = this.$output.value;
+    if (!output || !tracks.length) return;
+
+    const col = output.playlistItems.collection();
+    const existing = col.state === "loaded" ? col.data : [];
+
+    const existingKeys = new Set(
+      existing
+        .filter((item) => item.playlist === playlistName)
+        .map((item) => {
+          const a = item.criteria.find((c) =>
+            c.field === "tags.artist"
+          )?.value ?? "";
+          const t =
+            item.criteria.find((c) => c.field === "tags.title")?.value ?? "";
+          return `${String(a).toLowerCase()}.${String(t).toLowerCase()}`;
+        }),
+    );
+
+    const transformations = /** @type {string[]} */ (["toLowerCase"]);
+    const now = new Date().toISOString();
+
+    const newItems = tracks
+      .filter((track) => {
+        const key = `${String(track.tags?.artist ?? "").toLowerCase()}.${
+          String(track.tags?.title ?? "").toLowerCase()
+        }`;
+        return !existingKeys.has(key);
+      })
+      .map((
+        track,
+      ) => /** @type {import("~/definitions/types.d.ts").PlaylistItem} */ ({
+        $type: "sh.diffuse.output.playlistItem",
+        id: TID.now(),
+        playlist: playlistName,
+        criteria: [
+          {
+            field: "tags.artist",
+            value: /** @type {unknown} */ (track.tags?.artist),
+            transformations,
+          },
+          {
+            field: "tags.title",
+            value: /** @type {unknown} */ (track.tags?.title),
+            transformations,
+          },
+        ],
+        createdAt: now,
+        updatedAt: now,
+      }));
+
+    if (!newItems.length) return;
+    await output.playlistItems.save([...existing, ...newItems]);
+  };
+
+  /**
+   * @param {string} playlistName
+   * @param {Track[]} tracks
+   * @param {boolean} ordered
+   */
+  createPlaylistWithTracks = async (playlistName, tracks, ordered) => {
+    const output = this.$output.value;
+    if (!output || !tracks.length) return;
+
+    const col = output.playlistItems.collection();
+    const existing = col.state === "loaded" ? col.data : [];
+
+    const transformations = /** @type {string[]} */ (["toLowerCase"]);
+    const now = new Date().toISOString();
+
+    /** @type {import("~/definitions/types.d.ts").PlaylistItem[]} */
+    const newItems = [];
+    let prevId = /** @type {string | undefined} */ (undefined);
+
+    for (const track of tracks) {
+      const id = TID.now();
+      newItems.push(
+        /** @type {import("~/definitions/types.d.ts").PlaylistItem} */ ({
+          $type: "sh.diffuse.output.playlistItem",
+          id,
+          playlist: playlistName,
+          criteria: [
+            {
+              field: "tags.artist",
+              value: /** @type {unknown} */ (track.tags?.artist),
+              transformations,
+            },
+            {
+              field: "tags.title",
+              value: /** @type {unknown} */ (track.tags?.title),
+              transformations,
+            },
+          ],
+          ...(ordered ? { positionedAfter: prevId } : {}),
+          createdAt: now,
+          updatedAt: now,
+        }),
+      );
+      if (ordered) prevId = id;
+    }
+
+    await output.playlistItems.save([...existing, ...newItems]);
+  };
+
   // RENDER
+
+  /**
+   * @param {Function} html
+   */
+  #renderPlaylistPicker(html) {
+    const state = this.#playlistPickerState.value;
+    if (!state) {
+      return html`
+
+      `;
+    }
+
+    const isCreate = state.mode === "create";
+    const groups = this.$groupedPlaylists();
+
+    return html`
+      <div
+        class="picker-overlay"
+        @click="${(/** @type {MouseEvent} */ e) => {
+          if (e.target === e.currentTarget) {
+            this.#playlistPickerState.value = null;
+          }
+        }}"
+      >
+        <div class="window picker-window">
+          <div class="title-bar">
+            <div class="title-bar-text">${isCreate
+              ? `New playlist`
+              : `Add to playlist`}</div>
+            <div class="title-bar-controls">
+              <button aria-label="Close" @click="${() => {
+                this.#playlistPickerState.value = null;
+              }}"></button>
+            </div>
+          </div>
+          <div class="window-body picker-body">
+            ${isCreate
+              ? html`
+                <form
+                  @submit="${async (/** @type {SubmitEvent} */ e) => {
+                    e.preventDefault();
+                    const form =
+                      /** @type {HTMLFormElement} */ (e.currentTarget);
+                    const name =
+                      /** @type {HTMLInputElement} */ (form.elements.namedItem(
+                        `playlist-name`,
+                      ))?.value.trim();
+                    const ordered =
+                      /** @type {HTMLInputElement} */ (form.elements.namedItem(
+                        `playlist-ordered`,
+                      ))?.checked ?? false;
+                    if (!name) return;
+                    await this.createPlaylistWithTracks(
+                      name,
+                      state.tracks,
+                      ordered,
+                    );
+                    this.#playlistPickerState.value = null;
+                  }}"
+                >
+                  <div class="field-row">
+                    <label for="picker-playlist-name">Name:</label>
+                    <input
+                      id="picker-playlist-name"
+                      name="playlist-name"
+                      type="text"
+                      autofocus
+                      required
+                    />
+                  </div>
+                  <div class="field-row">
+                    <input
+                      id="picker-playlist-ordered"
+                      name="playlist-ordered"
+                      type="checkbox"
+                    />
+                    <label for="picker-playlist-ordered">Ordered</label>
+                  </div>
+                  <div class="field-row picker-form-actions">
+                    <button type="submit">Create</button>
+                    <button type="button" @click="${() => {
+                      this.#playlistPickerState.value = {
+                        mode: `add`,
+                        tracks: state.tracks,
+                      };
+                    }}">Back</button>
+                  </div>
+                </form>
+              `
+              : html`
+                <div class="picker-list">
+                  <button
+                    class="picker-item picker-item--create"
+                    @click="${() => {
+                      this.#playlistPickerState.value = {
+                        mode: `create`,
+                        tracks: state.tracks,
+                      };
+                    }}"
+                  >
+                    + Create new playlist
+                  </button>
+                  ${groups.length > 0
+                    ? html`
+                      <hr />
+                    `
+                    : ``} ${groups.map(({ label, playlists }) =>
+                      html`
+                        <div class="picker-group-label">${label}</div>
+                        ${playlists.map((p) =>
+                          html`
+                            <button
+                              class="picker-item"
+                              @click="${async () => {
+                                await this.addTracksToPlaylist(
+                                  p.name,
+                                  state.tracks,
+                                );
+                                this.#playlistPickerState.value = null;
+                              }}"
+                            >
+                              ${p.name}
+                            </button>
+                          `
+                        )}
+                      `
+                    )}
+                </div>
+              `}
+          </div>
+        </div>
+      </div>
+    `;
+  }
 
   /**
    * @param {RenderArg} _
@@ -287,11 +554,25 @@ class Browser extends DiffuseElement {
     const totalHeight = totalTracks * ROW_HEIGHT;
     const topPad = startIndex * ROW_HEIGHT;
 
+    const selectedTrack = highlighted
+      ? tracks.find((t) => t.id === highlighted)
+      : undefined;
+    const isCached = selectedTrack
+      ? this.#cachedUris.value.has(selectedTrack.uri)
+      : false;
+
     return html`
       <link rel="stylesheet" href="vendor/98.css" />
 
       <style>
       @import "./facets/themes/winamp/98-vars.css";
+
+      ::-webkit-scrollbar-button:vertical:start:increment,
+      ::-webkit-scrollbar-button:vertical:end:decrement,
+      ::-webkit-scrollbar-button:horizontal:start:increment,
+      ::-webkit-scrollbar-button:horizontal:end:decrement {
+        display: none;
+      }
 
       :host {
         display: flex;
@@ -377,6 +658,89 @@ class Browser extends DiffuseElement {
       table td {
         overflow: hidden;
         text-overflow: ellipsis;
+      }
+
+      /***********************************
+      * ACTIONS
+      ***********************************/
+
+      .actions-row {
+        flex-wrap: wrap;
+        margin-top: var(--element-spacing);
+      }
+
+      /***********************************
+      * PLAYLIST PICKER
+      ***********************************/
+
+      .picker-overlay {
+        align-items: center;
+        background: rgba(0, 0, 0, 0.4);
+        bottom: 0;
+        display: flex;
+        justify-content: center;
+        left: 0;
+        position: fixed;
+        right: 0;
+        top: 0;
+        z-index: 100;
+      }
+
+      .picker-window {
+        min-width: 240px;
+        max-width: 320px;
+      }
+
+      .picker-body {
+        display: flex;
+        flex-direction: column;
+        gap: 6px;
+
+        form {
+          margin-bottom: 0;
+        }
+      }
+
+      .picker-list {
+        border: 2px inset #dfdfdf;
+        display: flex;
+        flex-direction: column;
+        max-height: 200px;
+        overflow-y: auto;
+        padding: 2px;
+      }
+
+      .picker-item {
+        background: none;
+        border: none;
+        box-shadow: none;
+        cursor: pointer;
+        font-family: "Pixelated MS Sans Serif", Arial, "Apple Color Emoji", "Segoe UI Emoji", "Noto Color Emoji", sans-serif;
+        padding: 2px 4px;
+        text-align: left;
+        width: 100%;
+
+        &:hover {
+          background: var(--dialog-blue);
+          color: #fff;
+        }
+      }
+
+      .picker-item--create {
+        font-style: italic;
+      }
+
+      .picker-group-label {
+        color: gray;
+        font-size: 90%;
+        margin-top: 4px;
+        padding: 0 4px;
+        user-select: none;
+      }
+
+      .picker-form-actions {
+        justify-content: flex-end;
+        margin-top: 4px;
       }
       </style>
 
@@ -470,6 +834,63 @@ class Browser extends DiffuseElement {
           </table>
         </div>
       </div>
+
+      <div class="field-row actions-row">
+        <button
+          ?disabled="${!selectedTrack}"
+          @click="${() => {
+            if (!selectedTrack) return;
+            this.$queue.value?.add({
+              inFront: true,
+              trackIds: [selectedTrack.id],
+            });
+          }}"
+        >
+          Play next
+        </button>
+        <button
+          ?disabled="${!selectedTrack}"
+          @click="${() => {
+            if (!selectedTrack) return;
+            this.$queue.value?.add({ trackIds: [selectedTrack.id] });
+          }}"
+        >
+          Add to queue
+        </button>
+        <button
+          ?disabled="${!selectedTrack}"
+          @click="${() => {
+            if (!selectedTrack) return;
+            this.#playlistPickerState.value = {
+              mode: `add`,
+              tracks: [selectedTrack],
+            };
+          }}"
+        >
+          Add to playlist
+        </button>
+        ${this.$input.value
+          ? html`
+            <button
+              ?disabled="${!selectedTrack}"
+              @click="${async () => {
+                if (!selectedTrack) return;
+                if (isCached) {
+                  await this.$input.value?.removeFromCache([selectedTrack.uri]);
+                } else {
+                  await this.$input.value?.cache([selectedTrack.uri]);
+                }
+                const updated = await this.$input.value?.listCached();
+                if (updated) this.#cachedUris.value = new Set(updated);
+              }}"
+            >
+              ${isCached ? `Remove from cache` : `Store in cache`}
+            </button>
+          `
+          : ``}
+      </div>
+
+      ${this.#renderPlaylistPicker(html)}
     `;
   }
 }
