@@ -34,7 +34,7 @@ const process = (
 ) => /** @type {ActionsWithTunnel<Actions>["process"]} */ (async (
   { data, ports },
 ) => {
-  const cachedTracks = data;
+  const { tracks: cachedTracks, disabledUris } = data;
 
   // Reset progress
   $progress.value = { processed: 0, total: 0 };
@@ -48,13 +48,19 @@ const process = (
   ports.input.start();
   ports.metadata.start();
 
-  // List
-  const tracks = await input.list(cachedTracks);
+  // Split disabled tracks out — they are preserved as-is and skipped for listing/metadata
+  const isDisabled = (/** @type {Track} */ t) =>
+    disabledUris.some((/** @type {string} */ uri) => t.uri.startsWith(uri));
+  const disabledTracks = cachedTracks.filter(isDisabled);
+  const enabledCachedTracks = cachedTracks.filter((t) => !isDisabled(t));
+
+  // List from enabled sources only
+  const tracks = await input.list(enabledCachedTracks);
 
   // Persist the full track list immediately so that an interrupted metadata
   // processing run doesn't lose discovered tracks. On next run they'll come
   // back as cachedTracks and only the ones without metadata need reprocessing.
-  announce("list", tracks, context);
+  announce("list", [...tracks, ...disabledTracks], context);
 
   // Reset progress
   $progress.value = { processed: 0, total: tracks.length };
@@ -91,12 +97,14 @@ const process = (
     Promise.resolve([]),
   );
 
+  const allTracks = [...tracksWithMetadata, ...disabledTracks];
+
   // Changed?
-  const diff = deepDiff.diff(tracksWithMetadata, cachedTracks);
+  const diff = deepDiff.diff(allTracks, cachedTracks);
   const changed = !!diff;
 
   // Save if changed
-  if (changed) return tracksWithMetadata;
+  if (changed) return allTracks;
   return null;
 });
 

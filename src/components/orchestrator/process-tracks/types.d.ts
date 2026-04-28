@@ -6,6 +6,6 @@ export type Progress = {
 };
 
 export type Actions = {
-  process: (tracks: Track[]) => Promise<Track[] | null>;
+  process: (args: { tracks: Track[]; disabledUris: string[] }) => Promise<Track[] | null>;
   progress: () => Progress;
 };

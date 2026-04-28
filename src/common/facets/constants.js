@@ -18,11 +18,13 @@ export const STARTING_SET_URIS = [
   "facets/data/sources/index.html",
   "facets/themes/blur/artwork-controller/facet/index.html",
 
-  // PRELUDES
+  // PRELUDES (BASE)
   "facets/data/metadata-bundle/index.html",
   "facets/data/artwork-bundle/index.html",
   "facets/data/input-bundle/index.html",
   "facets/data/output-bundle/index.html",
+
+  // PRELUDES
   "facets/data/process-tracks/prelude/index.html",
   "facets/misc/scrobble/index.html",
   "facets/playback/auto-queue/prelude/index.html",

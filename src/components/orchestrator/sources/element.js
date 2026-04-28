@@ -6,6 +6,7 @@ import { groupTracksPerScheme } from "~/common/utils.js";
 import { signal } from "~/common/signal.js";
 
 import { DISABLED_KEY } from "./constants.js";
+import { parseDisabledUris, uriKey } from "./common.js";
 
 /**
  * @import {InputElement, Source} from "~/components/input/types.d.ts"
@@ -41,17 +42,14 @@ class Sources extends BroadcastableDiffuseElement {
    * @returns {boolean}
    */
   isDisabled(uri) {
-    const q = uri.indexOf("?");
-    const key = q === -1 ? uri : uri.slice(0, q);
-    return this.#disabled.get().includes(key);
+    return this.#disabled.get().includes(uriKey(uri));
   }
 
   /**
    * @param {string} uri
    */
   async toggle(uri) {
-    const q = uri.indexOf("?");
-    const key = q === -1 ? uri : uri.slice(0, q);
+    const key = uriKey(uri);
 
     const output = this.#output.value;
     if (!output) {
@@ -62,16 +60,7 @@ class Sources extends BroadcastableDiffuseElement {
     const settings = await Output.data(output.settings);
     const existing = settings.find((s) => s.key === DISABLED_KEY);
 
-    /** @type {string[]} */
-    let disabled = [];
-    if (existing) {
-      try {
-        const parsed = JSON.parse(existing.value);
-        disabled = Array.isArray(parsed) ? parsed : [];
-      } catch {
-        disabled = [];
-      }
-    }
+    let disabled = parseDisabledUris(settings);
 
     if (disabled.includes(key)) {
       disabled = disabled.filter((u) => u !== key);
@@ -124,14 +113,7 @@ class Sources extends BroadcastableDiffuseElement {
     this.effect(() => {
       const col = output.settings.collection();
       if (col.state !== "loaded") { this.#disabled.value = []; return; }
-      const setting = col.data.find((s) => s.key === DISABLED_KEY);
-      if (!setting) { this.#disabled.value = []; return; }
-      try {
-        const parsed = JSON.parse(setting.value);
-        this.#disabled.value = Array.isArray(parsed) ? parsed : [];
-      } catch {
-        this.#disabled.value = [];
-      }
+      this.#disabled.value = parseDisabledUris(col.data);
     });
 
     // Single input mode + dependencies

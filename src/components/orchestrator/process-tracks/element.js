@@ -7,6 +7,8 @@ import { data, mergeTracks } from "~/common/output.js";
 import { signal, untracked } from "~/common/signal.js";
 import { listen } from "~/common/worker.js";
 
+import { parseDisabledUris } from "~/components/orchestrator/sources/common.js";
+
 /**
  * @import {ProxiedActions} from "~/common/worker.d.ts"
  * @import {InputElement} from "~/components/input/types.d.ts"
@@ -199,7 +201,11 @@ class ProcessTracksOrchestrator extends BroadcastableDiffuseElement {
     console.log("🪵 Processing initiated");
 
     const cachedTracks = await data(this.output.tracks);
-    const result = await this.#proxy.process(cachedTracks);
+
+    const settings = await data(this.output.settings);
+    const disabledUris = parseDisabledUris(settings);
+
+    const result = await this.#proxy.process({ tracks: cachedTracks, disabledUris });
 
     if (result) {
       await this.output.tracks.save(mergeTracks(cachedTracks, result));
