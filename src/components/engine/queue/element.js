@@ -26,6 +26,7 @@ class QueueEngine extends DiffuseElement {
 
     this.add = this.proxy.add;
     this.clear = this.proxy.clear;
+    this.expel = this.proxy.expel;
     this.fill = this.proxy.fill;
     this.move = this.proxy.move;
     this.shift = this.proxy.shift;

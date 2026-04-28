@@ -6,6 +6,7 @@ export type Actions = {
    * Clear the `future()` items.
    */
   clear: (args: { keepManual?: boolean }) => void;
+  expel: (args: { key: string }) => void;
   fill: (
     args: {
       /** Always keep adding, even if the amount of non-manual items in the queue are passed the given `amount` */
@@ -14,7 +15,7 @@ export type Actions = {
       shuffled: boolean;
     },
   ) => void;
-  move: (args: { from: number; to: number }) => void;
+  move: (args: { key: string; to: number }) => void;
   shift: () => void;
   supply: (args: { trackIds: string[] }) => void;
   unshift: () => void;
@@ -22,6 +23,7 @@ export type Actions = {
 
 export type Item = {
   id: string;
+  key: string;
   manualEntry: boolean;
 };
 

@@ -139,7 +139,7 @@ effect(() => {
                   title="Move up"
                   ?disabled="${i === 0}"
                   @click="${() =>
-                    queue.move({ from: offset + i, to: offset + i - 1 })}"
+                    queue.move({ key: item.key, to: offset + i - 1 })}"
                 >
                   <i class="ph-bold ph-arrow-up"></i>
                 </button>
@@ -148,7 +148,7 @@ effect(() => {
                   title="Move down"
                   ?disabled="${i === future.length - 1}"
                   @click="${() =>
-                    queue.move({ from: offset + i, to: offset + i + 1 })}"
+                    queue.move({ key: item.key, to: offset + i + 1 })}"
                 >
                   <i class="ph-bold ph-arrow-down"></i>
                 </button>

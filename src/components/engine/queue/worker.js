@@ -11,6 +11,9 @@ import { xxh32 } from "xxh32";
 // STATE
 ////////////////////////////////////////////
 
+let _key = 0;
+const nextKey = () => String(++_key);
+
 /** Ordered list of available track IDs. */
 export const $lake = signal(/** @type {string[]} */ ([]));
 
@@ -71,7 +74,7 @@ export const $supplyFingerprint = signal(
  */
 export function add({ inFront, trackIds }) {
   const items = trackIds.map((id) => {
-    return { id, manualEntry: true };
+    return { id, key: nextKey(), manualEntry: true };
   });
 
   if (inFront) {
@@ -126,6 +129,85 @@ export function clear({ keepManual }) {
 }
 
 /**
+ * @type {Actions['expel']}
+ *
+ * @example Removes an item from the future by key
+ * ```js
+ * import { expel, $future } from "~/components/engine/queue/worker.js";
+ *
+ * $future.value = [
+ *   { id: "a", key: "1", manualEntry: true },
+ *   { id: "b", key: "2", manualEntry: true },
+ * ];
+ *
+ * expel({ key: "1" });
+ *
+ * if ($future.value.length !== 1) throw new Error("expected 1 item remaining");
+ * if ($future.value[0].id !== "b") throw new Error("expected 'b' to remain");
+ * ```
+ *
+ * @example Removes the now-playing item by key, setting now to null
+ * ```js
+ * import { expel, $now } from "~/components/engine/queue/worker.js";
+ *
+ * $now.value = { id: "a", key: "1", manualEntry: false };
+ *
+ * expel({ key: "1" });
+ *
+ * if ($now.value !== null) throw new Error("expected now to be null");
+ * ```
+ *
+ * @example Removes an item from the past by key
+ * ```js
+ * import { expel, $past } from "~/components/engine/queue/worker.js";
+ *
+ * $past.value = [
+ *   { id: "a", key: "1", manualEntry: false },
+ *   { id: "b", key: "2", manualEntry: false },
+ * ];
+ *
+ * expel({ key: "1" });
+ *
+ * if ($past.value.length !== 1) throw new Error("expected 1 item remaining");
+ * if ($past.value[0].id !== "b") throw new Error("expected 'b' to remain");
+ * ```
+ *
+ * @example Does nothing for an unknown key
+ * ```js
+ * import { expel, $past, $now, $future } from "~/components/engine/queue/worker.js";
+ *
+ * $past.value = [{ id: "a", key: "1", manualEntry: false }];
+ * $now.value = { id: "b", key: "2", manualEntry: false };
+ * $future.value = [{ id: "c", key: "3", manualEntry: false }];
+ *
+ * expel({ key: "z" });
+ *
+ * if ($past.value.length !== 1) throw new Error("past should be unchanged");
+ * if ($now.value?.id !== "b") throw new Error("now should be unchanged");
+ * if ($future.value.length !== 1) throw new Error("future should be unchanged");
+ * ```
+ */
+export function expel({ key }) {
+  const pastIdx = $past.value.findIndex((i) => i.key === key);
+  if (pastIdx !== -1) {
+    const p = [...$past.value];
+    p.splice(pastIdx, 1);
+    $past.value = p;
+    return;
+  }
+  if ($now.value?.key === key) {
+    $now.value = null;
+    return;
+  }
+  const futureIdx = $future.value.findIndex((i) => i.key === key);
+  if (futureIdx !== -1) {
+    const f = [...$future.value];
+    f.splice(futureIdx, 1);
+    $future.value = f;
+  }
+}
+
+/**
  * @type {Actions['fill']}
  */
 export function fill({ augment, amount, shuffled }) {
@@ -147,12 +229,12 @@ export function fill({ augment, amount, shuffled }) {
  * import { move, $future } from "~/components/engine/queue/worker.js";
  *
  * $future.value = [
- *   { id: "a", manualEntry: true },
- *   { id: "b", manualEntry: true },
- *   { id: "c", manualEntry: true },
+ *   { id: "a", key: "1", manualEntry: true },
+ *   { id: "b", key: "2", manualEntry: true },
+ *   { id: "c", key: "3", manualEntry: true },
  * ];
  *
- * move({ from: 0, to: 2 });
+ * move({ key: "1", to: 2 });
  *
  * if ($future.value[0].id !== "b") throw new Error("expected 'b' first");
  * if ($future.value[1].id !== "c") throw new Error("expected 'c' second");
@@ -164,12 +246,12 @@ export function fill({ augment, amount, shuffled }) {
  * import { move, $future } from "~/components/engine/queue/worker.js";
  *
  * $future.value = [
- *   { id: "a", manualEntry: true },
- *   { id: "b", manualEntry: true },
- *   { id: "c", manualEntry: true },
+ *   { id: "a", key: "1", manualEntry: true },
+ *   { id: "b", key: "2", manualEntry: true },
+ *   { id: "c", key: "3", manualEntry: true },
  * ];
  *
- * move({ from: 2, to: 0 });
+ * move({ key: "3", to: 0 });
  *
  * if ($future.value[0].id !== "c") throw new Error("expected 'c' first");
  * if ($future.value[1].id !== "a") throw new Error("expected 'a' second");
@@ -180,12 +262,12 @@ export function fill({ augment, amount, shuffled }) {
  * ```js
  * import { move, $past, $now, $future } from "~/components/engine/queue/worker.js";
  *
- * $past.value = [{ id: "a", manualEntry: false }];
- * $now.value = { id: "b", manualEntry: false };
- * $future.value = [{ id: "c", manualEntry: false }];
+ * $past.value = [{ id: "a", key: "1", manualEntry: false }];
+ * $now.value = { id: "b", key: "2", manualEntry: false };
+ * $future.value = [{ id: "c", key: "3", manualEntry: false }];
  *
  * // flat list is [a(0), b(1), c(2)]; moving c to front → [c, a, b]
- * move({ from: 2, to: 0 });
+ * move({ key: "3", to: 0 });
  *
  * if ($now.value?.id !== "b") throw new Error("now should still be 'b'");
  * if ($past.value[0]?.id !== "c") throw new Error("expected 'c' first in past");
@@ -193,53 +275,86 @@ export function fill({ augment, amount, shuffled }) {
  * if ($future.value.length !== 0) throw new Error("future should be empty");
  * ```
  *
- * @example Does nothing when from equals to
+ * @example Does nothing when the item is already at the target position
  * ```js
  * import { move, $future } from "~/components/engine/queue/worker.js";
  *
- * $future.value = [{ id: "a", manualEntry: true }, { id: "b", manualEntry: true }];
+ * $future.value = [{ id: "a", key: "1", manualEntry: true }, { id: "b", key: "2", manualEntry: true }];
  *
- * move({ from: 1, to: 1 });
+ * move({ key: "2", to: 1 });
  *
  * if ($future.value[0].id !== "a") throw new Error("order should be unchanged");
  * if ($future.value[1].id !== "b") throw new Error("order should be unchanged");
  * ```
  *
- * @example Does nothing for out-of-bounds indices
+ * @example Does nothing for out-of-bounds target or unknown key
  * ```js
  * import { move, $future } from "~/components/engine/queue/worker.js";
  *
- * $future.value = [{ id: "a", manualEntry: true }, { id: "b", manualEntry: true }];
+ * $future.value = [{ id: "a", key: "1", manualEntry: true }, { id: "b", key: "2", manualEntry: true }];
  *
- * move({ from: 0, to: 99 });
+ * move({ key: "1", to: 99 });
+ * move({ key: "z", to: 0 });
  *
  * if ($future.value[0].id !== "a") throw new Error("order should be unchanged");
  * if ($future.value[1].id !== "b") throw new Error("order should be unchanged");
  * ```
  */
-export function move({ from, to }) {
-  const all = [
-    ...$past.value,
-    ...($now.value ? [$now.value] : []),
-    ...$future.value,
-  ];
-
-  if (from === to || from < 0 || to < 0 || from >= all.length || to >= all.length) return;
-
-  const [item] = all.splice(from, 1);
-  all.splice(to, 0, item);
-
+export function move({ key, to }) {
+  const past = $past.value;
   const now = $now.value;
-  if (now) {
-    const nowIdx = all.indexOf(now);
-    $past.value = all.slice(0, nowIdx);
-    $now.value = all[nowIdx] ?? null;
-    $future.value = all.slice(nowIdx + 1);
-  } else {
-    const pastLen = $past.value.length;
-    $past.value = all.slice(0, pastLen);
-    $future.value = all.slice(pastLen);
+  const future = $future.value;
+  const pLen = past.length;
+  const nLen = now ? 1 : 0;
+  const futureStart = pLen + nLen;
+  const total = futureStart + future.length;
+
+  let from = past.findIndex((i) => i.key === key);
+  if (from === -1 && now?.key === key) from = pLen;
+  if (from === -1) {
+    const fi = future.findIndex((i) => i.key === key);
+    if (fi !== -1) from = futureStart + fi;
   }
+
+  if (from === -1 || from === to || to < 0 || to >= total) return;
+
+  // Compute now's new flat index after the move
+  let nowIdx = pLen;
+  if (nLen) {
+    if (from === pLen) nowIdx = to;
+    else if (from < to && pLen > from && pLen <= to) nowIdx = pLen - 1;
+    else if (from > to && pLen >= to && pLen < from) nowIdx = pLen + 1;
+  }
+
+  // Map a post-move flat index back to the original flat index
+  const origIdx = (/** @type {number} */ i) => {
+    if (from < to) {
+      if (i < from) return i;
+      if (i < to) return i + 1;
+      if (i === to) return from;
+    } else {
+      if (i < to) return i;
+      if (i === to) return from;
+      if (i <= from) return i - 1;
+    }
+    return i;
+  };
+
+  const flatGet = (/** @type {number} */ i) => {
+    const j = origIdx(i);
+    return j < pLen ? past[j] : j < futureStart ? now : future[j - futureStart];
+  };
+
+  $past.value =
+    /** @type {Item[]} */ (Array.from(
+      { length: nowIdx },
+      (_, i) => flatGet(i),
+    ));
+  $future.value =
+    /** @type {Item[]} */ (Array.from(
+      { length: total - nowIdx - nLen },
+      (_, i) => flatGet(nowIdx + nLen + i),
+    ));
 }
 
 /**
@@ -343,6 +458,7 @@ ostiary((context, _firstConnection, _connectionId) => {
   rpc(context, {
     add,
     clear,
+    expel,
     fill,
     move,
     shift,
@@ -480,7 +596,7 @@ export function fillSequentially(fillAmount, future) {
     if (currIndex > maxIndex) currIndex = 0;
     const id = $lake.value[currIndex];
     if (id) {
-      autoItems.push({ id, manualEntry: false });
+      autoItems.push({ id, key: nextKey(), manualEntry: false });
     }
     currIndex++;
   }
@@ -554,30 +670,29 @@ export function fillShuffle(fillAmount, future, autoFutureCount) {
   if ($now.value) excludeIds.add($now.value.id);
   future.forEach((i) => excludeIds.add(i.id));
 
-  let pool = $lake.value
-    .filter((id) => !excludeIds.has(id))
-    .map((id) => ({ id, manualEntry: false }));
+  let pool = $lake.value.filter((id) => !excludeIds.has(id));
 
   // Fallback: if everything has been played/is playing/is queued, use tracks not in past or now
   if (pool.length === 0) {
     const pastAndNowIds = new Set($past.value.map((i) => i.id));
     if ($now.value) pastAndNowIds.add($now.value.id);
-    pool = $lake.value
-      .filter((id) => !pastAndNowIds.has(id))
-      .map((id) => ({ id, manualEntry: false }));
+    pool = $lake.value.filter((id) => !pastAndNowIds.has(id));
   }
 
   // Final fallback: everything has been played, use the full lake
   if (pool.length === 0) {
-    pool = $lake.value.map((id) => ({ id, manualEntry: false }));
+    pool = [...$lake.value];
   }
 
-  const poolSelection = arrayShuffle(pool).slice(
+  const selected = arrayShuffle(pool).slice(
     0,
     Math.max(0, fillAmount - autoFutureCount),
   );
 
-  return [...future, ...poolSelection];
+  return [
+    ...future,
+    ...selected.map((id) => ({ id, key: nextKey(), manualEntry: false })),
+  ];
 }
 
 /**

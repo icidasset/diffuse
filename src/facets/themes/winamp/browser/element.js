@@ -52,6 +52,8 @@ class Browser extends DiffuseElement {
   );
 
   $highlightedTrack = signal(/** @type {string | null} */ (null));
+  $highlightedTracks = signal(/** @type {Set<string>} */ (new Set()));
+  #anchorTrackId = /** @type {string | null} */ (null);
 
   $input = signal(
     /** @type {import("~/components/configurator/input/element.js").CLASS | undefined} */ (undefined),
@@ -554,12 +556,11 @@ class Browser extends DiffuseElement {
     const totalHeight = totalTracks * ROW_HEIGHT;
     const topPad = startIndex * ROW_HEIGHT;
 
-    const selectedTrack = highlighted
-      ? tracks.find((t) => t.id === highlighted)
-      : undefined;
-    const isCached = selectedTrack
-      ? this.#cachedUris.value.has(selectedTrack.uri)
-      : false;
+    const highlightedTracks = this.$highlightedTracks.value;
+    const selectedTracks = tracks.filter((t) => highlightedTracks.has(t.id));
+    const cachedUris = this.#cachedUris.value;
+    const allCached = selectedTracks.length > 0 &&
+      selectedTracks.every((t) => cachedUris.has(t.uri));
 
     return html`
       <link rel="stylesheet" href="vendor/98.css" />
@@ -605,6 +606,7 @@ class Browser extends DiffuseElement {
       .sunken-panel {
         flex: 1;
         min-height: 80px;
+        outline: none;
       }
 
       :host([resizable]) .sunken-panel {
@@ -776,7 +778,37 @@ class Browser extends DiffuseElement {
         </select>
       </search>
 
-      <div class="sunken-panel">
+      <div
+        class="sunken-panel"
+        tabindex="0"
+        @keydown="${(/** @type {KeyboardEvent} */ e) => {
+          if (e.key !== `ArrowUp` && e.key !== `ArrowDown`) return;
+          e.preventDefault();
+          const allTracks = this.$provider.value?.tracks() ?? [];
+          if (allTracks.length === 0) return;
+          const current = this.$highlightedTrack.value;
+          const currentIdx = current
+            ? allTracks.findIndex((t) => t.id === current)
+            : -1;
+          const nextIdx = e.key === `ArrowUp`
+            ? Math.max(0, currentIdx - 1)
+            : Math.min(allTracks.length - 1, currentIdx + 1);
+          const next = allTracks[nextIdx];
+          this.#anchorTrackId = next.id;
+          this.$highlightedTracks.value = new Set([next.id]);
+          this.$highlightedTrack.value = next.id;
+          const panel = this.root().querySelector(`.sunken-panel`);
+          if (panel) {
+            const rowTop = nextIdx * ROW_HEIGHT;
+            const rowBottom = rowTop + ROW_HEIGHT;
+            if (rowTop < panel.scrollTop) {
+              panel.scrollTop = rowTop;
+            } else if (rowBottom > panel.scrollTop + panel.clientHeight) {
+              panel.scrollTop = rowBottom - panel.clientHeight;
+            }
+          }
+        }}"
+      >
         <table class="virtual-header">
           <thead>
             <tr>
@@ -820,8 +852,27 @@ class Browser extends DiffuseElement {
                 : visibleTracks.map((track) =>
                   html`
                     <tr
-                      class="${highlighted === track.id ? `highlighted` : ``}"
-                      @click="${() => this.$highlightedTrack.value = track.id}"
+                      class="${highlightedTracks.has(track.id) ? `highlighted` : ``}"
+                      @click="${(/** @type {MouseEvent} */ e) => {
+                        const idx = startIndex + visibleTracks.indexOf(track);
+                        if (e.shiftKey && this.#anchorTrackId !== null) {
+                          const anchorIdx = tracks.findIndex(
+                            (t) => t.id === this.#anchorTrackId,
+                          );
+                          if (anchorIdx !== -1) {
+                            const from = Math.min(anchorIdx, idx);
+                            const to = Math.max(anchorIdx, idx);
+                            this.$highlightedTracks.value = new Set(
+                              tracks.slice(from, to + 1).map((t) => t.id),
+                            );
+                            this.$highlightedTrack.value = track.id;
+                            return;
+                          }
+                        }
+                        this.#anchorTrackId = track.id;
+                        this.$highlightedTracks.value = new Set([track.id]);
+                        this.$highlightedTrack.value = track.id;
+                      }}"
                       @dblclick="${() => this.playTrack(track)}"
                     >
                       <td>${track.tags?.title}</td>
@@ -837,33 +888,33 @@ class Browser extends DiffuseElement {
 
       <div class="field-row actions-row">
         <button
-          ?disabled="${!selectedTrack}"
+          ?disabled="${selectedTracks.length === 0}"
           @click="${() => {
-            if (!selectedTrack) return;
+            if (selectedTracks.length === 0) return;
             this.$queue.value?.add({
               inFront: true,
-              trackIds: [selectedTrack.id],
+              trackIds: selectedTracks.map((t) => t.id),
             });
           }}"
         >
           Play next
         </button>
         <button
-          ?disabled="${!selectedTrack}"
+          ?disabled="${selectedTracks.length === 0}"
           @click="${() => {
-            if (!selectedTrack) return;
-            this.$queue.value?.add({ trackIds: [selectedTrack.id] });
+            if (selectedTracks.length === 0) return;
+            this.$queue.value?.add({ trackIds: selectedTracks.map((t) => t.id) });
           }}"
         >
           Add to queue
         </button>
         <button
-          ?disabled="${!selectedTrack}"
+          ?disabled="${selectedTracks.length === 0}"
           @click="${() => {
-            if (!selectedTrack) return;
+            if (selectedTracks.length === 0) return;
             this.#playlistPickerState.value = {
               mode: `add`,
-              tracks: [selectedTrack],
+              tracks: selectedTracks,
             };
           }}"
         >
@@ -872,19 +923,20 @@ class Browser extends DiffuseElement {
         ${this.$input.value
           ? html`
             <button
-              ?disabled="${!selectedTrack}"
+              ?disabled="${selectedTracks.length === 0}"
               @click="${async () => {
-                if (!selectedTrack) return;
-                if (isCached) {
-                  await this.$input.value?.removeFromCache([selectedTrack.uri]);
+                if (selectedTracks.length === 0) return;
+                const uris = selectedTracks.map((t) => t.uri);
+                if (allCached) {
+                  await this.$input.value?.removeFromCache(uris);
                 } else {
-                  await this.$input.value?.cache([selectedTrack.uri]);
+                  await this.$input.value?.cache(uris);
                 }
                 const updated = await this.$input.value?.listCached();
                 if (updated) this.#cachedUris.value = new Set(updated);
               }}"
             >
-              ${isCached ? `Remove from cache` : `Store in cache`}
+              ${allCached ? `Remove from cache` : `Store in cache`}
             </button>
           `
           : ``}
