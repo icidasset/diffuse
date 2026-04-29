@@ -75,19 +75,16 @@
         <span slot="title">Browse collection</span>
 
         <dtw-browser
-          output-selector="#output"
+          output-selector="do-output"
           queue-engine-selector="de-queue"
           scope-engine-selector="de-scope"
           tracks-selector="do-scoped-tracks"
-          input-selector="#input"
+          input-selector="dc-input"
         ></dtw-browser>
       </dtw-window>
 
       <!-- 🖼️ -->
-      <dtw-window
-        id="artwork-window"
-        window-style="min-width: 0; width: 275px; height: 275px;"
-      >
+      <dtw-window id="artwork-window" window-style="min-width: 0; width: 275px; height: 275px;">
         <span slot="title-icon"
           ><img src="images/icons/windows_98/imagwmf-1.png" height="14"
         /></span>

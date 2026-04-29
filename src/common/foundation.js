@@ -212,7 +212,6 @@ async function configuratorArtwork() {
 
   const ac = new ArtworkConfigurator();
   ac.setAttribute("group", GROUP);
-  ac.setAttribute("id", "artwork");
 
   return findExistingOrAdd(ac, signals.configurator.artwork);
 }
@@ -224,7 +223,6 @@ async function configuratorMetadata() {
 
   const mc = new MetadataConfigurator();
   mc.setAttribute("group", GROUP);
-  mc.setAttribute("id", "metadata");
 
   return findExistingOrAdd(mc, signals.configurator.metadata);
 }
@@ -236,7 +234,6 @@ async function input() {
 
   const i = new InputConfigurator();
   i.setAttribute("group", GROUP);
-  i.setAttribute("id", "input");
 
   return findExistingOrAdd(i, signals.configurator.input);
 }
@@ -251,7 +248,6 @@ async function scrobbles() {
 
   const sc = new ScrobblesConfigurator();
   sc.setAttribute("group", GROUP);
-  sc.setAttribute("id", "scrobbles");
 
   const existing = document.body.querySelector(sc.selector);
 
@@ -412,7 +408,6 @@ async function output(options) {
 
   const o = new OutputOrchestrator();
   o.setAttribute("group", GROUP);
-  o.setAttribute("id", "output");
 
   if (options?.namespace) o.setAttribute("namespace", options.namespace);
 

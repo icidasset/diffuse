@@ -30,7 +30,7 @@ const { default: WinampElement } = await import(
 );
 
 /** @type {OutputElement | null} */
-const output = document.querySelector("#output");
+const output = document.querySelector("do-output");
 if (!output) throw new Error("Missing output element");
 
 globalThis.queue = queue;

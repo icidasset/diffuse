@@ -29,20 +29,20 @@
 
 <main>
   <db-browser
-    output-selector="#output"
+    output-selector="do-output"
     tracks-selector="do-scoped-tracks"
     queue-engine-selector="de-queue"
     scope-engine-selector="de-scope"
     favourites-orchestrator-selector="do-favourites"
     artwork-selector="do-artwork"
     cover-groups-orchestrator-selector="do-cover-groups"
-    input-selector="#input"
+    input-selector="dc-input"
   ></db-browser>
 
   <db-artwork-controller
     artwork-selector="do-artwork"
     controller-orchestrator-selector="do-controller"
-    input-selector="#input"
+    input-selector="dc-input"
     favourites-orchestrator-selector="do-favourites"
     repeat-shuffle-engine-selector="de-repeat-shuffle"
   ></db-artwork-controller>
