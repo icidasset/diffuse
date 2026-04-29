@@ -1,5 +1,3 @@
-import type { RequestHandler } from "lume/core/server.ts";
-
 import { dotenvRun } from "@dotenv-run/esbuild";
 import lume from "lume/mod.ts";
 
@@ -15,6 +13,8 @@ import { nodeModulesPolyfillPlugin } from "esbuild-plugins-node-modules-polyfill
 import { wasmLoader } from "esbuild-plugin-wasm";
 import autoprefixer from "autoprefixer";
 import cssnano from "cssnano";
+
+import { Uint8ArrayReader, Uint8ArrayWriter, ZipWriter } from "@zip-js/zip-js";
 
 import { create as createCID } from "~/common/cid.js";
 
@@ -134,7 +134,7 @@ site.add([".js"]);
 
 // *.inline.js files are inlined into their companion HTML at build/serve time.
 // Exclude them from the regular build so esbuild doesn't try to bundle them.
-site.ignore((p) => p.endsWith(".inline.js"));
+site.ignore((p) => p.endsWith(".inline.js") || p.endsWith("SKILL.md"));
 
 ////////////////////////////////////////////
 // CSS
@@ -277,13 +277,6 @@ site.add([".html"]);
 site.add([".json"]);
 site.add([".webmanifest"]);
 
-site.remoteFile(
-  "architecture.txt",
-  import.meta.resolve("./docs/ARCHITECTURE.md"),
-);
-
-site.add("architecture.txt");
-
 site.script("copy-type-defs", () => {
   for (
     const f of walkSync(
@@ -298,8 +291,37 @@ site.script("copy-type-defs", () => {
   }
 });
 
-site.addEventListener("afterBuild", () => {
-  // site.run("copy-type-defs");
+// SKILLS
+
+site.remoteFile(
+  "skills/diffuse-facet/docs/architecture.txt",
+  import.meta.resolve("./docs/ARCHITECTURE.md"),
+);
+
+site.remoteFile(
+  "skills/diffuse-facet/example/index.html",
+  import.meta.resolve("./src/facets/data/sources/index.html"),
+);
+
+site.add("skills/diffuse-facet/docs/architecture.txt");
+site.add("skills/diffuse-facet/example/index.html");
+site.add("/definitions", "/skills/diffuse-facet/docs/definitions");
+site.copy("skills/diffuse-facet/SKILL.md");
+site.add("skills");
+
+site.addEventListener("afterBuild", async () => {
+  const skillsDir = "dist/skills/diffuse-facet";
+  const zipWriter = new ZipWriter(new Uint8ArrayWriter());
+
+  for (const entry of walkSync(skillsDir, { includeDirs: false })) {
+    if (entry.path.endsWith(".br")) continue;
+    await zipWriter.add(
+      "diffuse-facet/" + entry.path.slice(skillsDir.length + 1),
+      new Uint8ArrayReader(Deno.readFileSync(entry.path)),
+    );
+  }
+
+  Deno.writeFileSync("dist/skills/diffuse-facet.zip", await zipWriter.close());
 });
 
 ////////////////////////////////////////////
