@@ -299,11 +299,17 @@ site.remoteFile(
 );
 
 site.remoteFile(
+  "skills/diffuse-facet/docs/foundation.js",
+  import.meta.resolve("./src/common/foundation.js"),
+);
+
+site.remoteFile(
   "skills/diffuse-facet/example/index.html",
   import.meta.resolve("./src/facets/data/sources/index.html"),
 );
 
 site.add("skills/diffuse-facet/docs/architecture.txt");
+site.add("skills/diffuse-facet/docs/foundation.js");
 site.add("skills/diffuse-facet/example/index.html");
 site.add("/definitions", "/skills/diffuse-facet/docs/definitions");
 site.copy("skills/diffuse-facet/SKILL.md");

@@ -2,7 +2,7 @@
 name: diffuse-facet
 description: Create an interface or feature facet for Diffuse
 user-invocable: true
-version: 0.1.0
+version: 0.2.0
 ---
 
 Create a Diffuse facet and produce the HTML ready to paste into the `create/` page.
@@ -13,6 +13,7 @@ Use the read tool to read these files:
 
 - `docs/architecture.txt` — system overview, facet rules, foundation API
 - `docs/elements.txt` — all available custom elements with code examples
+- `docs/foundation.js` — the foundation code mentioned throughout this document
 - `example/index.html` — a representative interface facet to use as a reference
 - Any specific definition you need (e.g. `docs/definitions/output/track.json` for the track schema)
 - `docs/definitions/index.ts` — TypeScript types for all data structures
@@ -85,34 +86,7 @@ Facets are HTML fragments (no `<!doctype>`, `<html>`, or `<head>`). The loader i
 
 For a centered or full-screen layout (player, dialog, etc.) override `body` and `main` in the facet's `<style>` block directly.
 
-### Foundation API quick reference
-
-```js
-// Engines
-const audio         = await foundation.engine.audio();
-const queue         = await foundation.engine.queue();
-const repeatShuffle = await foundation.engine.repeatShuffle();
-
-// Configurators
-const inputCfg    = await foundation.configurator.input();
-const metadataCfg = await foundation.configurator.metadata();
-
-// Orchestrators
-const output        = await foundation.orchestrator.output();
-const sources       = await foundation.orchestrator.sources();
-const controller    = await foundation.orchestrator.controller();
-const queueAudio    = await foundation.orchestrator.queueAudio();
-const mediaSession  = await foundation.orchestrator.mediaSession();
-const processTracks = await foundation.orchestrator.processTracks({ disableWhenReady: false });
-const favourites    = await foundation.orchestrator.favourites();
-const artwork       = await foundation.orchestrator.artwork();
-const scopedTracks  = await foundation.orchestrator.scopedTracks();
-const autoQueue     = await foundation.orchestrator.autoQueue();
-```
-
-Though make sure to check the mentioned foundation js file for the latest code.
-
-Typical playback bootstrap:
+### Example foundation usage
 
 ```js
 await foundation.orchestrator.queueAudio();
@@ -133,18 +107,18 @@ Signals are used for reactivity, see the `~/common/signal.js` javascript file fo
 
 ```js
 effect(() => {
-  const track      = ctl.currentTrack();   // computed — call like a fn
-  const isPlaying  = ctl.isPlaying();
-  const audioState = ctl.audio();          // AudioStateReadOnly | undefined
+  const track = ctl.currentTrack(); // computed — call like a fn
+  const isPlaying = ctl.isPlaying();
+  const audioState = ctl.audio(); // AudioStateReadOnly | undefined
 
   if (audioState) {
-    const progress = audioState.progress();   // 0–1
-    const current  = audioState.currentTime();
+    const progress = audioState.progress(); // 0–1
+    const current = audioState.currentTime();
     const duration = audioState.duration();
   }
 
-  const now    = queue.now();     // SignalReader — call like a fn
-  const past   = queue.past();
+  const now = queue.now(); // SignalReader — call like a fn
+  const past = queue.past();
   const future = queue.future();
 });
 ```
@@ -155,9 +129,16 @@ effect(() => {
 audio.play({ audioId: queue.now().id });
 audio.pause({ audioId: queue.now().id });
 audio.seek({ audioId: queue.now().id, percentage: 0.5 }); // 0–1
-queue.shift();    // next track
-queue.unshift();  // previous track
+queue.shift(); // next track
+queue.unshift(); // previous track
 ```
+
+### Additional requirements and notes
+
+- When working with track lists, realise that there could be a huge number of tracks that you need to work with (eg. 20000 tracks). You can use `~/vendor/@tanstack/virtual-core/index.js` for this.
+- Prefer the lit-html library as the templating/rendering engine. It is available from `~/vendor/lit-html/index.js` (among some other libraries such as: `idb-keyval`, `throttle-debounce`, several `@atcute` libraries, and `kmenu-core`). Always make sure to use the `~/vendor/` prefix for libraries, you're not working in an enviroment that bundles code.
+- Prefer to fetch the tracks from the `scoped-tracks` orchestrator element.
+- Talking about orchestrators, always prefer to use an orchestrator or another component instead of reimplementing logic yourself.
 
 ## Step 4 — Deliver
 
