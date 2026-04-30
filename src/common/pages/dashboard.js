@@ -272,7 +272,7 @@ function _renderList(output, listEl) {
                   <div id="facet-menu-${c.id}" class="dropdown" popover>
                     <a
                       class="with-icon"
-                      href="code/?id=${encodeURIComponent(c.id)}"
+                      href="create/?id=${encodeURIComponent(c.id)}"
                     >
                       <i class="ph-fill ph-code-block"></i>
                       Edit

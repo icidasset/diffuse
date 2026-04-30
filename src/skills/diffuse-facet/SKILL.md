@@ -5,7 +5,7 @@ user-invocable: true
 version: 0.1.0
 ---
 
-Create a Diffuse facet and produce the HTML ready to paste into the `code/` page.
+Create a Diffuse facet and produce the HTML ready to paste into the `create/` page.
 
 ## Step 1 — Read the docs
 
@@ -161,4 +161,4 @@ queue.unshift();  // previous track
 
 ## Step 4 — Deliver
 
-Output the complete facet HTML in a code block. Tell the user to open the `code/` page in Diffuse, paste it in, and load it.
+Output the complete facet HTML in a code block. Tell the user to open the `create/` page in Diffuse, paste it in, and load it.

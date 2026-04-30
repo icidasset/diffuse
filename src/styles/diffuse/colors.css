@@ -22,7 +22,7 @@
   --text-color: var(--color-1);
 
   --border-color: oklch(from var(--text-color) l c h / 0.1);
-  --code-color: oklch(from #fefcf1 l c h);
+  --code-color: oklch(1 0.01 98.09 / 1);
   --form-color: oklch(from var(--bg-color) calc(l - 0.075) c h / 1);
 }
 

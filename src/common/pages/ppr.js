@@ -38,7 +38,7 @@ async function initJsBasedOnPage(url) {
   await Grid.setupOutputIndicator();
 
   switch (path) {
-    case "/code":
+    case "/create":
       Build.renderEditor();
       Build.handleBuildFormSubmit();
       Build.listenForExamplesEdit();

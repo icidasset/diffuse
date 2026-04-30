@@ -1,7 +1,7 @@
 .code-editor {
   font-size: var(--fs-sm);
   /*font-size: calc((var(--fs-xs) + var(--fs-sm)) / 2);*/
-  height: var(--container-md);
+  height: var(--container-sm);
 }
 
 .code-editor .cm-editor {
@@ -11,6 +11,10 @@
   .cm-selectionBackground,
   &::selection {
     background: var(--accent-mark) !important;
+  }
+
+  &.cm-focused {
+    outline: none;
   }
 
   .cm-content {

@@ -1,7 +1,7 @@
 ---
 layout: layouts/kitchen.vto
 base: ../
-title: Code | Diffuse
+title: Create | Diffuse
 
 examples:
   - url: "facets/examples/now-playing/index.html"
@@ -22,7 +22,7 @@ examples:
 </style>
 
 
-<h1 id="code" hidden>Code</h1>
+<h1 id="create" hidden>Create</h1>
 
 
 <!-- BUILD -->
@@ -35,18 +35,18 @@ examples:
 
     <div style="flex: 1; font-size: var(--fs-sm); max-width: var(--container-sm)">
       <p style="margin-top: 0">
-        Your code here builds on the <a href="#foundation">foundation</a> listed below, and will be injected into a <span style="white-space: nowrap"><code>&lt;div id="container"&gt;</code></span> element in the body.
+        <label for="name-input">Name</label>
+        <input id="name-input" type="text" placeholder="Name" name="name" value="New facet" required />
       </p>
       <p>
-        <input id="name-input" type="text" placeholder="Name" name="name" required />
-      </p>
-      <p>
+        <label for="kind-input">Kind</label>
         <select id="kind-input" name="kind">
-          <option value="interactive" selected>Interactive</option>
-          <option value="prelude">Prelude</option>
+          <option value="interactive" selected>Interactive (Interface)</option>
+          <option value="prelude">Prelude (Feature)</option>
         </select>
       </p>
       <p>
+        <label for="description-input">Description</label>
         <textarea id="description-input" placeholder="Description" name="description" rows="5"></textarea>
       </p>
       <p>
@@ -59,13 +59,73 @@ examples:
   </form>
 </section>
 
+<!-- GENERATE -->
+<div class="columns">
+  <section class="flex">
+    <h2 id="generate">Generate</h2>
+
+    <p>
+      <strong>You can generate interfaces or features easily using AI.</strong> Diffuse provides a skill to use with LLMs. Claude usage example:
+    </p>
+
+    <ul>
+      <li>
+        <p>
+          <a href="skills/diffuse-facet.zip" class="button" download>Download skill</a>
+        </p>
+      </li>
+      <li>
+        <p>
+          Open up <a href="https://claude.ai/customize/skills" target="_blank">skills screen</a> <small>(Customise tab in sidebar)</small>
+        </p>
+      </li>
+      <li>
+        <p>
+          <span class="with-icon">
+            <i class="ph-bold ph-plus"></i>
+            <span>Create skill</span>
+            <i class="ph-bold ph-arrow-right"></i>
+            <span>Upload skill</span>
+          </span>
+        </p>
+      </li>
+      <li>
+        <p>
+          Select downloaded zip file
+        </p>
+      </li>
+      <li>
+        <p>
+          Try in chat and follow directions
+        </p>
+      </li>
+    </ul>
+  </section>
+
+  <section class="flex">
+    <h2 id="notes">Notes</h2>
+
+    <p>
+      Facets will be injected into a <span style="white-space: nowrap"><code>&lt;div id="container"&gt;</code></span> element in the body.
+    </p>
+    <p>
+      While you have the ability to do whatever you want in a custom facet, the existing facets are designed to work a certain way; so here's some things to keep in mind:
+    </p>
+    <ul>
+      <li><span>Prelude (feature) facets are loaded in alphabetical order by the facet loader.</span></li>
+      <li><span>Most elements are configured in broadcast mode so they communicate across tabs. There are a few exceptions such as inputs, where we prefer parallelisation.</span></li>
+      <li><span>All URLs in a facet are relative to the root of Diffuse (not the root of the server) due to the base element in the header of the facet loader.</span></li>
+    </ul>
+  </section>
+</div>
+
 <!-- FOUNDATION -->
 <div class="columns">
   <section class="flex">
     <h2 id="foundation">Foundation</h2>
 
     <p>
-      <strong>Diffuse comes with a foundation that preconfigures a lot of elements so you don't have to set them up yourself</strong>, along with a combination of elements for certain features. It internally tracks the DOM addition of the custom elements, so no need to worry about setting up an element multiple times. It also provides signals which can be used to track element creations. An example of this can be found in the "scrobbles" feature.
+      <strong>Diffuse comes with a foundation that preconfigures a lot of the built-in Diffuse web components so you don't have to set them up yourself</strong>, along with a combination of components for certain features. It internally tracks the DOM addition of the custom elements, so no need to worry about setting up an element multiple times. It also provides signals which can be used to track element creations. An example of this can be found in the "scrobbles" feature.
     </p>
     <p>
       That said, you are not required not use this! You can, for example, setup a Diffuse audio engine element yourself that's in a different group so that it doesn't communicate with the default one; in case you want to make a dj-deck, or something like that, which would have multiple audio items playing at the same time. This does mean you will need to pay attention to more things, such as, how does this interact with other features the user has enabled.
@@ -107,19 +167,9 @@ examples:
     <h2 id="examples">Examples</h2>
 
     <p>
-      Some simple examples to help you understand how to build your own facet. Click the edit button to load them into the code editor above.
+      Some simple examples to help you understand how to write your own facet. Click the edit button to load them into the code editor above.
     </p>
 
     {{ await comp.examples({ id: "examples", items: examples }) }}
-
-    <h2 id="notes">Notes</h2>
-    <p>
-      While you have the ability to do whatever you want in a custom facet, the existing facets are designed to work a certain way; so here's some things to keep in mind:
-    </p>
-    <ul>
-      <li><span>Prelude (feature) facets are loaded in alphabetical order by the facet loader.</span></li>
-      <li><span>Most elements are configured in broadcast mode so they communicate across tabs. There are a few exceptions such as inputs, where we prefer parallelisation.</span></li>
-      <li><span>All URLs in a facet are relative to the root of Diffuse (not the root of the server) due to the base element in the header of the facet loader.</span></li>
-    </ul>
   </section>
 </div>
