@@ -191,9 +191,9 @@ export async function versionUpgrade() {
   const isDiffuseDomain = document.location.hostname.endsWith("diffuse.sh");
 
   if (!isDiffuseDomain) {
-    // document.querySelectorAll("#status a").forEach((el) => {
-    //   el.classList.add("hidden");
-    // });
+    document.querySelectorAll("#status a").forEach((el) => {
+      el.classList.add("hidden");
+    });
 
     return;
   }
