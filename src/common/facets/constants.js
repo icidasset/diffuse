@@ -16,17 +16,19 @@ export const STARTING_SET_URIS = [
   // INTERACTIVE
   "facets/connect/index.html",
   "facets/data/sources/index.html",
+  "facets/themes/blur/facet/index.html",
   "facets/themes/blur/artwork-controller/facet/index.html",
+  "facets/themes/winamp/facet/index.html",
 
   // PRELUDES (BASE)
   "facets/data/metadata-bundle/index.html",
   "facets/data/artwork-bundle/index.html",
   "facets/data/input-bundle/index.html",
   "facets/data/output-bundle/index.html",
+  "facets/playback/preload/prelude/index.html",
 
   // PRELUDES
   "facets/data/process-tracks/prelude/index.html",
   "facets/misc/scrobble/index.html",
   "facets/playback/auto-queue/prelude/index.html",
-  "facets/playback/preload/prelude/index.html",
 ];

@@ -152,6 +152,7 @@
     "title": "Preload Tracks",
     "kind": "prelude",
     "category": "Playback",
+    "tags": ["base"],
     "desc": "Automatically preload the next track in the queue."
   },
   {
