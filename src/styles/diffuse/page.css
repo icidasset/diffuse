@@ -918,7 +918,7 @@ nav {
   }
 }
 
-.diffuse-logo-container--condensed #status a {
+.diffuse-logo-container--condensed #status a:not(.hidden) {
   opacity: 0.25;
 }
 
