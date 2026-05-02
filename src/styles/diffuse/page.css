@@ -918,6 +918,10 @@ nav {
   }
 }
 
+.diffuse-logo-container--condensed #status a {
+  opacity: 0.25;
+}
+
 /**
  * 😶‍🌫️
  */

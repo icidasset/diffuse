@@ -137,14 +137,22 @@ export function checkIsLatest(versionOrCid, lastArtifact) {
  * }
  * ```
  */
-export function getLatestArtifact(artifacts, { includePrerelease = true } = {}) {
+export function getLatestArtifact(
+  artifacts,
+  { includePrerelease = true } = {},
+) {
   return Object.values(artifacts).reduce(
     /** @param {{ version: string, cid: string } | null} max */
     (max, artifact) => {
       if (!canParse(artifact.version)) return max;
-      if (!includePrerelease && parseSemver(artifact.version).prerelease?.length) return max;
+      if (
+        !includePrerelease && parseSemver(artifact.version).prerelease?.length
+      ) return max;
       if (!max) return artifact;
-      return greaterThan(parseSemver(artifact.version), parseSemver(max.version))
+      return greaterThan(
+          parseSemver(artifact.version),
+          parseSemver(max.version),
+        )
         ? artifact
         : max;
     },
@@ -183,9 +191,9 @@ export async function versionUpgrade() {
   const isDiffuseDomain = document.location.hostname.endsWith("diffuse.sh");
 
   if (!isDiffuseDomain) {
-    document.querySelectorAll("#status a").forEach((el) => {
-      el.classList.add("hidden");
-    });
+    // document.querySelectorAll("#status a").forEach((el) => {
+    //   el.classList.add("hidden");
+    // });
 
     return;
   }
@@ -199,8 +207,8 @@ export async function versionUpgrade() {
     { with: { type: "json" } }
   ).catch(() => ({ default: {} }));
 
-  const currentIsStable =
-    canParse(versionOrCid) && !parseSemver(versionOrCid).prerelease?.length;
+  const currentIsStable = canParse(versionOrCid) &&
+    !parseSemver(versionOrCid).prerelease?.length;
   const lastArtifact = getLatestArtifact(artifacts, {
     includePrerelease: !currentIsStable,
   });
