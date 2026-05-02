@@ -48,7 +48,7 @@ const client_id = isLocalDev
   : /** @type {any} */ (import.meta).env?.ROCKSKY_ATPROTO_CLIENT_ID ??
     "https://elements.diffuse.sh/latest/components/supplement/rocksky/oauth-client-metadata.json";
 
-configureOAuth({
+const OAUTH_CONFIG = {
   metadata: { client_id, redirect_uri },
   storageName: "diffuse/supplement/rocksky/atcute/oauth",
   identityResolver: new LocalActorResolver({
@@ -62,7 +62,9 @@ configureOAuth({
       },
     }),
   }),
-});
+};
+
+configureOAuth(OAUTH_CONFIG);
 
 // LOGIN
 // =====
@@ -74,6 +76,8 @@ configureOAuth({
  * @param {string} handle
  */
 export async function login(handle) {
+  configureOAuth(OAUTH_CONFIG);
+
   sessionStorage.setItem(
     "oauth/callback/redirect_path",
     location.pathname + location.search,
@@ -99,6 +103,8 @@ export async function login(handle) {
  * @returns {Promise<Session | null>}
  */
 export async function restoreOrFinalize() {
+  configureOAuth(OAUTH_CONFIG);
+
   const params = new URLSearchParams(location.hash.slice(1));
 
   if (

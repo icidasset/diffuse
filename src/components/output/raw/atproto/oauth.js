@@ -50,7 +50,7 @@ const client_id = isLocalDev
   : /** @type {any} */ (import.meta).env?.ATPROTO_CLIENT_ID ??
     "https://elements.diffuse.sh/latest/components/output/raw/atproto/oauth-client-metadata.json";
 
-configureOAuth({
+const OAUTH_CONFIG = {
   metadata: {
     client_id,
     redirect_uri,
@@ -67,7 +67,9 @@ configureOAuth({
       },
     }),
   }),
-});
+};
+
+configureOAuth(OAUTH_CONFIG);
 
 // LOGIN
 // =====
@@ -79,6 +81,8 @@ configureOAuth({
  * @param {string} handle
  */
 export async function login(handle) {
+  configureOAuth(OAUTH_CONFIG);
+
   sessionStorage.setItem(
     "oauth/callback/redirect_path",
     location.pathname + location.search,
@@ -104,6 +108,8 @@ export async function login(handle) {
  * @returns {Promise<Session | null>}
  */
 export async function restoreOrFinalize() {
+  configureOAuth(OAUTH_CONFIG);
+
   const location = globalThis.location;
 
   // Check for OAuth callback parameters (the library uses response_mode=fragment,
