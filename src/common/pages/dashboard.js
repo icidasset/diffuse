@@ -38,8 +38,7 @@ const emptyFacetsList = () =>
         You haven't saved anything yet. Add a facet by browsing the <a
           href="featured/"
         >featured ones</a> or any of the other categories. You can click the toggle
-        to quickly add or remove from your collection. Alternatively, add one using
-        an URI:
+        to quickly add or remove from your collection.
       </span>
     </p>
   `;

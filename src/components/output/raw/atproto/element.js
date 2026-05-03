@@ -50,6 +50,9 @@ class ATProtoOutput extends BroadcastedOutputElement {
   /** @type {PromiseWithResolvers<void>} */
   #authenticated = Promise.withResolvers();
 
+  /** @type {PromiseWithResolvers<void>} */
+  #restoreSettled = Promise.withResolvers();
+
   /** @type {Client | null} */
   #rpc = null;
 
@@ -71,6 +74,10 @@ class ATProtoOutput extends BroadcastedOutputElement {
 
     /** @type {OutputManager} */
     this.#manager = outputManager({
+      init: async () => {
+        await this.#restoreSettled.promise;
+        return true;
+      },
       facets: {
         empty: () => [],
         get: () => this.listRecords("sh.diffuse.output.facet"),
@@ -258,6 +265,8 @@ class ATProtoOutput extends BroadcastedOutputElement {
       } else {
         throw err;
       }
+    } finally {
+      this.#restoreSettled.resolve();
     }
   }
 
@@ -290,6 +299,11 @@ class ATProtoOutput extends BroadcastedOutputElement {
     this.#authenticated.resolve();
     this.#startFirehose();
     this.#fetchHandle(session.info.sub);
+
+    this.#manager.facets.reload();
+    this.#manager.playlistItems.reload();
+    this.#manager.settings.reload();
+    this.#manager.tracks.reload();
   }
 
   /**
@@ -300,7 +314,9 @@ class ATProtoOutput extends BroadcastedOutputElement {
     if (!rpc) return;
     try {
       const result = await ok(rpc.get("com.atproto.repo.describeRepo", {
-        params: { repo: /** @type {import("@atcute/lexicons").ActorIdentifier} */ (did) },
+        params: {
+          repo: /** @type {import("@atcute/lexicons").ActorIdentifier} */ (did),
+        },
       }));
       if (this.#did.value === did) {
         this.#handle.value = result.handle ?? null;
@@ -462,7 +478,14 @@ class ATProtoOutput extends BroadcastedOutputElement {
       let cursor;
       do {
         const page = await ok(this.#rpc.get("com.atproto.repo.listRecords", {
-          params: { repo: /** @type {import("@atcute/lexicons").ActorIdentifier} */ (did), collection: /** @type {`${string}.${string}.${string}`} */ (collection), limit: 100, cursor },
+          params: {
+            repo:
+              /** @type {import("@atcute/lexicons").ActorIdentifier} */ (did),
+            collection:
+              /** @type {`${string}.${string}.${string}`} */ (collection),
+            limit: 100,
+            cursor,
+          },
         }));
         records.push(...page.records.map((r) => /** @type {T} */ (r.value)));
         cursor = page.cursor;
@@ -590,7 +613,13 @@ class ATProtoOutput extends BroadcastedOutputElement {
       let cursor;
       do {
         const page = await ok(rpc.get("com.atproto.repo.listRecords", {
-          params: { repo: did, collection: /** @type {`${string}.${string}.${string}`} */ (collection), limit: 100, cursor },
+          params: {
+            repo: did,
+            collection:
+              /** @type {`${string}.${string}.${string}`} */ (collection),
+            limit: 100,
+            cursor,
+          },
         }));
         for (const { uri, value } of page.records) {
           const record = /** @type {any} */ (value);
