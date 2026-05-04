@@ -73,13 +73,16 @@ class ATProtoOutputSyncTransformer extends OutputTransformer {
           const tombstones = this.#getTombstones(name);
           let tombstonesChanged = false;
 
-          const oldCol = await Output.data(l[name]);
-          if (oldCol && Array.isArray(oldCol.data)) {
-            for (const record of oldCol.data) {
-              if (!newIds.has(record.id) && !tombstones.has(record.id)) {
-                tombstones.add(record.id);
-                tombstonesChanged = true;
-              }
+          const existing = l[name].collection();
+          const existingArr =
+            existing.state === "loaded" && Array.isArray(existing.data)
+              ? existing.data
+              : [];
+
+          for (const record of existingArr) {
+            if (!newIds.has(record.id) && !tombstones.has(record.id)) {
+              tombstones.add(record.id);
+              tombstonesChanged = true;
             }
           }
 
@@ -103,7 +106,16 @@ class ATProtoOutputSyncTransformer extends OutputTransformer {
           await l[name].save(newData);
 
           if (remote.ready()) {
-            remote[name].save(newData).then(() => {
+            // Merge with any records added remotely since the last sync so we
+            // don't accidentally overwrite them with our local-only view.
+            const remoteCol = remote[name].collection();
+            const remoteArr =
+              remoteCol.state === "loaded" && Array.isArray(remoteCol.data)
+                ? remoteCol.data
+                : [];
+            const dataForRemote = this.#mergeRecords(name, newData, remoteArr);
+
+            remote[name].save(dataForRemote).then(() => {
               const rev = this.#atproto()?.rev();
               if (rev) this.#storeRev(rev);
               this.#clearDirty();
@@ -265,8 +277,14 @@ class ATProtoOutputSyncTransformer extends OutputTransformer {
       if (tombstones.has(record.id)) continue;
 
       // If this id was previously known but is absent from local,
-      // it was deleted locally — skip it.
-      if (knownIds.has(record.id) && !merged.has(record.id)) continue;
+      // it was deleted locally — skip it. Only apply this heuristic when
+      // localArr is non-empty; an empty localArr could mean the local cache
+      // was cleared rather than the user deleting everything.
+      if (
+        localArr.length > 0 &&
+        knownIds.has(record.id) &&
+        !merged.has(record.id)
+      ) continue;
 
       const existing = merged.get(record.id);
 
