@@ -369,3 +369,9 @@ p,
     opacity: 0.55;
   }
 }
+
+.with-icon {
+  align-items: center;
+  display: inline-flex;
+  gap: var(--space-3xs);
+}

@@ -55,7 +55,7 @@ class DropboxInput extends DiffuseElement {
   // 🛠️
 
   authorize() {
-    sessionStorage.setItem("oauth/callback/redirect_path", location.pathname + location.search);
+    localStorage.setItem("oauth/callback/redirect_path", location.pathname + location.search);
 
     const params = new URLSearchParams({
       response_type: "token",

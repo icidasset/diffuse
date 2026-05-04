@@ -204,6 +204,13 @@ class ATProtoOutput extends BroadcastedOutputElement {
   }
 
   /**
+   * @returns {Promise<void>}
+   */
+  whenRestored() {
+    return this.#restoreSettled.promise;
+  }
+
+  /**
    * Sign out and revoke the current session.
    */
   async logout() {

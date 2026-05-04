@@ -11,4 +11,5 @@ export type ATProtoOutputElement =
     getLatestCommit(): Promise<string | null>;
     login(handle: string): Promise<void>;
     logout(): Promise<void>;
+    whenRestored(): Promise<void>;
   };

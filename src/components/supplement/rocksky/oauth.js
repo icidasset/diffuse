@@ -78,12 +78,12 @@ configureOAuth(OAUTH_CONFIG);
 export async function login(handle) {
   configureOAuth(OAUTH_CONFIG);
 
-  sessionStorage.setItem(
+  localStorage.setItem(
     "oauth/callback/redirect_path",
     location.pathname + location.search,
   );
 
-  sessionStorage.setItem("oauth/pending-client", CLIENT_KEY);
+  localStorage.setItem("oauth/pending-client", CLIENT_KEY);
 
   const authUrl = await createAuthorizationUrl({
     target: { type: "account", identifier: /** @type {any} */ (handle) },
@@ -109,9 +109,9 @@ export async function restoreOrFinalize() {
 
   if (
     params.has("code") &&
-    sessionStorage.getItem("oauth/pending-client") === CLIENT_KEY
+    localStorage.getItem("oauth/pending-client") === CLIENT_KEY
   ) {
-    sessionStorage.removeItem("oauth/pending-client");
+    localStorage.removeItem("oauth/pending-client");
 
     const result = await finalizeAuthorization(params);
 

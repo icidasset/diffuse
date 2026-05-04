@@ -44,6 +44,27 @@ const $passkeyError = signal(/** @type {string | null} */ (null));
 const $passkeyWorking = signal(false);
 
 ////////////////////////////////////////////
+// OAUTH CALLBACK LOADING STATE
+////////////////////////////////////////////
+
+if (true) {
+  litRender(
+    html`
+      <div class="facet__left"></div>
+      <div class="facet__right">
+        <p class="with-icon">
+          <i class="ph-bold ph-spinner animate-spin"></i>
+          Connecting to the Atmosphere
+        </p>
+      </div>
+    `,
+    /** @type {HTMLElement} */ (document.querySelector("main")),
+  );
+
+  await atprotoEl.whenRestored();
+}
+
+////////////////////////////////////////////
 // UI
 ////////////////////////////////////////////
 
