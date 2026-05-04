@@ -17,8 +17,13 @@ main {
 
 ul,
 ol,
-p {
+p,
+label {
   text-wrap: balance;
+
+  a {
+    color: var(--accent-twist-2);
+  }
 }
 
 .facet__left {
