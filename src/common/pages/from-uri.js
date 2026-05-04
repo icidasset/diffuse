@@ -52,7 +52,7 @@ export function openAddFromURIModal() {
               <label>URI</label>
               <input
                 id="add-uri-uri"
-                type="url"
+                type="text"
                 placeholder="at://..."
                 required
                 autocomplete="off"
