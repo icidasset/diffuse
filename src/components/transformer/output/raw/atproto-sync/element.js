@@ -109,11 +109,10 @@ class ATProtoOutputSyncTransformer extends OutputTransformer {
             // Merge with any records added remotely since the last sync so we
             // don't accidentally overwrite them with our local-only view.
             const remoteCol = remote[name].collection();
-            const remoteArr =
+            const dataForRemote =
               remoteCol.state === "loaded" && Array.isArray(remoteCol.data)
-                ? remoteCol.data
-                : [];
-            const dataForRemote = this.#mergeRecords(name, newData, remoteArr);
+                ? this.#mergeRecords(name, newData, /** @type {typeof newData} */ (remoteCol.data))
+                : newData;
 
             remote[name].save(dataForRemote).then(() => {
               const rev = this.#atproto()?.rev();
@@ -137,6 +136,16 @@ class ATProtoOutputSyncTransformer extends OutputTransformer {
       if (!l) return;
 
       this.effect(async () => {
+        if (!remote.ready()) return;
+        if (!(await this.isLeader())) return;
+        this.#sync();
+      });
+
+      // Re-sync when firehose detects a remote change
+      this.effect(async () => {
+        const atproto = this.#atproto();
+        if (!atproto) return;
+        if (!atproto.firehoseRev()) return;
         if (!remote.ready()) return;
         if (!(await this.isLeader())) return;
         this.#sync();
@@ -194,6 +203,23 @@ class ATProtoOutputSyncTransformer extends OutputTransformer {
       const localHasData = localCollections.some(
         (data) => Array.isArray(data) && data.length > 0,
       );
+
+      // Seed knownIds from local data if empty and not dirty.
+      // Handles the case where localStorage was cleared but IndexedDB still
+      // has data — without this, #mergeRecords can't detect remote deletions
+      // (knownIds.has(id) is always false) and deleted records re-appear locally.
+      if (!dirty) {
+        for (let i = 0; i < COLLECTIONS.length; i++) {
+          const name = COLLECTIONS[i];
+          const localData = localCollections[i];
+          if (
+            this.#getKnownIds(name).size === 0 &&
+            Array.isArray(localData) && localData.length > 0
+          ) {
+            this.#trackIds(name, localData);
+          }
+        }
+      }
 
       if (!localHasData && !dirty) {
         // Local is empty and clean — just pull remote

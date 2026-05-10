@@ -246,7 +246,7 @@ export function setup(
                       }}"
                     >
                       <i class="ph-fill ph-skull"></i>
-                      Delete
+                      Disconnect
                     </button>
                   </div>
                 </li>
