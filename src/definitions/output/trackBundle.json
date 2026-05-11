@@ -9,6 +9,7 @@
         "required": ["id", "data"],
         "properties": {
           "id": { "type": "string" },
+          "scheme": { "type": "string" },
           "createdAt": { "type": "string", "format": "datetime" },
           "data": {
             "type": "blob",

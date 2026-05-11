@@ -20,6 +20,14 @@ const COLLECTIONS = /** @type {const} */ ([
   "tracks",
 ]);
 
+/** @type {Record<string, string>} */
+const NSID_TO_COLLECTION = {
+  "sh.diffuse.output.facet": "facets",
+  "sh.diffuse.output.playlistItemBundle": "playlistItems",
+  "sh.diffuse.output.setting": "settings",
+  "sh.diffuse.output.trackBundle": "tracks",
+};
+
 const STORAGE_PREFIX = "diffuse/transformer/output/atproto-sync";
 
 /**
@@ -100,9 +108,6 @@ class ATProtoOutputSyncTransformer extends OutputTransformer {
             );
           }
 
-          // Update known ids
-          this.#trackIds(name, newData);
-
           await l[name].save(newData);
 
           if (remote.ready()) {
@@ -114,6 +119,7 @@ class ATProtoOutputSyncTransformer extends OutputTransformer {
                 ? this.#mergeRecords(name, newData, /** @type {typeof newData} */ (remoteCol.data))
                 : newData;
 
+            this.#markDirty();
             remote[name].save(dataForRemote).then(() => {
               const rev = this.#atproto()?.rev();
               if (rev) this.#storeRev(rev);
@@ -145,10 +151,16 @@ class ATProtoOutputSyncTransformer extends OutputTransformer {
       this.effect(async () => {
         const atproto = this.#atproto();
         if (!atproto) return;
-        if (!atproto.firehoseRev()) return;
+        const firehose = atproto.firehoseRev();
+        if (!firehose) return;
         if (!remote.ready()) return;
         if (!(await this.isLeader())) return;
-        this.#sync();
+        const touched = /** @type {string[]} */ (
+          [...firehose.collections]
+            .map((nsid) => NSID_TO_COLLECTION[nsid])
+            .filter((name) => name !== undefined)
+        );
+        if (touched.length > 0) this.#sync(touched, firehose.rev);
       });
     });
   }
@@ -170,7 +182,11 @@ class ATProtoOutputSyncTransformer extends OutputTransformer {
 
   // SYNC
 
-  async #sync() {
+  /**
+   * @param {readonly string[]} collections
+   * @param {string | null} [knownRev]
+   */
+  async #sync(collections = COLLECTIONS, knownRev = null) {
     if (this.#syncing) return;
     this.#syncing = true;
 
@@ -181,63 +197,51 @@ class ATProtoOutputSyncTransformer extends OutputTransformer {
 
       if (!l || !atproto || !remote.ready()) return;
 
-      const remoteRev = await atproto.getLatestCommit();
+      const isFull = collections === COLLECTIONS;
+      /** @type {Record<string, any>} */
+      const lAny = l;
+      /** @type {Record<string, any>} */
+      const remoteAny = remote;
+
+      const remoteRev = knownRev ?? await atproto.getLatestCommit();
       if (!remoteRev) return;
 
-      const localRev = this.#getStoredRev();
-      const dirty = this.#isDirty();
-
-      if (localRev === remoteRev && !dirty) {
-        return;
+      if (isFull) {
+        const localRev = this.#getStoredRev();
+        const dirty = this.#isDirty();
+        if (localRev === remoteRev && !dirty) return;
       }
 
-      // Fetch remote data
-      for (const name of COLLECTIONS) {
-        await remote[name].reload();
+      // Fetch remote data for the affected collections only
+      for (const name of collections) {
+        await remoteAny[name].reload();
       }
 
       const localCollections = await Promise.all(
-        COLLECTIONS.map((name) => Output.data(l[name])),
+        collections.map((name) => Output.data(lAny[name])),
       );
 
       const localHasData = localCollections.some(
         (data) => Array.isArray(data) && data.length > 0,
       );
 
-      // Seed knownIds from local data if empty and not dirty.
-      // Handles the case where localStorage was cleared but IndexedDB still
-      // has data — without this, #mergeRecords can't detect remote deletions
-      // (knownIds.has(id) is always false) and deleted records re-appear locally.
-      if (!dirty) {
-        for (let i = 0; i < COLLECTIONS.length; i++) {
-          const name = COLLECTIONS[i];
-          const localData = localCollections[i];
-          if (
-            this.#getKnownIds(name).size === 0 &&
-            Array.isArray(localData) && localData.length > 0
-          ) {
-            this.#trackIds(name, localData);
-          }
-        }
-      }
-
-      if (!localHasData && !dirty) {
+      if (!localHasData && !this.#isDirty()) {
         // Local is empty and clean — just pull remote
-        for (const name of COLLECTIONS) {
-          const remoteCol = remote[name].collection();
+        for (const name of collections) {
+          const remoteCol = remoteAny[name].collection();
           if (
             remoteCol.state === "loaded" && Array.isArray(remoteCol.data) &&
             remoteCol.data.length > 0
           ) {
             this.#trackIds(name, remoteCol.data);
-            await l[name].save(remoteCol.data);
+            await lAny[name].save(remoteCol.data);
           }
         }
       } else {
         // Union merge
-        for (const name of COLLECTIONS) {
-          const localCol = l[name].collection();
-          const remoteCol = remote[name].collection();
+        for (const name of collections) {
+          const localCol = lAny[name].collection();
+          const remoteCol = remoteAny[name].collection();
           const localArr =
             localCol.state === "loaded" && Array.isArray(localCol.data)
               ? localCol.data
@@ -249,17 +253,17 @@ class ATProtoOutputSyncTransformer extends OutputTransformer {
 
           const merged = this.#mergeRecords(name, localArr, remoteArr);
 
-          this.#trackIds(name, merged);
-          await l[name].save(merged);
+          await lAny[name].save(merged);
 
           if (this.#differFromRemote(merged, remoteArr)) {
-            await remote[name].save(merged);
+            await remoteAny[name].save(merged);
           }
+          this.#trackIds(name, merged);
         }
       }
 
-      this.#storeRev(atproto.rev());
-      this.#clearDirty();
+      this.#storeRev(atproto.rev() ?? remoteRev);
+      if (isFull) this.#clearDirty();
     } catch (err) {
       console.warn("Sync failed:", err);
     } finally {

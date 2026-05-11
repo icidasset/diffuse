@@ -5,7 +5,7 @@ export type ATProtoOutputElement =
   & OutputElement
   & {
     did: SignalReader<string | null>;
-    firehoseRev: SignalReader<string | null>;
+    firehoseRev: SignalReader<{ rev: string; collections: ReadonlySet<string> } | null>;
     handle: SignalReader<string | null>;
     rev: SignalReader<string | null>;
 

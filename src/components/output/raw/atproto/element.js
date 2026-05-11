@@ -67,18 +67,22 @@ class ATProtoOutput extends BroadcastedOutputElement {
         await this.#restoreSettled.promise;
         return true;
       },
-      facets: {
-        empty: () => [],
-        get: () => this.listRecords("sh.diffuse.output.facet"),
-        put: (data) => this.putRecords("sh.diffuse.output.facet", data),
-      },
-      playlistItems: this.#blobCollection("sh.diffuse.output.playlistItemBundle", { groupBy: "playlist" }),
-      settings: {
-        empty: () => [],
-        get: () => this.listRecords("sh.diffuse.output.setting"),
-        put: (data) => this.putRecords("sh.diffuse.output.setting", data),
-      },
-      tracks: this.#blobCollection("sh.diffuse.output.trackBundle"),
+      facets: this.#recordCollection("sh.diffuse.output.facet"),
+      playlistItems: this.#blobCollection(
+        "sh.diffuse.output.playlistItemBundle",
+        { groupBy: "playlist" },
+      ),
+      settings: this.#recordCollection("sh.diffuse.output.setting"),
+      tracks: this.#blobCollection("sh.diffuse.output.trackBundle", {
+        groupBy: "scheme",
+        keyOf: (item) => {
+          const uri = String(
+            /** @type {Record<string, unknown>} */ (item)["uri"] ?? "",
+          );
+          const colon = uri.indexOf(":");
+          return colon > 0 ? uri.substring(0, colon) : undefined;
+        },
+      }),
     });
 
     this.facets = this.#manager.facets;
@@ -93,7 +97,7 @@ class ATProtoOutput extends BroadcastedOutputElement {
   #handle = signal(/** @type {string | null} */ (null));
   #isOnline = signal(navigator.onLine);
   #rev = signal(/** @type {string | null} */ (null));
-  #firehoseRev = signal(/** @type {string | null} */ (null));
+  #firehoseRev = signal(/** @type {{ rev: string, collections: ReadonlySet<string> } | null} */ (null));
 
   /** @type {AsyncIterator<unknown> | null} */
   #firehoseIterator = null;
@@ -200,7 +204,9 @@ class ATProtoOutput extends BroadcastedOutputElement {
     // original 401 response, which ok() wraps as a ClientResponseError.
     if (err instanceof ClientResponseError && err.status === 401) return true;
     if (err && typeof err === "object" && "cause" in err) {
-      return this.#isSessionError((/** @type {{ cause: unknown }} */ (err)).cause);
+      return this.#isSessionError(
+        (/** @type {{ cause: unknown }} */ (err)).cause,
+      );
     }
     return false;
   }
@@ -304,7 +310,8 @@ class ATProtoOutput extends BroadcastedOutputElement {
   #handleFirehoseCommit(message) {
     if (message.$type !== "com.atproto.sync.subscribeRepos#commit") return;
 
-    const commit = /** @type {{ repo: string, rev: string, ops?: Array<{ path: string }> }} */ (message);
+    const commit =
+      /** @type {{ repo: string, rev: string, ops?: Array<{ path: string }> }} */ (message);
 
     if (commit.repo !== this.#did.value) return;
     if (commit.rev === this.#rev.value) return;
@@ -318,12 +325,7 @@ class ATProtoOutput extends BroadcastedOutputElement {
 
     if (touched.size === 0) return;
 
-    this.#firehoseRev.value = commit.rev;
-
-    if (touched.has("sh.diffuse.output.facet")) this.#manager.facets.reload();
-    if (touched.has("sh.diffuse.output.playlistItemBundle")) this.#manager.playlistItems.reload();
-    if (touched.has("sh.diffuse.output.setting")) this.#manager.settings.reload();
-    if (touched.has("sh.diffuse.output.trackBundle")) this.#manager.tracks.reload();
+    this.#firehoseRev.value = { rev: commit.rev, collections: touched };
   }
 
   /**
@@ -349,34 +351,143 @@ class ATProtoOutput extends BroadcastedOutputElement {
   // RECORDS
 
   /**
-   * Returns `{ empty, get, put }` for a collection stored as CBOR blobs.
-   * When `groupBy` is provided each distinct value of that field gets its own
-   * bundle record; otherwise all items are packed into a single bundle.
-   * Each call gets its own closure-local state.
+   * Returns `{ empty, get, put }` for a small record collection (facets, settings).
+   *
+   * Tracks last-known remote state in closure so `put()` skips the `listRecords`
+   * round-trip on every write. Uses `putRecord` (upsert) to avoid create/update
+   * ambiguity; batches deletes via `applyWrites`.
    *
    * @param {string} nsid
-   * @param {{ groupBy?: string }} [options]
    */
-  #blobCollection(nsid, { groupBy } = {}) {
-    if (groupBy) {
-      /** @type {Map<string, string>} groupKey → content hash */
-      let lastHashes = new Map();
-      /** @type {Map<string, unknown>} groupKey → blob ref */
-      let lastBlobs = new Map();
+  #recordCollection(nsid) {
+    /** @type {Map<string, Record<string, unknown>> | null} */
+    let lastKnown = null;
 
-      return {
+    return {
+      empty: () => [],
+      get: async () => {
+        const records = await this.listRecords(nsid);
+        lastKnown = new Map(
+          /** @type {Array<Record<string, unknown>>} */ (records).map((r) => [
+            String(r["id"]),
+            r,
+          ]),
+        );
+        return records;
+      },
+      put: async (/** @type {unknown[]} */ data) => {
+        const nsidTyped = /** @type {`${string}.${string}.${string}`} */ (nsid);
+
+        /** @type {Map<string, Record<string, unknown>>} */
+        const desired = new Map(
+          /** @type {Array<{ id: string }>} */ (data).map((r) => [
+            r.id,
+            /** @type {Record<string, unknown>} */ ({ $type: nsidTyped, ...r }),
+          ]),
+        );
+
+        const known = lastKnown ?? new Map();
+
+        /** @type {Array<[string, Record<string, unknown>]>} */
+        const upserts = [];
+        for (const [id, record] of desired) {
+          const existing = known.get(id);
+          if (existing && JSON.stringify(existing) === JSON.stringify(record)) {
+            continue;
+          }
+          upserts.push([id, record]);
+        }
+
+        /** @type {WriteOp[]} */
+        const deletes = [];
+        for (const id of known.keys()) {
+          if (!desired.has(id)) {
+            deletes.push({
+              $type: "com.atproto.repo.applyWrites#delete",
+              collection: nsidTyped,
+              rkey: id,
+            });
+          }
+        }
+
+        if (upserts.length === 0 && deletes.length === 0) return;
+
+        const newKnown = new Map(known);
+        for (const [id, record] of upserts) newKnown.set(id, record);
+        for (const { rkey } of deletes) newKnown.delete(rkey);
+
+        const prior = this.#writeCancels.get(nsid);
+        if (prior) prior.cancelled = true;
+        const token = { cancelled: false };
+        this.#writeCancels.set(nsid, token);
+
+        await this.#enqueueWrite(async () => {
+          if (token.cancelled) return;
+          const rpc = this.#rpc;
+          const did = this.#did.value;
+          if (!rpc || !did) return;
+          this.#writing++;
+          try {
+            for (const [rkey, record] of upserts) {
+              const result = await ok(rpc.post("com.atproto.repo.putRecord", {
+                input: { repo: did, collection: nsidTyped, rkey, record },
+              }));
+              if (result?.commit?.rev) this.#rev.value = result.commit.rev;
+            }
+            for (let i = 0; i < deletes.length; i += 100) {
+              const result = await ok(rpc.post("com.atproto.repo.applyWrites", {
+                input: { repo: did, writes: deletes.slice(i, i + 100) },
+              }));
+              if (result?.commit?.rev) this.#rev.value = result.commit.rev;
+            }
+            lastKnown = newKnown;
+          } catch (err) {
+            if (this.#isSessionError(err)) { this.#clearSession(); return; }
+            throw err;
+          } finally {
+            this.#writing--;
+            if (this.#writeCancels.get(nsid) === token) {
+              this.#writeCancels.delete(nsid);
+            }
+          }
+        });
+      },
+    };
+  }
+
+  /**
+   * Returns `{ empty, get, put }` for a collection stored as CBOR blobs.
+   * Each distinct group key gets its own bundle record.
+   *
+   * `groupBy` is the field name stored on the bundle record (used by `get()`
+   * to reconstruct the key). `keyOf` extracts the group key from each item;
+   * defaults to `item[groupBy]` when omitted.
+   *
+   * @param {string} nsid
+   * @param {{ groupBy: string, keyOf?: (item: unknown) => string | undefined }} options
+   */
+  #blobCollection(nsid, { groupBy, keyOf } = /** @type {any} */ ({})) {
+    /** @type {Map<string, string>} groupKey → content hash */
+    let lastHashes = new Map();
+    /** @type {Map<string, unknown>} groupKey → blob ref */
+    let lastBlobs = new Map();
+
+    return {
         empty: () => /** @type {unknown[]} */ ([]),
         get: async () => {
           const bundles = await this.listRecords(nsid);
           /** @type {unknown[]} */
           const items = [];
-          lastHashes = new Map();
-          lastBlobs = new Map();
+          /** @type {Map<string, string>} */
+          const newHashes = new Map();
+          /** @type {Map<string, unknown>} */
+          const newBlobs = new Map();
 
           for (const bundle of bundles) {
             if (!bundle.data?.ref?.$link) continue;
 
-            const key = /** @type {Record<string, unknown>} */ (bundle)[groupBy];
+            const key =
+              /** @type {Record<string, unknown>} */ (bundle)[groupBy];
             if (typeof key !== "string") continue;
 
             const bytes = await this.#fetchBlob(bundle.data.ref.$link);
@@ -384,20 +495,33 @@ class ATProtoOutput extends BroadcastedOutputElement {
             if (!Array.isArray(groupItems)) continue;
 
             items.push(...groupItems);
-            lastHashes.set(key, xxh32r(bytes).toString(16));
-            lastBlobs.set(key, bundle.data);
+            // Hash the re-encoded form so put() compares apples to apples.
+            // Raw PDS bytes may not equal encode(decode(bytes)) if field order
+            // or numeric encoding differs, causing spurious re-uploads.
+            newHashes.set(key, xxh32r(encode(groupItems)).toString(16));
+            newBlobs.set(key, bundle.data);
           }
 
+          // Assign atomically after all fetches complete so a concurrent put()
+          // never sees a partially-populated lastHashes and generates wrong #create ops.
+          lastHashes = newHashes;
+          lastBlobs = newBlobs;
           return items;
         },
         put: async (/** @type {unknown[]} */ data) => {
-          const nsidTyped = /** @type {`${string}.${string}.${string}`} */ (nsid);
+          const nsidTyped =
+            /** @type {`${string}.${string}.${string}`} */ (nsid);
+
+          const extractKey = keyOf ??
+            ((/** @type {unknown} */ item) =>
+              /** @type {string | undefined} */ (
+                /** @type {Record<string, unknown>} */ (item)[groupBy]
+              ));
 
           /** @type {Map<string, unknown[]>} */
           const groups = new Map();
           for (const item of data) {
-            const record = /** @type {Record<string, unknown>} */ (item);
-            const key = record[groupBy];
+            const key = extractKey(item);
             if (typeof key !== "string") continue;
             const group = groups.get(key) ?? [];
             if (!groups.has(key)) groups.set(key, group);
@@ -408,8 +532,9 @@ class ATProtoOutput extends BroadcastedOutputElement {
           const newHashes = new Map(lastHashes);
           const newBlobs = new Map(lastBlobs);
 
-          /** @type {WriteOp[]} */
-          const writes = [];
+          // Upload blobs for changed groups (outside write queue — not a mutation)
+          /** @type {Array<{ rkey: string, value: unknown }>} */
+          const upserts = [];
 
           for (const [key, groupItems] of groups) {
             const bytes = encode(groupItems);
@@ -421,65 +546,74 @@ class ATProtoOutput extends BroadcastedOutputElement {
             if (!blob) continue;
 
             const rkey = xxh32r(encode(key)).toString(16);
-            const value = { $type: nsidTyped, id: rkey, [groupBy]: key, data: blob };
-
-            if (lastHashes.has(key)) {
-              writes.push({ $type: "com.atproto.repo.applyWrites#update", collection: nsidTyped, rkey, value });
-            } else {
-              writes.push({ $type: "com.atproto.repo.applyWrites#create", collection: nsidTyped, rkey, value });
-            }
-
+            const value = {
+              $type: nsidTyped,
+              id: rkey,
+              [groupBy]: key,
+              data: blob,
+            };
+            upserts.push({ rkey, value });
             newHashes.set(key, hash);
             newBlobs.set(key, blob);
           }
 
+          /** @type {WriteOp[]} */
+          const deletes = [];
           for (const key of lastHashes.keys()) {
             if (!groups.has(key)) {
               const rkey = xxh32r(encode(key)).toString(16);
-              writes.push({ $type: "com.atproto.repo.applyWrites#delete", collection: nsidTyped, rkey });
+              deletes.push({
+                $type: "com.atproto.repo.applyWrites#delete",
+                collection: nsidTyped,
+                rkey,
+              });
               newHashes.delete(key);
               newBlobs.delete(key);
             }
           }
 
-          if (writes.length === 0) return;
+          if (upserts.length === 0 && deletes.length === 0) return;
 
-          await this.#applyWriteOps(writes);
+          await this.#enqueueWrite(async () => {
+            const rpc = this.#rpc;
+            const did = this.#did.value;
+            if (!rpc || !did) return;
+            this.#writing++;
+            try {
+              // putRecord is a true upsert — no need to track create vs update
+              for (const { rkey, value } of upserts) {
+                const result = await ok(rpc.post("com.atproto.repo.putRecord", {
+                  input: {
+                    repo: did,
+                    collection: nsidTyped,
+                    rkey,
+                    record: /** @type {Record<string, unknown>} */ (value),
+                  },
+                }));
+                if (result?.commit?.rev) this.#rev.value = result.commit.rev;
+              }
+              for (let i = 0; i < deletes.length; i += 100) {
+                const result = await ok(
+                  rpc.post("com.atproto.repo.applyWrites", {
+                    input: { repo: did, writes: deletes.slice(i, i + 100) },
+                  }),
+                );
+                if (result?.commit?.rev) this.#rev.value = result.commit.rev;
+              }
+            } catch (err) {
+              if (this.#isSessionError(err)) {
+                this.#clearSession();
+                return;
+              }
+              throw err;
+            } finally {
+              this.#writing--;
+            }
+          });
 
           lastHashes = newHashes;
           lastBlobs = newBlobs;
         },
-      };
-    }
-
-    // Single-blob variant (used for tracks)
-    /** @type {unknown[] | null} */
-    let lastPersisted = null;
-
-    return {
-      empty: () => /** @type {unknown[]} */ ([]),
-      get: async () => {
-        const bundles = await this.listRecords(nsid);
-        /** @type {unknown[]} */
-        const items = [];
-        for (const bundle of bundles) {
-          if (!bundle.data?.ref?.$link) continue;
-          const bytes = await this.#fetchBlob(bundle.data.ref.$link);
-          items.push(...decode(bytes));
-        }
-        lastPersisted = items;
-        return items;
-      },
-      put: async (/** @type {unknown[]} */ data) => {
-        if (xxh32r(encode(lastPersisted ?? [])) === xxh32r(encode(data))) return;
-        const bytes = encode(data);
-        const blob = await this.#uploadBlob(bytes);
-        if (!blob) return;
-        const id = xxh32r(bytes).toString(16);
-        const bundle = { id, data: blob };
-        await this.putRecords(nsid, [bundle]);
-        lastPersisted = data;
-      },
     };
   }
 
@@ -554,18 +688,19 @@ class ATProtoOutput extends BroadcastedOutputElement {
       /** @type {string | undefined} */
       let cursor;
       do {
-        const page = /** @type {{ records: { value: unknown }[], cursor?: string }} */ (
-          await ok(this.#rpc.get("com.atproto.repo.listRecords", {
-            params: {
-              repo:
-                /** @type {import("@atcute/lexicons").ActorIdentifier} */ (did),
-              collection:
-                /** @type {`${string}.${string}.${string}`} */ (collection),
-              limit: 100,
-              cursor,
-            },
-          }))
-        );
+        const page =
+          /** @type {{ records: { value: unknown }[], cursor?: string }} */ (
+            await ok(this.#rpc.get("com.atproto.repo.listRecords", {
+              params: {
+                repo:
+                  /** @type {import("@atcute/lexicons").ActorIdentifier} */ (did),
+                collection:
+                  /** @type {`${string}.${string}.${string}`} */ (collection),
+                limit: 100,
+                cursor,
+              },
+            }))
+          );
         records.push(...page.records.map((r) => /** @type {T} */ (r.value)));
         cursor = page.cursor;
       } while (cursor);
@@ -613,184 +748,6 @@ class ATProtoOutput extends BroadcastedOutputElement {
     this.#writeDraining = false;
   }
 
-  /**
-   * @param {string} collection
-   * @param {Array<{ id: string }>} data
-   * @param {{ deleteBatchSize?: number, upsertBatchSize?: number }} [options]
-   */
-  async putRecords(
-    collection,
-    data,
-    { deleteBatchSize = 100, upsertBatchSize = deleteBatchSize } = {},
-  ) {
-    if (!this.#rpc || !this.#did.value) return;
-
-    // Supersede any prior write for this collection
-    const prior = this.#writeCancels.get(collection);
-    if (prior) prior.cancelled = true;
-
-    const token = { cancelled: false };
-    this.#writeCancels.set(collection, token);
-
-    return this.#enqueueWrite(async () => {
-      if (token.cancelled) return;
-      try {
-        await this.#doPutRecords(collection, data, {
-          deleteBatchSize,
-          upsertBatchSize,
-        }, token);
-      } finally {
-        if (this.#writeCancels.get(collection) === token) {
-          this.#writeCancels.delete(collection);
-        }
-      }
-    });
-  }
-
-  /**
-   * @param {string} collection
-   * @param {Array<{ id: string }>} data
-   * @param {{ deleteBatchSize: number, upsertBatchSize: number }} options
-   * @param {{ cancelled: boolean }} token
-   */
-  async #doPutRecords(
-    collection,
-    data,
-    { deleteBatchSize, upsertBatchSize },
-    token,
-  ) {
-    const rpc = this.#rpc;
-    const did = this.#did.value;
-    if (!rpc || !did) return;
-
-    const nsid = /** @type {`${string}.${string}.${string}`} */ (collection);
-
-    this.#writing++;
-    try {
-      // 1. Fetch current state
-      /** @type {Map<string, { rkey: string, value: unknown }>} */
-      const existing = new Map();
-
-      /** @type {string | undefined} */
-      let cursor;
-      do {
-        const page = /** @type {{ records: { uri: string, value: unknown }[], cursor?: string }} */ (
-          await ok(rpc.get("com.atproto.repo.listRecords", {
-            params: { repo: did, collection: nsid, limit: 100, cursor },
-          }))
-        );
-        for (const { uri, value } of page.records) {
-          const record = /** @type {{ id: string }} */ (value);
-          const rkey = /** @type {string} */ (uri.split("/").at(-1));
-          existing.set(record.id, { rkey, value: record });
-        }
-        cursor = page.cursor;
-      } while (cursor);
-
-      // 2. Build desired state
-      const desired = new Map(
-        data.map((record) => [record.id, { $type: nsid, ...record }]),
-      );
-
-      // 3. Compute diff
-      /** @type {WriteOp[]} */
-      const deletes = [];
-
-      /** @type {WriteOp[]} */
-      const upserts = [];
-
-      for (const [id, { rkey }] of existing) {
-        if (!desired.has(id)) {
-          deletes.push({ $type: "com.atproto.repo.applyWrites#delete", collection: nsid, rkey });
-        }
-      }
-
-      for (const [id, record] of desired) {
-        const entry = existing.get(id);
-
-        if (!entry) {
-          upserts.push({
-            $type: "com.atproto.repo.applyWrites#create",
-            collection: nsid,
-            rkey: id,
-            value: record,
-          });
-        } else if (JSON.stringify(entry.value) !== JSON.stringify(record)) {
-          upserts.push({
-            $type: "com.atproto.repo.applyWrites#update",
-            collection: nsid,
-            rkey: entry.rkey,
-            value: record,
-          });
-        }
-      }
-
-      // 4. Apply batches
-      /** @param {WriteOp[]} batch */
-      const applyBatch = async (batch) => {
-        const result = await ok(rpc.post("com.atproto.repo.applyWrites", {
-          input: { repo: did, writes: batch },
-        }));
-
-        if (result?.commit?.rev) {
-          this.#rev.value = result.commit.rev;
-        }
-      };
-
-      for (let i = 0; i < deletes.length; i += deleteBatchSize) {
-        if (token.cancelled) return;
-        await applyBatch(deletes.slice(i, i + deleteBatchSize));
-      }
-
-      for (let i = 0; i < upserts.length; i += upsertBatchSize) {
-        if (token.cancelled) return;
-        await applyBatch(upserts.slice(i, i + upsertBatchSize));
-      }
-    } catch (err) {
-      if (this.#isSessionError(err)) {
-        this.#clearSession();
-        return;
-      }
-
-      throw err;
-    } finally {
-      this.#writing--;
-    }
-  }
-
-  /**
-   * Apply pre-computed write operations via applyWrites, respecting the write
-   * queue and #writing guard.
-   *
-   * @param {WriteOp[]} writes
-   * @param {number} [batchSize]
-   */
-  #applyWriteOps(writes, batchSize = 100) {
-    if (!this.#rpc || !this.#did.value) return Promise.resolve();
-    return this.#enqueueWrite(async () => {
-      const rpc = this.#rpc;
-      const did = this.#did.value;
-      if (!rpc || !did) return;
-      this.#writing++;
-      try {
-        for (let i = 0; i < writes.length; i += batchSize) {
-          const batch = writes.slice(i, i + batchSize);
-          const result = await ok(rpc.post("com.atproto.repo.applyWrites", {
-            input: { repo: did, writes: batch },
-          }));
-          if (result?.commit?.rev) this.#rev.value = result.commit.rev;
-        }
-      } catch (err) {
-        if (this.#isSessionError(err)) {
-          this.#clearSession();
-          return;
-        }
-        throw err;
-      } finally {
-        this.#writing--;
-      }
-    });
-  }
 }
 
 export default ATProtoOutput;

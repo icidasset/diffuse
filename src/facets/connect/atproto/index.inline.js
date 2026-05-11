@@ -61,7 +61,7 @@ if (true) {
     /** @type {HTMLElement} */ (document.querySelector("main")),
   );
 
-  await atprotoEl.whenRestored();
+  await atprotoEl?.whenRestored();
 }
 
 ////////////////////////////////////////////
