@@ -14,6 +14,7 @@ import * as _EngineScope from "./engine/scope/element.js"
 import * as _InputDropbox from "./input/dropbox/element.js"
 import * as _InputEphemeralCache from "./input/ephemeral-cache/element.js"
 import * as _InputHttps from "./input/https/element.js"
+import * as _InputHttpsJson from "./input/https-json/element.js"
 import * as _InputIcecast from "./input/icecast/element.js"
 import * as _InputLocal from "./input/local/element.js"
 import * as _InputOpensubsonic from "./input/opensubsonic/element.js"
@@ -74,6 +75,7 @@ export const input = {
   dropbox: _InputDropbox,
   ephemeralCache: _InputEphemeralCache,
   https: _InputHttps,
+  httpsJson: _InputHttpsJson,
   icecast: _InputIcecast,
   local: _InputLocal,
   opensubsonic: _InputOpensubsonic,

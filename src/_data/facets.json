@@ -73,6 +73,12 @@
     "desc": "Add HTTPS URLs as audio sources."
   },
   {
+    "url": "facets/connect/https-json/index.html",
+    "title": "Connect / HTTPS + JSON",
+    "category": "Data",
+    "desc": "Add an HTTPS server with JSON directory listing support as an audio source."
+  },
+  {
     "url": "facets/connect/icecast/index.html",
     "title": "Connect / Icecast",
     "category": "Data",

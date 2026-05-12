@@ -13,6 +13,7 @@ const icons = {
   "facets/connect/atproto/index.html": "at",
   "facets/connect/dropbox/index.html": "cloud",
   "facets/connect/https/index.html": "globe",
+  "facets/connect/https-json/index.html": "list-bullets",
   "facets/connect/icecast/index.html": "radio",
   "facets/connect/local/index.html": "folder-open",
   "facets/connect/opensubsonic/index.html": "broadcast",
@@ -24,6 +25,7 @@ const recommended = new Set([
   "facets/connect/atproto/index.html",
   "facets/connect/dropbox/index.html",
   "facets/connect/local/index.html",
+  "facets/connect/s3/index.html",
 ]);
 
 const facets = facetsData
@@ -39,6 +41,7 @@ const facets = facetsData
     href: loaderHref(f.url),
     isRecommended: recommended.has(f.url),
   }))
+  .sort((a, b) => (b.isRecommended ? 1 : 0) - (a.isRecommended ? 1 : 0))
 ;
 
 const main = document.querySelector("main");
