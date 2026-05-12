@@ -1,4 +1,7 @@
-import { BroadcastableDiffuseElement, defineElement } from "~/common/element.js";
+import {
+  BroadcastableDiffuseElement,
+  defineElement,
+} from "~/common/element.js";
 import { signal } from "~/common/signal.js";
 
 ////////////////////////////////////////////
@@ -13,8 +16,15 @@ class ScopeEngine extends BroadcastableDiffuseElement {
   #groupBy = signal(/** @type {string | undefined} */ (undefined));
   #playlist = signal(/** @type {string | undefined} */ (undefined));
   #searchTerm = signal(/** @type {string | undefined} */ (undefined));
-  #sortBy = signal(/** @type {string[]} */ (["createdAt"]));
-  #sortDirection = signal(/** @type {"asc" | "desc" | undefined} */ ("desc"));
+  #sortBy = signal(
+    /** @type {string[]} */ ([
+      "tags.artist",
+      "tags.album",
+      "tags.disc.no",
+      "tags.track.no",
+    ]),
+  );
+  #sortDirection = signal(/** @type {"asc" | "desc" | undefined} */ ("asc"));
 
   groupBy = this.#groupBy.get;
   playlist = this.#playlist.get;
@@ -66,12 +76,13 @@ class ScopeEngine extends BroadcastableDiffuseElement {
     this.#searchTerm.value =
       localStorage.getItem(`${storagePrefix}/searchTerm`) ?? undefined;
     this.#sortBy.value = JSON.parse(
-      localStorage.getItem(`${storagePrefix}/sortBy`) ?? `["createdAt"]`,
+      localStorage.getItem(`${storagePrefix}/sortBy`) ??
+        `["tags.artist", "tags.album", "tags.disc.no", "tags.track.no"]`,
     );
     this.#sortDirection.value =
       /** @type {"desc" | "asc"} */ (localStorage.getItem(
         `${storagePrefix}/sortDirection`,
-      ) ?? "desc");
+      ) ?? "asc");
 
     // Effects
     this.effect(() => {
@@ -118,8 +129,13 @@ class ScopeEngine extends BroadcastableDiffuseElement {
   // ACTIONS
 
   revertToDefaultSort = async () => {
-    this.#sortBy.value = ["createdAt"];
-    this.#sortDirection.value = "desc";
+    this.#sortBy.value = [
+      "tags.artist",
+      "tags.album",
+      "tags.disc.no",
+      "tags.track.no",
+    ];
+    this.#sortDirection.value = "asc";
   };
 
   /** @param {string | undefined} val */
