@@ -42,7 +42,7 @@ site.use(esbuild({
     bundle: true,
     format: "esm",
     minify: true,
-    external: ["./file-tree.json", "@awesome.me/webawesome/*"],
+    external: ["@awesome.me/webawesome/*"],
     platform: "browser",
     plugins: [
       // @ts-ignore
@@ -334,29 +334,28 @@ site.addEventListener("afterBuild", async () => {
 // FILE TREE
 ////////////////////////////////////////////
 
-site.addEventListener("afterBuild", async () => {
+async function buildFileTree(
+  dir: string,
+  prefix = "",
+): Promise<Record<string, string>> {
   const RAW = 0x55;
+  const tree: Record<string, string> = {};
 
-  async function buildFileTree(
-    dir: string,
-    prefix = "",
-  ): Promise<Record<string, string>> {
-    const tree: Record<string, string> = {};
-
-    for (const entry of Deno.readDirSync(dir)) {
-      const entryPath = path.join(dir, entry.name);
-      const entryKey = prefix ? `${prefix}/${entry.name}` : entry.name;
-      if (entry.isDirectory) {
-        Object.assign(tree, await buildFileTree(entryPath, entryKey));
-      } else {
-        const data = Deno.readFileSync(entryPath);
-        tree[entryKey] = await createCID(RAW, data);
-      }
+  for (const entry of Deno.readDirSync(dir)) {
+    const entryPath = path.join(dir, entry.name);
+    const entryKey = prefix ? `${prefix}/${entry.name}` : entry.name;
+    if (entry.isDirectory) {
+      Object.assign(tree, await buildFileTree(entryPath, entryKey));
+    } else {
+      const data = Deno.readFileSync(entryPath);
+      tree[entryKey] = await createCID(RAW, data);
     }
-
-    return tree;
   }
 
+  return tree;
+}
+
+async function writeFileTree() {
   const tree = await buildFileTree("dist/");
   const sorted = Object.fromEntries(
     Object.keys(tree).sort().map((k) => [k, tree[k]]),
@@ -366,7 +365,10 @@ site.addEventListener("afterBuild", async () => {
     "./dist/file-tree.json",
     JSON.stringify(sorted, null, 2),
   );
-});
+}
+
+site.addEventListener("afterBuild", writeFileTree);
+site.addEventListener("afterUpdate", writeFileTree);
 
 ////////////////////////////////////////////
 // INLINE JS FOR FACETS

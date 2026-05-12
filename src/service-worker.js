@@ -2,8 +2,8 @@
 
 import { create as createCid } from "./common/cid.js";
 
-const fileTreePromise = import("./file-tree.json", { with: { type: "json" } })
-  .then((m) => m.default)
+const fileTreePromise = fetch("./file-tree.json", { cache: "no-cache" })
+  .then((r) => /** @type {Promise<Record<string, string>>} */ (r.json()))
   .catch(() => null);
 
 /** Media content types to ignore */
@@ -39,7 +39,7 @@ self.addEventListener("activate", (event) => {
       thyself.clients.matchAll({ type: "window" }).then((clients) => {
         for (const client of clients) client.navigate(client.url);
       })
-    )
+    ),
   );
 });
 
@@ -84,12 +84,21 @@ function interceptCredentials(request) {
   const url = new URL(request.url);
 
   if (url.username) {
-    const credentials = `${decodeURIComponent(url.username)}:${decodeURIComponent(url.password)}`;
+    const credentials = `${decodeURIComponent(url.username)}:${
+      decodeURIComponent(url.password)
+    }`;
     url.username = "";
     url.password = "";
     const headers = new Headers(request.headers);
-    headers.set("Authorization", `Basic ${btoa(unescape(encodeURIComponent(credentials)))}`);
-    return fetch(url.href, { method: request.method, headers, signal: request.signal });
+    headers.set(
+      "Authorization",
+      `Basic ${btoa(unescape(encodeURIComponent(credentials)))}`,
+    );
+    return fetch(url.href, {
+      method: request.method,
+      headers,
+      signal: request.signal,
+    });
   }
 
   const auth = url.searchParams.get("diffuse:basic-auth");
@@ -98,7 +107,11 @@ function interceptCredentials(request) {
   url.searchParams.delete("diffuse:basic-auth");
   const headers = new Headers(request.headers);
   headers.set("Authorization", `Basic ${auth}`);
-  return fetch(url.href, { method: request.method, headers, signal: request.signal });
+  return fetch(url.href, {
+    method: request.method,
+    headers,
+    signal: request.signal,
+  });
 }
 
 ////////////////////////////////////////////
@@ -134,7 +147,6 @@ async function openCaches() {
  * @returns {Promise<string | undefined>}
  */
 async function cidFromTree(pathname) {
-  /** @type {Record<string, string> | null} */
   const tree = await fileTreePromise;
   if (!tree) return undefined;
   const key = pathname.replace(/^\//, "");
@@ -153,7 +165,7 @@ async function cidFromTree(pathname) {
  */
 async function store(request, response) {
   const { pathname } = new URL(request.url);
-  const cid = await cidFromTree(pathname) ??
+  const cid = (await cidFromTree(pathname)) ??
     await createCid(
       RAW_CODEC,
       new Uint8Array(await response.clone().arrayBuffer()),
@@ -210,8 +222,10 @@ async function lookup(request) {
 async function handleFetch(request) {
   if (navigator.onLine) {
     const { pathname } = new URL(request.url);
-    if (await cidFromTree(pathname) !== undefined) {
-      const cached = await lookup(request);
+    const cid = await cidFromTree(pathname);
+    if (cid !== undefined) {
+      const { content } = await openCaches();
+      const cached = await content.match(cidUrl(cid));
       if (cached) return cached;
     }
 
