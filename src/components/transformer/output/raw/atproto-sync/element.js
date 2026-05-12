@@ -108,6 +108,7 @@ class ATProtoOutputSyncTransformer extends OutputTransformer {
             );
           }
 
+          this.#markDirty();
           await l[name].save(newData);
 
           if (remote.ready()) {
@@ -119,7 +120,6 @@ class ATProtoOutputSyncTransformer extends OutputTransformer {
                 ? this.#mergeRecords(name, newData, /** @type {typeof newData} */ (remoteCol.data))
                 : newData;
 
-            this.#markDirty();
             remote[name].save(dataForRemote).then(() => {
               const rev = this.#atproto()?.rev();
               if (rev) this.#storeRev(rev);
@@ -127,8 +127,6 @@ class ATProtoOutputSyncTransformer extends OutputTransformer {
             }).catch((err) => {
               console.error(err);
             });
-          } else {
-            this.#markDirty();
           }
         },
       };
