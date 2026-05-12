@@ -1230,8 +1230,8 @@ class Browser extends DiffuseElement {
           Title ${sortedColumn === `title`
             ? html`
               <i class="ph-bold ${sortDirection === `desc`
-                ? `ph-caret-down`
-                : `ph-caret-up`}"></i>
+                ? `ph-caret-up`
+                : `ph-caret-down`}"></i>
             `
             : ``}
         </div>
@@ -1243,8 +1243,8 @@ class Browser extends DiffuseElement {
           Artist ${sortedColumn === `artist`
             ? html`
               <i class="ph-bold ${sortDirection === `desc`
-                ? `ph-caret-down`
-                : `ph-caret-up`}"></i>
+                ? `ph-caret-up`
+                : `ph-caret-down`}"></i>
             `
             : ``}
         </div>
@@ -1256,8 +1256,8 @@ class Browser extends DiffuseElement {
           Album ${sortedColumn === `album`
             ? html`
               <i class="ph-bold ${sortDirection === `desc`
-                ? `ph-caret-down`
-                : `ph-caret-up`}"></i>
+                ? `ph-caret-up`
+                : `ph-caret-down`}"></i>
             `
             : ``}
         </div>
