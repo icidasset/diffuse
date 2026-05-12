@@ -570,6 +570,8 @@ class AudioEngine extends BroadcastableDiffuseElement {
   #itemElement(audioId) {
     const node = this.querySelector(
       `de-audio-item[id="${audioId}"]:not([preload])`,
+    ) ?? this.querySelector(
+      `de-audio-item[id="${audioId}"]`,
     );
 
     if (node) {
