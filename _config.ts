@@ -23,7 +23,6 @@ const site = lume({
   src: "./src",
   server: {
     debugBar: false,
-    liveReload: false,
     middlewares: [],
   },
 });
