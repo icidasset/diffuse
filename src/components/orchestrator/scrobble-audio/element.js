@@ -108,8 +108,11 @@ class ScrobbleAudioOrchestrator extends BroadcastableDiffuseElement {
 
     if (!id) return;
 
-    const isPlaying = this.audio.state(id)?.isPlaying() ?? false;
-    const hasEnded = this.audio.state(id)?.hasEnded() ?? false;
+    const state = this.audio.state(id);
+    const loadingState = state?.loadingState() ?? "loading";
+    const hasError = typeof loadingState === "object" && "error" in loadingState;
+    const isPlaying = !hasError && (state?.isPlaying() ?? false);
+    const hasEnded = state?.hasEnded() ?? false;
 
     // Detect same-track restart (e.g. repeat): the track ended and now plays again.
     if (this.#hadEnded && !hasEnded && isPlaying) {

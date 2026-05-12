@@ -810,10 +810,8 @@ class AudioEngineItem extends BroadcastableDiffuseElement {
   errorEvent(event) {
     const audio = /** @type {HTMLAudioElement} */ (event.target);
     const code = audio.error?.code || 0;
-    const item = engineItem(audio);
 
-    item?.$state.loadingState.set({ error: { code } });
-    item?.$state.isPlaying.set(false);
+    engineItem(audio)?.$state.loadingState.set({ error: { code } });
   }
 
   /**
