@@ -32,12 +32,17 @@ self.addEventListener("install", (_event) => {
 ////////////////////////////////////////////
 
 self.addEventListener("activate", (event) => {
-  // Take control of all open clients right away, then reload them so every
-  // page starts fresh under the new service worker with no mid-session split.
+  // Claim clients, then signal each window to reload so no old code stays
+  // active after the new SW takes over. Signalling via postMessage (rather
+  // than client.navigate) lets the page debounce the reload and break the
+  // loop that would otherwise occur when the SW script itself changes between
+  // reloads (e.g. esbuild chunk-hash churn during development).
   /** @type {ExtendableEvent} */ (event).waitUntil(
     thyself.clients.claim().then(() =>
       thyself.clients.matchAll({ type: "window" }).then((clients) => {
-        for (const client of clients) client.navigate(client.url);
+        for (const client of clients) {
+          client.postMessage({ type: "sw-activated" });
+        }
       })
     ),
   );
