@@ -640,6 +640,7 @@ class AudioEngineItem extends BroadcastableDiffuseElement {
     audio.addEventListener("error", this.errorEvent);
     audio.addEventListener("pause", this.pauseEvent);
     audio.addEventListener("play", this.playEvent);
+    audio.addEventListener("playing", this.playingEvent);
     audio.addEventListener("suspend", this.suspendEvent);
     audio.addEventListener("timeupdate", this.timeupdateEvent);
     audio.addEventListener("waiting", this.waitingEvent);
@@ -809,8 +810,10 @@ class AudioEngineItem extends BroadcastableDiffuseElement {
   errorEvent(event) {
     const audio = /** @type {HTMLAudioElement} */ (event.target);
     const code = audio.error?.code || 0;
+    const item = engineItem(audio);
 
-    engineItem(audio)?.$state.loadingState.set({ error: { code } });
+    item?.$state.loadingState.set({ error: { code } });
+    item?.$state.isPlaying.set(false);
   }
 
   /**
@@ -835,6 +838,13 @@ class AudioEngineItem extends BroadcastableDiffuseElement {
 
     // In case audio was preloaded:
     if (audio.readyState === 4) finishedLoading(event);
+  }
+
+  /**
+   * @param {Event} event
+   */
+  playingEvent(event) {
+    finishedLoading(event);
   }
 
   /**
