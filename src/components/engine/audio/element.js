@@ -620,8 +620,7 @@ class AudioEngineItem extends BroadcastableDiffuseElement {
         const currentTime = this.$state.currentTime.value;
         const duration = this.$state.duration.value;
 
-        if (isNaN(duration)) return 0;
-        if (duration === Infinity) return 0;
+        if (!duration || isNaN(duration) || duration === Infinity) return 0;
 
         return currentTime / duration;
       }),
