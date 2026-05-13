@@ -242,7 +242,7 @@
     },
     "serve": {
       "description": "Run and serve the site for development",
-      "command": "deno task lume -s",
+      "command": "static-web-server -p 3000 --root dist/",
     },
     "test:doc": {
       "description": "Run documentation tests",
