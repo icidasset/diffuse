@@ -869,6 +869,29 @@ class AudioEngineItem extends BroadcastableDiffuseElement {
    */
   waitingEvent(event) {
     initiateLoading(event);
+
+    const audio = /** @type {HTMLAudioElement} */ (event.target);
+    if (audio.seeking) return;
+    if (audio.networkState !== HTMLMediaElement.NETWORK_IDLE) return;
+
+    const item = engineItem(audio);
+    if (!item || item.hasAttribute("preload")) return;
+
+    const progress = !isNaN(audio.duration) && audio.duration > 0 && audio.duration !== Infinity
+      ? audio.currentTime / audio.duration
+      : 0;
+
+    if (progress > 0) {
+      item.setAttribute("initial-progress", JSON.stringify(progress));
+    }
+
+    audio.load();
+
+    audio.addEventListener("canplay", () => {
+      if (item.$state.isPlaying.get()) {
+        item.engine?.play({ audioId: item.id });
+      }
+    }, { once: true });
   }
 }
 
