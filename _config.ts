@@ -356,7 +356,47 @@ async function buildFileTree(
 }
 
 async function writeFileTree() {
+  const RAW = 0x55;
   const tree = await buildFileTree("dist/");
+
+  // Fingerprint all app assets, excluding the SW (handled below),
+  // file-tree.json (self-referential), and .br sidecars (derived).
+  const stableEntries = Object.entries(tree)
+    .filter(([k]) =>
+      k !== "service-worker.js" &&
+      k !== "file-tree.json" &&
+      !k.endsWith(".br")
+    )
+    .sort(([a], [b]) => a.localeCompare(b));
+
+  const fingerprint = await createCID(
+    RAW,
+    new TextEncoder().encode(JSON.stringify(Object.fromEntries(stableEntries))),
+  );
+
+  // Stamp the built SW with the fingerprint so the browser detects a SW
+  // update whenever any app asset changes, not just when the SW source changes.
+  const swDist = "./dist/service-worker.js";
+  const swSource = Deno.readTextFileSync(swDist)
+    .replace(/\n\/\/ @assets \S+\n$/, "");
+  const swStamped = `${swSource}\n// @assets ${fingerprint}\n`;
+  Deno.writeTextFileSync(swDist, swStamped);
+
+  // Remove the now-stale brotli sidecar; server falls back to plain JS.
+  try {
+    Deno.removeSync("./dist/service-worker.js.br");
+  } catch { /* didn't exist */ }
+
+  tree["service-worker.js"] = await createCID(
+    RAW,
+    new TextEncoder().encode(swStamped),
+  );
+  delete tree["service-worker.js.br"];
+
+  // Exclude file-tree.json from its own contents (self-referential).
+  delete tree["file-tree.json"];
+  delete tree["file-tree.json.br"];
+
   const sorted = Object.fromEntries(
     Object.keys(tree).sort().map((k) => [k, tree[k]]),
   );

@@ -8,17 +8,19 @@ if ("serviceWorker" in navigator) {
       console.warn("[do-offline] Failed to register service worker:", error);
     });
 
-  // When the SW activates it sends "sw-activated". Reload once so the page
-  // runs fresh code under the new SW. The sessionStorage flag prevents a
-  // second reload on the very next page load (which would happen if the SW
-  // script changed again during the reload, e.g. esbuild chunk-hash churn).
-  if (sessionStorage.getItem("sw-activated-reload")) {
-    sessionStorage.removeItem("sw-activated-reload");
-  } else {
-    navigator.serviceWorker.addEventListener("message", (event) => {
-      if (event.data?.type !== "sw-activated") return;
-      sessionStorage.setItem("sw-activated-reload", "1");
-      location.reload();
-    });
-  }
+  // When the SW activates it sends "sw-activated". Reload so the page runs
+  // fresh code under the new SW. The sessionStorage flag skips one reload on
+  // the very next page load to break the loop caused by the SW script URL
+  // changing during the reload (e.g. esbuild chunk-hash churn in development).
+  // The listener is always attached so a second activation in the same load
+  // isn't silently dropped.
+  navigator.serviceWorker.addEventListener("message", (event) => {
+    if (event.data?.type !== "sw-activated") return;
+    if (sessionStorage.getItem("sw-activated-reload")) {
+      sessionStorage.removeItem("sw-activated-reload");
+      return;
+    }
+    sessionStorage.setItem("sw-activated-reload", "1");
+    location.reload();
+  });
 }
