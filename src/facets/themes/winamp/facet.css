@@ -1,5 +1,5 @@
 body {
-  background: #3a6ea5;
+  /* background: #3a6ea5; */
   margin: 0;
 }
 
@@ -20,8 +20,7 @@ body {
   flex-direction: column;
 
   &:not([role="tabpanel"]) {
-    height: 64dvh;
-    width: min(960px, 86dvw);
+    height: 100%;
   }
 }
 
