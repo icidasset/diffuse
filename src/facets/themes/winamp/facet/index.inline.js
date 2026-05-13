@@ -19,6 +19,7 @@ await foundation.orchestrator.processTracks({ disableWhenReady: true });
 await foundation.orchestrator.queueAudio();
 await foundation.orchestrator.controller();
 await foundation.orchestrator.artwork();
+await foundation.orchestrator.mediaSession();
 await foundation.configurator.input();
 
 await import("~/facets/themes/winamp/browser/element.js");
