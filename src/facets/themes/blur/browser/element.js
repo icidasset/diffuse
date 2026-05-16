@@ -1,10 +1,3 @@
-import {
-  elementScroll,
-  observeElementOffset,
-  observeElementRect,
-  Virtualizer,
-} from "@tanstack/virtual-core";
-
 import * as TID from "@atcute/tid";
 
 import {
@@ -260,13 +253,21 @@ class Browser extends DiffuseElement {
   /** @type {{ label: string; tracks: Track[] }[] | undefined} */
   #lastGroups = undefined;
 
-  /** @type {Virtualizer<Element, Element> | undefined} */
-  #virtualizer;
+  // Custom virtual scroll state
+  #scrollTop = 0;
+  #viewportHeight = 0;
+  #renderedStartIndex = -1;
+  #renderedEndIndex = -1;
+  #itemCount = 0;
 
-  /** @type {(() => void) | undefined} */
-  #virtualizerCleanup;
+  /** @type {ResizeObserver | undefined} */
+  #resizeObserver;
 
-  #virtualizerCount = 0;
+  /** @type {AbortController | undefined} */
+  #scrollAbort;
+
+  /** @type {number[]} */
+  #offsets = [];
 
   // LIFECYCLE
 
@@ -343,8 +344,8 @@ class Browser extends DiffuseElement {
       });
     });
 
-    // Set up the virtualizer after the first render, when .scroll-panel exists in the DOM.
-    requestAnimationFrame(() => this.#setupVirtualizer());
+    // Set up scroll tracking after first render, when .scroll-panel exists in the DOM.
+    this.#setupScrollTracking();
   }
 
   /**
@@ -352,9 +353,10 @@ class Browser extends DiffuseElement {
    */
   disconnectedCallback() {
     super.disconnectedCallback();
-    this.#virtualizerCleanup?.();
-    this.#virtualizerCleanup = undefined;
-    this.#virtualizer = undefined;
+    this.#scrollAbort?.abort();
+    this.#scrollAbort = undefined;
+    this.#resizeObserver?.disconnect();
+    this.#resizeObserver = undefined;
     this.#disconnectCoverObserver();
   }
 
@@ -567,11 +569,11 @@ class Browser extends DiffuseElement {
     if (this.#viewMode.value === "cover") {
       this.#disconnectCoverObserver();
       this.#openCoverItem.value = null;
-      requestAnimationFrame(() => this.#setupVirtualizer());
     }
     const next = this.#viewMode.value === "list" ? "cover" : "list";
     localStorage.setItem("diffuse/browser/view-mode", next);
     this.#viewMode.value = next;
+    if (next === "list") this.#setupScrollTracking();
   };
 
   /**
@@ -685,39 +687,92 @@ class Browser extends DiffuseElement {
     }
   }
 
-  #setupVirtualizer() {
-    if (!this.root().querySelector(".scroll-panel")) return;
+  #setupScrollTracking() {
+    this.#scrollAbort?.abort();
+    this.#scrollAbort = new AbortController();
+    this.#resizeObserver?.disconnect();
+    this.#resizeObserver = undefined;
+    this.#scrollTop = 0;
 
-    this.#virtualizerCleanup?.();
-    this.#virtualizerCount = 0;
+    const abort = this.#scrollAbort;
 
-    this.#virtualizer = new Virtualizer({
-      count: 0,
-      getScrollElement: () => this.root().querySelector(".scroll-panel"),
-      estimateSize: (i) =>
-        this.#flatItems[i]?.type === "group"
-          ? GROUP_HEADER_HEIGHT
-          : TRACK_ROW_HEIGHT,
-      overscan: OVERSCAN,
-      observeElementRect,
-      observeElementOffset,
-      scrollToFn: elementScroll,
-      onChange: () => {
-        requestAnimationFrame(() => this.forceRender());
-      },
-    });
-
-    this.#virtualizerCleanup = this.#virtualizer._didMount();
-    this.#virtualizer._willUpdate();
-    this.forceRender();
-
-    // Reset scroll after browser scroll restoration, which fires asynchronously
     requestAnimationFrame(() => {
-      requestAnimationFrame(() => {
-        const panel = this.root().querySelector(".scroll-panel");
-        if (panel && panel.scrollTop !== 0) panel.scrollTop = 0;
+      if (abort.signal.aborted) return;
+      const panel = this.root().querySelector(".scroll-panel");
+      if (!panel) return;
+
+      panel.addEventListener(
+        "scroll",
+        () => {
+          this.#scrollTop = panel.scrollTop;
+          this.#renderIfWindowChanged(panel);
+        },
+        { passive: true, signal: abort.signal },
+      );
+
+      this.#resizeObserver = new ResizeObserver((entries) => {
+        this.#viewportHeight = entries[0].contentRect.height;
+        this.#renderIfWindowChanged(panel);
       });
+
+      this.#resizeObserver.observe(panel);
     });
+  }
+
+  /**
+   * @param {Element} panel
+   */
+  #renderIfWindowChanged(panel) {
+    const { startIndex, endIndex } = this.#computeWindow(this.#itemCount);
+    if (
+      startIndex === this.#renderedStartIndex &&
+      endIndex === this.#renderedEndIndex
+    ) return;
+    const scrollTop = panel.scrollTop;
+    this.forceRender();
+    panel.scrollTop = scrollTop;
+  }
+
+  /**
+   * @param {number} count
+   * @returns {{ startIndex: number; endIndex: number }}
+   */
+  #computeWindow(count) {
+    const scrollTop = this.#scrollTop;
+    const viewportHeight = this.#viewportHeight;
+
+    if (this.#offsets.length === 0) {
+      const startIndex = Math.max(
+        0,
+        Math.floor(scrollTop / TRACK_ROW_HEIGHT) - OVERSCAN,
+      );
+      const visibleCount = Math.ceil(viewportHeight / TRACK_ROW_HEIGHT) +
+        2 * OVERSCAN;
+      return { startIndex, endIndex: Math.min(count, startIndex + visibleCount) };
+    }
+
+    const offsets = this.#offsets;
+    const startIndex = Math.max(0, bisectRight(offsets, scrollTop) - OVERSCAN);
+    const endIndex = Math.min(
+      count,
+      bisectRight(offsets, scrollTop + viewportHeight) + 1 + OVERSCAN,
+    );
+    return { startIndex, endIndex };
+  }
+
+  #buildOffsets() {
+    const items = this.#flatItems;
+    if (items.length === 0) {
+      this.#offsets = [];
+      return;
+    }
+    const offsets = new Array(items.length + 1);
+    offsets[0] = 0;
+    for (let i = 0; i < items.length; i++) {
+      offsets[i + 1] = offsets[i] +
+        (items[i].type === "group" ? GROUP_HEADER_HEIGHT : TRACK_ROW_HEIGHT);
+    }
+    this.#offsets = offsets;
   }
 
   #disconnectCoverObserver() {
@@ -1138,31 +1193,24 @@ class Browser extends DiffuseElement {
         ? (sortDirection === "desc" ? "descending" : "ascending")
         : "none";
 
-    // Rebuild flat items only when data reference changes
+    // Rebuild flat items and pixel offsets only when data reference changes
     if (groups !== this.#lastGroups || tracks !== this.#lastTracks) {
       this.#flatItems = groups ? buildFlatList(groups) : [];
+      this.#buildOffsets();
       this.#lastGroups = groups;
       this.#lastTracks = tracks;
     }
 
     const count = groups ? this.#flatItems.length : tracks.length;
+    this.#itemCount = count;
 
-    // Update virtualizer count whenever data changes.
-    // The virtualizer is set up in connectedCallback after first render;
-    // until then virtualItems is empty and totalSize is 0.
-    if (this.#virtualizer) {
-      if (count !== this.#virtualizerCount) {
-        this.#virtualizerCount = count;
-        this.#virtualizer.setOptions({
-          ...this.#virtualizer.options,
-          count,
-        });
-      }
-      this.#virtualizer._willUpdate();
-    }
+    const { startIndex, endIndex } = this.#computeWindow(count);
+    this.#renderedStartIndex = startIndex;
+    this.#renderedEndIndex = endIndex;
 
-    const virtualItems = this.#virtualizer?.getVirtualItems() ?? [];
-    const totalSize = this.#virtualizer?.getTotalSize() ?? 0;
+    const totalSize = this.#offsets.length > 0
+      ? this.#offsets[this.#flatItems.length]
+      : count * TRACK_ROW_HEIGHT;
 
     const favSet = this.$favouritesSet();
 
@@ -1270,28 +1318,33 @@ class Browser extends DiffuseElement {
             ? html`
               <div class="loading">Loading ...</div>
             `
-            : virtualItems.map((vItem) => {
-              const item = groups ? this.#flatItems[vItem.index] : {
-                type: /** @type {"track"} */ ("track"),
-                track: tracks[vItem.index],
-              };
+            : (() => {
+              const rows = [];
+              for (let i = startIndex; i < endIndex; i++) {
+                const item = groups ? this.#flatItems[i] : {
+                  type: /** @type {"track"} */ ("track"),
+                  track: tracks[i],
+                };
+                const top = this.#offsets.length > 0
+                  ? this.#offsets[i]
+                  : i * TRACK_ROW_HEIGHT;
 
-              return item?.type === "group"
-                ? html`
-                  <div
-                    class="group-header ${vItem.index === 0
-                      ? `group-header--top`
-                      : ``}"
-                    style="transform: translateY(${vItem.start}px);"
-                  >
-                    <i class="ph-fill ph-vinyl-record"></i>
-                    <span>${item.label}</span>
-                  </div>
-                `
-                : item?.type === "track"
-                ? renderTrackRow(item.track, vItem.start, vItem.index)
-                : ``;
-            })}
+                if (item?.type === "group") {
+                  rows.push(html`
+                    <div
+                      class="group-header ${i === 0 ? `group-header--top` : ``}"
+                      style="transform: translateY(${top}px);"
+                    >
+                      <i class="ph-fill ph-vinyl-record"></i>
+                      <span>${item.label}</span>
+                    </div>
+                  `);
+                } else if (item?.type === "track") {
+                  rows.push(renderTrackRow(item.track, top, i));
+                }
+              }
+              return rows;
+            })()}
         </div>
       </div>
     `;
@@ -1579,6 +1632,23 @@ function detectMime(bytes) {
   if (bytes[0] === 0x47 && bytes[1] === 0x49) return "image/gif";
   if (bytes[0] === 0x52 && bytes[1] === 0x49) return "image/webp";
   return "image/jpeg";
+}
+
+/**
+ * Largest index i where sortedArr[i] <= target (sorted ascending).
+ * Returns 0 when target is below all values.
+ * @param {number[]} sortedArr
+ * @param {number} target
+ * @returns {number}
+ */
+function bisectRight(sortedArr, target) {
+  let lo = 0, hi = sortedArr.length;
+  while (lo < hi) {
+    const mid = (lo + hi) >>> 1;
+    if (sortedArr[mid] <= target) lo = mid + 1;
+    else hi = mid;
+  }
+  return Math.max(0, lo - 1);
 }
 
 /**

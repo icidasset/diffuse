@@ -135,7 +135,7 @@ queue.unshift(); // previous track
 
 ### Additional requirements and notes
 
-- When working with track lists, realise that there could be a huge number of tracks that you need to work with (eg. 20000 tracks). You can use `~/vendor/@tanstack/virtual-core/index.js` for this.
+- When working with track lists, realise that there could be a huge number of tracks that you need to work with (eg. 20000 tracks). Implement a custom virtual scroll (see the winamp or blur browser elements for examples).
 - Prefer the lit-html library as the templating/rendering engine. It is available from `~/vendor/lit-html/index.js` (among some other libraries such as: `idb-keyval`, `throttle-debounce`, several `@atcute` libraries, and `kmenu-core`). Always make sure to use the `~/vendor/` prefix for libraries, you're not working in an enviroment that bundles code.
 - Prefer to fetch the tracks from the `scoped-tracks` orchestrator element.
 - Talking about orchestrators, always prefer to use an orchestrator or another component instead of reimplementing logic yourself.
