@@ -278,7 +278,7 @@ class ScopedTracksOrchestrator extends BroadcastableDiffuseElement {
           if (groupBy && a.groupKey !== b.groupKey) {
             if (!a.groupKey) return 1;
             if (!b.groupKey) return -1;
-            return a.groupKey.localeCompare(b.groupKey) * groupDir;
+            return collator.compare(a.groupKey, b.groupKey) * groupDir;
           }
           for (let i = 0; i < a.fieldVals.length; i++) {
             const av = a.fieldVals[i];
@@ -410,12 +410,14 @@ function groupKeyLabel(track, fieldPath) {
  * @param {any} bVal
  * @returns {number}
  */
+const collator = new Intl.Collator(undefined, { numeric: true });
+
 function compareValues(aVal, bVal) {
   if (aVal == null && bVal == null) return 0;
   if (aVal == null) return 1;
   if (bVal == null) return -1;
   return typeof aVal === "string" && typeof bVal === "string"
-    ? aVal.localeCompare(bVal)
+    ? collator.compare(aVal, bVal)
     : aVal < bVal
     ? -1
     : aVal > bVal
