@@ -227,6 +227,7 @@
 }
 
 .virtual-scroll {
+  contain: layout paint;
   position: relative;
 }
 
