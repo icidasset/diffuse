@@ -522,7 +522,6 @@
  ***********************************/
 
 .album-detail {
-  container-type: inline-size;
   display: flex;
   flex-direction: column;
   flex: 1;
@@ -639,7 +638,7 @@
   white-space: nowrap;
 }
 
-@container (max-width: 42rem) {
+@media (max-width: 42rem) {
   .album-detail-main {
     flex-direction: column;
     overflow-y: auto;
@@ -675,7 +674,7 @@
   }
 }
 
-@container (max-width: 21rem) {
+@media (max-width: 21rem) {
   .album-track-row .col-artist {
     display: none;
   }
