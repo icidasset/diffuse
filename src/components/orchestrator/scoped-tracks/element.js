@@ -227,6 +227,8 @@ class ScopedTracksOrchestrator extends BroadcastableDiffuseElement {
     });
 
     // Watch `#tracksSearch` + Playlist + Sort
+    let x = 0;
+
     this.effect(async () => {
       const tracks = this.#tracksSearch.value;
       const playlistItems = this.#selectedPlaylistItems();
@@ -235,7 +237,10 @@ class ScopedTracksOrchestrator extends BroadcastableDiffuseElement {
       const sortDirection = this.#scope.value?.sortDirection();
       const groupBy = this.#scope.value?.groupBy();
 
+      const y = ++x;
+
       if ((await this.isLeader()) === false) return;
+      if (y !== x) return;
 
       let final = playlistItems?.length
         ? filterByPlaylist(tracks, playlistItems)
@@ -410,14 +415,12 @@ function groupKeyLabel(track, fieldPath) {
  * @param {any} bVal
  * @returns {number}
  */
-const collator = new Intl.Collator(undefined, { numeric: true });
-
 function compareValues(aVal, bVal) {
   if (aVal == null && bVal == null) return 0;
   if (aVal == null) return 1;
   if (bVal == null) return -1;
   return typeof aVal === "string" && typeof bVal === "string"
-    ? collator.compare(aVal, bVal)
+    ? aVal.localeCompare(bVal)
     : aVal < bVal
     ? -1
     : aVal > bVal
