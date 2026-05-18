@@ -359,33 +359,31 @@ async function writeFileTree() {
   const RAW = 0x55;
   const tree = await buildFileTree("dist/");
 
-  // Fingerprint all app assets, excluding the SW (handled below),
-  // file-tree.json (self-referential), and .br sidecars (derived).
-  const stableEntries = Object.entries(tree)
-    .filter(([k]) =>
-      k !== "service-worker.js" &&
-      k !== "file-tree.json" &&
-      !k.endsWith(".br")
-    )
-    .sort(([a], [b]) => a.localeCompare(b));
-
-  const fingerprint = await createCID(
-    RAW,
-    new TextEncoder().encode(JSON.stringify(Object.fromEntries(stableEntries))),
-  );
-
-  // Stamp the built SW with the fingerprint so the browser detects a SW
-  // update whenever any app asset changes, not just when the SW source changes.
+  // Stamp the built SW with a unique build ID so the browser always detects a
+  // SW update on each build, not just when the SW source itself changes.
   const swDist = "./dist/service-worker.js";
   const swSource = Deno.readTextFileSync(swDist)
-    .replace(/\n\/\/ @assets \S+\n$/, "");
-  const swStamped = `${swSource}\n// @assets ${fingerprint}\n`;
+    .replace(/\n\/\/ @build \S+\n$/, "");
+  const swStamped = `${swSource}\n// @build ${crypto.randomUUID()}\n`;
   Deno.writeTextFileSync(swDist, swStamped);
 
-  // Remove the now-stale brotli sidecar; server falls back to plain JS.
-  try {
-    Deno.removeSync("./dist/service-worker.js.br");
-  } catch { /* didn't exist */ }
+  // Remove any .br sidecar that is older than its plain counterpart — this
+  // catches cases where brotli compression did not re-run after an asset
+  // changed (e.g. incremental afterUpdate builds), so the server falls back
+  // to the fresh plain file instead of serving stale compressed bytes.
+  for (const key of Object.keys(tree)) {
+    if (key.endsWith(".br")) continue;
+    const plainPath = `./dist/${key}`;
+    const brPath = `${plainPath}.br`;
+    try {
+      const plainMtime = Deno.statSync(plainPath).mtime;
+      const brMtime = Deno.statSync(brPath).mtime;
+      if (plainMtime && brMtime && brMtime < plainMtime) {
+        Deno.removeSync(brPath);
+        delete tree[`${key}.br`];
+      }
+    } catch { /* .br sidecar doesn't exist — nothing to do */ }
+  }
 
   tree["service-worker.js"] = await createCID(
     RAW,

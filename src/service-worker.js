@@ -235,7 +235,8 @@ async function handleFetch(request) {
     }
 
     try {
-      return await fetchAndStore(request);
+      const response = await fetchAndStore(request);
+      if (response.status !== 404) return response;
     } catch {}
   }
 
