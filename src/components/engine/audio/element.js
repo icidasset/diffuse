@@ -1,6 +1,10 @@
 import { keyed } from "lit-html/directives/keyed.js";
 
-import { BroadcastableDiffuseElement, defineElement, nothing } from "~/common/element.js";
+import {
+  BroadcastableDiffuseElement,
+  defineElement,
+  nothing,
+} from "~/common/element.js";
 import { computed, signal, untracked } from "~/common/signal.js";
 
 /**
@@ -200,6 +204,8 @@ class AudioEngine extends BroadcastableDiffuseElement {
   }
 
   /**
+   * Use this function to reload the audio after an error occurred.
+   *
    * @type {Actions["reload"]}
    */
   reload(args) {
@@ -876,9 +882,11 @@ class AudioEngineItem extends BroadcastableDiffuseElement {
     const item = engineItem(audio);
     if (!item || item.hasAttribute("preload")) return;
 
-    const progress = !isNaN(audio.duration) && audio.duration > 0 && audio.duration !== Infinity
-      ? audio.currentTime / audio.duration
-      : 0;
+    const progress =
+      !isNaN(audio.duration) && audio.duration > 0 &&
+        audio.duration !== Infinity
+        ? audio.currentTime / audio.duration
+        : 0;
 
     if (progress > 0) {
       item.setAttribute("initial-progress", JSON.stringify(progress));

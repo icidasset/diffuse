@@ -269,6 +269,9 @@ class Browser extends DiffuseElement {
   /** @type {number[]} */
   #offsets = [];
 
+  /** @type {Track[] | undefined} */
+  #previousTracks = undefined;
+
   // LIFECYCLE
 
   /**
@@ -334,11 +337,16 @@ class Browser extends DiffuseElement {
       });
     }
 
-    // Reset scroll when track list changes
+    // Reset scroll when track list changes (skip the initial population)
     this.effect(() => {
-      const _results = this.$provider.value?.tracks();
+      const tracks = this.$provider.value?.tracks();
 
       untracked(() => {
+        if (this.#previousTracks === undefined) {
+          this.#previousTracks = tracks;
+          return;
+        }
+        this.#previousTracks = tracks;
         const panel = this.root().querySelector(".scroll-panel");
         if (panel) panel.scrollTo(0, 0);
       });
