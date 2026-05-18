@@ -705,32 +705,27 @@ class Browser extends DiffuseElement {
         "scroll",
         () => {
           this.#scrollTop = panel.scrollTop;
-          this.#renderIfWindowChanged(panel);
+          this.#renderIfWindowChanged();
         },
         { passive: true, signal: abort.signal },
       );
 
       this.#resizeObserver = new ResizeObserver((entries) => {
         this.#viewportHeight = entries[0].contentRect.height;
-        this.#renderIfWindowChanged(panel);
+        this.#renderIfWindowChanged();
       });
 
       this.#resizeObserver.observe(panel);
     });
   }
 
-  /**
-   * @param {Element} panel
-   */
-  #renderIfWindowChanged(panel) {
+  #renderIfWindowChanged() {
     const { startIndex, endIndex } = this.#computeWindow(this.#itemCount);
     if (
       startIndex === this.#renderedStartIndex &&
       endIndex === this.#renderedEndIndex
     ) return;
-    const scrollTop = panel.scrollTop;
     this.forceRender();
-    panel.scrollTop = scrollTop;
   }
 
   /**
