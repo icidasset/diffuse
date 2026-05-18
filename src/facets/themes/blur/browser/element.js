@@ -7,7 +7,7 @@ import {
   queryOptional,
   whenElementsDefined,
 } from "~/common/element.js";
-import { computed, signal, untracked } from "~/common/signal.js";
+import { batch, computed, signal, untracked } from "~/common/signal.js";
 import * as Playlist from "~/common/playlist.js";
 
 /**
@@ -309,11 +309,13 @@ class Browser extends DiffuseElement {
 
     whenElementsDefined({ output, provider, queue, scope, favourites }).then(
       () => {
-        this.$output.value = output;
-        this.$provider.value = provider;
-        this.$queue.value = queue;
-        this.$scope.value = scope;
-        this.$favourites.value = favourites;
+        batch(() => {
+          this.$output.value = output;
+          this.$provider.value = provider;
+          this.$queue.value = queue;
+          this.$scope.value = scope;
+          this.$favourites.value = favourites;
+        });
       },
     );
 
