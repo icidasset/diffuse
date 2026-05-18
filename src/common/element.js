@@ -128,7 +128,7 @@ export class DiffuseElement extends HTMLElement {
 
     this.effect(() => {
       if (!("render" in this && typeof this.render === "function")) return;
-      requestAnimationFrame(() => this.#render());
+      this.#render();
     });
   }
 
