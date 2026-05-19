@@ -373,30 +373,11 @@ class Browser extends DiffuseElement {
       untracked(() => {
         requestAnimationFrame(() => {
           this.#setupCoverObserver();
-
-          // Direct visibility check: IntersectionObserver is async and may not
-          // deliver its initial callback before paint, so fetch visible cards now.
-          const panel = this.root().querySelector(".cover-scroll-panel");
-          if (!panel) return;
-          const panelRect = panel.getBoundingClientRect();
-          const margin = 200;
-          for (const card of this.root().querySelectorAll(
-            ".cover-card[data-album-key]",
-          )) {
-            const albumKey =
-              /** @type {HTMLElement} */ (card).dataset.albumKey;
-            if (
-              !albumKey || this.#coverArtCache.has(albumKey) ||
-              this.#pendingArtFetch.has(albumKey)
-            ) continue;
-            const cardRect = card.getBoundingClientRect();
-            if (
-              cardRect.bottom + margin < panelRect.top ||
-              cardRect.top - margin > panelRect.bottom
-            ) continue;
-            const track = this.$albumTrackMap().get(albumKey);
-            if (track) this.#fetchAlbumArt(albumKey, track);
-          }
+          this.#fetchVisibleCoverArt();
+          // Fallback: IntersectionObserver may not deliver initial callbacks
+          // before paint, and layout may not be stable yet. Re-check after
+          // a frame to catch any cards that were missed.
+          requestAnimationFrame(() => this.#fetchVisibleCoverArt());
         });
       });
     });
@@ -753,6 +734,30 @@ class Browser extends DiffuseElement {
       this.#artRenderScheduled = false;
       this.forceRender();
     });
+  }
+
+  #fetchVisibleCoverArt() {
+    const panel = this.root().querySelector(".cover-scroll-panel");
+    if (!panel) return;
+    const panelRect = panel.getBoundingClientRect();
+    const margin = 200;
+    for (const card of this.root().querySelectorAll(
+      ".cover-card[data-album-key]",
+    )) {
+      const albumKey =
+        /** @type {HTMLElement} */ (card).dataset.albumKey;
+      if (
+        !albumKey || this.#coverArtCache.has(albumKey) ||
+        this.#pendingArtFetch.has(albumKey)
+      ) continue;
+      const cardRect = card.getBoundingClientRect();
+      if (
+        cardRect.bottom + margin < panelRect.top ||
+        cardRect.top - margin > panelRect.bottom
+      ) continue;
+      const track = this.$albumTrackMap().get(albumKey);
+      if (track) this.#fetchAlbumArt(albumKey, track);
+    }
   }
 
   #setupCoverObserver() {
