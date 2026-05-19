@@ -312,6 +312,8 @@ export default ScopedTracksOrchestrator;
 // HELPERS
 ////////////////////////////////////////////
 
+const collator = new Intl.Collator();
+
 const MONTHS = [
   "January",
   "February",
