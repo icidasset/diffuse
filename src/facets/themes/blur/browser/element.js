@@ -266,6 +266,9 @@ class Browser extends DiffuseElement {
   /** @type {AbortController | undefined} */
   #scrollAbort;
 
+  /** @type {number | undefined} */
+  #scrollRenderRaf = undefined;
+
   /** @type {number[]} */
   #offsets = [];
 
@@ -368,6 +371,10 @@ class Browser extends DiffuseElement {
     this.#resizeObserver?.disconnect();
     this.#resizeObserver = undefined;
     this.#disconnectCoverObserver();
+    if (this.#scrollRenderRaf !== undefined) {
+      cancelAnimationFrame(this.#scrollRenderRaf);
+      this.#scrollRenderRaf = undefined;
+    }
   }
 
   // EVENTS
@@ -735,7 +742,11 @@ class Browser extends DiffuseElement {
       startIndex === this.#renderedStartIndex &&
       endIndex === this.#renderedEndIndex
     ) return;
-    this.forceRender();
+    if (this.#scrollRenderRaf !== undefined) return;
+    this.#scrollRenderRaf = requestAnimationFrame(() => {
+      this.#scrollRenderRaf = undefined;
+      this.forceRender();
+    });
   }
 
   /**
