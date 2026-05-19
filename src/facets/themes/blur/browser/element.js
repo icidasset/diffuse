@@ -778,7 +778,13 @@ class Browser extends DiffuseElement {
       );
 
       this.#resizeObserver = new ResizeObserver((entries) => {
-        this.#viewportHeight = entries[0].contentRect.height;
+        // Cap to window.innerHeight to guard against measuring the scroll height
+        // before shadow DOM stylesheets finish loading (when the panel has no
+        // flex constraints and expands to its full virtual content size).
+        this.#viewportHeight = Math.min(
+          entries[0].contentRect.height,
+          window.innerHeight,
+        );
         this.#renderIfWindowChanged();
       });
 
