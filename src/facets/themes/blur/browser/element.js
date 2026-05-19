@@ -695,7 +695,12 @@ class Browser extends DiffuseElement {
   async #doFetchAlbumArt(albumKey, track) {
     const artwork = this.$artwork.value;
     try {
-      const bytes = artwork ? await artwork.get(track) : null;
+      const timeout = new Promise(
+        (resolve) => setTimeout(() => resolve(null), 30_000),
+      );
+      const bytes = artwork
+        ? await Promise.race([artwork.get(track), timeout])
+        : null;
       if (bytes) {
         const mime = detectMime(bytes);
         const url = URL.createObjectURL(
@@ -706,8 +711,9 @@ class Browser extends DiffuseElement {
         this.#coverArtCache.set(albumKey, null);
       }
     } catch {
-      this.#coverArtCache.set(albumKey, null);
+      // don't cache on error — let it be retried
     } finally {
+      this.#pendingArtFetch.delete(albumKey);
       this.#artFetchActive--;
       this.#drainArtQueue();
     }
