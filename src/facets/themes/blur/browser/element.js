@@ -799,6 +799,7 @@ class Browser extends DiffuseElement {
         requestAnimationFrame(attach);
       },
     );
+
     this.#scrollVisibilityObserver.observe(this);
   }
 
@@ -810,11 +811,7 @@ class Browser extends DiffuseElement {
       endIndex === this.#renderedEndIndex
     ) return;
 
-    if (this.#scrollRenderRaf !== undefined) return;
-    this.#scrollRenderRaf = requestAnimationFrame(() => {
-      this.#scrollRenderRaf = undefined;
-      this.forceRender();
-    });
+    this.forceRender();
   }
 
   /**
