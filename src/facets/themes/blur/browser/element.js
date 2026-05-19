@@ -237,8 +237,6 @@ class Browser extends DiffuseElement {
   /** @type {IntersectionObserver | undefined} */
   #coverObserver = undefined;
 
-  #observedCards = new WeakSet();
-
   /** @type {Map<string, Track>} */
   #pendingVisibleCards = new Map();
 
@@ -361,6 +359,19 @@ class Browser extends DiffuseElement {
           panel.scrollTo(0, 0);
           this.#scrollTop = 0;
         }
+      });
+    });
+
+    // Re-observe cover cards when groups change (track filtering, sorting, search)
+    this.effect(() => {
+      const _coverGroups = this.$sortedCoverGroups();
+      const _artistGroups = this.$sortedArtistGroups();
+
+      if (this.#viewMode.value !== "cover") return;
+      if (this.#openCoverItem.value) return;
+
+      untracked(() => {
+        requestAnimationFrame(() => this.#setupCoverObserver());
       });
     });
 
@@ -688,7 +699,7 @@ class Browser extends DiffuseElement {
       if (bytes) {
         const mime = detectMime(bytes);
         const url = URL.createObjectURL(
-          new Blob([/** @type {ArrayBuffer} */ (bytes.buffer)], { type: mime }),
+          new Blob([bytes], { type: mime }),
         );
         this.#coverArtCache.set(albumKey, url);
       } else {
@@ -746,8 +757,12 @@ class Browser extends DiffuseElement {
     for (
       const card of this.root().querySelectorAll(".cover-card[data-album-key]")
     ) {
-      if (this.#observedCards.has(card)) continue;
-      this.#observedCards.add(card);
+      const albumKey = /** @type {HTMLElement} */ (card).dataset.albumKey;
+      if (
+        albumKey &&
+        (this.#coverArtCache.has(albumKey) ||
+          this.#pendingArtFetch.has(albumKey))
+      ) continue;
       this.#coverObserver.observe(card);
     }
   }
@@ -862,7 +877,6 @@ class Browser extends DiffuseElement {
   #disconnectCoverObserver() {
     this.#coverObserver?.disconnect();
     this.#coverObserver = undefined;
-    this.#observedCards = new WeakSet();
     clearTimeout(this.#artFetchDebounce);
     this.#pendingVisibleCards.clear();
   }
