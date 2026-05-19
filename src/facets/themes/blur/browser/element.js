@@ -371,7 +371,33 @@ class Browser extends DiffuseElement {
       if (this.#openCoverItem.value) return;
 
       untracked(() => {
-        requestAnimationFrame(() => this.#setupCoverObserver());
+        requestAnimationFrame(() => {
+          this.#setupCoverObserver();
+
+          // Direct visibility check: IntersectionObserver is async and may not
+          // deliver its initial callback before paint, so fetch visible cards now.
+          const panel = this.root().querySelector(".cover-scroll-panel");
+          if (!panel) return;
+          const panelRect = panel.getBoundingClientRect();
+          const margin = 200;
+          for (const card of this.root().querySelectorAll(
+            ".cover-card[data-album-key]",
+          )) {
+            const albumKey =
+              /** @type {HTMLElement} */ (card).dataset.albumKey;
+            if (
+              !albumKey || this.#coverArtCache.has(albumKey) ||
+              this.#pendingArtFetch.has(albumKey)
+            ) continue;
+            const cardRect = card.getBoundingClientRect();
+            if (
+              cardRect.bottom + margin < panelRect.top ||
+              cardRect.top - margin > panelRect.bottom
+            ) continue;
+            const track = this.$albumTrackMap().get(albumKey);
+            if (track) this.#fetchAlbumArt(albumKey, track);
+          }
+        });
       });
     });
 
