@@ -9,6 +9,7 @@ import {
 } from "~/common/element.js";
 import { batch, computed, signal, untracked } from "~/common/signal.js";
 import * as Playlist from "~/common/playlist.js";
+import { repeat } from "~/vendor/lit-html/directives/repeat.js";
 
 /**
  * @import {RenderArg} from "~/common/element.d.ts"
@@ -1334,33 +1335,24 @@ class Browser extends DiffuseElement {
             ? html`
               <div class="loading">Loading ...</div>
             `
-            : (() => {
-              const rows = [];
-              for (let i = startIndex; i < endIndex; i++) {
-                const item = groups ? this.#flatItems[i] : {
-                  type: /** @type {"track"} */ ("track"),
-                  track: tracks[i],
-                };
-                const top = this.#offsets.length > 0
-                  ? this.#offsets[i]
-                  : i * TRACK_ROW_HEIGHT;
-
-                if (item?.type === "group") {
-                  rows.push(html`
+            : repeat(
+              buildWindowItems(groups, tracks, this.#flatItems, this.#offsets, startIndex, endIndex),
+              (entry) => entry.key,
+              (entry) => {
+                if (entry.type === "group") {
+                  return html`
                     <div
-                      class="group-header ${i === 0 ? `group-header--top` : ``}"
-                      style="transform: translateY(${top}px);"
+                      class="group-header ${entry.index === 0 ? `group-header--top` : ``}"
+                      style="transform: translateY(${entry.top}px);"
                     >
                       <i class="ph-fill ph-vinyl-record"></i>
-                      <span>${item.label}</span>
+                      <span>${entry.label}</span>
                     </div>
-                  `);
-                } else if (item?.type === "track") {
-                  rows.push(renderTrackRow(item.track, top, i));
+                  `;
                 }
-              }
-              return rows;
-            })()}
+                return renderTrackRow(entry.track, entry.top, entry.index);
+              },
+            )}
         </div>
       </div>
     `;
@@ -1681,6 +1673,39 @@ function buildFlatList(groups) {
     }
   }
   return items;
+}
+
+/**
+ * @typedef {{ type: "group"; key: string; label: string; index: number; top: number }} WindowGroupEntry
+ * @typedef {{ type: "track"; key: string; track: Track; index: number; top: number }} WindowTrackEntry
+ * @typedef {WindowGroupEntry | WindowTrackEntry} WindowEntry
+ */
+
+/**
+ * @param {{ label: string; tracks: Track[] }[] | undefined} groups
+ * @param {Track[]} tracks
+ * @param {VirtualItem[]} flatItems
+ * @param {number[]} offsets
+ * @param {number} startIndex
+ * @param {number} endIndex
+ * @returns {WindowEntry[]}
+ */
+function buildWindowItems(groups, tracks, flatItems, offsets, startIndex, endIndex) {
+  /** @type {WindowEntry[]} */
+  const entries = [];
+  for (let i = startIndex; i < endIndex; i++) {
+    const item = groups
+      ? flatItems[i]
+      : /** @type {VirtualItem} */ ({ type: "track", track: tracks[i] });
+    const top = offsets.length > 0 ? offsets[i] : i * TRACK_ROW_HEIGHT;
+    if (!item) continue;
+    if (item.type === "group") {
+      entries.push({ type: "group", key: `group:${item.label}`, label: item.label, index: i, top });
+    } else {
+      entries.push({ type: "track", key: `track:${item.track.id}`, track: item.track, index: i, top });
+    }
+  }
+  return entries;
 }
 
 ////////////////////////////////////////////
