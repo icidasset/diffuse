@@ -9,18 +9,20 @@ if ("serviceWorker" in navigator) {
     });
 
   // When the SW activates it sends "sw-activated". Reload so the page runs
-  // fresh code under the new SW. The sessionStorage flag skips one reload on
-  // the very next page load to break the loop caused by the SW script URL
-  // changing during the reload (e.g. esbuild chunk-hash churn in development).
-  // The listener is always attached so a second activation in the same load
-  // isn't silently dropped.
+  // fresh code under the new SW. To break the loop that can occur when the SW
+  // script itself changes between reloads (esbuild chunk-hash churn in dev),
+  // we store a timestamp. If a second sw-activated arrives within a few seconds
+  // of the previous reload it is the loop — skip it. A stale timestamp means a
+  // genuinely new SW arrived later, so we reload again.
+  const RELOAD_GUARD_MS = 5000;
   navigator.serviceWorker.addEventListener("message", (event) => {
     if (event.data?.type !== "sw-activated") return;
-    if (sessionStorage.getItem("sw-activated-reload")) {
+    const flag = sessionStorage.getItem("sw-activated-reload");
+    if (flag) {
       sessionStorage.removeItem("sw-activated-reload");
-      return;
+      if (Date.now() - Number(flag) < RELOAD_GUARD_MS) return;
     }
-    sessionStorage.setItem("sw-activated-reload", "1");
+    sessionStorage.setItem("sw-activated-reload", String(Date.now()));
     location.reload();
   });
 }

@@ -12,6 +12,19 @@ import {
 import * as CID from "~/common/cid.js";
 import { effect } from "~/common/signal.js";
 
+// When the service worker takes control (clients.claim()), the page is about
+// to reload (see default-layout.js sw-activated handler). Any fetch() calls
+// in flight at that moment will be cancelled by the navigation and throw a
+// NetworkError. We detect the controller change here so we can suppress those
+// spurious errors rather than flashing an error UI before the reload.
+let swControllerChanging = false;
+
+if ("serviceWorker" in navigator) {
+  navigator.serviceWorker.addEventListener("controllerchange", () => {
+    swControllerChanging = true;
+  });
+}
+
 /**
  * @import {SignalReader} from "~/common/signal.d.ts"
  */
@@ -103,6 +116,7 @@ export function createLoader(config) {
 
     // Make sure HTML is loaded when a URI is specified
     await ensureHTML(item).catch((err) => {
+      if (swControllerChanging) return;
       renderError(container, `Failed to load URI: ${item.uri}`, {
         context: err,
         throw: true,
