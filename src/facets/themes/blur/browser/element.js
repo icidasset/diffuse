@@ -267,6 +267,9 @@ class Browser extends DiffuseElement {
   /** @type {AbortController | undefined} */
   #scrollAbort;
 
+  /** @type {IntersectionObserver | undefined} */
+  #scrollVisibilityObserver;
+
   /** @type {number | undefined} */
   #scrollRenderRaf = undefined;
 
@@ -354,7 +357,10 @@ class Browser extends DiffuseElement {
         }
         this.#previousTracks = tracks;
         const panel = this.root().querySelector(".scroll-panel");
-        if (panel) panel.scrollTo(0, 0);
+        if (panel) {
+          panel.scrollTo(0, 0);
+          this.#scrollTop = 0;
+        }
       });
     });
 
@@ -369,6 +375,8 @@ class Browser extends DiffuseElement {
     super.disconnectedCallback();
     this.#scrollAbort?.abort();
     this.#scrollAbort = undefined;
+    this.#scrollVisibilityObserver?.disconnect();
+    this.#scrollVisibilityObserver = undefined;
     this.#resizeObserver?.disconnect();
     this.#resizeObserver = undefined;
     this.#disconnectCoverObserver();
@@ -461,8 +469,11 @@ class Browser extends DiffuseElement {
       existing
         .filter((item) => item.playlist === playlistName)
         .map((item) => {
-          const a = item.criteria.find((c) => c.field === "tags.artist")?.value ?? "";
-          const t = item.criteria.find((c) => c.field === "tags.title")?.value ?? "";
+          const a = item.criteria.find((c) =>
+            c.field === "tags.artist"
+          )?.value ?? "";
+          const t =
+            item.criteria.find((c) => c.field === "tags.title")?.value ?? "";
           return `${String(a).toLowerCase()}.${String(t).toLowerCase()}`;
         }),
     );
@@ -472,16 +483,28 @@ class Browser extends DiffuseElement {
 
     const newItems = tracks
       .filter((track) => {
-        const key = `${String(track.tags?.artist ?? "").toLowerCase()}.${String(track.tags?.title ?? "").toLowerCase()}`;
+        const key = `${String(track.tags?.artist ?? "").toLowerCase()}.${
+          String(track.tags?.title ?? "").toLowerCase()
+        }`;
         return !existingKeys.has(key);
       })
-      .map((track) => /** @type {import("~/definitions/types.d.ts").PlaylistItem} */ ({
+      .map((
+        track,
+      ) => /** @type {import("~/definitions/types.d.ts").PlaylistItem} */ ({
         $type: "sh.diffuse.output.playlistItem",
         id: TID.now(),
         playlist: playlistName,
         criteria: [
-          { field: "tags.artist", value: /** @type {unknown} */ (track.tags?.artist), transformations },
-          { field: "tags.title", value: /** @type {unknown} */ (track.tags?.title), transformations },
+          {
+            field: "tags.artist",
+            value: /** @type {unknown} */ (track.tags?.artist),
+            transformations,
+          },
+          {
+            field: "tags.title",
+            value: /** @type {unknown} */ (track.tags?.title),
+            transformations,
+          },
         ],
         createdAt: now,
         updatedAt: now,
@@ -512,18 +535,28 @@ class Browser extends DiffuseElement {
 
     for (const track of tracks) {
       const id = TID.now();
-      newItems.push(/** @type {import("~/definitions/types.d.ts").PlaylistItem} */ ({
-        $type: "sh.diffuse.output.playlistItem",
-        id,
-        playlist: playlistName,
-        criteria: [
-          { field: "tags.artist", value: /** @type {unknown} */ (track.tags?.artist), transformations },
-          { field: "tags.title", value: /** @type {unknown} */ (track.tags?.title), transformations },
-        ],
-        ...(ordered ? { positionedAfter: prevId } : {}),
-        createdAt: now,
-        updatedAt: now,
-      }));
+      newItems.push(
+        /** @type {import("~/definitions/types.d.ts").PlaylistItem} */ ({
+          $type: "sh.diffuse.output.playlistItem",
+          id,
+          playlist: playlistName,
+          criteria: [
+            {
+              field: "tags.artist",
+              value: /** @type {unknown} */ (track.tags?.artist),
+              transformations,
+            },
+            {
+              field: "tags.title",
+              value: /** @type {unknown} */ (track.tags?.title),
+              transformations,
+            },
+          ],
+          ...(ordered ? { positionedAfter: prevId } : {}),
+          createdAt: now,
+          updatedAt: now,
+        }),
+      );
       if (ordered) prevId = id;
     }
 
@@ -537,13 +570,21 @@ class Browser extends DiffuseElement {
    */
   #renderTrackMenu(html, menuId, tracks) {
     const uris = tracks.map((t) => t.uri);
-    const allCached = uris.length > 0 && uris.every((u) => this.#cachedUris.value.has(u));
+    const allCached = uris.length > 0 &&
+      uris.every((u) => this.#cachedUris.value.has(u));
     return html`
-      <div id="${menuId}" class="dropdown" popover @click="${(/** @type {MouseEvent} */ e) => e.stopPropagation()}">
+      <div id="${menuId}" class="dropdown" popover @click="${(
+        /** @type {MouseEvent} */ e,
+      ) => e.stopPropagation()}">
         <button @click="${() => {
           if (!tracks.length) return;
-          this.$queue.value?.add({ inFront: true, trackIds: tracks.map((t) => t.id) });
-          /** @type {HTMLElement | null} */ (this.root().querySelector(`#${menuId}`))?.hidePopover();
+          this.$queue.value?.add({
+            inFront: true,
+            trackIds: tracks.map((t) => t.id),
+          });
+          /** @type {HTMLElement | null} */ (this.root().querySelector(
+            `#${menuId}`,
+          ))?.hidePopover();
         }}">
           <i class="ph-bold ph-clock-counter-clockwise"></i>
           Play next
@@ -551,14 +592,18 @@ class Browser extends DiffuseElement {
         <button @click="${() => {
           if (!tracks.length) return;
           this.$queue.value?.add({ trackIds: tracks.map((t) => t.id) });
-          /** @type {HTMLElement | null} */ (this.root().querySelector(`#${menuId}`))?.hidePopover();
+          /** @type {HTMLElement | null} */ (this.root().querySelector(
+            `#${menuId}`,
+          ))?.hidePopover();
         }}">
           <i class="ph-bold ph-clock-counter-clockwise"></i>
           Add to queue
         </button>
         <button @click="${() => {
           if (!tracks.length) return;
-          /** @type {HTMLElement | null} */ (this.root().querySelector(`#${menuId}`))?.hidePopover();
+          /** @type {HTMLElement | null} */ (this.root().querySelector(
+            `#${menuId}`,
+          ))?.hidePopover();
           this.#playlistPickerState.value = { mode: "add", tracks };
         }}">
           <i class="ph-bold ph-playlist"></i>
@@ -574,7 +619,9 @@ class Browser extends DiffuseElement {
           }
           const updated = await this.$input.value?.listCached();
           if (updated) this.#cachedUris.value = new Set(updated);
-          /** @type {HTMLElement | null} */ (this.root().querySelector(`#${menuId}`))?.hidePopover();
+          /** @type {HTMLElement | null} */ (this.root().querySelector(
+            `#${menuId}`,
+          ))?.hidePopover();
         }}">
           <i class="ph-fill ph-lightning"></i>
           ${allCached ? `Remove from cache` : `Store in cache`}
@@ -708,13 +755,15 @@ class Browser extends DiffuseElement {
   #setupScrollTracking() {
     this.#scrollAbort?.abort();
     this.#scrollAbort = new AbortController();
+    this.#scrollVisibilityObserver?.disconnect();
+    this.#scrollVisibilityObserver = undefined;
     this.#resizeObserver?.disconnect();
     this.#resizeObserver = undefined;
     this.#scrollTop = 0;
 
     const abort = this.#scrollAbort;
 
-    requestAnimationFrame(() => {
+    const attach = () => {
       if (abort.signal.aborted) return;
       const panel = this.root().querySelector(".scroll-panel");
       if (!panel) return;
@@ -734,15 +783,27 @@ class Browser extends DiffuseElement {
       });
 
       this.#resizeObserver.observe(panel);
-    });
+    };
+
+    this.#scrollVisibilityObserver = new IntersectionObserver(
+      (entries, observer) => {
+        if (!entries[0].isIntersecting) return;
+        observer.disconnect();
+        this.#scrollVisibilityObserver = undefined;
+        requestAnimationFrame(attach);
+      },
+    );
+    this.#scrollVisibilityObserver.observe(this);
   }
 
   #renderIfWindowChanged() {
     const { startIndex, endIndex } = this.#computeWindow(this.#itemCount);
+
     if (
       startIndex === this.#renderedStartIndex &&
       endIndex === this.#renderedEndIndex
     ) return;
+
     if (this.#scrollRenderRaf !== undefined) return;
     this.#scrollRenderRaf = requestAnimationFrame(() => {
       this.#scrollRenderRaf = undefined;
@@ -765,7 +826,10 @@ class Browser extends DiffuseElement {
       );
       const visibleCount = Math.ceil(viewportHeight / TRACK_ROW_HEIGHT) +
         2 * OVERSCAN;
-      return { startIndex, endIndex: Math.min(count, startIndex + visibleCount) };
+      return {
+        startIndex,
+        endIndex: Math.min(count, startIndex + visibleCount),
+      };
     }
 
     const offsets = this.#offsets;
@@ -807,7 +871,11 @@ class Browser extends DiffuseElement {
    */
   #renderPlaylistPicker(html) {
     const state = this.#playlistPickerState.value;
-    if (!state) return html``;
+    if (!state) {
+      return html`
+
+      `;
+    }
 
     const isCreate = state.mode === "create";
     const title = state.mode === "filter"
@@ -823,7 +891,10 @@ class Browser extends DiffuseElement {
         <button
           class="toolbar-icon-btn"
           @click="${() => {
-            this.#playlistPickerState.value = { mode: "add", tracks: /** @type {any} */ (state).tracks };
+            this.#playlistPickerState.value = {
+              mode: "add",
+              tracks: /** @type {any} */ (state).tracks,
+            };
           }}"
           title="Back"
         >
@@ -843,7 +914,9 @@ class Browser extends DiffuseElement {
       </a>
       <button
         class="toolbar-icon-btn"
-        @click="${() => { this.#playlistPickerState.value = null; }}"
+        @click="${() => {
+          this.#playlistPickerState.value = null;
+        }}"
         title="Close"
       >
         <i class="ph-bold ph-x"></i>
@@ -857,10 +930,20 @@ class Browser extends DiffuseElement {
           @submit="${async (/** @type {SubmitEvent} */ e) => {
             e.preventDefault();
             const form = /** @type {HTMLFormElement} */ (e.currentTarget);
-            const name = /** @type {HTMLInputElement} */ (form.elements.namedItem(`playlist-name`))?.value.trim();
-            const ordered = /** @type {HTMLInputElement} */ (form.elements.namedItem(`playlist-ordered`))?.checked ?? false;
+            const name =
+              /** @type {HTMLInputElement} */ (form.elements.namedItem(
+                `playlist-name`,
+              ))?.value.trim();
+            const ordered =
+              /** @type {HTMLInputElement} */ (form.elements.namedItem(
+                `playlist-ordered`,
+              ))?.checked ?? false;
             if (!name) return;
-            await this.createPlaylistWithTracks(name, /** @type {any} */ (state).tracks, ordered);
+            await this.createPlaylistWithTracks(
+              name,
+              /** @type {any} */ (state).tracks,
+              ordered,
+            );
             this.#playlistPickerState.value = null;
           }}"
         >
@@ -876,7 +959,9 @@ class Browser extends DiffuseElement {
               required
             />
           </label>
-          <label class="playlist-picker-create-label playlist-picker-create-label--checkbox">
+          <label
+            class="playlist-picker-create-label playlist-picker-create-label--checkbox"
+          >
             <input
               class="playlist-picker-create-checkbox"
               name="playlist-ordered"
@@ -905,44 +990,55 @@ class Browser extends DiffuseElement {
                 All tracks
               </button>
             `
-            : ``}
-          ${state.mode === "add"
+            : ``} ${state.mode === "add"
             ? html`
               <button
                 class="playlist-picker-item playlist-picker-item--create"
                 @click="${() => {
-                  this.#playlistPickerState.value = { mode: "create", tracks: state.tracks };
+                  this.#playlistPickerState.value = {
+                    mode: "create",
+                    tracks: state.tracks,
+                  };
                 }}"
               >
                 <i class="ph-bold ph-plus"></i>
                 Create new playlist
               </button>
-              ${groups.length > 0 ? html`<div class="playlist-picker-divider"></div>` : ``}
+              ${groups.length > 0
+                ? html`
+                  <div class="playlist-picker-divider"></div>
+                `
+                : ``}
             `
-            : ``}
-          ${groups.length === 0
-            ? (state.mode === "add" ? `` : html`<div class="playlist-picker-empty">No playlists yet</div>`)
-            : groups.map(({ label, playlists }) => html`
-              <div class="playlist-picker-group-label">${label}</div>
-              ${playlists.map((p) => html`
-                <button
-                  class="playlist-picker-item ${state.mode === `filter` &&
-                      this.$scope.value?.playlist() === p.name
-                    ? `playlist-picker-item--active`
-                    : ``}"
-                  @click="${async () => {
-                    if (state.mode === "add") {
-                      await this.addTracksToPlaylist(p.name, state.tracks);
-                    } else {
-                      this.setSelectedPlaylist(p.name);
-                    }
-                    this.#playlistPickerState.value = null;
-                  }}"
-                >
-                  ${p.name}
-                </button>
-              `)}
-            `)}
+            : ``} ${groups.length === 0
+            ? (state.mode === "add" ? `` : html`
+              <div class="playlist-picker-empty">No playlists yet</div>
+            `)
+            : groups.map(({ label, playlists }) =>
+              html`
+                <div class="playlist-picker-group-label">${label}</div>
+                ${playlists.map((p) =>
+                  html`
+                    <button
+                      class="playlist-picker-item ${state.mode === `filter` &&
+                          this.$scope.value?.playlist() === p.name
+                        ? `playlist-picker-item--active`
+                        : ``}"
+                      @click="${async () => {
+                        if (state.mode === "add") {
+                          await this.addTracksToPlaylist(p.name, state.tracks);
+                        } else {
+                          this.setSelectedPlaylist(p.name);
+                        }
+                        this.#playlistPickerState.value = null;
+                      }}"
+                    >
+                      ${p.name}
+                    </button>
+                  `
+                )}
+              `
+            )}
         </div>
       `;
 
@@ -950,7 +1046,9 @@ class Browser extends DiffuseElement {
       <div
         class="playlist-picker-overlay"
         @click="${(/** @type {MouseEvent} */ e) => {
-          if (e.target === e.currentTarget) this.#playlistPickerState.value = null;
+          if (e.target === e.currentTarget) {
+            this.#playlistPickerState.value = null;
+          }
         }}"
       >
         <div class="playlist-picker-panel">
@@ -1094,11 +1192,16 @@ class Browser extends DiffuseElement {
                         <button
                           class="cover-menu-btn"
                           popovertarget="artist-card-menu-${track.id}"
-                          @click="${(/** @type {Event} */ e) => e.stopPropagation()}"
+                          @click="${(/** @type {Event} */ e) =>
+                            e.stopPropagation()}"
                         >
                           <i class="ph-fill ph-dots-three-outline"></i>
                         </button>
-                        ${this.#renderTrackMenu(html, `artist-card-menu-${track.id}`, cardTracks)}
+                        ${this.#renderTrackMenu(
+                          html,
+                          `artist-card-menu-${track.id}`,
+                          cardTracks,
+                        )}
                       </div>
                       <div class="cover-info">
                         <span class="cover-album">${artistName}</span>
@@ -1171,11 +1274,16 @@ class Browser extends DiffuseElement {
                       <button
                         class="cover-menu-btn"
                         popovertarget="album-card-menu-${track.id}"
-                        @click="${(/** @type {Event} */ e) => e.stopPropagation()}"
+                        @click="${(/** @type {Event} */ e) =>
+                          e.stopPropagation()}"
                       >
                         <i class="ph-fill ph-dots-three-outline"></i>
                       </button>
-                      ${this.#renderTrackMenu(html, `album-card-menu-${track.id}`, cardTracks)}
+                      ${this.#renderTrackMenu(
+                        html,
+                        `album-card-menu-${track.id}`,
+                        cardTracks,
+                      )}
                     </div>
                     <div class="cover-info">
                       <span class="cover-album">${albumName}</span>
@@ -1278,7 +1386,9 @@ class Browser extends DiffuseElement {
             >
               <i class="ph-bold ph-dots-three-outline"></i>
             </button>
-            ${this.#renderTrackMenu(html, `list-track-menu-${track.id}`, [track])}
+            ${this.#renderTrackMenu(html, `list-track-menu-${track.id}`, [
+              track,
+            ])}
           </div>
         </div>
       `;
@@ -1336,13 +1446,22 @@ class Browser extends DiffuseElement {
               <div class="loading">Loading ...</div>
             `
             : repeat(
-              buildWindowItems(groups, tracks, this.#flatItems, this.#offsets, startIndex, endIndex),
+              buildWindowItems(
+                groups,
+                tracks,
+                this.#flatItems,
+                this.#offsets,
+                startIndex,
+                endIndex,
+              ),
               (entry) => entry.key,
               (entry) => {
                 if (entry.type === "group") {
                   return html`
                     <div
-                      class="group-header ${entry.index === 0 ? `group-header--top` : ``}"
+                      class="group-header ${entry.index === 0
+                        ? `group-header--top`
+                        : ``}"
                       style="transform: translateY(${entry.top}px);"
                     >
                       <i class="ph-fill ph-vinyl-record"></i>
@@ -1469,11 +1588,14 @@ class Browser extends DiffuseElement {
                     <button
                       class="track-menu-btn"
                       popovertarget="detail-track-menu-${t.id}"
-                      @click="${(/** @type {Event} */ e) => e.stopPropagation()}"
+                      @click="${(/** @type {Event} */ e) =>
+                        e.stopPropagation()}"
                     >
                       <i class="ph-bold ph-dots-three-outline"></i>
                     </button>
-                    ${this.#renderTrackMenu(html, `detail-track-menu-${t.id}`, [t])}
+                    ${this.#renderTrackMenu(html, `detail-track-menu-${t.id}`, [
+                      t,
+                    ])}
                   </div>
                 </div>
               `;
@@ -1544,7 +1666,9 @@ class Browser extends DiffuseElement {
         class="browser-button browser-button--playlist ${playlist
           ? `browser-button--active`
           : ``}"
-        @click="${() => { this.#playlistPickerState.value = { mode: "filter" }; }}"
+        @click="${() => {
+          this.#playlistPickerState.value = { mode: "filter" };
+        }}"
       >
         <i class="ph-fill ph-playlist"></i>
         <span>${playlist ?? `All tracks`}</span>
@@ -1617,9 +1741,8 @@ class Browser extends DiffuseElement {
 
       ${viewMode === `cover`
         ? this.#renderCoverView(html, isLoading)
-        : this.#renderListView(html, isLoading, sortBy)}
-
-      ${this.#renderPlaylistPicker(html)}
+        : this.#renderListView(html, isLoading, sortBy)} ${this
+        .#renderPlaylistPicker(html)}
     `;
   }
 }
@@ -1690,7 +1813,14 @@ function buildFlatList(groups) {
  * @param {number} endIndex
  * @returns {WindowEntry[]}
  */
-function buildWindowItems(groups, tracks, flatItems, offsets, startIndex, endIndex) {
+function buildWindowItems(
+  groups,
+  tracks,
+  flatItems,
+  offsets,
+  startIndex,
+  endIndex,
+) {
   /** @type {WindowEntry[]} */
   const entries = [];
   for (let i = startIndex; i < endIndex; i++) {
@@ -1700,9 +1830,21 @@ function buildWindowItems(groups, tracks, flatItems, offsets, startIndex, endInd
     const top = offsets.length > 0 ? offsets[i] : i * TRACK_ROW_HEIGHT;
     if (!item) continue;
     if (item.type === "group") {
-      entries.push({ type: "group", key: `group:${item.label}`, label: item.label, index: i, top });
+      entries.push({
+        type: "group",
+        key: `group:${item.label}`,
+        label: item.label,
+        index: i,
+        top,
+      });
     } else {
-      entries.push({ type: "track", key: `track:${item.track.id}`, track: item.track, index: i, top });
+      entries.push({
+        type: "track",
+        key: `track:${item.track.id}`,
+        track: item.track,
+        index: i,
+        top,
+      });
     }
   }
   return entries;
