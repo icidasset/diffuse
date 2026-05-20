@@ -34,16 +34,19 @@ class WindowManager extends DiffuseElement {
    * @param {string} id
    * @param {string} left
    * @param {string} top
+   * @param {string | undefined} [width]
+   * @param {string | undefined} [height]
+   * @param {boolean | undefined} [open]
    */
-  #savePosition(id, left, top) {
-    localStorage.setItem(`${STORAGE_PREFIX}${id}`, JSON.stringify({ left, top }));
+  #saveState(id, left, top, width, height, open) {
+    localStorage.setItem(`${STORAGE_PREFIX}${id}`, JSON.stringify({ left, top, width, height, open }));
   }
 
   /**
    * @param {string} id
-   * @returns {{ left: string; top: string } | null}
+   * @returns {{ left: string; top: string; width?: string; height?: string; open?: boolean } | null}
    */
-  #loadPosition(id) {
+  #loadState(id) {
     try {
       const raw = localStorage.getItem(`${STORAGE_PREFIX}${id}`);
       if (!raw) return null;
@@ -53,14 +56,83 @@ class WindowManager extends DiffuseElement {
     }
   }
 
-  #restorePositions() {
+  #restoreState() {
     this.querySelectorAll("dtw-window[id]").forEach((w) => {
       if (!(w instanceof HTMLElement) || !w.id) return;
-      const pos = this.#loadPosition(w.id);
-      if (pos) {
-        w.style.left = pos.left;
-        w.style.top = pos.top;
+      const state = this.#loadState(w.id);
+      if (!state) return;
+      if (state.left) w.style.left = state.left;
+      if (state.top) w.style.top = state.top;
+      if (state.width || state.height) {
+        const body = w.shadowRoot?.querySelector(".window-body");
+        if (body instanceof HTMLElement) {
+          if (state.width) body.style.width = state.width;
+          if (state.height) body.style.height = state.height;
+        }
       }
+      if (state.open) {
+        w.setAttribute("open", "");
+        this.#lastZindex++;
+        w.style.zIndex = this.#lastZindex.toString();
+      }
+    });
+  }
+
+  /** @type {MutationObserver | null} */
+  #openObserver = null;
+
+  #setupOpenObserver() {
+    this.#openObserver = new MutationObserver((mutations) => {
+      for (const mutation of mutations) {
+        if (mutation.attributeName !== "open") continue;
+        const target = mutation.target;
+        if (!(target instanceof HTMLElement) || !target.id) continue;
+        const isOpen = target.hasAttribute("open");
+        const state = this.#loadState(target.id) ?? {};
+        this.#saveState(
+          target.id,
+          state.left ?? target.style.left,
+          state.top ?? target.style.top,
+          state.width,
+          state.height,
+          isOpen,
+        );
+      }
+    });
+
+    this.querySelectorAll("dtw-window[id]").forEach((w) => {
+      this.#openObserver?.observe(w, { attributes: true, attributeFilter: ["open"] });
+    });
+  }
+
+  #resizeObservers = /** @type {Map<string, ResizeObserver>} */ (new Map());
+
+  #setupResizeObservers() {
+    this.querySelectorAll("dtw-window[id]").forEach((w) => {
+      if (!(w instanceof HTMLElement) || !w.id) return;
+      if (this.#resizeObservers.has(w.id)) return;
+
+      const body = w.shadowRoot?.querySelector(".window-body");
+      if (!(body instanceof HTMLElement)) return;
+
+      let initialized = false;
+      const observer = new ResizeObserver(() => {
+        if (!initialized) { initialized = true; return; }
+        const { width, height } = body.getBoundingClientRect();
+        if (width === 0 || height === 0) return;
+        const state = this.#loadState(w.id) ?? {};
+        this.#saveState(
+          w.id,
+          state.left ?? w.style.left,
+          state.top ?? w.style.top,
+          `${Math.round(width)}px`,
+          `${Math.round(height)}px`,
+          state.open,
+        );
+      });
+
+      observer.observe(body);
+      this.#resizeObservers.set(w.id, observer);
     });
   }
 
@@ -72,7 +144,9 @@ class WindowManager extends DiffuseElement {
   async connectedCallback() {
     super.connectedCallback();
 
-    this.#restorePositions();
+    this.#restoreState();
+    this.#setupResizeObservers();
+    this.#setupOpenObserver();
 
     // Events
     this.root().addEventListener("mousedown", this.focusOnWindow);
@@ -107,6 +181,10 @@ class WindowManager extends DiffuseElement {
       "mousedown",
       this.bringWinampToFront.bind(this),
     );
+
+    this.#resizeObservers.forEach((observer) => observer.disconnect());
+    this.#resizeObservers.clear();
+    this.#openObserver?.disconnect();
   }
 
   /**
@@ -173,7 +251,8 @@ class WindowManager extends DiffuseElement {
 
       const target = ogEvent.detail.element;
       if (target instanceof HTMLElement && target.id) {
-        this.#savePosition(target.id, target.style.left, target.style.top);
+        const state = this.#loadState(target.id) ?? {};
+        this.#saveState(target.id, target.style.left, target.style.top, state.width, state.height, state.open);
       }
     };
 
@@ -213,7 +292,7 @@ class WindowManager extends DiffuseElement {
       this.#lastZindex++;
       w.style.zIndex = this.#lastZindex.toString();
 
-      if (!this.#loadPosition(id)) {
+      if (!this.#loadState(id)) {
         const placeWindow = () => {
           const dialog = w.shadowRoot?.querySelector("dialog[open]");
           if (!dialog) { requestAnimationFrame(placeWindow); return; }
@@ -223,7 +302,8 @@ class WindowManager extends DiffuseElement {
           const stagger = index * 12;
           w.style.left = `${Math.round(Math.max(0, (window.innerWidth - width) / 2) + stagger)}px`;
           w.style.top = `${Math.round(Math.max(0, (window.innerHeight - height) / 2) + stagger)}px`;
-          this.#savePosition(id, w.style.left, w.style.top);
+          const state = this.#loadState(id) ?? {};
+          this.#saveState(id, w.style.left, w.style.top, state.width, state.height, state.open);
         };
         requestAnimationFrame(placeWindow);
       }
