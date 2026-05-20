@@ -6,6 +6,7 @@ import {
   getSession,
   OAuthUserAgent,
 } from "@atcute/oauth-browser-client";
+import { withOAuthLock } from "~/oauth/lock.js";
 
 import {
   CompositeDidDocumentResolver,
@@ -75,22 +76,24 @@ configureOAuth(OAUTH_CONFIG);
  *
  * @param {string} handle
  */
-export async function login(handle) {
-  configureOAuth(OAUTH_CONFIG);
+export function login(handle) {
+  return withOAuthLock(async () => {
+    configureOAuth(OAUTH_CONFIG);
 
-  localStorage.setItem(
-    "oauth/callback/redirect_path",
-    location.pathname + location.search,
-  );
+    localStorage.setItem(
+      "oauth/callback/redirect_path",
+      location.pathname + location.search,
+    );
 
-  localStorage.setItem("oauth/pending-client", CLIENT_KEY);
+    localStorage.setItem("oauth/pending-client", CLIENT_KEY);
 
-  const authUrl = await createAuthorizationUrl({
-    target: { type: "account", identifier: /** @type {any} */ (handle) },
-    scope: SCOPE,
+    const authUrl = await createAuthorizationUrl({
+      target: { type: "account", identifier: /** @type {any} */ (handle) },
+      scope: SCOPE,
+    });
+
+    location.assign(authUrl.toString());
   });
-
-  location.assign(authUrl.toString());
 }
 
 // SESSION RESTORE / CALLBACK
@@ -102,38 +105,41 @@ export async function login(handle) {
  *
  * @returns {Promise<Session | null>}
  */
-export async function restoreOrFinalize() {
-  configureOAuth(OAUTH_CONFIG);
+export function restoreOrFinalize() {
+  return withOAuthLock(async () => {
+    configureOAuth(OAUTH_CONFIG);
 
-  const params = new URLSearchParams(location.hash.slice(1));
+    const loc = globalThis.location;
+    const params = new URLSearchParams(loc.hash.slice(1));
 
-  if (
-    params.has("code") &&
-    localStorage.getItem("oauth/pending-client") === CLIENT_KEY
-  ) {
-    localStorage.removeItem("oauth/pending-client");
+    if (
+      params.has("code") &&
+      localStorage.getItem("oauth/pending-client") === CLIENT_KEY
+    ) {
+      localStorage.removeItem("oauth/pending-client");
 
-    const result = await finalizeAuthorization(params);
+      const result = await finalizeAuthorization(params);
 
-    history.replaceState(null, "", location.pathname + location.search);
-    localStorage.setItem(DID_STORAGE_KEY, result.session.info.sub);
+      history.replaceState(null, "", loc.pathname + loc.search);
+      localStorage.setItem(DID_STORAGE_KEY, result.session.info.sub);
 
-    return result.session;
-  }
-
-  const did = localStorage.getItem(DID_STORAGE_KEY);
-
-  if (did) {
-    try {
-      return await getSession(/** @type {`did:${string}:${string}`} */ (did));
-    } catch (err) {
-      console.warn(err);
-      clearStoredSession();
-      return null;
+      return result.session;
     }
-  }
 
-  return null;
+    const did = localStorage.getItem(DID_STORAGE_KEY);
+
+    if (did) {
+      try {
+        return await getSession(/** @type {`did:${string}:${string}`} */ (did));
+      } catch (err) {
+        console.warn(err);
+        clearStoredSession();
+        return null;
+      }
+    }
+
+    return null;
+  });
 }
 
 // CLEAR SESSION

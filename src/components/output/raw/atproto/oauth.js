@@ -1,4 +1,5 @@
 import { configureOAuth } from "@atcute/oauth-browser-client";
+import { withOAuthLock } from "~/oauth/lock.js";
 
 import metadata from "./oauth-client-metadata.json" with {
   type: "json",
@@ -80,22 +81,24 @@ configureOAuth(OAUTH_CONFIG);
  *
  * @param {string} handle
  */
-export async function login(handle) {
-  configureOAuth(OAUTH_CONFIG);
+export function login(handle) {
+  return withOAuthLock(async () => {
+    configureOAuth(OAUTH_CONFIG);
 
-  localStorage.setItem(
-    "oauth/callback/redirect_path",
-    location.pathname + location.search,
-  );
+    localStorage.setItem(
+      "oauth/callback/redirect_path",
+      location.pathname + location.search,
+    );
 
-  localStorage.setItem("oauth/pending-client", CLIENT_KEY);
+    localStorage.setItem("oauth/pending-client", CLIENT_KEY);
 
-  const authUrl = await createAuthorizationUrl({
-    target: { type: "account", identifier: /** @type {any} */ (handle) },
-    scope: SCOPE,
+    const authUrl = await createAuthorizationUrl({
+      target: { type: "account", identifier: /** @type {any} */ (handle) },
+      scope: SCOPE,
+    });
+
+    location.assign(authUrl.toString());
   });
-
-  location.assign(authUrl.toString());
 }
 
 // SESSION RESTORE / CALLBACK
@@ -107,52 +110,50 @@ export async function login(handle) {
  *
  * @returns {Promise<Session | null>}
  */
-export async function restoreOrFinalize() {
-  configureOAuth(OAUTH_CONFIG);
+export function restoreOrFinalize() {
+  return withOAuthLock(async () => {
+    configureOAuth(OAUTH_CONFIG);
 
-  const location = globalThis.location;
+    const loc = globalThis.location;
 
-  // Check for OAuth callback parameters (the library uses response_mode=fragment,
-  // so params arrive in the URL hash, not the query string)
-  const params = new URLSearchParams(location.hash.slice(1));
+    // Check for OAuth callback parameters (the library uses response_mode=fragment,
+    // so params arrive in the URL hash, not the query string)
+    const params = new URLSearchParams(loc.hash.slice(1));
 
-  if (
-    params.has("code") &&
-    localStorage.getItem("oauth/pending-client") === CLIENT_KEY
-  ) {
-    localStorage.removeItem("oauth/pending-client");
+    if (
+      params.has("code") &&
+      localStorage.getItem("oauth/pending-client") === CLIENT_KEY
+    ) {
+      localStorage.removeItem("oauth/pending-client");
 
-    const result = await finalizeAuthorization(params);
+      const result = await finalizeAuthorization(params);
 
-    // Clean up URL (remove fragment containing OAuth params)
-    history.replaceState(
-      null,
-      "",
-      location.pathname + location.search,
-    );
+      // Clean up URL (remove fragment containing OAuth params)
+      history.replaceState(null, "", loc.pathname + loc.search);
 
-    // Persist the DID for future session restoration
-    localStorage.setItem(STORAGE_KEY, result.session.info.sub);
+      // Persist the DID for future session restoration
+      localStorage.setItem(STORAGE_KEY, result.session.info.sub);
 
-    return result.session;
-  }
-
-  // Try to restore a previously stored session
-  const did = localStorage.getItem(STORAGE_KEY);
-
-  if (did) {
-    try {
-      return await getSession(
-        /** @type {`did:${string}:${string}`} */ (did),
-      );
-    } catch (err) {
-      console.warn(err);
-      clearStoredSession();
-      return null;
+      return result.session;
     }
-  }
 
-  return null;
+    // Try to restore a previously stored session
+    const did = localStorage.getItem(STORAGE_KEY);
+
+    if (did) {
+      try {
+        return await getSession(
+          /** @type {`did:${string}:${string}`} */ (did),
+        );
+      } catch (err) {
+        console.warn(err);
+        clearStoredSession();
+        return null;
+      }
+    }
+
+    return null;
+  });
 }
 
 // CLEAR SESSION
