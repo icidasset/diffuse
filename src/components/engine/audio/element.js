@@ -32,7 +32,6 @@ class AudioEngine extends BroadcastableDiffuseElement {
   constructor() {
     super();
 
-    this.isPlaying = this.isPlaying.bind(this);
     this.state = this.state.bind(this);
   }
 
@@ -51,6 +50,17 @@ class AudioEngine extends BroadcastableDiffuseElement {
 
   items = this.#items.get;
   volume = this.#volume.get;
+
+  isPlaying = computed(() => {
+    const item = this.items()?.[0];
+    if (!item) return false;
+
+    const state = this.state(item.id);
+    if (!state) return false;
+
+    return state.isPlaying() || state.hasEnded() ||
+      (state.duration() > 0 && state.currentTime() === state.duration());
+  });
 
   // LIFECYCLE
 
@@ -523,22 +533,6 @@ class AudioEngine extends BroadcastableDiffuseElement {
   // 🛠️
 
   /**
-   * Convenience signal to track if something is, or was, playing.
-   */
-  _isPlaying() {
-    return computed(() => {
-      const item = this.items()?.[0];
-      if (!item) return false;
-
-      const state = this.state(item.id);
-      if (!state) return false;
-
-      return state.isPlaying() || state.hasEnded() ||
-        (state.duration() > 0 && state.currentTime() === state.duration());
-    });
-  }
-
-  /**
    * Get the state of a single audio item.
    *
    * @param {string} audioId
@@ -551,13 +545,6 @@ class AudioEngine extends BroadcastableDiffuseElement {
       const s = this.#itemElement(audioId)?.state;
       return s ? { ...s } : undefined;
     });
-  }
-
-  /**
-   * Convenience signal to track if something is, or was, playing.
-   */
-  isPlaying() {
-    return this._isPlaying()();
   }
 
   /**
@@ -882,11 +869,10 @@ class AudioEngineItem extends BroadcastableDiffuseElement {
     const item = engineItem(audio);
     if (!item || item.hasAttribute("preload")) return;
 
-    const progress =
-      !isNaN(audio.duration) && audio.duration > 0 &&
+    const progress = !isNaN(audio.duration) && audio.duration > 0 &&
         audio.duration !== Infinity
-        ? audio.currentTime / audio.duration
-        : 0;
+      ? audio.currentTime / audio.duration
+      : 0;
 
     if (progress > 0) {
       item.setAttribute("initial-progress", JSON.stringify(progress));

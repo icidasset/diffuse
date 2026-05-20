@@ -353,6 +353,7 @@ export class BroadcastableDiffuseElement extends DiffuseElement {
     msg.port2.start();
 
     async function anyoneWaiting() {
+      if (typeof navigator.locks?.query !== "function") return false;
       const state = await navigator.locks.query();
       return !!state.pending?.length;
     }
@@ -424,16 +425,22 @@ export class BroadcastableDiffuseElement extends DiffuseElement {
     const assumeLeadership = this.#broadcastingOptions?.assumeLeadership;
 
     if (assumeLeadership === undefined || assumeLeadership === true) {
-      navigator.locks.request(
-        `${this.channelName}/lock`,
-        assumeLeadership === true ? { steal: true } : { ifAvailable: true },
-        (lock) => {
-          this.#status.resolve(
-            lock ? { leader: true, initialLeader: true } : { leader: false },
-          );
-          if (lock) return this.#lock.promise;
-        },
-      );
+      if (typeof navigator.locks?.request === "function") {
+        navigator.locks.request(
+          `${this.channelName}/lock`,
+          assumeLeadership === true ? { steal: true } : { ifAvailable: true },
+          (lock) => {
+            this.#status.resolve(
+              lock ? { leader: true, initialLeader: true } : { leader: false },
+            );
+            if (lock) return this.#lock.promise;
+          },
+        );
+      } else {
+        this.#status.resolve(
+          { leader: true, initialLeader: true },
+        );
+      }
     } else {
       this.#status.resolve(
         { leader: false },

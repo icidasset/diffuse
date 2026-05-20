@@ -25,6 +25,7 @@ await foundation.orchestrator.sources();
 await foundation.orchestrator.processTracks({ disableWhenReady: true });
 await foundation.orchestrator.queueAudio();
 await foundation.orchestrator.controller();
+await foundation.orchestrator.mediaSession();
 await foundation.orchestrator.artwork();
 await foundation.orchestrator.coverGroups();
 await foundation.orchestrator.favourites();

@@ -28,38 +28,27 @@ class MediaSessionOrchestrator extends BroadcastableDiffuseElement {
    * @override
    */
   async connectedCallback() {
-    // Broadcast if needed
     if (this.hasAttribute("group")) {
       this.broadcast(this.identifier, {});
     }
 
-    // Super
     super.connectedCallback();
 
     if (!("mediaSession" in navigator)) return;
 
-    /** @type {import("~/components/engine/audio/element.js").CLASS} */
     this.audio = query(this, "audio-engine-selector");
-
-    /** @type {import("~/components/engine/queue/element.js").CLASS} */
     this.queue = query(this, "queue-engine-selector");
-
-    /** @type {OutputElement | null} */
     this.output = queryOptional(this, "output-selector");
-
-    /** @type {ArtworkOrchestrator | null} */
     this.artwork = queryOptional(this, "artwork-selector");
 
-    // Wait until defined
-    await customElements.whenDefined(this.audio.localName);
-    await customElements.whenDefined(this.queue.localName);
-    if (this.output) await customElements.whenDefined(this.output.localName);
-    if (this.artwork) await customElements.whenDefined(this.artwork.localName);
+    await Promise.all([
+      customElements.whenDefined(this.audio.localName),
+      customElements.whenDefined(this.queue.localName),
+      this.output && customElements.whenDefined(this.output.localName),
+      this.artwork && customElements.whenDefined(this.artwork.localName),
+    ].filter(Boolean));
 
-    // Register Media Session action handlers
     this.#registerActionHandlers();
-
-    // Effects
     this.effect(() => this.#syncMetadata());
     this.effect(() => this.#syncPlaybackState());
     this.effect(() => this.#syncPositionState());
@@ -116,9 +105,12 @@ class MediaSessionOrchestrator extends BroadcastableDiffuseElement {
         // don't set the artwork.
         if (nowLater?.id !== now?.id) return;
 
-        navigator.mediaSession.metadata.artwork = [
-          { src: url, type: mime },
-        ];
+        navigator.mediaSession.metadata = new MediaMetadata({
+          title: tags.title ?? "",
+          artist: tags.artist ?? tags.albumartist ?? "",
+          album: tags.album ?? "",
+          artwork: [{ src: url, type: mime }],
+        });
       }
     }
   }
