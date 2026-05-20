@@ -51,6 +51,10 @@ class Browser extends DiffuseElement {
     /** @type {import("~/components/engine/scope/element.js").CLASS | undefined} */ (undefined),
   );
 
+  $favourites = signal(
+    /** @type {import("~/components/orchestrator/favourites/element.js").CLASS | undefined} */ (undefined),
+  );
+
   $highlightedTrack = signal(/** @type {string | null} */ (null));
   $highlightedTracks = signal(/** @type {Set<string>} */ (new Set()));
   #anchorTrackId = /** @type {string | null} */ (null);
@@ -117,16 +121,22 @@ class Browser extends DiffuseElement {
     /** @type {import("~/components/engine/scope/element.js").CLASS} */
     const scope = query(this, "scope-engine-selector");
 
+    /** @type {import("~/components/orchestrator/favourites/element.js").CLASS} */
+    const favourites = query(this, "favourites-orchestrator-selector");
+
     /** @type {import("~/components/configurator/input/element.js").CLASS | null} */
     const input = queryOptional(this, "input-selector");
 
     // Wait for the above dependencies to be defined, then render again.
-    whenElementsDefined({ output, provider, queue, scope }).then(() => {
-      this.$output.value = output;
-      this.$provider.value = provider;
-      this.$queue.value = queue;
-      this.$scope.value = scope;
-    });
+    whenElementsDefined({ output, provider, queue, scope, favourites }).then(
+      () => {
+        this.$output.value = output;
+        this.$provider.value = provider;
+        this.$queue.value = queue;
+        this.$scope.value = scope;
+        this.$favourites.value = favourites;
+      },
+    );
 
     if (input) {
       whenElementsDefined({ input }).then(async () => {
@@ -275,6 +285,13 @@ class Browser extends DiffuseElement {
       scope.setSortBy(COLUMN_SORT[column] ?? []);
       scope.setSortDirection(undefined);
     }
+  };
+
+  /**
+   * @param {Track} track
+   */
+  toggleFavourite = (track) => {
+    this.$favourites.value?.toggle(track);
   };
 
   /**
@@ -919,6 +936,17 @@ class Browser extends DiffuseElement {
           }}"
         >
           Add to playlist
+        </button>
+        <button
+          ?disabled="${selectedTracks.length !== 1}"
+          @click="${() => {
+            if (selectedTracks.length !== 1) return;
+            this.toggleFavourite(selectedTracks[0]);
+          }}"
+        >
+          ${selectedTracks.length === 1 && this.$favourites.value?.isFavourite(selectedTracks[0])
+            ? `Unfavourite`
+            : `Favourite`}
         </button>
         ${this.$input.value
           ? html`

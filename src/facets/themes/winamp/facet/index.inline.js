@@ -20,6 +20,7 @@ await foundation.orchestrator.queueAudio();
 await foundation.orchestrator.controller();
 await foundation.orchestrator.artwork();
 await foundation.orchestrator.mediaSession();
+await foundation.orchestrator.favourites();
 await foundation.configurator.input();
 
 await import("~/facets/themes/winamp/browser/element.js");
