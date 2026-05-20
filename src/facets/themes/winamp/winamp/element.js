@@ -222,6 +222,9 @@ class WinampElement extends DiffuseElement {
   #dragMouseUp = null;
   /** @type {((e: KeyboardEvent) => void) | null} */
   #onKeyDown = null;
+  /** @type {((e: MouseEvent) => void) | null} */
+  #onMouseDownFocus = null;
+  #isWinampFocused = false;
   #marqueeCurrentOffset = 0;
   /** @type {HTMLElement | null} */
   #marqueeScroller = null;
@@ -562,16 +565,24 @@ class WinampElement extends DiffuseElement {
         el.classList.remove("winamp-active");
         document.removeEventListener("pointerup", cleanup);
       };
+
       document.addEventListener("pointerup", cleanup);
     });
 
+    // Track whether this winamp element is the active one on the page
+    this.#onMouseDownFocus = (e) => {
+      this.#isWinampFocused = e.composedPath().includes(this);
+    };
+    document.addEventListener("mousedown", this.#onMouseDownFocus);
+
     // Delete selected playlist tracks via keyboard
     this.#onKeyDown = (e) => {
+      if (!this.#isWinampFocused) return;
       if (this.#focusedWindow.value !== "playlist") return;
       if (e.key !== "Delete" && e.key !== "Backspace") return;
-      e.preventDefault();
       this.#removeTrack();
     };
+
     document.addEventListener("keydown", this.#onKeyDown);
 
     // Window dragging
@@ -584,6 +595,7 @@ class WinampElement extends DiffuseElement {
   /** @override */
   disconnectedCallback() {
     clearInterval(this.#marqueeStepInterval);
+    if (this.#onMouseDownFocus) document.removeEventListener("mousedown", this.#onMouseDownFocus);
     if (this.#onKeyDown) document.removeEventListener("keydown", this.#onKeyDown);
     this.root().removeEventListener(
       "mousedown",
@@ -1376,7 +1388,11 @@ class WinampElement extends DiffuseElement {
     const audioId = this.$controller.value?.$queue.value?.now()?.id;
     if (audioId) {
       const progress = this.audio()?.progress();
-      this.$controller.value?.$audio.value?.reload({ audioId, play: true, progress });
+      this.$controller.value?.$audio.value?.reload({
+        audioId,
+        play: true,
+        progress,
+      });
     }
   };
 
@@ -1663,15 +1679,19 @@ class WinampElement extends DiffuseElement {
     const nLen = now ? 1 : 0;
     const total = pLen + nLen + future.length;
     for (const idx of indices) {
-      const item = idx < pLen ? past[idx]
-        : idx < pLen + nLen ? now
+      const item = idx < pLen
+        ? past[idx]
+        : idx < pLen + nLen
+        ? now
         : future[idx - pLen - nLen];
       if (item) queue.expel({ key: item.key });
     }
     const newTotal = total - indices.length;
     const minIdx = Math.min(...indices);
     this.#selectedIndices.value = new Set();
-    this.#selectedIndex.value = newTotal <= 0 ? null : Math.min(minIdx, newTotal - 1);
+    this.#selectedIndex.value = newTotal <= 0
+      ? null
+      : Math.min(minIdx, newTotal - 1);
   };
 
   static #TRACK_HEIGHT = 13;
@@ -1686,7 +1706,13 @@ class WinampElement extends DiffuseElement {
     e.preventDefault();
     const multiDrag = this.#selectedIndices.value.size > 1 &&
       this.#selectedIndices.value.has(idx);
-    this.#dragState.value = { fromIdx: idx, fromKey: key, toIdx: idx, startY: e.clientY, multiDrag };
+    this.#dragState.value = {
+      fromIdx: idx,
+      fromKey: key,
+      toIdx: idx,
+      startY: e.clientY,
+      multiDrag,
+    };
 
     this.#dragMouseMove = (mv) => {
       const state = this.#dragState.value;
@@ -1716,13 +1742,17 @@ class WinampElement extends DiffuseElement {
         const queue = this.$controller.value?.$queue.value;
 
         if (state.multiDrag) {
-          const sortedSel = [...this.#selectedIndices.value].sort((a, b) => a - b);
+          const sortedSel = [...this.#selectedIndices.value].sort((a, b) =>
+            a - b
+          );
           const delta = state.toIdx - state.fromIdx; // already clamped by mousemove
 
           // Build new array: each selected item shifts by delta, non-selected fill gaps
           const selectedSet = new Set(sortedSel);
           const result = new Array(all.length).fill(null);
-          sortedSel.forEach((i) => { result[i + delta] = all[i]; });
+          sortedSel.forEach((i) => {
+            result[i + delta] = all[i];
+          });
           const nonSelected = all.filter((_, i) => !selectedSet.has(i));
           let nsIdx = 0;
           for (let i = 0; i < result.length; i++) {
@@ -1731,7 +1761,9 @@ class WinampElement extends DiffuseElement {
 
           // Commit moves to queue (order matters to preserve relative positions)
           if (queue) {
-            const processOrder = delta > 0 ? [...sortedSel].reverse() : sortedSel;
+            const processOrder = delta > 0
+              ? [...sortedSel].reverse()
+              : sortedSel;
             for (const origIdx of processOrder) {
               queue.move({ key: all[origIdx].key, to: origIdx + delta });
             }
@@ -1747,7 +1779,9 @@ class WinampElement extends DiffuseElement {
               now: now ? (result[nowIdx] ?? null) : null,
               future: result.slice(nowIdx + (now ? 1 : 0)),
             };
-            this.#selectedIndices.value = new Set(sortedSel.map((i) => i + delta));
+            this.#selectedIndices.value = new Set(
+              sortedSel.map((i) => i + delta),
+            );
             this.#selectedIndex.value = state.toIdx;
           });
         } else {
@@ -1872,18 +1906,24 @@ class WinampElement extends DiffuseElement {
     const isMono = channels === 1;
     const kbpsChars = kbps != null
       ? [...String(kbps)].map((c) =>
-        html`<span class="character character-${c.charCodeAt(0)}">${c}</span>`
+        html`
+          <span class="character character-${c.charCodeAt(0)}">${c}</span>
+        `
       )
       : [];
     const khzChars = khz != null
       ? [...String(khz)].map((c) =>
-        html`<span class="character character-${c.charCodeAt(0)}">${c}</span>`
+        html`
+          <span class="character character-${c.charCodeAt(0)}">${c}</span>
+        `
       )
       : [];
 
     const seekPct = this.#seekingProgress.value;
     const duration = audio?.duration() ?? 0;
-    const elapsed = seekPct !== null ? seekPct * duration : audio?.currentTime() ?? 0;
+    const elapsed = seekPct !== null
+      ? seekPct * duration
+      : audio?.currentTime() ?? 0;
     const isCountdown = this.#timeCountdown.value;
     const timeSeconds = isCountdown ? Math.max(0, duration - elapsed) : elapsed;
     const timeMinutes = Math.floor(timeSeconds / 60);
@@ -1926,7 +1966,9 @@ class WinampElement extends DiffuseElement {
           const delta = dragState.toIdx - dragState.fromIdx;
           const selectedSet = new Set(sortedSel);
           const result = new Array(arr.length).fill(null);
-          sortedSel.forEach((i) => { result[i + delta] = arr[i]; });
+          sortedSel.forEach((i) => {
+            result[i + delta] = arr[i];
+          });
           const nonSelected = arr.filter((_, i) => !selectedSet.has(i));
           let nsIdx = 0;
           for (let i = 0; i < result.length; i++) {
@@ -1944,7 +1986,9 @@ class WinampElement extends DiffuseElement {
     const trackMap = col?.state === "loaded"
       ? new Map(col.data.map((t) => [t.id, t]))
       : new Map();
-    const selectedItemSet = new Set([...selectedIndices].map((i) => allItems[i]));
+    const selectedItemSet = new Set(
+      [...selectedIndices].map((i) => allItems[i]),
+    );
     const nowIdx = nowItem ? displayItems.indexOf(nowItem) : -1;
     const playlistRows = displayItems.map((item, i) => {
       const track = trackMap.get(item.id);
@@ -1988,7 +2032,9 @@ class WinampElement extends DiffuseElement {
     };
     const runningTimeStr = `${fmtDur(nowTrackSec)}/${fmtDur(totalSec)}`;
     const totalTimeChars = [...runningTimeStr].map((c) =>
-      html`<span class="character character-${c.charCodeAt(0)}">${c}</span>`
+      html`
+        <span class="character character-${c.charCodeAt(0)}">${c}</span>
+      `
     );
 
     const isPaused = !!audio && !this.isPlaying() && !this.#stopped.value;
@@ -2009,7 +2055,9 @@ class WinampElement extends DiffuseElement {
       ? `${shadeArtist} - ${nowTrack?.tags?.title ?? ""}`.toLowerCase()
       : (nowTrack?.tags?.title ?? "").toLowerCase();
     const shadeTitleChars = [...shadeTitle].map((c) =>
-      html`<span class="character character-${c.charCodeAt(0)}">${c}</span>`
+      html`
+        <span class="character character-${c.charCodeAt(0)}">${c}</span>
+      `
     );
     const shadeTimeChars = [...miniTimeStr].map((c, i) =>
       c === ":" ? null : html`
@@ -2024,7 +2072,11 @@ class WinampElement extends DiffuseElement {
     const loopedMarquee = WinampElement.#marqueeLoopText(activeMarquee);
 
     const marqueeChars = [...loopedMarquee].map((char) =>
-      html`<span class="character character-${char.toLowerCase().charCodeAt(0)}">${char}</span>`
+      html`
+        <span class="character character-${char.toLowerCase().charCodeAt(
+          0,
+        )}">${char}</span>
+      `
     );
 
     return html`
@@ -2126,7 +2178,12 @@ class WinampElement extends DiffuseElement {
             </div>
             <div id="play-pause"></div>
             <div id="work-indicator"></div>
-            <div id="time" class="${isCountdown ? "countdown" : ""}" @click="${this.#toggleTimeCountdown}" style="cursor: pointer;">
+            <div
+              id="time"
+              class="${isCountdown ? "countdown" : ""}"
+              @click="${this.#toggleTimeCountdown}"
+              style="cursor: pointer;"
+            >
               <div id="minus-sign"></div>
               <div id="minute-first-digit" class="digit digit-${d
                 .mFirst}"></div>
@@ -2337,7 +2394,8 @@ class WinampElement extends DiffuseElement {
                             class="track-cell"
                             style="color: ${r.color}; background-color: ${r
                               .bg};"
-                            @click="${(/** @type {MouseEvent} */ e) => this.#selectTrack(r.idx, e.shiftKey)}"
+                            @click="${(/** @type {MouseEvent} */ e) =>
+                              this.#selectTrack(r.idx, e.shiftKey)}"
                             @dblclick="${() => this.#playTrack(r.idx)}"
                             @mousedown="${(/** @type {MouseEvent} */ e) =>
                               this.#onTrackMouseDown(
@@ -2358,7 +2416,8 @@ class WinampElement extends DiffuseElement {
                             class="track-cell"
                             style="color: ${r.color}; background-color: ${r
                               .bg}; cursor: grab;"
-                            @click="${(/** @type {MouseEvent} */ e) => this.#selectTrack(r.idx, e.shiftKey)}"
+                            @click="${(/** @type {MouseEvent} */ e) =>
+                              this.#selectTrack(r.idx, e.shiftKey)}"
                             @dblclick="${() => this.#playTrack(r.idx)}"
                             @mousedown="${(/** @type {MouseEvent} */ e) =>
                               this.#onTrackMouseDown(
@@ -2386,7 +2445,12 @@ class WinampElement extends DiffuseElement {
               <div id="playlist-add-menu" class="playlist-menu" @click="${this
                 .#openConnect}">
               </div>
-              <div id="playlist-remove-menu" class="playlist-menu" @click="${this.#removeTrack}"></div>
+              <div
+                id="playlist-remove-menu"
+                class="playlist-menu"
+                @click="${this.#removeTrack}"
+              >
+              </div>
               <div id="playlist-selection-menu" class="playlist-menu"></div>
               <div id="playlist-misc-menu" class="playlist-menu"></div>
             </div>
