@@ -27,6 +27,19 @@ const COLUMN_SORT = {
   album: ["tags.album", "tags.disc.no", "tags.track.no"],
 };
 
+const GROUP_BY_OPTIONS = [
+  { value: "firstLetter", label: "First letter" },
+  { value: "directory", label: "Path" },
+  { value: "createdAt", label: "Processing date" },
+  { value: "tags.year", label: "Track year" },
+];
+
+/**
+ * @typedef {{ type: "group"; label: string }} GroupItem
+ * @typedef {{ type: "track"; track: Track }} TrackItem
+ * @typedef {GroupItem | TrackItem} VirtualItem
+ */
+
 class Browser extends DiffuseElement {
   constructor() {
     super();
@@ -98,6 +111,15 @@ class Browser extends DiffuseElement {
   #renderedStartIndex = -1;
   #renderedEndIndex = -1;
 
+  /** @type {VirtualItem[]} */
+  #flatItems = [];
+
+  /** @type {Track[] | undefined} */
+  #lastTracks = undefined;
+
+  /** @type {{ label: string; tracks: Track[] }[] | undefined} */
+  #lastGroups = undefined;
+
   /** @type {ResizeObserver | undefined} */
   #resizeObserver;
 
@@ -168,6 +190,17 @@ class Browser extends DiffuseElement {
 
       if (select) {
         /** @type {HTMLSelectElement} */ (select).value = playlist ?? "";
+      }
+    });
+
+    this.effect(() => {
+      const groupBy = this.$scope.value?.groupBy();
+      const select = this.root().querySelector("#groupby-select");
+      if (select) {
+        const displayValue = groupBy?.startsWith("firstLetter:")
+          ? "firstLetter"
+          : (groupBy ?? "");
+        /** @type {HTMLSelectElement} */ (select).value = displayValue;
       }
     });
   }
@@ -263,6 +296,23 @@ class Browser extends DiffuseElement {
     const value = /** @type {HTMLSelectElement} */ (event.currentTarget).value;
 
     this.$scope.value?.setPlaylist(value === "" ? undefined : value);
+  };
+
+  /**
+   * @param {Event} event
+   */
+  setGroupBy = (event) => {
+    const scope = this.$scope.value;
+    if (!scope) return;
+    const raw = /** @type {HTMLSelectElement} */ (event.currentTarget).value;
+    if (!raw) {
+      scope.setGroupBy(undefined);
+      return;
+    }
+    const value = raw === "firstLetter"
+      ? `firstLetter:${scope.sortBy()[0] ?? "tags.title"}`
+      : raw;
+    scope.setGroupBy(value);
   };
 
   /**
@@ -548,7 +598,11 @@ class Browser extends DiffuseElement {
       this.$output.value?.tracks?.collection().state !== "loaded";
 
     const tracks = this.$provider.value?.tracks() ?? [];
+    const groups = /** @type {{ label: string; tracks: Track[] }[] | undefined} */ (
+      /** @type {any} */ (this.$provider.value)?.groups?.()
+    );
     const playlist = this.$scope.value?.playlist();
+    const groupBy = this.$scope.value?.groupBy();
     const searchTerm = this.$scope.value?.searchTerm() ?? "";
     const sortBy = this.$scope.value?.sortBy() ?? [];
     const sortDirection = this.$scope.value?.sortDirection();
@@ -562,15 +616,25 @@ class Browser extends DiffuseElement {
         : "none";
 
     // Virtual list
-    const totalTracks = tracks.length;
+    if (groups !== this.#lastGroups || tracks !== this.#lastTracks) {
+      this.#flatItems = groups ? buildFlatList(groups) : [];
+      this.#lastGroups = groups;
+      this.#lastTracks = tracks;
+    }
+
+    const totalItems = groups ? this.#flatItems.length : tracks.length;
     const { startIndex, endIndex: rawEnd } = this.#computeWindow();
-    const endIndex = Math.min(totalTracks, rawEnd);
+    const endIndex = Math.min(totalItems, rawEnd);
 
     this.#renderedStartIndex = startIndex;
     this.#renderedEndIndex = endIndex;
 
-    const visibleTracks = tracks.slice(startIndex, endIndex);
-    const totalHeight = totalTracks * ROW_HEIGHT;
+    const visibleItems = groups
+      ? this.#flatItems.slice(startIndex, endIndex)
+      : tracks.slice(startIndex, endIndex).map(
+          (t) => /** @type {VirtualItem} */ ({ type: "track", track: t }),
+        );
+    const totalHeight = totalItems * ROW_HEIGHT;
     const topPad = startIndex * ROW_HEIGHT;
 
     const highlightedTracks = this.$highlightedTracks.value;
@@ -761,6 +825,25 @@ class Browser extends DiffuseElement {
         justify-content: flex-end;
         margin-top: 4px;
       }
+
+      /***********************************
+      * GROUP HEADERS
+      ***********************************/
+
+      table tbody tr.group-header {
+        cursor: default;
+
+        & td {
+          background: var(--button-face);
+          border-bottom: 1px solid var(--button-shadow);
+          color: var(--button-shadow);
+          font-size: 82%;
+          letter-spacing: 0.05em;
+          padding: 0 4px;
+          text-transform: uppercase;
+          user-select: none;
+        }
+      }
       </style>
 
       <search class="field-row">
@@ -793,6 +876,15 @@ class Browser extends DiffuseElement {
             `
           )}
         </select>
+        <label for="groupby-select">Group:</label>
+        <select id="groupby-select" @change="${this.setGroupBy}">
+          <option value="">None</option>
+          ${GROUP_BY_OPTIONS.map((opt) =>
+            html`
+              <option value="${opt.value}">${opt.label}</option>
+            `
+          )}
+        </select>
       </search>
 
       <div
@@ -816,7 +908,12 @@ class Browser extends DiffuseElement {
           this.$highlightedTrack.value = next.id;
           const panel = this.root().querySelector(`.sunken-panel`);
           if (panel) {
-            const rowTop = nextIdx * ROW_HEIGHT;
+            const flatIdx = this.#flatItems.length > 0
+              ? this.#flatItems.findIndex(
+                  (item) => item.type === "track" && item.track.id === next.id,
+                )
+              : nextIdx;
+            const rowTop = (flatIdx < 0 ? nextIdx : flatIdx) * ROW_HEIGHT;
             const rowBottom = rowTop + ROW_HEIGHT;
             if (rowTop < panel.scrollTop) {
               panel.scrollTop = rowTop;
@@ -866,12 +963,22 @@ class Browser extends DiffuseElement {
                     <td></td>
                   </tr>
                 `
-                : visibleTracks.map((track) =>
-                  html`
+                : visibleItems.map((item) => {
+                  if (item.type === "group") {
+                    return html`
+                      <tr class="group-header">
+                        <td colspan="3">${item.label}</td>
+                      </tr>
+                    `;
+                  }
+                  const track = item.track;
+                  return html`
                     <tr
                       class="${highlightedTracks.has(track.id) ? `highlighted` : ``}"
                       @click="${(/** @type {MouseEvent} */ e) => {
-                        const idx = startIndex + visibleTracks.indexOf(track);
+                        const idx = tracks.findIndex(
+                          (t) => t.id === track.id,
+                        );
                         if (e.shiftKey && this.#anchorTrackId !== null) {
                           const anchorIdx = tracks.findIndex(
                             (t) => t.id === this.#anchorTrackId,
@@ -896,8 +1003,8 @@ class Browser extends DiffuseElement {
                       <td>${track.tags?.artist}</td>
                       <td>${track.tags?.album}</td>
                     </tr>
-                  `
-                )}
+                  `;
+                })}
             </tbody>
           </table>
         </div>
@@ -973,6 +1080,26 @@ class Browser extends DiffuseElement {
       ${this.#renderPlaylistPicker(html)}
     `;
   }
+}
+
+////////////////////////////////////////////
+// HELPERS
+////////////////////////////////////////////
+
+/**
+ * @param {{ label: string; tracks: Track[] }[]} groups
+ * @returns {VirtualItem[]}
+ */
+function buildFlatList(groups) {
+  /** @type {VirtualItem[]} */
+  const items = [];
+  for (const group of groups) {
+    items.push({ type: "group", label: group.label });
+    for (const track of group.tracks) {
+      items.push({ type: "track", track });
+    }
+  }
+  return items;
 }
 
 export default Browser;
