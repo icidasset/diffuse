@@ -220,6 +220,8 @@ class WinampElement extends DiffuseElement {
   #dragMouseMove = null;
   /** @type {((e: MouseEvent) => void) | null} */
   #dragMouseUp = null;
+  /** @type {((e: KeyboardEvent) => void) | null} */
+  #onKeyDown = null;
   #marqueeCurrentOffset = 0;
   /** @type {HTMLElement | null} */
   #marqueeScroller = null;
@@ -563,6 +565,15 @@ class WinampElement extends DiffuseElement {
       document.addEventListener("pointerup", cleanup);
     });
 
+    // Delete selected playlist tracks via keyboard
+    this.#onKeyDown = (e) => {
+      if (this.#focusedWindow.value !== "playlist") return;
+      if (e.key !== "Delete" && e.key !== "Backspace") return;
+      e.preventDefault();
+      this.#removeTrack();
+    };
+    document.addEventListener("keydown", this.#onKeyDown);
+
     // Window dragging
     this.root().addEventListener(
       "mousedown",
@@ -573,6 +584,7 @@ class WinampElement extends DiffuseElement {
   /** @override */
   disconnectedCallback() {
     clearInterval(this.#marqueeStepInterval);
+    if (this.#onKeyDown) document.removeEventListener("keydown", this.#onKeyDown);
     this.root().removeEventListener(
       "mousedown",
       /** @type {EventListener} */ (this.#onWindowDragStart),
