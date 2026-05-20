@@ -277,6 +277,8 @@ class Browser extends DiffuseElement {
   /** @type {Track[] | undefined} */
   #previousTracks = undefined;
 
+  #coverScrollTop = 0;
+
   // LIFECYCLE
 
   /**
@@ -1219,6 +1221,8 @@ class Browser extends DiffuseElement {
                       class="cover-card"
                       data-album-key="${artistKey}"
                       @click="${() => {
+                        const panel = this.root().querySelector(".cover-scroll-panel");
+                        if (panel) this.#coverScrollTop = panel.scrollTop;
                         this.#openCoverItem.value = {
                           type: "artist",
                           artistKey,
@@ -1301,6 +1305,8 @@ class Browser extends DiffuseElement {
                     class="cover-card"
                     data-album-key="${albumKey}"
                     @click="${() => {
+                      const panel = this.root().querySelector(".cover-scroll-panel");
+                      if (panel) this.#coverScrollTop = panel.scrollTop;
                       this.#openCoverItem.value = {
                         type: "album",
                         albumKey,
@@ -1570,6 +1576,10 @@ class Browser extends DiffuseElement {
             class="toolbar-icon-btn"
             @click="${() => {
               this.#openCoverItem.value = null;
+              requestAnimationFrame(() => {
+                const panel = this.root().querySelector(".cover-scroll-panel");
+                if (panel) panel.scrollTop = this.#coverScrollTop;
+              });
             }}"
             title="Back"
           >
