@@ -591,6 +591,7 @@ export default AudioEngine;
 
 class AudioEngineItem extends BroadcastableDiffuseElement {
   static NAME = "diffuse/engine/audio/item";
+  static observedAttributes = ["preload"];
 
   constructor() {
     super();
@@ -618,6 +619,16 @@ class AudioEngineItem extends BroadcastableDiffuseElement {
         return currentTime / duration;
       }),
     };
+  }
+
+  /**
+   * @override
+   */
+  attributeChangedCallback(name, oldValue, newValue) {
+    super.attributeChangedCallback(name, oldValue, newValue);
+    if (name === "preload") {
+      this.$state.isPreload.set(newValue !== null);
+    }
   }
 
   // LIFECYCLE
@@ -829,7 +840,7 @@ class AudioEngineItem extends BroadcastableDiffuseElement {
     item?.$state.isPlaying.set(true);
 
     // In case audio was preloaded:
-    if (audio.readyState === 4) finishedLoading(event);
+    if (audio.readyState >= 2) finishedLoading(event);
   }
 
   /**
@@ -878,6 +889,12 @@ class AudioEngineItem extends BroadcastableDiffuseElement {
       item.setAttribute("initial-progress", JSON.stringify(progress));
     }
 
+    // Don't force a full reload if the browser already has buffered data —
+    // it should be able to continue buffering on its own. This prevents
+    // discarding the preloaded buffer when playback briefly catches up to
+    // the end of the downloaded portion.
+    if (audio.buffered.length > 0) return;
+
     audio.load();
 
     audio.addEventListener("canplay", () => {
@@ -917,7 +934,9 @@ function finishedLoading(event) {
 function initiateLoading(event) {
   const audio = /** @type {HTMLAudioElement} */ (event.target);
   if (audio.readyState < 4) {
-    engineItem(audio)?.$state.loadingState.set("loading");
+    const item = engineItem(audio);
+    if (item?.hasAttribute("preload")) return;
+    item?.$state.loadingState.set("loading");
   }
 }
 
