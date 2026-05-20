@@ -362,15 +362,22 @@ class WinampElement extends DiffuseElement {
       this.effect(() => {
         const now = !!this.$controller.value?.$queue.value?.now();
         const loadingState = this.audio()?.loadingState();
-        const isLoading = now && loadingState !== "loaded";
+        const isError = now && typeof loadingState === "object" &&
+          loadingState !== null && "error" in loadingState;
+        const isLoading = now && !isError && loadingState !== "loaded";
 
         clearTimeout(this.#isLoadingTimeout);
 
-        if (isLoading) {
+        if (isError) {
+          this.#marqueeOverride.value = "Audio error ...";
+        } else if (isLoading) {
           this.#isLoadingTimeout = setTimeout(() => {
             this.#marqueeOverride.value = "Loading audio ...";
           }, 2000);
-        } else if (this.#marqueeOverride.value === "Loading audio ...") {
+        } else if (
+          this.#marqueeOverride.value === "Loading audio ..." ||
+          this.#marqueeOverride.value === "Audio error ..."
+        ) {
           this.#marqueeOverride.value = null;
         }
       });
@@ -1353,8 +1360,25 @@ class WinampElement extends DiffuseElement {
     }, 250);
   };
 
+  #reload = () => {
+    const audioId = this.$controller.value?.$queue.value?.now()?.id;
+    if (audioId) {
+      const progress = this.audio()?.progress();
+      this.$controller.value?.$audio.value?.reload({ audioId, play: true, progress });
+    }
+  };
+
   #playPause = () => {
     const audioId = this.$controller.value?.$queue.value?.now()?.id;
+    const loadingState = this.audio()?.loadingState();
+    const isError = typeof loadingState === "object" && loadingState !== null &&
+      "error" in loadingState;
+
+    if (isError) {
+      this.#reload();
+      return;
+    }
+
     this.#stopped.value = false;
     if (this.isPlaying() && audioId) {
       this.$controller.value?.$audio.value?.pause({ audioId });

@@ -52,6 +52,7 @@ class ArtworkController extends DiffuseElement {
   #artworkColor = signal(/** @type {string | undefined} */ (undefined));
   #artworkLightMode = signal(false);
   #duration = signal("0:00");
+  #audioError = signal(false);
   #isLoading = signal(true);
   #time = signal("0:00");
 
@@ -130,13 +131,17 @@ class ArtworkController extends DiffuseElement {
           this.effect(() => {
             const now = !!this.$controller.value?.$queue.value?.now();
             const aud = this.audio()?.loadingState();
-            const bool = now && aud !== "loaded";
+            const isError = now && typeof aud === "object" && aud !== null &&
+              "error" in aud;
+            const isLoading = now && !isError && aud !== "loaded";
+
+            this.#audioError.value = isError;
 
             if (this.#isLoadingTimeout) {
               clearTimeout(this.#isLoadingTimeout);
             }
 
-            if (bool) {
+            if (isLoading) {
               this.#isLoadingTimeout = setTimeout(
                 () => this.#isLoading.value = true,
                 2000,
@@ -299,6 +304,14 @@ class ArtworkController extends DiffuseElement {
       previous: this.#artwork.value.previous,
       current: { ...this.#artwork.value.current, loaded: true },
     };
+  };
+
+  reload = () => {
+    const audioId = this.$controller.value?.$queue.value?.now()?.id;
+    if (audioId) {
+      const progress = this.audio()?.progress();
+      this.$controller.value?.$audio.value?.reload({ audioId, play: true, progress });
+    }
   };
 
   fullVolume = () => {
@@ -520,10 +533,20 @@ class ArtworkController extends DiffuseElement {
                 <i class="ph-fill ph-vinyl-record" title="Loading ..."></i>
               </div>
 
+              <!-- error -->
+              <div
+                class="menu__loader"
+                style="display: ${this.#audioError.value ? `inherit` : `none`};"
+                @click="${this.reload}"
+              >
+                <i class="ph-fill ph-warning-circle" title="Reload"></i>
+              </div>
+
               <!-- play -->
               <li
                 @click="${this.playPause}"
                 style="display: ${!this.#isLoading.value &&
+                    !this.#audioError.value &&
                     !this.isPlaying()
                   ? `inline`
                   : `none`};"
@@ -534,7 +557,9 @@ class ArtworkController extends DiffuseElement {
               <!-- pause -->
               <li
                 @click="${this.playPause}"
-                style="display: ${!this.#isLoading.value && this.isPlaying()
+                style="display: ${!this.#isLoading.value &&
+                    !this.#audioError.value &&
+                    this.isPlaying()
                   ? `inline`
                   : `none`};"
               >
