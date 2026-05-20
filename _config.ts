@@ -357,15 +357,21 @@ async function buildFileTree(
 
 async function writeFileTree() {
   const RAW = 0x55;
-  const tree = await buildFileTree("dist/");
 
   // Stamp the built SW with a unique build ID so the browser always detects a
   // SW update on each build, not just when the SW source itself changes.
+  // Do this before buildFileTree (and before brotli's stale-sidecar cleanup)
+  // so the stamped version is the one captured in the tree CID.  Also delete
+  // any brotli'd copy of the *un*stamped SW so Caddy's precompressed-br
+  // serving never delivers it to the browser's update checker.
   const swDist = "./dist/service-worker.js";
+  try { Deno.removeSync(`${swDist}.br`); } catch { /* already gone */ }
   const swSource = Deno.readTextFileSync(swDist)
     .replace(/\n\/\/ @build \S+\n$/, "");
   const swStamped = `${swSource}\n// @build ${crypto.randomUUID()}\n`;
   Deno.writeTextFileSync(swDist, swStamped);
+
+  const tree = await buildFileTree("dist/");
 
   // Remove any .br sidecar that is older than its plain counterpart — this
   // catches cases where brotli compression did not re-run after an asset
@@ -389,7 +395,6 @@ async function writeFileTree() {
     RAW,
     new TextEncoder().encode(swStamped),
   );
-  delete tree["service-worker.js.br"];
 
   // Exclude file-tree.json from its own contents (self-referential).
   delete tree["file-tree.json"];

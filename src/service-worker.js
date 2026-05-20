@@ -162,19 +162,19 @@ async function cidFromTree(pathname) {
  * Computes the CID of `response`'s body and writes it into the two-level cache.
  * The same content is stored only once, regardless of how many URLs reference it.
  *
- * Uses the pre-built file tree CID when available; falls back to hashing the
- * response body when the entry is missing from the tree.
+ * The CID is always derived from the actual response bytes so the cache key
+ * is guaranteed to match the stored content — we never trust the pre-built
+ * file tree here because the response may have been served from the browser's
+ * HTTP cache and could be stale.
  *
  * @param {Request} request
  * @param {Response} response - a clone; its body is fully consumed here
  */
 async function store(request, response) {
-  const { pathname } = new URL(request.url);
-  const cid = (await cidFromTree(pathname)) ??
-    await createCid(
-      RAW_CODEC,
-      new Uint8Array(await response.clone().arrayBuffer()),
-    );
+  const cid = await createCid(
+    RAW_CODEC,
+    new Uint8Array(await response.clone().arrayBuffer()),
+  );
   const cidKey = cidUrl(cid);
 
   const caches = await openCaches();
@@ -253,7 +253,11 @@ async function handleFetch(request) {
  * @param {Request} request
  */
 async function fetchAndStore(request) {
-  const response = await fetch(request);
+  // Validate with the server so the browser's HTTP cache never serves stale
+  // content to the offline cache.  (The first request after a deploy would
+  // otherwise return the old page from the HTTP cache, and store() would
+  // permanently slot it under the new CID.)
+  const response = await fetch(request, { cache: "no-cache" });
 
   // Partial content (range requests) — return as-is, do not cache.
   if (response.status === 206) return response;
