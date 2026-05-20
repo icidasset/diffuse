@@ -3,6 +3,7 @@ import * as CID from "~/common/cid.js";
 import * as Output from "~/common/output.js";
 import { createLoader, renderError } from "~/common/loader.js";
 import { insertPreludes } from "~/common/facets/prelude.js";
+import { computed, effect } from "~/common/signal.js";
 
 // Output element
 const output = await foundation.orchestrator.output();
@@ -15,6 +16,23 @@ const container = /** @type {HTMLDivElement} */ (
 // Preludes
 const facets = await Output.data(output.facets);
 let preludesInserted = false;
+
+// Reload when the prelude facets change after initial load
+const preludeKey = computed(() => {
+  const col = output.facets.collection();
+  if (col.state !== "loaded") return "";
+  return col.data
+    .filter((f) => f.kind === "prelude")
+    .map((f) => `${f.id}:${f.cid ?? ""}:${f.enabled !== false}`)
+    .join(",");
+});
+
+const initialPreludeKey = preludeKey();
+
+effect(() => {
+  if (preludeKey() === initialPreludeKey) return;
+  window.location.reload();
+});
 
 // Load
 createLoader({
