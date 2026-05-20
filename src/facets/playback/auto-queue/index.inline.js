@@ -30,6 +30,8 @@ const sortBySelect =
   /** @type {HTMLSelectElement} */ (document.querySelector("#sort-by"));
 const sortDirectionBtn =
   /** @type {HTMLButtonElement} */ (document.querySelector("#sort-direction"));
+const groupBySelect =
+  /** @type {HTMLSelectElement} */ (document.querySelector("#group-by"));
 
 // Repeat & Shuffle state
 effect(() => {
@@ -131,6 +133,23 @@ effect(() => {
 sortDirectionBtn.onclick = () => {
   const dir = scope.sortDirection() ?? "desc";
   scope.setSortDirection(dir === "asc" ? "desc" : "asc");
+};
+
+// Group by state
+effect(() => {
+  const groupBy = scope.groupBy();
+  groupBySelect.value = groupBy?.startsWith("firstLetter:") ? "firstLetter" : (groupBy ?? "");
+});
+
+groupBySelect.onchange = () => {
+  const raw = groupBySelect.value;
+  if (!raw) {
+    scope.setGroupBy(undefined);
+  } else if (raw === "firstLetter") {
+    scope.setGroupBy(`firstLetter:${scope.sortBy()[0] ?? "tags.artist"}`);
+  } else {
+    scope.setGroupBy(raw);
+  }
 };
 
 ////////////////////////////////////////////
