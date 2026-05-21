@@ -9,6 +9,7 @@ export type Actions = {
   seek: (
     _: { currentTime?: number; audioId: string; percentage?: number },
   ) => void;
+  state: (audioId: string) => AudioStateReadOnly | undefined;
   supply: (
     _: { audio: Audio[]; play?: { audioId: string; volume?: number } },
   ) => void;

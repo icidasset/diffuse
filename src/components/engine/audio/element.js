@@ -608,7 +608,7 @@ class AudioEngineItem extends BroadcastableDiffuseElement {
       hasEnded: signal(false),
       isPlaying: signal(false),
       isPreload: signal(this.hasAttribute("preload")),
-      loadingState: signal(/** @type {LoadingState} */ ("loading")),
+      loadingState: signal(/** @type {LoadingState} */ ("initialisation")),
 
       progress: computed(() => {
         const currentTime = this.$state.currentTime.value;
@@ -652,6 +652,11 @@ class AudioEngineItem extends BroadcastableDiffuseElement {
     audio.addEventListener("suspend", this.suspendEvent);
     audio.addEventListener("timeupdate", this.timeupdateEvent);
     audio.addEventListener("waiting", this.waitingEvent);
+
+    // Transition from initialisation to loading for non-preload items
+    if (!this.hasAttribute("preload")) {
+      this.$state.loadingState.set("loading");
+    }
 
     // Setup broadcasting if part of group
     if (this.hasAttribute("group")) {
