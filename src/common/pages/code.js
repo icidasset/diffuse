@@ -222,7 +222,7 @@ export function handleBuildFormSubmit() {
   const importBtn = document.querySelector("#import-button");
   const importInput = document.querySelector("#import-input");
 
-  importBtn?.addEventListener("click", () => importInput?.click());
+  importBtn?.addEventListener("click", () => /** @type {HTMLElement} */ (importInput)?.click());
 
   importInput?.addEventListener("change", async (event) => {
     const file = /** @type {HTMLInputElement} */ (event.target).files?.[0];

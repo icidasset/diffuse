@@ -623,6 +623,9 @@ class AudioEngineItem extends BroadcastableDiffuseElement {
 
   /**
    * @override
+   * @param {string} name
+   * @param {string} oldValue
+   * @param {string} newValue
    */
   attributeChangedCallback(name, oldValue, newValue) {
     super.attributeChangedCallback(name, oldValue, newValue);

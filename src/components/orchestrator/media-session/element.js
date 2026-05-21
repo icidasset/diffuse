@@ -8,6 +8,8 @@ import {
 /**
  * @import {OutputElement} from "~/components/output/types.d.ts"
  * @import ArtworkOrchestrator from "~/components/orchestrator/artwork/element.js"
+ * @import {default as AudioEngine} from "~/components/engine/audio/element.js"
+ * @import {default as QueueEngine} from "~/components/engine/queue/element.js"
  */
 
 ////////////////////////////////////////////
@@ -36,9 +38,13 @@ class MediaSessionOrchestrator extends BroadcastableDiffuseElement {
 
     if (!("mediaSession" in navigator)) return;
 
+    /** @type {AudioEngine} */
     this.audio = query(this, "audio-engine-selector");
+    /** @type {QueueEngine} */
     this.queue = query(this, "queue-engine-selector");
+    /** @type {OutputElement | null} */
     this.output = queryOptional(this, "output-selector");
+    /** @type {ArtworkOrchestrator | null} */
     this.artwork = queryOptional(this, "artwork-selector");
 
     await Promise.all([

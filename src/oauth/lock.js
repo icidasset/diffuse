@@ -9,6 +9,7 @@
 // This lock serialises all library operations so only one module at a time
 // owns the global state.
 
+/** @type {Promise<unknown>} */
 let _chain = Promise.resolve();
 
 /**

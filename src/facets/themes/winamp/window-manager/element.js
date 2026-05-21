@@ -88,7 +88,7 @@ class WindowManager extends DiffuseElement {
         const target = mutation.target;
         if (!(target instanceof HTMLElement) || !target.id) continue;
         const isOpen = target.hasAttribute("open");
-        const state = this.#loadState(target.id) ?? {};
+        const state = this.#loadState(target.id) ?? /** @type {{ left: string; top: string; width?: string; height?: string; open?: boolean }} */ ({});
         this.#saveState(
           target.id,
           state.left ?? target.style.left,
@@ -120,7 +120,7 @@ class WindowManager extends DiffuseElement {
         if (!initialized) { initialized = true; return; }
         const { width, height } = body.getBoundingClientRect();
         if (width === 0 || height === 0) return;
-        const state = this.#loadState(w.id) ?? {};
+        const state = this.#loadState(w.id) ?? /** @type {{ left: string; top: string; width?: string; height?: string; open?: boolean }} */ ({});
         this.#saveState(
           w.id,
           state.left ?? w.style.left,
@@ -251,7 +251,7 @@ class WindowManager extends DiffuseElement {
 
       const target = ogEvent.detail.element;
       if (target instanceof HTMLElement && target.id) {
-        const state = this.#loadState(target.id) ?? {};
+        const state = this.#loadState(target.id) ?? /** @type {{ left: string; top: string; width?: string; height?: string; open?: boolean }} */ ({});
         this.#saveState(target.id, target.style.left, target.style.top, state.width, state.height, state.open);
       }
     };
@@ -302,7 +302,7 @@ class WindowManager extends DiffuseElement {
           const stagger = index * 12;
           w.style.left = `${Math.round(Math.max(0, (window.innerWidth - width) / 2) + stagger)}px`;
           w.style.top = `${Math.round(Math.max(0, (window.innerHeight - height) / 2) + stagger)}px`;
-          const state = this.#loadState(id) ?? {};
+          const state = this.#loadState(id) ?? /** @type {{ left: string; top: string; width?: string; height?: string; open?: boolean }} */ ({});
           this.#saveState(id, w.style.left, w.style.top, state.width, state.height, state.open);
         };
         requestAnimationFrame(placeWindow);
