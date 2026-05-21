@@ -49,8 +49,8 @@ export const $supplyFingerprint = signal(
  * import { add, $future } from "~/components/engine/queue/worker.js";
  *
  * $future.value = [
- *   { id: "manual", manualEntry: true },
- *   { id: "auto", manualEntry: false },
+ *   { id: "manual", key: "1", manualEntry: true },
+ *   { id: "auto", key: "2", manualEntry: false },
  * ];
  *
  * add({ trackIds: ["new"] });
@@ -100,8 +100,8 @@ export function add({ inFront, trackIds }) {
  * import { clear, $future } from "~/components/engine/queue/worker.js";
  *
  * $future.value = [
- *   { id: "manual", manualEntry: true },
- *   { id: "auto", manualEntry: false },
+ *   { id: "manual", key: "1", manualEntry: true },
+ *   { id: "auto", key: "2", manualEntry: false },
  * ];
  * clear({ keepManual: true });
  *
@@ -114,8 +114,8 @@ export function add({ inFront, trackIds }) {
  * import { clear, $future } from "~/components/engine/queue/worker.js";
  *
  * $future.value = [
- *   { id: "manual", manualEntry: true },
- *   { id: "auto", manualEntry: false },
+ *   { id: "manual", key: "1", manualEntry: true },
+ *   { id: "auto", key: "2", manualEntry: false },
  * ];
  * clear({ keepManual: false });
  *
@@ -413,8 +413,8 @@ export function supply({ trackIds }) {
  * ```js
  * import { unshift, $future, $now, $past } from "~/components/engine/queue/worker.js";
  *
- * $past.value = [{ id: "prev", manualEntry: false }];
- * $now.value = { id: "current", manualEntry: false };
+ * $past.value = [{ id: "prev", key: "1", manualEntry: false }];
+ * $now.value = { id: "current", key: "2", manualEntry: false };
  * $future.value = [];
  *
  * unshift();
@@ -429,7 +429,7 @@ export function supply({ trackIds }) {
  * import { unshift, $now, $past } from "~/components/engine/queue/worker.js";
  *
  * $past.value = [];
- * $now.value = { id: "current", manualEntry: false };
+ * $now.value = { id: "current", key: "1", manualEntry: false };
  *
  * unshift();
  *
@@ -541,7 +541,7 @@ function fillQueue(shuffled, fillAmount, future) {
  * import { fillSequentially, $lake, $now } from "~/components/engine/queue/worker.js";
  *
  * $lake.value = ["a", "b", "c", "d"];
- * $now.value = { id: "b", manualEntry: false };
+ * $now.value = { id: "b", key: "1", manualEntry: false };
  *
  * const result = fillSequentially(2, []);
  *
@@ -554,7 +554,7 @@ function fillQueue(shuffled, fillAmount, future) {
  * import { fillSequentially, $lake, $now } from "~/components/engine/queue/worker.js";
  *
  * $lake.value = ["a", "b", "c"];
- * $now.value = { id: "b", manualEntry: false };
+ * $now.value = { id: "b", key: "1", manualEntry: false };
  *
  * const result = fillSequentially(3, []);
  *
@@ -570,7 +570,7 @@ function fillQueue(shuffled, fillAmount, future) {
  * $lake.value = ["a", "b", "c"];
  * $now.value = null;
  *
- * const future = [{ id: "manual", manualEntry: true }];
+ * const future = [{ id: "manual", key: "1", manualEntry: true }];
  * const result = fillSequentially(2, future);
  *
  * if (result[0].id !== "manual") throw new Error("manual entry should be preserved");
@@ -631,8 +631,8 @@ export function fillSequentially(fillAmount, future) {
  * $past.value = [];
  *
  * const existing = [
- *   { id: "x", manualEntry: false },
- *   { id: "y", manualEntry: false },
+ *   { id: "x", key: "1", manualEntry: false },
+ *   { id: "y", key: "2", manualEntry: false },
  * ];
  *
  * const result = fillShuffle(4, existing, 2);
@@ -645,8 +645,8 @@ export function fillSequentially(fillAmount, future) {
  * import { fillShuffle, $lake, $past, $now } from "~/components/engine/queue/worker.js";
  *
  * $lake.value = ["a", "b", "c", "d"];
- * $past.value = [{ id: "a", manualEntry: false }];
- * $now.value = { id: "b", manualEntry: false };
+ * $past.value = [{ id: "a", key: "1", manualEntry: false }];
+ * $now.value = { id: "b", key: "2", manualEntry: false };
  *
  * const result = fillShuffle(4, [], 0);
  *
@@ -658,7 +658,7 @@ export function fillSequentially(fillAmount, future) {
  * import { fillShuffle, $lake, $past } from "~/components/engine/queue/worker.js";
  *
  * $lake.value = ["a", "b"];
- * $past.value = [{ id: "a", manualEntry: false }, { id: "b", manualEntry: false }];
+ * $past.value = [{ id: "a", key: "1", manualEntry: false }, { id: "b", key: "2", manualEntry: false }];
  *
  * const result = fillShuffle(2, [], 0);
  *
@@ -704,7 +704,7 @@ export function fillShuffle(fillAmount, future, autoFutureCount) {
  * import type { Item } from "./types.d.ts"
  *
  * $now.value = null as null | Item;
- * $future.value = [{ id: "a", manualEntry: false }, { id: "b", manualEntry: false }];
+ * $future.value = [{ id: "a", key: "1", manualEntry: false }, { id: "b", key: "2", manualEntry: false }];
  *
  * _shift();
  *
@@ -718,8 +718,8 @@ export function fillShuffle(fillAmount, future, autoFutureCount) {
  * import { _shift, $future, $now, $past } from "~/components/engine/queue/worker.js";
  *
  * $past.value = [];
- * $now.value = { id: "prev", manualEntry: false };
- * $future.value = [{ id: "next", manualEntry: false }];
+ * $now.value = { id: "prev", key: "1", manualEntry: false };
+ * $future.value = [{ id: "next", key: "2", manualEntry: false }];
  *
  * _shift();
  *

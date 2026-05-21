@@ -73,10 +73,11 @@ import { effect } from "~/common/signal.js";
  * ```
  *
  * @example Handles both arrays empty
- * ```js
+ * ```ts
  * import { mergeTracks } from "~/common/output.js";
+ * import type { Track } from "~/definitions/types.d.ts";
  *
- * const result = mergeTracks([], []);
+ * const result = mergeTracks<Track>([], []);
  * if (result.length !== 0) throw new Error("expected empty result");
  * ```
  */

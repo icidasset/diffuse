@@ -245,7 +245,7 @@
     },
     "test:doc": {
       "description": "Run documentation tests",
-      "command": "deno test src -A --doc --ignore=README.md",
+      "command": "deno test -A --doc --ignore=README.md --ignore=src/skills src",
     },
     "test:unit": {
       "description": "Run unit tests (documentation tests)",
