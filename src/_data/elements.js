@@ -115,6 +115,11 @@ export default {
       desc: "HTTPS URLs to audio files or streams.",
     },
     {
+      url: "components/input/https-json/element.js",
+      title: "HTTPS + JSON",
+      desc: "HTTPS servers with JSON directory listings.",
+    },
+    {
       url: "components/input/icecast/element.js",
       title: "Icecast",
       desc:
@@ -264,13 +269,11 @@ export default {
       url: "components/supplement/listenbrainz/element.js",
       title: "ListenBrainz Scrobbler",
       desc: "Scrobbles track plays to ListenBrainz.",
-      todo: true,
     },
     {
       url: "components/supplement/rocksky/element.js",
       title: "Rocksky Scrobbler",
       desc: "Scrobbles track plays to Rocksky.",
-      todo: true,
     },
   ],
 
