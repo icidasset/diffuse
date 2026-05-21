@@ -17,21 +17,26 @@ const container = /** @type {HTMLDivElement} */ (
 const facets = await Output.data(output.facets);
 let preludesInserted = false;
 
-// Reload when the prelude facets change after initial load
+// Reload when the prelude facets change after initial load.
+// initialPreludeKey is captured the first time the collection finishes loading
+// (not at startup when it's still pending), so the effect never fires on the
+// very first load and causes an infinite reload loop.
 const preludeKey = computed(() => {
   const col = output.facets.collection();
-  if (col.state !== "loaded") return "";
+  if (col.state !== "loaded") return null;
   return col.data
     .filter((f) => f.kind === "prelude")
     .map((f) => `${f.id}:${f.cid ?? ""}:${f.enabled !== false}`)
     .join(",");
 });
 
-const initialPreludeKey = preludeKey();
+let initialPreludeKey = /** @type {string | null} */ (null);
 
 effect(() => {
-  if (preludeKey() === initialPreludeKey) return;
-  window.location.reload();
+  const key = preludeKey();
+  if (key === null) return;
+  if (initialPreludeKey === null) { initialPreludeKey = key; return; }
+  if (key !== initialPreludeKey) window.location.reload();
 });
 
 // Load
