@@ -255,6 +255,18 @@
       "description": "Run integration tests",
       "command": "deno test tests -A --ignore=README.md",
     },
+    "test:integration:coverage": {
+      "description": "Run integration tests with code coverage",
+      "command": "DENO_COVERAGE_DIR=./cov deno test tests -A --coverage=./cov --ignore=README.md",
+    },
+    "coverage": {
+      "description": "Generate coverage report from collected data",
+      "command": "deno coverage ./cov --lcov --output=./cov.lcov",
+    },
+    "coverage:html": {
+      "description": "Generate HTML coverage report",
+      "command": "deno coverage ./cov --html",
+    },
   },
   "compilerOptions": {
     "checkJs": true,
