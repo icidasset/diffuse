@@ -138,6 +138,8 @@ async (event) => {
       name,
     };
 
+  $editingFacet.value = facet;
+
   switch (/** @type {any} */ (event).submitter.name) {
     case "save":
       await saveFacet(facet);
