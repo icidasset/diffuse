@@ -218,6 +218,23 @@ export function handleBuildFormSubmit() {
     "submit",
     onBuildSubmit(editor),
   );
+
+  const importBtn = document.querySelector("#import-button");
+  const importInput = document.querySelector("#import-input");
+
+  importBtn?.addEventListener("click", () => importInput?.click());
+
+  importInput?.addEventListener("change", async (event) => {
+    const file = /** @type {HTMLInputElement} */ (event.target).files?.[0];
+    if (!file) return;
+
+    const html = await file.text();
+    const cid = await CID.create(0x55, new TextEncoder().encode(html));
+
+    editor.dispatch({
+      changes: { from: 0, to: editor.state.doc.length, insert: html },
+    });
+  });
 }
 
 ////////////////////////////////////////////
