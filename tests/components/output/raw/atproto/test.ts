@@ -65,7 +65,7 @@ describe("components/output/raw/atproto", () => {
       const output = new mod.CLASS();
       document.body.append(output);
 
-      await output.putRecords("sh.diffuse.output.facet", []);
+      await output.facets.save([]);
       return true;
     });
 

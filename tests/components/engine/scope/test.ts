@@ -4,7 +4,7 @@ import { expect } from "@std/expect";
 import { testWeb } from "@tests/common/index.ts";
 
 describe("components/engine/scope", () => {
-  it("has default sortBy of ['createdAt']", async () => {
+  it("has default sortBy of tag fields", async () => {
     const result = await testWeb(async () => {
       const mod = await import("~/components/engine/scope/element.js");
       const engine = new mod.CLASS();
@@ -12,10 +12,10 @@ describe("components/engine/scope", () => {
       return engine.sortBy();
     });
 
-    expect(result).toEqual(["createdAt"]);
+    expect(result).toEqual(["tags.artist", "tags.album", "tags.disc.no", "tags.track.no"]);
   });
 
-  it("has default sortDirection of 'desc'", async () => {
+  it("has default sortDirection of 'asc'", async () => {
     const result = await testWeb(async () => {
       const mod = await import("~/components/engine/scope/element.js");
       const engine = new mod.CLASS();
@@ -23,7 +23,7 @@ describe("components/engine/scope", () => {
       return engine.sortDirection();
     });
 
-    expect(result).toBe("desc");
+    expect(result).toBe("asc");
   });
 
   it("has default groupBy of undefined", async () => {
@@ -143,8 +143,8 @@ describe("components/engine/scope", () => {
       return { sortBy: engine.sortBy(), sortDirection: engine.sortDirection() };
     });
 
-    expect(result.sortBy).toEqual(["createdAt"]);
-    expect(result.sortDirection).toBe("desc");
+    expect(result.sortBy).toEqual(["tags.artist", "tags.album", "tags.disc.no", "tags.track.no"]);
+    expect(result.sortDirection).toBe("asc");
   });
 
   it("persists groupBy to localStorage", async () => {

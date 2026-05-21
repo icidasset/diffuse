@@ -173,7 +173,7 @@ describe("components/engine/queue", () => {
       const { tracks } = await import("~/testing/sample/tracks.js");
 
       await engine.add({ trackIds: tracks.slice(0, 3).map((t) => t.id) });
-      await engine.move({ from: 0, to: 2 });
+      await engine.move({ key: "1", to: 2 });
       return engine.future().map((i) => i.id);
     });
 
@@ -195,7 +195,7 @@ describe("components/engine/queue", () => {
       await engine.shift();
       // flat list: [past[0]=tracks[0]], now=tracks[1], future=[tracks[2]]
       // move future item (idx 2) before now (idx 1)
-      await engine.move({ from: 2, to: 0 });
+      await engine.move({ key: "3", to: 0 });
 
       return {
         now: engine.now()?.id,
@@ -221,7 +221,7 @@ describe("components/engine/queue", () => {
       const { tracks } = await import("~/testing/sample/tracks.js");
 
       await engine.add({ trackIds: tracks.slice(0, 3).map((t) => t.id) });
-      await engine.move({ from: 1, to: 1 });
+      await engine.move({ key: "2", to: 1 });
       return engine.future().map((i) => i.id);
     });
 
@@ -240,7 +240,7 @@ describe("components/engine/queue", () => {
       const { tracks } = await import("~/testing/sample/tracks.js");
 
       await engine.add({ trackIds: tracks.slice(0, 2).map((t) => t.id) });
-      await engine.move({ from: 0, to: 99 });
+      await engine.move({ key: "1", to: 99 });
       return engine.future().map((i) => i.id);
     });
 
