@@ -10,7 +10,7 @@ import {
 import { SCHEME } from "./constants.js";
 
 /**
- * @import { InputActions as Actions, ConsultGrouping } from "~/components/input/types.d.ts";
+ * @import { InputActions as Actions, ConsultGrouping } from "@specs/components/input/types.d.ts";
  */
 
 ////////////////////////////////////////////

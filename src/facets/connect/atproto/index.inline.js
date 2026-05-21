@@ -10,7 +10,7 @@ import { setup } from "~/facets/connect/common.js";
 foundation.setup({ title: "Connect Atmosphere | Diffuse" });
 
 /**
- * @import { ATProtoOutputElement } from "~/components/output/raw/atproto/types.d.ts"
+ * @import { ATProtoOutputElement } from "@specs/components/output/raw/atproto/types.d.ts"
  * @import PasskeyEncryptionTransformer from "~/components/transformer/output/refiner/passkey-encryption/element.js"
  */
 

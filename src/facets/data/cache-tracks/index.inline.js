@@ -4,7 +4,7 @@ import foundation from "~/common/foundation.js";
 
 
 /**
- * @import {ScrobbleElement} from "~/components/supplement/types.d.ts"
+ * @import {ScrobbleElement} from "@specs/components/supplement/types.d.ts"
  * @import {Track} from "~/definitions/types.d.ts"
  */
 

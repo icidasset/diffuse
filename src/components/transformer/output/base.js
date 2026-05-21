@@ -2,7 +2,7 @@ import { BroadcastableDiffuseElement, query } from "~/common/element.js";
 import { computed, signal } from "~/common/signal.js";
 
 /**
- * @import { OutputElement, OutputManagerDeputy } from "../../output/types.d.ts"
+ * @import { OutputElement, OutputManagerDeputy } from "@specs/components/output/types.d.ts"
  */
 
 /**

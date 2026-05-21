@@ -2,8 +2,8 @@ import { defineElement, DiffuseElement } from "~/common/element.js";
 
 /**
  * @import {ProxiedActions, Tunnel} from "~/common/worker.d.ts"
- * @import {InputElement} from "~/components/input/types.d.ts"
- * @import {Actions} from "./types.d.ts"
+ * @import {InputElement} from "@specs/components/input/types.d.ts"
+ * @import {Actions} from "@specs/components/configurator/input/types.d.ts"
  */
 
 /**

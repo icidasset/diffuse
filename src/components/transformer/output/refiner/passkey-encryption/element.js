@@ -16,7 +16,7 @@ import {
 
 /**
  * @import { Setting, Track } from "~/definitions/types.d.ts"
- * @import { OutputManager } from "~/components/output/types.d.ts"
+ * @import { OutputManager } from "@specs/components/output/types.d.ts"
  */
 
 /**

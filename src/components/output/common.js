@@ -5,7 +5,7 @@ import { strictEquality } from "~/common/compare.js";
 /**
  * @import {Facet, PlaylistItem, Setting, Track} from "~/definitions/types.d.ts"
  * @import {SignalWriter} from "~/common/signal.d.ts";
- * @import {OutputManager, OutputManagerProperties} from "./types.d.ts"
+ * @import {OutputManager, OutputManagerProperties} from "@specs/components/output/types.d.ts"
  */
 
 export class BroadcastedOutputElement extends BroadcastableDiffuseElement {

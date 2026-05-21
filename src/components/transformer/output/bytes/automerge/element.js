@@ -21,7 +21,7 @@ import {
 /**
  * @import { RenderArg } from "~/common/element.d.ts"
  * @import { SignalReader } from "~/common/signal.d.ts";
- * @import { OutputElement } from "~/components/output/types.d.ts";
+ * @import { OutputElement } from "@specs/components/output/types.d.ts";
  */
 
 /**

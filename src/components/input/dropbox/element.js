@@ -3,7 +3,7 @@ import { DEFAULT_APP_KEY, SCHEME } from "./constants.js";
 import { accountsFromTracks, buildURI } from "./common.js";
 
 /**
- * @import {InputActions, InputSchemeProvider} from "~/components/input/types.d.ts"
+ * @import {InputActions, InputSchemeProvider} from "@specs/components/input/types.d.ts"
  * @import {ProxiedActions} from "~/common/worker.d.ts"
  * @import {Track} from "~/definitions/types.d.ts"
  */

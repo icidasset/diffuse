@@ -1,4 +1,4 @@
-import type {InputActions} from "~/components/input/types.d.ts"
+import type {InputActions} from "@specs/components/input/types.d.ts"
 
 export type Actions = InputActions & {
   cache(uris: string[]): Promise<void>

@@ -9,7 +9,7 @@ import {
 } from "./common.js";
 
 /**
- * @import {InputActions, InputSchemeProvider} from "~/components/input/types.d.ts"
+ * @import {InputActions, InputSchemeProvider} from "@specs/components/input/types.d.ts"
  * @import {ProxiedActions} from "~/common/worker.d.ts"
  * @import {Track} from "~/definitions/types.d.ts"
  */

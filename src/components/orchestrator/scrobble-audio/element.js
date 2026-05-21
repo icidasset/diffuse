@@ -1,7 +1,7 @@
 import { BroadcastableDiffuseElement, defineElement, query } from "~/common/element.js";
 
 /**
- * @import {ScrobbleElement} from "~/components/supplement/types.d.ts"
+ * @import {ScrobbleElement} from "@specs/components/supplement/types.d.ts"
  * @import {Track} from "~/definitions/types.d.ts"
  */
 

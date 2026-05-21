@@ -15,7 +15,7 @@ import facets from "~/_data/facets.json" with {
 };
 
 /**
- * @import {OutputManagerDeputy} from "~/components/output/types.d.ts"
+ * @import {OutputManagerDeputy} from "@specs/components/output/types.d.ts"
  */
 
 const IDB_KEY =

@@ -15,8 +15,8 @@ import { repeat } from "~/vendor/lit-html/directives/repeat.js";
  * @import {RenderArg} from "~/common/element.d.ts"
  * @import {SignalReader} from "~/common/signal.d.ts";
  * @import {Track} from "~/definitions/types.d.ts"
- * @import {OutputElement} from "~/components/output/types.d.ts"
- * @import {ArtworkElement} from "~/components/artwork/types.d.ts"
+ * @import {OutputElement} from "@specs/components/output/types.d.ts"
+ * @import {ArtworkElement} from "@specs/components/artwork/types.d.ts"
  */
 
 /**

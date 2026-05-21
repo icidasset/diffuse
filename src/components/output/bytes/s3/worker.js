@@ -4,7 +4,7 @@ import { ostiary, rpc } from "~/common/worker.js";
 import { OBJECT_PREFIX } from "./constants.js";
 
 /**
- * @import {S3OutputWorkerActions} from "./types.d.ts"
+ * @import {S3OutputWorkerActions} from "@specs/components/output/bytes/s3/types.d.ts"
  */
 
 ////////////////////////////////////////////

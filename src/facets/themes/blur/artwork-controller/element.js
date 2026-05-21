@@ -17,7 +17,7 @@ import { signal, untracked } from "~/common/signal.js";
 /**
  * @import {RenderArg} from "~/common/element.d.ts"
  *
- * @import {InputElement} from "~/components/input/types.d.ts"
+ * @import {InputElement} from "@specs/components/input/types.d.ts"
  * @import ArtworkOrchestrator from "~/components/orchestrator/artwork/element.js"
  * @import ControllerOrchestrator from "~/components/orchestrator/controller/element.js"
  * @import FavouritesOrchestrator from "~/components/orchestrator/favourites/element.js"

@@ -12,9 +12,9 @@ import { ostiary, rpc, workerProxy } from "~/common/worker.js";
 
 /**
  * @import {Track} from "~/definitions/types.d.ts";
- * @import {GroupConsult, InputActions} from "~/components/input/types.d.ts"
+ * @import {GroupConsult, InputActions} from "@specs/components/input/types.d.ts"
  * @import {ActionsWithTunnel, ProxiedActions} from "~/common/worker.d.ts"
- * @import {Actions} from "./types.d.ts"
+ * @import {Actions} from "@specs/components/configurator/input/types.d.ts"
  */
 
 ////////////////////////////////////////////

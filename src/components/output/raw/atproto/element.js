@@ -17,8 +17,8 @@ import {
 } from "./oauth.js";
 
 /**
- * @import {OutputManager} from "../../types.d.ts"
- * @import {ATProtoOutputElement} from "./types.d.ts"
+ * @import {OutputManager} from "@specs/components/output/types.d.ts"
+ * @import {ATProtoOutputElement} from "@specs/components/output/raw/atproto/types.d.ts"
  * @import {MessageOf} from "@atcute/firehose"
  * @typedef {import("@atcute/atproto").ComAtprotoRepoApplyWrites.$input['writes'][number]} WriteOp
  */

@@ -2,7 +2,7 @@ import { defineElement, DiffuseElement } from "~/common/element.js";
 
 /**
  * @import {Track} from "~/definitions/types.d.ts"
- * @import {ScrobbleActions, ScrobbleElement} from "~/components/supplement/types.d.ts"
+ * @import {ScrobbleActions, ScrobbleElement} from "@specs/components/supplement/types.d.ts"
  */
 
 ////////////////////////////////////////////

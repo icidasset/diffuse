@@ -10,7 +10,7 @@ import { clearSession, readSession, saveSession } from "../session.js";
 
 /**
  * @import {Track} from "~/definitions/types.d.ts"
- * @import {ScrobbleElement} from "../types.d.ts"
+ * @import {ScrobbleElement} from "@specs/components/supplement/types.d.ts"
  */
 
 ////////////////////////////////////////////

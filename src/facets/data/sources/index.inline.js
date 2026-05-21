@@ -100,7 +100,7 @@ const trackPrefix = (uri) => {
 
 const onlineMap = signal(/** @type {Record<string, boolean | null>} */ ({}));
 
-/** @param {{ [scheme: string]: import("~/components/input/types.d.ts").Source[] }} sourcesRecord */
+/** @param {{ [scheme: string]: import("@specs/components/input/types.d.ts").Source[] }} sourcesRecord */
 async function checkOnlineStatus(sourcesRecord) {
   const sources = Object.values(sourcesRecord).flat();
   const entries = await Promise.all(

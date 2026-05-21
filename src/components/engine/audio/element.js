@@ -8,7 +8,7 @@ import {
 import { computed, signal, untracked } from "~/common/signal.js";
 
 /**
- * @import {Actions, AudioUrl, AudioState, AudioStateReadOnly, LoadingState} from "./types.d.ts"
+ * @import {Actions, AudioUrl, AudioState, AudioStateReadOnly, LoadingState} from "@specs/components/engine/audio/types.d.ts"
  * @import {RenderArg} from "~/common/element.d.ts"
  * @import {SignalReader} from "~/common/signal.d.ts"
  */

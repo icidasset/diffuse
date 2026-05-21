@@ -3,7 +3,7 @@ import { OutputTransformer } from "../../base.js";
 import { defineElement } from "~/common/element.js";
 
 /**
- * @import { OutputManagerDeputy } from "~/components/output/types.d.ts"
+ * @import { OutputManagerDeputy } from "@specs/components/output/types.d.ts"
  */
 
 /**

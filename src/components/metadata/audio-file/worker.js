@@ -4,8 +4,8 @@ import { musicMetadataTags } from "~/components/metadata/common.js";
 /**
  * @import {Track} from "~/definitions/types.d.ts"
  * @import {ActionsWithTunnel, ProxiedActions} from "~/common/worker.d.ts"
- * @import {InputActions} from "~/components/input/types.d.ts"
- * @import {Actions} from "~/components/metadata/types.d.ts"
+ * @import {InputActions} from "@specs/components/input/types.d.ts"
+ * @import {Actions} from "@specs/components/metadata/types.d.ts"
  */
 
 ////////////////////////////////////////////
@@ -40,7 +40,7 @@ export async function patch({ data: track, ports }) {
       : undefined,
   }).catch(/** @param {Error} err */ (err) => {
     console.warn("audio-file metadata error", err);
-    return /** @type {import("./types.d.ts").Extraction} */ ({});
+    return /** @type {import("@specs/components/metadata/audio-file/types.d.ts").Extraction} */ ({});
   });
 
   if (!tags && !stats) return track;

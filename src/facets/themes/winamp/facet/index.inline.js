@@ -7,7 +7,7 @@ import WindowManager from "~/facets/themes/winamp/window-manager/element.js";
 foundation.setup({ title: "Winamp | Diffuse" });
 
 /**
- * @import {OutputElement} from "~/components/output/types.d.ts"
+ * @import {OutputElement} from "@specs/components/output/types.d.ts"
  */
 
 const queue = await foundation.engine.queue();

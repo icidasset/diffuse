@@ -3,7 +3,7 @@ import { signal } from "~/common/signal.js";
 /**
  * @import { DiffuseElement } from "~/common/element.js";
  * @import { Signal } from "~/common/signal.d.ts";
- * @import { ScrobbleElement } from "~/components/supplement/types.d.ts";
+ * @import { ScrobbleElement } from "@specs/components/supplement/types.d.ts";
  */
 
 const url = new URL(document.location.href);

@@ -9,7 +9,7 @@ import { effect, signal } from "~/common/signal.js";
  * @import {SearchParams} from "@orama/orama";
  *
  * @import {Track} from "~/definitions/types.d.ts"
- * @import {Actions, Schema} from "./types.d.ts"
+ * @import {Actions, Schema} from "@specs/components/orchestrator/scoped-tracks/types.d.ts"
  */
 
 ////////////////////////////////////////////

@@ -5,8 +5,8 @@ import { BroadcastedOutputElement, outputManager } from "../../common.js";
 import { defineElement } from "~/common/element.js";
 
 /**
- * @import {OutputElement, OutputManager, OutputWorkerActions} from "../../types.d.ts"
- * @import {SupportedDataTypes} from "./types.d.ts"
+ * @import {OutputElement, OutputManager, OutputWorkerActions} from "@specs/components/output/types.d.ts"
+ * @import {SupportedDataTypes} from "@specs/components/output/polymorphic/indexed-db/types.d.ts"
  */
 
 ////////////////////////////////////////////

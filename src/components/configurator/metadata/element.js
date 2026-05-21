@@ -2,8 +2,8 @@ import { defineElement, DiffuseElement } from "~/common/element.js";
 
 /**
  * @import {ProxiedActions} from "~/common/worker.d.ts"
- * @import {MetadataElement} from "~/components/metadata/types.d.ts"
- * @import {Actions} from "./types.d.ts"
+ * @import {MetadataElement} from "@specs/components/metadata/types.d.ts"
+ * @import {Actions} from "@specs/components/configurator/metadata/types.d.ts"
  */
 
 ////////////////////////////////////////////

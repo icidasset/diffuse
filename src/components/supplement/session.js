@@ -3,7 +3,7 @@ import * as Output from "~/common/output.js";
 
 /**
  * @import {DiffuseElement} from "~/common/element.js"
- * @import {OutputElement} from "~/components/output/types.d.ts"
+ * @import {OutputElement} from "@specs/components/output/types.d.ts"
  */
 
 /**

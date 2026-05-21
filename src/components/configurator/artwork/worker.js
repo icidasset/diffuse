@@ -2,8 +2,8 @@ import { ostiary, rpc, workerProxy } from "~/common/worker.js";
 
 /**
  * @import {ActionsWithTunnel, ProxiedActions} from "~/common/worker.d.ts"
- * @import {Actions} from "~/components/artwork/types.d.ts"
- * @import {Actions as ConfiguratorActions} from "./types.d.ts"
+ * @import {Actions} from "@specs/components/artwork/types.d.ts"
+ * @import {Actions as ConfiguratorActions} from "@specs/components/configurator/artwork/types.d.ts"
  */
 
 ////////////////////////////////////////////

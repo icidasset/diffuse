@@ -13,7 +13,7 @@ import { guard } from "lit-html/directives/guard.js";
  *
  * @import ControllerOrchestrator from "~/components/orchestrator/controller/element.js"
  * @import RepeatShuffleEngine from "~/components/engine/repeat-shuffle/element.js"
- * @import {Item} from "~/components/engine/queue/types.d.ts"
+ * @import {Item} from "@specs/components/engine/queue/types.d.ts"
  */
 
 ////////////////////////////////////////////

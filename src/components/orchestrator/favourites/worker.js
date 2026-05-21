@@ -3,7 +3,7 @@ import { createFavouriteItem, filterFavourites } from "./common.js";
 
 /**
  * @import {PlaylistItem, Track} from "~/definitions/types.d.ts"
- * @import {Actions} from "./types.d.ts"
+ * @import {Actions} from "@specs/components/orchestrator/favourites/types.d.ts"
  */
 
 ////////////////////////////////////////////

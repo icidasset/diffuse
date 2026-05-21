@@ -14,7 +14,7 @@ import foundation from "~/common/foundation.js";
 import { setup } from "~/facets/connect/common.js";
 
 /**
- * @import { Server } from "~/components/input/opensubsonic/types.d.ts"
+ * @import { Server } from "@specs/components/input/opensubsonic/types.d.ts"
  */
 
 foundation.setup({ title: "Connect OpenSubsonic | Diffuse" });

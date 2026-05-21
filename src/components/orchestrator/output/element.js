@@ -14,8 +14,8 @@ import "~/components/transformer/output/string/json/element.js";
 
 /**
  * @import {RenderArg} from "~/common/element.d.ts"
- * @import {OutputElement} from "~/components/output/types.d.ts"
- * @import {OutputConfiguratorElement} from "~/components/configurator/output/types.d.ts"
+ * @import {OutputElement} from "@specs/components/output/types.d.ts"
+ * @import {OutputConfiguratorElement} from "@specs/components/configurator/output/types.d.ts"
  */
 
 ////////////////////////////////////////////

@@ -11,12 +11,12 @@ import { parseDisabledUris } from "~/components/orchestrator/sources/common.js";
 
 /**
  * @import {ProxiedActions} from "~/common/worker.d.ts"
- * @import {InputElement} from "~/components/input/types.d.ts"
- * @import {OutputElement} from "~/components/output/types.d.ts"
+ * @import {InputElement} from "@specs/components/input/types.d.ts"
+ * @import {OutputElement} from "@specs/components/output/types.d.ts"
  * @import {Track} from "~/definitions/types.d.ts"
  * @import MetadataConfigurator from "~/components/configurator/metadata/element.js"
  *
- * @import {Actions, Progress} from "./types.d.ts"
+ * @import {Actions, Progress} from "@specs/components/orchestrator/process-tracks/types.d.ts"
  */
 
 ////////////////////////////////////////////

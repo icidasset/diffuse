@@ -6,7 +6,7 @@ import {
 } from "~/common/element.js";
 
 /**
- * @import {OutputElement} from "~/components/output/types.d.ts"
+ * @import {OutputElement} from "@specs/components/output/types.d.ts"
  * @import ArtworkOrchestrator from "~/components/orchestrator/artwork/element.js"
  * @import {default as AudioEngine} from "~/components/engine/audio/element.js"
  * @import {default as QueueEngine} from "~/components/engine/queue/element.js"

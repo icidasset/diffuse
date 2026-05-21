@@ -12,9 +12,9 @@ import { listen } from "~/common/worker.js";
 /**
  * @import {ProxiedActions} from "~/common/worker.d.ts"
  * @import {Track} from "~/definitions/types.d.ts"
- * @import {InputElement} from "~/components/input/types.d.ts"
- * @import {OutputElement} from "~/components/output/types.d.ts"
- * @import {Actions, State} from "./types.d.ts"
+ * @import {InputElement} from "@specs/components/input/types.d.ts"
+ * @import {OutputElement} from "@specs/components/output/types.d.ts"
+ * @import {Actions, State} from "@specs/components/orchestrator/scoped-tracks/types.d.ts"
  */
 
 ////////////////////////////////////////////

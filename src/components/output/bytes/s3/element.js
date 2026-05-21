@@ -8,9 +8,9 @@ const STORAGE_PREFIX = "diffuse/output/bytes/s3";
 
 /**
  * @import {ProxiedActions} from "~/common/worker.d.ts"
- * @import {OutputElement, OutputManager} from "../../types.d.ts"
- * @import {Bucket} from "~/components/input/s3/types.d.ts"
- * @import {S3OutputElement, S3OutputWorkerActions} from "./types.d.ts"
+ * @import {OutputElement, OutputManager} from "@specs/components/output/types.d.ts"
+ * @import {Bucket} from "@specs/components/input/s3/types.d.ts"
+ * @import {S3OutputElement, S3OutputWorkerActions} from "@specs/components/output/bytes/s3/types.d.ts"
  */
 
 ////////////////////////////////////////////

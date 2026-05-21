@@ -10,7 +10,7 @@ import foundation from "~/common/foundation.js";
 import { setup } from "~/facets/connect/common.js";
 
 /**
- * @import { Server } from "~/components/input/webdav/types.d.ts"
+ * @import { Server } from "@specs/components/input/webdav/types.d.ts"
  */
 
 foundation.setup({ title: "Connect WebDAV | Diffuse" });

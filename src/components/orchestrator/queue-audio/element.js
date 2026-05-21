@@ -2,8 +2,8 @@ import { BroadcastableDiffuseElement, defineElement, query } from "~/common/elem
 import { untracked } from "~/common/signal.js";
 
 /**
- * @import {InputElement} from "~/components/input/types.d.ts"
- * @import {OutputElement} from "~/components/output/types.d.ts"
+ * @import {InputElement} from "@specs/components/input/types.d.ts"
+ * @import {OutputElement} from "@specs/components/output/types.d.ts"
  * @import RepeatShuffleEngine from "~/components/engine/repeat-shuffle/element.js"
  */
 

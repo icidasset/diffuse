@@ -2,7 +2,7 @@ import { defineElement, DiffuseElement, query, whenElementsDefined } from "~/com
 import { computed, signal } from "~/common/signal.js";
 
 /**
- * @import {OutputElement} from "~/components/output/types.d.ts"
+ * @import {OutputElement} from "@specs/components/output/types.d.ts"
  * @import AudioEngine from "~/components/engine/audio/element.js"
  * @import QueueEngine from "~/components/engine/queue/element.js"
  */

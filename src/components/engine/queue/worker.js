@@ -4,7 +4,7 @@ import { arrayShuffle } from "~/common/utils.js";
 import { xxh32 } from "xxh32";
 
 /**
- * @import {Actions, Item} from "./types.d.ts"
+ * @import {Actions, Item} from "@specs/components/engine/queue/types.d.ts"
  */
 
 ////////////////////////////////////////////
@@ -701,7 +701,7 @@ export function fillShuffle(fillAmount, future, autoFutureCount) {
  * @example Moves the first future item to now
  * ```ts
  * import { _shift, $future, $now } from "~/components/engine/queue/worker.js";
- * import type { Item } from "./types.d.ts"
+ * import type { Item } from "@specs/components/engine/queue/types.d.ts"
  *
  * $now.value = null as null | Item;
  * $future.value = [{ id: "a", key: "1", manualEntry: false }, { id: "b", key: "2", manualEntry: false }];

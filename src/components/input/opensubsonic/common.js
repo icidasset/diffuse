@@ -9,7 +9,7 @@ import { SubsonicAPIWithoutFetch } from "./class.js";
 /**
  * @import {Child} from "subsonic-api"
  * @import {Track} from "~/definitions/types.d.ts";
- * @import {Server} from "./types.d.ts";
+ * @import {Server} from "@specs/components/input/opensubsonic/types.d.ts";
  */
 
 /**

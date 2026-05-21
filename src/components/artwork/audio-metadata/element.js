@@ -2,8 +2,8 @@ import { defineElement, DiffuseElement, query } from "~/common/element.js";
 
 /**
  * @import {ProxiedActions} from "~/common/worker.d.ts"
- * @import {InputElement} from "~/components/input/types.d.ts"
- * @import {Actions} from "~/components/artwork/types.d.ts"
+ * @import {InputElement} from "@specs/components/input/types.d.ts"
+ * @import {Actions} from "@specs/components/artwork/types.d.ts"
  */
 
 ////////////////////////////////////////////

@@ -9,8 +9,8 @@ import * as Output from "~/common/output.js";
 
 /**
  * @import { RenderArg } from "~/common/element.d.ts"
- * @import { OutputElement } from "~/components/output/types.d.ts"
- * @import { ATProtoOutputElement } from "~/components/output/raw/atproto/types.d.ts"
+ * @import { OutputElement } from "@specs/components/output/types.d.ts"
+ * @import { ATProtoOutputElement } from "@specs/components/output/raw/atproto/types.d.ts"
  */
 
 const COLLECTIONS = /** @type {const} */ ([

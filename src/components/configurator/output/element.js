@@ -4,9 +4,9 @@ import { batch, computed, signal } from "~/common/signal.js";
 /**
  * @import {DiffuseElement} from "~/common/element.js"
  * @import {Facet, PlaylistItem, Setting, Track} from "~/definitions/types.d.ts"
- * @import {OutputManagerDeputy, OutputElement} from "~/components/output/types.d.ts"
+ * @import {OutputManagerDeputy, OutputElement} from "@specs/components/output/types.d.ts"
  *
- * @import {OutputConfiguratorElement} from "./types.d.ts"
+ * @import {OutputConfiguratorElement} from "@specs/components/configurator/output/types.d.ts"
  */
 
 /**

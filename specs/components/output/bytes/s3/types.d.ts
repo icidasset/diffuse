@@ -1,6 +1,6 @@
 import type { SignalReader } from "~/common/signal.d.ts";
-import type { OutputElement } from "../../types.d.ts";
-import type { Bucket } from "~/components/input/s3/types.d.ts";
+import type { OutputElement } from "@specs/components/output/types.d.ts";
+import type { Bucket } from "@specs/components/input/s3/types.d.ts";
 
 export type S3OutputElement =
   & OutputElement<Uint8Array | undefined>

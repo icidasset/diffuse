@@ -4,7 +4,7 @@ import { listen } from "~/common/worker.js";
 
 /**
  * @import {ProxiedActions} from "~/common/worker.d.ts";
- * @import {Actions, Item, State} from "./types.d.ts"
+ * @import {Actions, Item, State} from "@specs/components/engine/queue/types.d.ts"
  */
 
 ////////////////////////////////////////////

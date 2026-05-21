@@ -5,7 +5,7 @@ import { effect, signal } from "~/common/signal.js";
 import { NAME as ATPROTO_NAME } from "~/components/output/raw/atproto/element.js";
 
 /**
- * @import { ATProtoOutputElement } from "~/components/output/raw/atproto/types.d.ts"
+ * @import { ATProtoOutputElement } from "@specs/components/output/raw/atproto/types.d.ts"
  */
 
 ////////////////////////////////////////////

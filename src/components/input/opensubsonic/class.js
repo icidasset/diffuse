@@ -2,7 +2,7 @@ import { SubsonicAPI } from "subsonic-api";
 
 export class SubsonicAPIWithoutFetch extends SubsonicAPI {
   /**
-   * @param {import("./types.d.ts").SubsonicConfig} config
+   * @param {import("@specs/components/input/opensubsonic/types.d.ts").SubsonicConfig} config
    */
   constructor(config) {
     super({

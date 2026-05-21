@@ -13,8 +13,8 @@ import { setup } from "~/facets/connect/common.js";
 foundation.setup({ title: "Connect S3 | Diffuse" });
 
 /**
- * @import { Bucket } from "~/components/input/s3/types.d.ts"
- * @import { S3OutputElement } from "~/components/output/bytes/s3/types.d.ts"
+ * @import { Bucket } from "@specs/components/input/s3/types.d.ts"
+ * @import { S3OutputElement } from "@specs/components/output/bytes/s3/types.d.ts"
  */
 
 ////////////////////////////////////////////

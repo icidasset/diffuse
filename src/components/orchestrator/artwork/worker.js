@@ -6,8 +6,8 @@ import { ostiary, rpc, workerProxy } from "~/common/worker.js";
 /**
  * @import {Track} from "~/definitions/types.d.ts"
  * @import {ActionsWithTunnel, ProxiedActions} from "~/common/worker.d.ts"
- * @import {Actions} from "~/components/artwork/types.d.ts"
- * @import {Artwork} from "./types.d.ts"
+ * @import {Actions} from "@specs/components/artwork/types.d.ts"
+ * @import {Artwork} from "@specs/components/orchestrator/artwork/types.d.ts"
  */
 
 // multicodec raw bytes

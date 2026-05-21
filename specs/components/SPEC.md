@@ -19,15 +19,7 @@ These web components are custom elements (DOM elements) that serve as building b
 
 ### Artwork
 
-Various ways to fetch artwork for tracks. Must adhere to API:
-
-```ts
-import type { Track } from "~/definitions/types.d.ts";
-
-export type Actions = {
-  get(track: Track): Promise<Uint8Array | null>;
-};
-```
+Various ways to fetch artwork for tracks. Must adhere to types defined in `artwork/types.d.ts`
 
 
 ### Engine
@@ -37,76 +29,12 @@ All kinds of core behaviour.
 
 ### Input
 
-Input components generate tracks and resolve track URIs into audio. They must be of the following `InputElement` type:
-
-```ts
-import type { DiffuseElement } from "~/common/element.js";
-import type { ProxiedActions } from "~/common/worker.d.ts";
-import type { Track } from "~/definitions/types.d.ts";
-
-/**
- * Consultation.
- *
- * `consult` can be "undetermined" if only a scheme was given instead of a full URI.
- */
-export type Consult =
-  | { supported: false; reason: string }
-  | { supported: true; consult: "undetermined" | boolean };
-
-export type ConsultGrouping =
-  | { available: false; reason: string; scheme: string; uris: string[] }
-  | { available: true; scheme: string; uris: string[] };
-
-export type GroupConsult = Record<string, ConsultGrouping>;
-
-export type InputActions = {
-  artwork(uri: string): Promise<Uint8Array | null>;
-  consult(uriOrScheme: string): Promise<Consult>;
-  detach(args: { fileUriOrScheme: string; tracks: Track[] }): Promise<Track[]>;
-  groupConsult(uris: string[]): Promise<GroupConsult>;
-  list(tracks: Track[]): Promise<Track[]>;
-  resolve(args: { method?: string; uri: string }): Promise<ResolvedUri>;
-};
-
-export type InputElement =
-  & DiffuseElement
-  & InputSchemeProvider
-  & ProxiedActions<InputActions>
-  & { sources: (tracks: Track[]) => Source[] };
-
-export type InputSchemeProvider = { SCHEME: string };
-
-export type ResolvedUri = undefined | ResolveUriAsUrl | ResolveUriAsStream;
-
-export type ResolveUriAsUrl = {
-  expiresAt: number;
-  url: string;
-};
-
-export type ResolveUriAsStream = {
-  expiresAt: number;
-  mimeType: string;
-  stream: ReadableStream;
-
-  /** Total duration in seconds. */
-  duration?: number;
-};
-
-export type Source = { label: string; uri: string };
-````
+Input components generate tracks and resolve track URIs into audio. They must adhere to types defined in `input/types.d.ts`
 
 
 ### Metadata
 
-Various ways to fetch metadata for tracks. Must adhere to API:
-
-```ts
-import type { Track } from "~/definitions/types.d.ts";
-
-export type Actions = {
-  patch(track: Track): Promise<Track>;
-};
-```
+Various ways to fetch metadata for tracks. Must adhere to types defined in `metadata/types.d.ts`
 
 
 ### Output
@@ -116,6 +44,8 @@ Output components hold all the user data: facets, playlist items, settings and t
 - `polymorphic`: The data can be of multiple types.
 - `raw`: The data is not encoded at all, it is of the same type stated in the definitions (lexicons).
 - `bytes`: Encoded as `Uint8Array`.
+
+Must adhere to types defined in `output/types.d.ts`
 
 
 ### Supplement

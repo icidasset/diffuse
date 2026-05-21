@@ -2,8 +2,8 @@ import { defineElement, DiffuseElement } from "~/common/element.js";
 
 /**
  * @import {ProxiedActions} from "~/common/worker.d.ts"
- * @import {ArtworkElement} from "~/components/artwork/types.d.ts"
- * @import {Actions} from "./types.d.ts"
+ * @import {ArtworkElement} from "@specs/components/artwork/types.d.ts"
+ * @import {Actions} from "@specs/components/configurator/artwork/types.d.ts"
  */
 
 ////////////////////////////////////////////

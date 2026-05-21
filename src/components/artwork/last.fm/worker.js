@@ -1,7 +1,7 @@
 import { ostiary, rpc } from "~/common/worker.js";
 
 /**
- * @import {Actions} from "~/components/artwork/types.d.ts"
+ * @import {Actions} from "@specs/components/artwork/types.d.ts"
  */
 
 ////////////////////////////////////////////

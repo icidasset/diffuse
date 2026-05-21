@@ -2,7 +2,7 @@ import * as Automerge from "@automerge/automerge";
 import { base64 } from "iso-base/rfc4648";
 
 /**
- * @import { FacetsDocument, PlaylistItemsDocument, SettingsDocument, TracksDocument } from "./types.d.ts";
+ * @import { FacetsDocument, PlaylistItemsDocument, SettingsDocument, TracksDocument } from "@specs/components/transformer/output/bytes/automerge/types.d.ts";
  */
 
 /** @type {Automerge.Doc<FacetsDocument>} */

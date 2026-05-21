@@ -21,8 +21,8 @@ import {
 /**
  * @import {Child, SubsonicAPI} from "subsonic-api"
  * @import {Track} from "~/definitions/types.d.ts";
- * @import {ConsultGrouping, InputActions as Actions} from "~/components/input/types.d.ts";
- * @import {Server} from "./types.d.ts"
+ * @import {ConsultGrouping, InputActions as Actions} from "@specs/components/input/types.d.ts";
+ * @import {Server} from "@specs/components/input/opensubsonic/types.d.ts"
  */
 
 ////////////////////////////////////////////

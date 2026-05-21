@@ -9,7 +9,7 @@ import { SCHEME } from "./constants.js";
 
 /**
  * @import { Track } from "~/definitions/types.d.ts";
- * @import { Server } from "./types.d.ts";
+ * @import { Server } from "@specs/components/input/webdav/types.d.ts";
  */
 
 ////////////////////////////////////////////

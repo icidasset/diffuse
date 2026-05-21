@@ -2,7 +2,7 @@ import type { Orama, SearchParams } from "@orama/orama";
 
 import type { SignalReader } from "~/common/signal.d.ts";
 import type { Track } from "~/definitions/types.d.ts";
-import type { SCHEMA } from "./constants.js";
+import type { SCHEMA } from "~/components/orchestrator/scoped-tracks/constants.js";
 
 export type Actions = {
   /**

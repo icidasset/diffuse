@@ -10,7 +10,7 @@ const IDB_KEY_TRACKS =
   "diffuse/transformer/output/refiner/default/tracks/ephemeral";
 
 /**
- * @import { OutputManagerDeputy } from "~/components/output/types.d.ts"
+ * @import { OutputManagerDeputy } from "@specs/components/output/types.d.ts"
  * @import { PlaylistItem, Track } from "~/definitions/types.d.ts"
  */
 

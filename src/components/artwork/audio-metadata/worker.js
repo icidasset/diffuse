@@ -2,10 +2,10 @@ import { musicMetadataTags } from "~/components/metadata/common.js";
 import { ostiary, rpc, workerProxy } from "~/common/worker.js";
 
 /**
- * @import {Extraction} from "~/components/metadata/audio-file/types.d.ts"
+ * @import {Extraction} from "@specs/components/metadata/audio-file/types.d.ts"
  * @import {ActionsWithTunnel, ProxiedActions} from "~/common/worker.d.ts"
- * @import {InputActions} from "~/components/input/types.d.ts"
- * @import {Actions} from "~/components/artwork/types.d.ts"
+ * @import {InputActions} from "@specs/components/input/types.d.ts"
+ * @import {Actions} from "@specs/components/artwork/types.d.ts"
  */
 
 ////////////////////////////////////////////

@@ -37,7 +37,7 @@ let initialised = false;
 
 const debounced = debounce(
   2500,
-  /** @param {import("~/components/input/types.d.ts").Source} _sources */ async (
+  /** @param {import("@specs/components/input/types.d.ts").Source} _sources */ async (
     _sources,
   ) => {
     if (initialised) orchestrator.process();

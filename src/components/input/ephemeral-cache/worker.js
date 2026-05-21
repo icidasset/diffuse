@@ -4,7 +4,7 @@ import { ostiary, rpc } from "~/common/worker.js";
 import { CACHE_KEY_PREFIX, SCHEME } from "./constants.js";
 
 /**
- * @import { InputActions as Actions } from "~/components/input/types.d.ts"
+ * @import { InputActions as Actions } from "@specs/components/input/types.d.ts"
  * @import { Track } from "~/definitions/types.d.ts"
  */
 

@@ -6,10 +6,10 @@ import { announce, ostiary, rpc, workerProxy } from "~/common/worker.js";
 /**
  * @import {Track} from "~/definitions/types.d.ts"
  * @import {ActionsWithTunnel, ProxiedActions} from "~/common/worker.d.ts"
- * @import {InputActions} from "~/components/input/types.d.ts"
- * @import {Actions as MetadataActions} from "~/components/metadata/types.d.ts"
+ * @import {InputActions} from "@specs/components/input/types.d.ts"
+ * @import {Actions as MetadataActions} from "@specs/components/metadata/types.d.ts"
  *
- * @import {Actions} from "./types.d.ts"
+ * @import {Actions} from "@specs/components/orchestrator/process-tracks/types.d.ts"
  */
 
 ////////////////////////////////////////////

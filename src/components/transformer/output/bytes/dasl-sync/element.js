@@ -14,9 +14,9 @@ import { defineElement } from "~/common/element.js";
 /**
  * @import { SignalReader } from "~/common/signal.d.ts";
  * @import { RenderArg } from "~/common/element.d.ts"
- * @import { OutputElement } from "~/components/output/types.d.ts"
+ * @import { OutputElement } from "@specs/components/output/types.d.ts"
  *
- * @import { Container } from "./types.d.ts"
+ * @import { Container } from "@specs/components/transformer/output/bytes/dasl-sync/types.d.ts"
  */
 
 /** @type {Container<any>} */

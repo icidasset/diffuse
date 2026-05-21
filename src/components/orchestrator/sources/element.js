@@ -9,8 +9,8 @@ import { DISABLED_KEY } from "./constants.js";
 import { parseDisabledUris, uriKey } from "./common.js";
 
 /**
- * @import {InputElement, Source} from "~/components/input/types.d.ts"
- * @import {OutputElement} from "~/components/output/types.d.ts"
+ * @import {InputElement, Source} from "@specs/components/input/types.d.ts"
+ * @import {OutputElement} from "@specs/components/output/types.d.ts"
  */
 
 ////////////////////////////////////////////

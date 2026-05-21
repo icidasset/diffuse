@@ -11,8 +11,8 @@ import * as Output from "~/common/output.js";
 /**
  * @import {Track} from "~/definitions/types.d.ts"
  * @import {ProxiedActions} from "~/common/worker.d.ts"
- * @import {OutputElement} from "~/components/output/types.d.ts"
- * @import {Actions} from "./types.d.ts"
+ * @import {OutputElement} from "@specs/components/output/types.d.ts"
+ * @import {Actions} from "@specs/components/orchestrator/favourites/types.d.ts"
  */
 
 ////////////////////////////////////////////
