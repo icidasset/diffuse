@@ -305,7 +305,9 @@ site.remoteFile(
 
 site.remoteFile(
   "skills/diffuse-facet/example/index.html",
-  import.meta.resolve("./src/facets/data/sources/index.html"),
+  import.meta.resolve(
+    "./src/facets/themes/blur/artwork-controller/facet/index.html",
+  ),
 );
 
 site.add("skills/diffuse-facet/docs/architecture.txt");
