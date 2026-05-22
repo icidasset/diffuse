@@ -290,6 +290,12 @@ export async function editFacetFromURL() {
   const idParam = params.get("id");
   const uriParam = params.get("uri");
 
+  // Reset editing state; if we're loading a specific facet, editFacet() will
+  // set it again. Without this, $editingFacet persists across SPA navigations
+  // and a subsequent "save" will reuse the stale id, silently overwriting the
+  // previously edited facet instead of creating a new entry.
+  $editingFacet.value = null;
+
   setEditorLoading(true);
   try {
     if (idParam) {
