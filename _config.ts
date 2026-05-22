@@ -315,6 +315,16 @@ site.add("/definitions", "/skills/diffuse-facet/docs/definitions");
 site.copy("skills/diffuse-facet/SKILL.md");
 site.add("skills");
 
+site.addEventListener("afterBuild", () => {
+  const destDir = "dist/skills/diffuse-facet/docs/definitions";
+  for (const f of walkSync("./lexicons/", { includeDirs: false })) {
+    const rel = path.relative("./lexicons", f.path);
+    const dest = path.join(destDir, rel);
+    ensureDirSync(path.dirname(dest));
+    Deno.copyFileSync(f.path, dest);
+  }
+});
+
 site.addEventListener("afterBuild", async () => {
   const skillsDir = "dist/skills/diffuse-facet";
   const zipWriter = new ZipWriter(new Uint8ArrayWriter());
@@ -365,7 +375,9 @@ async function writeFileTree() {
   // any brotli'd copy of the *un*stamped SW so Caddy's precompressed-br
   // serving never delivers it to the browser's update checker.
   const swDist = "./dist/service-worker.js";
-  try { Deno.removeSync(`${swDist}.br`); } catch { /* already gone */ }
+  try {
+    Deno.removeSync(`${swDist}.br`);
+  } catch { /* already gone */ }
   const swSource = Deno.readTextFileSync(swDist)
     .replace(/\n\/\/ @build \S+\n$/, "");
   const swStamped = `${swSource}\n// @build ${crypto.randomUUID()}\n`;
