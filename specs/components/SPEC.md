@@ -4,16 +4,20 @@ These web components are custom elements (DOM elements) that serve as building b
 
 ## Requirements
 
-- Components should never rely on instances of other components, except if they live in the 'orchestrator' category or if the instance is a child of itself. Orchestrator components can refer to other components using a DOM selector, this can be provided via an attribute ending with `-selector` as its name.
+- Components should never rely on instances of other components, except if they live in the 'orchestrator' category or if the instance is a child of itself. Orchestrator components can refer to other components using a DOM selector, this can be provided via an attribute ending with `-selector` as its name. These orchestrators are responsible for bringing components together and making prebuilt setups.
 - Components rely on signals exposed via the `common/signal.js` module. Only signal getters are exposed, never the entire signal object.
 - A base class should be built that all components build on. This should be made available via `common/element.js`.
 - Components should be broadcastable, meaning that various instances of that component should be able to communicate with each other. This will be used to replicate state and call methods. Broadcasting should have two modes: 'replicate' and 'leaderOnly'. The former is executed on all instances, while the latter is only executed on the leader. Another base class should be provided for broadcastable components. A `group` attribute will be used to choose the group in which we'll broadcast, so can we can form groups of instances that communicate.
 - Components live in the `components` directory.
 - Another special category of components is 'configurator', those components take DOM children of the same category. For example, A configurator must have at least the same properties as the component provided via the DOM, but may have more.
 - If heavy computation work or other work which could block the main thread is needed, the element should be accompanied by a web worker.
-- Register the custom element as soon as possible.
+- A tunnel should be able to be formed between workers using message ports, passing the message port along using `postMessage`.
+- Communication between different threads/workers should be performant.
+- Register the custom element as soon as possible. Ideally using the `defineElement` helper to prevent double registration.
 - When any namespace is needed, prefer to prefix with `diffuse/`
 - When code is shared between files from a specific component, components in a specific category, or components across different categories; put it in a `common.js` file (or `common` directory with multiple js files if it gets too big) on the appropriate level.
+- Tag naming convention: all lowercase, starts with letter `d`, then the first letter of each sub category, a dash, and finally the name of the element in kebab case. Collisions may occur with the prefix, in that case, change the element name.
+- All elements should have a `static NAME` property with the directory path in src prefixed with `diffuse/`.
 
 ## Other categories
 
@@ -39,7 +43,7 @@ Various ways to fetch metadata for tracks. Must adhere to types defined in `meta
 
 ### Output
 
-Output components hold all the user data: facets, playlist items, settings and tracks. They all have the same surface API. Data is exposed via a signal getter called `collection`, one for each kind of data. These components are also responsible loading and saving that data. The data may be encoded, each component decides for its own what the type of the data is. The subcategory states what that type is:
+Output components hold all the user data: facets, playlist items, settings and tracks. They all have the same surface API. Data is exposed via a signal getter called `collection`, one for each kind of data. These components are also responsible loading and saving that data. The data may be encoded, each component decides for its own what the type of the data is. The subcategory states what that type is and this is reflected in the directory structure these components live in:
 
 - `polymorphic`: The data can be of multiple types.
 - `raw`: The data is not encoded at all, it is of the same type stated in the definitions (lexicons).
@@ -55,4 +59,4 @@ All kinds of additional components, not really required to make a working audio 
 
 ### Transformer
 
-Transformers are also intermediate components like configurators, with the same API requirements. They don't take DOM elements as children however, instead they serve to be used as a chain. Output transformers have a `output-selector` which chains the transformer to another component.
+Transformers are also intermediate components like configurators, with the same API requirements. They don't take DOM elements as children however, instead they serve to be used as a chain. Output transformers have a `output-selector` which chains the transformer to another component. These output transformers also have the same subcategories and directory structure as the output category.
