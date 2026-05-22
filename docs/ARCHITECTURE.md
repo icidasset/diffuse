@@ -26,7 +26,7 @@ Components share state with each other using signals (see `common/signal.js`) or
 
 ## Definitions
 
-`src/definitions/` are atproto lexicons, JSON schemas that describe data in the system.
+`lexicons/` are atproto lexicons, JSON schemas that describe data in the system. The generated TypeScript types live in `src/definitions/`.
 
 
 
