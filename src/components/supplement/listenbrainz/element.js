@@ -130,13 +130,13 @@ class ListenBrainzScrobbler extends BroadcastableDiffuseElement {
   /**
    * @param {Track} track
    * @param {number} startedAt Unix timestamp in milliseconds
-   * @param {{ duration?: number }} [_options] duration in milliseconds
+   * @param {{ duration?: number }} [options] duration in milliseconds
    */
-  async scrobble(track, startedAt, _options) {
+  async scrobble(track, startedAt, options) {
     return this.#submit("single", [
       {
         listened_at: Math.floor(startedAt / 1000),
-        track_metadata: this.#trackMetadata(track),
+        track_metadata: this.#trackMetadata(track, options?.duration),
       },
     ]);
   }
@@ -145,15 +145,17 @@ class ListenBrainzScrobbler extends BroadcastableDiffuseElement {
 
   /**
    * @param {Track} track
+   * @param {number} [durationMs]
    * @returns {Record<string, unknown>}
    */
-  #trackMetadata(track) {
+  #trackMetadata(track, durationMs) {
     const tags = track.tags ?? {};
     /** @type {Record<string, unknown>} */
     const additional_info = { submission_client: "Diffuse" };
 
-    if (track.stats?.duration != null) {
-      additional_info.duration_ms = track.stats.duration;
+    const duration = track.stats?.duration ?? durationMs;
+    if (duration != null) {
+      additional_info.duration_ms = duration;
     }
     if (tags.track?.no != null) {
       additional_info.tracknumber = tags.track.no;
