@@ -248,6 +248,10 @@
       "description": "Run documentation tests",
       "command": "deno test -A --doc --ignore=README.md --ignore=src/skills src",
     },
+    "test:types": {
+      "description": "Make sure everything type checks",
+      "command": "deno check specs && deno check src",
+    },
     "test:unit": {
       "description": "Run unit tests (documentation tests)",
       "command": "deno task test:doc",
