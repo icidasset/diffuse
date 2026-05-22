@@ -29,10 +29,11 @@ class ScrobblesConfigurator extends DiffuseElement {
   /**
    * @param {Track} track
    * @param {number} startedAt Unix timestamp in milliseconds
+   * @param {{ duration?: number }} [options] duration in milliseconds
    */
-  async scrobble(track, startedAt) {
+  async scrobble(track, startedAt, options) {
     return await Promise.all(
-      this.#activeScrobblers().map((s) => s.scrobble(track, startedAt)),
+      this.#activeScrobblers().map((s) => s.scrobble(track, startedAt, options)),
     );
   }
 

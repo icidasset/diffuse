@@ -169,8 +169,9 @@ class RockskyScrobbler extends BroadcastableDiffuseElement {
   /**
    * @param {Track} track
    * @param {number} startedAt Unix timestamp in milliseconds
+   * @param {{ duration?: number }} [options] duration in milliseconds
    */
-  async scrobble(track, startedAt) {
+  async scrobble(track, startedAt, { duration: durationMs } = {}) {
     if (!this.#connected.value) return;
 
     const did = localStorage.getItem(DID_STORAGE_KEY);
@@ -180,30 +181,24 @@ class RockskyScrobbler extends BroadcastableDiffuseElement {
     const agent = new OAuthUserAgent(session);
 
     const tags = track.tags ?? {};
+    const duration = track.stats?.duration ?? durationMs;
 
-    // All five fields are required by the app.rocksky.scrobble lexicon.
-    if (
-      !tags.title ||
-      !tags.artist ||
-      !tags.album ||
-      !tags.albumartist ||
-      track.stats?.duration == null
-    ) return;
+    // duration has no meaningful fallback value; skip rather than create an invalid record
+    if (duration == null) return;
 
     /** @type {Record<string, unknown>} */
     const record = {
       $type: "app.rocksky.scrobble",
-      title: tags.title,
-      artist: tags.artist,
-      album: tags.album,
-      albumArtist: tags.albumartist,
-      duration: track.stats.duration,
+      createdAt: new Date(startedAt).toISOString(),
+      title: tags.title || "Unknown",
+      artist: tags.artist || "Unknown",
+      album: tags.album || "Unknown",
+      albumArtist: tags.albumartist || tags.artist || "Unknown",
+      duration,
     };
 
     if (tags.track?.no != null) record.trackNumber = tags.track.no;
     if (tags.disc?.no != null) record.discNumber = tags.disc.no;
-
-    record.createdAt = new Date(startedAt).toISOString();
 
     const response = await agent.handle("/xrpc/com.atproto.repo.putRecord", {
       method: "POST",

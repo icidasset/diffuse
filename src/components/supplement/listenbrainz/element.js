@@ -130,8 +130,9 @@ class ListenBrainzScrobbler extends BroadcastableDiffuseElement {
   /**
    * @param {Track} track
    * @param {number} startedAt Unix timestamp in milliseconds
+   * @param {{ duration?: number }} [_options] duration in milliseconds
    */
-  async scrobble(track, startedAt) {
+  async scrobble(track, startedAt, _options) {
     return this.#submit("single", [
       {
         listened_at: Math.floor(startedAt / 1000),

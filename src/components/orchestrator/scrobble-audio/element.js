@@ -204,7 +204,7 @@ class ScrobbleAudioOrchestrator extends BroadcastableDiffuseElement {
     const startedAt = this.#startedAt;
 
     try {
-      await this.scrobble?.scrobble(track, startedAt);
+      await this.scrobble?.scrobble(track, startedAt, { duration: Math.round(durationSec * 1000) });
     } catch (err) {
       console.warn("Scrobble failed", err);
       this.#scrobbled = false;

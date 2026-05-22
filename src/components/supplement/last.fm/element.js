@@ -188,8 +188,9 @@ class LastFmScrobbler extends BroadcastableDiffuseElement {
   /**
    * @param {Track} track
    * @param {number} startedAt Unix timestamp in milliseconds
+   * @param {{ duration?: number }} [_options] duration in milliseconds
    */
-  async scrobble(track, startedAt) {
+  async scrobble(track, startedAt, _options) {
     const tags = track.tags ?? {};
     /** @type {Record<string, string>} */
     const params = {

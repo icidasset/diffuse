@@ -14,6 +14,7 @@ export type ScrobbleActions = {
   /**
    * @param {Track} track
    * @param {number} startedAt Unix timestamp in milliseconds
+   * @param {{ duration?: number }} [options] duration in milliseconds
    */
-  scrobble(track: Track, startedAt: number): Promise<unknown>;
+  scrobble(track: Track, startedAt: number, options?: { duration?: number }): Promise<unknown>;
 };
