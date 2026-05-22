@@ -237,7 +237,15 @@ async function handleFetch(request) {
     try {
       const response = await fetchAndStore(request);
       if (response.status !== 404) return response;
-    } catch {}
+      if (cid === undefined) return response;
+    } catch {
+      if (cid === undefined) {
+        return new Response(null, {
+          status: 503,
+          statusText: "Unavailable asset, not cached",
+        });
+      }
+    }
   }
 
   const cached = await lookup(request);
