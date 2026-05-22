@@ -105,16 +105,24 @@ export function setupFilter() {
     b.addEventListener("click", () => {
       activeKind = b.dataset.filter ?? "all";
       localStorage.setItem(FILTER_KIND_STORAGE_KEY, activeKind);
+      const url = new URL(location.href);
+      url.searchParams.delete("filter");
+      history.replaceState(null, "", url);
       applyFilter(activeKind, activeCategory);
     });
   });
 
+  const url = new URL(location.href);
+  const filterParam = url.searchParams.get("filter");
   const storedKind = localStorage.getItem(FILTER_KIND_STORAGE_KEY);
-  activeKind = storedKind === "prelude" || storedKind === "interface" ||
-      storedKind === "base"
+  activeKind = filterParam === "prelude" || filterParam === "interface" ||
+      filterParam === "base" || filterParam === "all"
+    ? filterParam
+    : storedKind === "prelude" || storedKind === "interface" ||
+        storedKind === "base"
     ? storedKind
     : "all";
-  activeCategory = new URL(location.href).searchParams.get("category") ?? "all";
+  activeCategory = url.searchParams.get("category") ?? "all";
   applyFilter(activeKind, activeCategory);
 }
 

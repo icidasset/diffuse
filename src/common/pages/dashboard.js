@@ -27,6 +27,14 @@ effect(() => {
   localStorage.setItem(FILTER_STORAGE_KEY, activeFilter.get());
 });
 
+/** @param {string} filter */
+function setFilter(filter) {
+  const url = new URL(location.href);
+  url.searchParams.delete("filter");
+  history.replaceState(null, "", url);
+  activeFilter.set(filter);
+}
+
 /**
  * @import OutputOrchestrator from "~/components/orchestrator/output/element.js";
  */
@@ -54,6 +62,11 @@ let stopMonitor;
 export async function renderList() {
   if (stopMonitor) stopMonitor();
   activeFilter.set((() => {
+    const param = new URL(location.href).searchParams.get("filter");
+    if (
+      param === "prelude" || param === "interface" || param === "base" ||
+      param === "all"
+    ) return param;
     const stored = localStorage.getItem(FILTER_STORAGE_KEY);
     return stored === "prelude" || stored === "interface" || stored === "base"
       ? stored
@@ -124,7 +137,7 @@ function _renderList(output, listEl) {
         class="button--border button--tiny ${filter === "all"
           ? ""
           : "button--transparent"}"
-        @click="${() => activeFilter.set("all")}"
+        @click="${() => setFilter("all")}"
       >
         All
       </button>
@@ -133,7 +146,7 @@ function _renderList(output, listEl) {
             "prelude"
           ? ""
           : "button--transparent"}"
-        @click="${() => activeFilter.set("prelude")}"
+        @click="${() => setFilter("prelude")}"
       >
         Features
       </button>
@@ -142,7 +155,7 @@ function _renderList(output, listEl) {
             "interface"
           ? ""
           : "button--transparent"}"
-        @click="${() => activeFilter.set("interface")}"
+        @click="${() => setFilter("interface")}"
       >
         Interfaces
       </button>
@@ -152,7 +165,7 @@ function _renderList(output, listEl) {
           ? ""
           : "button--transparent"}"
         title="Show the hidden essential features"
-        @click="${() => activeFilter.set("base")}"
+        @click="${() => setFilter("base")}"
       >
         Base
       </button>
