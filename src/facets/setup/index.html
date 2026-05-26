@@ -1,0 +1,61 @@
+<style>
+  @import "./styles/base.css";
+  @import "./styles/diffuse/facet.css";
+  @import "./vendor/@phosphor-icons/web/fill/style.css";
+
+  @layer base, diffuse;
+
+  .setup-actions {
+    display: flex;
+    flex-direction: column;
+    font-size: var(--fs-md);
+    font-weight: 500;
+    gap: var(--space-md);
+    list-style: none;
+    margin: 0;
+    padding: 0;
+  }
+
+  .setup-action {
+    align-items: center;
+    color: var(--accent-twist-2);
+    display: flex;
+    gap: var(--space-sm);
+    text-decoration: none;
+  }
+
+  button.setup-action {
+    background: none;
+    border: none;
+    cursor: pointer;
+    font: inherit;
+    padding: 0;
+  }
+
+  .setup-desc {
+    font-style: italic;
+    margin-bottom: var(--space-lg);
+  }
+</style>
+
+<main>
+  <div class="facet__left">
+    <div>
+      <a href="./dashboard/" class="diffuse-logo-container">
+        <svg viewBox="0 0 902 134" width="160">
+          <title>Diffuse</title>
+          <use
+            xlink:href="images/diffuse-current.svg#diffuse"
+            href="images/diffuse-current.svg#diffuse"
+          ></use>
+        </svg>
+      </a>
+    </div>
+    <h1>Setup</h1>
+    <p>Follow these steps to get up and running with Diffuse.</p>
+  </div>
+
+  <div class="facet__right" id="setup-right"></div>
+</main>
+
+<script type="module" src="./facets/setup/index.inline.js"></script>

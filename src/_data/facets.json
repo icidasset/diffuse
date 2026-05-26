@@ -207,6 +207,12 @@
     "desc": "Connect to Rocksky to setup the Rocksky scrobbler."
   },
   {
+    "url": "facets/setup/index.html",
+    "title": "Setup",
+    "category": "Miscellaneous",
+    "desc": "An interactive getting-started guide. Shows contextual next steps based on your current progress."
+  },
+  {
     "url": "facets/data/sources/index.html",
     "title": "Sources",
     "category": "Data",
