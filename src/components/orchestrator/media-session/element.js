@@ -4,6 +4,7 @@ import {
   query,
   queryOptional,
 } from "~/common/element.js";
+import { signal } from "~/common/signal.js";
 
 /**
  * @import {OutputElement} from "@specs/components/output/types.d.ts"
@@ -23,6 +24,13 @@ import {
  */
 class MediaSessionOrchestrator extends BroadcastableDiffuseElement {
   static NAME = "diffuse/orchestrator/media-session";
+
+  // SIGNALS
+
+  /** @type {string | null} */
+  #artworkUrl = null;
+
+  #isLeader = signal(true);
 
   // LIFECYCLE
 
@@ -54,7 +62,13 @@ class MediaSessionOrchestrator extends BroadcastableDiffuseElement {
       this.artwork && customElements.whenDefined(this.artwork.localName),
     ].filter(Boolean));
 
+    this.effect(() => {
+      const promise = this.isLeader();
+      promise?.then((b) => this.#isLeader.set(b));
+    });
+
     this.#registerActionHandlers();
+
     this.effect(() => this.#syncMetadata());
     this.effect(() => this.#syncPlaybackState());
     this.effect(() => this.#syncPositionState());
@@ -72,6 +86,10 @@ class MediaSessionOrchestrator extends BroadcastableDiffuseElement {
       : undefined;
 
     if (!track) {
+      if (this.#artworkUrl) {
+        URL.revokeObjectURL(this.#artworkUrl);
+        this.#artworkUrl = null;
+      }
       navigator.mediaSession.metadata = null;
       return;
     }
@@ -109,7 +127,13 @@ class MediaSessionOrchestrator extends BroadcastableDiffuseElement {
 
         // If in the meantime the now-playing track has changed,
         // don't set the artwork.
-        if (nowLater?.id !== now?.id) return;
+        if (nowLater?.id !== now?.id) {
+          URL.revokeObjectURL(url);
+          return;
+        }
+
+        if (this.#artworkUrl) URL.revokeObjectURL(this.#artworkUrl);
+        this.#artworkUrl = url;
 
         navigator.mediaSession.metadata = new MediaMetadata({
           title: tags.title ?? "",
@@ -141,11 +165,12 @@ class MediaSessionOrchestrator extends BroadcastableDiffuseElement {
     const progress = state.progress();
 
     if (!duration || isNaN(duration) || duration === 0) return;
+    if (navigator.mediaSession.playbackState === "none") return;
 
     try {
       navigator.mediaSession.setPositionState({
         duration,
-        position: duration * progress,
+        position: Math.min(duration * progress, duration),
         playbackRate: 1,
       });
     } catch {
@@ -154,35 +179,35 @@ class MediaSessionOrchestrator extends BroadcastableDiffuseElement {
   }
 
   #registerActionHandlers() {
-    navigator.mediaSession.setActionHandler("play", async () => {
+    navigator.mediaSession.setActionHandler("play", () => {
       if (!this.audio || !this.queue) return;
-      if (!(await this.isLeader())) return;
+      if (!this.#isLeader) return;
       const now = this.queue.now();
       if (now) this.audio.play({ audioId: now.id });
     });
 
-    navigator.mediaSession.setActionHandler("pause", async () => {
+    navigator.mediaSession.setActionHandler("pause", () => {
       if (!this.audio || !this.queue) return;
-      if (!(await this.isLeader())) return;
+      if (!this.#isLeader) return;
       const now = this.queue.now();
       if (now) this.audio.pause({ audioId: now.id });
     });
 
-    navigator.mediaSession.setActionHandler("previoustrack", async () => {
+    navigator.mediaSession.setActionHandler("previoustrack", () => {
       if (!this.queue) return;
-      if (!(await this.isLeader())) return;
-      await this.queue.unshift();
+      if (!this.#isLeader) return;
+      this.queue.unshift();
     });
 
-    navigator.mediaSession.setActionHandler("nexttrack", async () => {
+    navigator.mediaSession.setActionHandler("nexttrack", () => {
       if (!this.queue) return;
-      if (!(await this.isLeader())) return;
-      await this.queue.shift();
+      if (!this.#isLeader) return;
+      this.queue.shift();
     });
 
-    navigator.mediaSession.setActionHandler("seekto", async (details) => {
+    navigator.mediaSession.setActionHandler("seekto", (details) => {
       if (!this.audio || !this.queue) return;
-      if (!(await this.isLeader())) return;
+      if (!this.#isLeader) return;
       const now = this.queue.now();
       if (!now || details.seekTime == null) return;
       const state = this.audio.state(now.id);
