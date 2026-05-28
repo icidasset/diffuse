@@ -49,6 +49,30 @@
   opacity: 0.2;
 }
 
+.s3-scan-video {
+  border-radius: 0;
+  inset: 0;
+  object-fit: cover;
+  position: absolute;
+  height: 100%;
+  width: 100%;
+  z-index: 1;
+}
+
+.connect-qr-body {
+  align-items: center;
+  display: flex;
+  justify-content: center;
+
+  & svg {
+    background: white;
+    border-radius: var(--radius-sm);
+    height: 240px;
+    padding: var(--space-sm);
+    width: 240px;
+  }
+}
+
 .dropzone {
   align-items: center;
   border: 2px dashed var(--border-color);

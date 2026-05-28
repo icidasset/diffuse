@@ -260,6 +260,7 @@ dialog {
   flex-direction: column;
   gap: var(--space-sm);
   overflow-y: auto;
+  position: relative;
   padding: var(--space-sm);
 }
 

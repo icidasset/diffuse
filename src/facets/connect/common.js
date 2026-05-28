@@ -1,3 +1,4 @@
+import { encodeQR } from "@paulmillr/qr";
 import { html, nothing, render as litRender } from "lit-html";
 
 /**
@@ -5,7 +6,7 @@ import { html, nothing, render as litRender } from "lit-html";
  */
 
 /**
- * @typedef {{ name: string; detail: string; isInput: boolean; isOutput: boolean; isSelectedOutput: boolean; isDisabled?: boolean; onRemove: () => void; onToggleDisabled?: () => void }} ConnectItem
+ * @typedef {{ name: string; detail: string; isInput: boolean; isOutput: boolean; isSelectedOutput: boolean; isDisabled?: boolean; onShowQR?: () => void; onRemove: () => void; onToggleDisabled?: () => void }} ConnectItem
  */
 
 /**
@@ -21,9 +22,10 @@ import { html, nothing, render as litRender } from "lit-html";
  * @param {(mode: 'input' | 'output') => Promise<void>} config.onSubmit
  * @param {boolean} [config.hasInput] - Whether to show the "Add audio input" button (default: true)
  * @param {boolean} [config.hasOutput] - Whether to show the "Use as userdata storage" button (default: true)
+ * @param {TemplateResult | typeof nothing} [config.footerActions] - Extra buttons rendered in the dialog footer
  * @param {() => Promise<void>} [config.onOutputActivate] - Called instead of opening the dialog when output is already configured but inactive
  *
- * @returns {{ setItems: (items: ConnectItem[]) => void, setError: (message: string | null) => void }}
+ * @returns {{ setItems: (items: ConnectItem[]) => void, setError: (message: string | null) => void, setDialogError: (message: string | null) => void, showQR: (data: string) => void }}
  */
 export function setup(
   {
@@ -31,6 +33,7 @@ export function setup(
     description,
     rightContent = nothing,
     formFields,
+    footerActions = nothing,
     onSubmit,
     hasInput = true,
     hasOutput = true,
@@ -87,12 +90,23 @@ export function setup(
           <strong id="connect-dialog-title"></strong>
         </div>
         <form id="connect-form" class="dialog-body">
+          <div id="connect-error" class="callout callout--danger" hidden style="margin: 0"></div>
           ${formFields}
-          <div id="connect-error" class="callout callout--danger" hidden></div>
         </form>
         <div class="dialog-footer">
           <button id="connect-submit-btn" type="submit" form="connect-form" class="button--brand">Add</button>
           <button id="connect-cancel-btn" type="button">Cancel</button>
+          ${footerActions}
+        </div>
+      </dialog>
+
+      <dialog id="connect-qr-dialog">
+        <div class="dialog-header">
+          <strong>Scan to connect</strong>
+        </div>
+        <div id="connect-qr-body" class="dialog-body connect-qr-body"></div>
+        <div class="dialog-footer">
+          <button id="connect-qr-close-btn" type="button">Close</button>
         </div>
       </dialog>
     `,
@@ -165,6 +179,21 @@ export function setup(
     dialog.close();
   });
 
+  const qrDialog =
+    /** @type {HTMLDialogElement} */ (main.querySelector("#connect-qr-dialog"));
+  const qrBody =
+    /** @type {HTMLElement} */ (main.querySelector("#connect-qr-body"));
+
+  main.querySelector("#connect-qr-close-btn")?.addEventListener("click", () => {
+    qrDialog.close();
+  });
+
+  /** @param {string} data */
+  const showQR = (data) => {
+    qrBody.innerHTML = encodeQR(data, "svg");
+    qrDialog.showModal();
+  };
+
   const submitBtn =
     /** @type {HTMLElement} */ (main.querySelector("#connect-submit-btn"));
 
@@ -188,6 +217,8 @@ export function setup(
 
   return {
     setError,
+    setDialogError,
+    showQR,
 
     /**
      * Updates the list of configured items below the divider.
@@ -203,7 +234,7 @@ export function setup(
       litRender(
         html`
           ${items.map(
-            ({ name, detail, isInput, isOutput, isSelectedOutput, isDisabled, onRemove, onToggleDisabled }, index) =>
+            ({ name, detail, isInput, isOutput, isSelectedOutput, isDisabled, onShowQR, onRemove, onToggleDisabled }, index) =>
               html`
                 <li class="connect-item${isDisabled ? " connect-item--disabled" : ""}">
                   <div class="connect-item__info">
@@ -226,6 +257,19 @@ export function setup(
                     <i class="ph-fill ph-dots-three-outline-vertical"></i>
                   </button>
                   <div id="connect-item-menu-${index}" class="dropdown" popover>
+                    ${onShowQR
+                      ? html`
+                        <button
+                          @click="${(/** @type {MouseEvent} */ e) => {
+                            /** @type {HTMLElement | null} */ (/** @type {HTMLElement} */ (e.currentTarget).closest("[popover]"))?.hidePopover();
+                            onShowQR();
+                          }}"
+                        >
+                          <i class="ph-fill ph-qr-code"></i>
+                          Show QR code
+                        </button>
+                      `
+                      : nothing}
                     ${onToggleDisabled
                       ? html`
                         <button

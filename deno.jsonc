@@ -38,6 +38,7 @@
     "@std/semver": "jsr:@std/semver@^1.0.8",
     "@std/xml": "jsr:@std/xml@^0.1.0",
     "@vicary/debounce-microtask": "jsr:@vicary/debounce-microtask@^0.1.8",
+    "@paulmillr/qr": "jsr:@paulmillr/qr@^0.6.0",
     "@zip-js/zip-js": "jsr:@zip-js/zip-js@^2",
     "alien-signals": "npm:alien-signals@^3.1.2",
     "bs58check": "npm:bs58check@^4.0.0",

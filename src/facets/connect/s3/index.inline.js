@@ -1,4 +1,5 @@
 import * as TID from "@atcute/tid";
+import decodeQR from "@paulmillr/qr/decode.js";
 import { html } from "lit-html";
 
 import * as Output from "~/common/output.js";
@@ -49,10 +50,95 @@ if (!s3Option) {
 const OUTPUT_S3_ID = s3Option?.id;
 
 ////////////////////////////////////////////
+// CAMERA SCAN
+////////////////////////////////////////////
+
+/** @type {MediaStream | null} */
+let scanStream = null;
+/** @type {number} */
+let scanTimerId = 0;
+
+/** @param {boolean} scanning */
+function setScanButtonLabel(scanning) {
+  const btn = document.querySelector("#s3-scan-btn");
+  if (!btn) return;
+  btn.innerHTML = scanning
+    ? `<i class="ph-fill ph-x"></i> Cancel scan`
+    : `<i class="ph-fill ph-camera"></i> Scan QR code`;
+}
+
+function stopScan() {
+  scanStream?.getTracks().forEach((t) => t.stop());
+  scanStream = null;
+  const scanVideo = document.querySelector("#s3-scan-video");
+  if (scanVideo instanceof HTMLVideoElement) scanVideo.hidden = true;
+  clearTimeout(scanTimerId);
+  setScanButtonLabel(false);
+}
+
+async function handleScanClick() {
+  if (scanStream) { stopScan(); return; }
+  setScanError(null);
+
+  const scanVideo = document.querySelector("#s3-scan-video");
+  if (!(scanVideo instanceof HTMLVideoElement)) return;
+
+  try {
+    scanStream = await navigator.mediaDevices.getUserMedia({
+      video: { facingMode: { ideal: "environment" } },
+    });
+    scanVideo.srcObject = scanStream;
+    scanVideo.hidden = false;
+    setScanButtonLabel(true);
+
+    const canvas = document.createElement("canvas");
+    const ctx =
+      /** @type {CanvasRenderingContext2D} */ (canvas.getContext("2d"));
+
+    const loop = () => {
+      if (!scanStream) return;
+      if (
+        scanVideo.readyState >= HTMLMediaElement.HAVE_CURRENT_DATA &&
+        scanVideo.videoWidth > 0
+      ) {
+        canvas.width = scanVideo.videoWidth;
+        canvas.height = scanVideo.videoHeight;
+        ctx.drawImage(scanVideo, 0, 0);
+        try {
+          const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
+          const result = decodeQR(/** @type {any} */ (imageData));
+          const parsed = parseURI(result);
+          if (parsed) {
+            const { bucket } = parsed;
+            /** @param {string} id @returns {HTMLInputElement} */
+            const field = (
+              id,
+            ) => /** @type {HTMLInputElement} */ (document.querySelector(id));
+            field("#s3-access-key").value = bucket.accessKey;
+            field("#s3-secret-key").value = bucket.secretKey;
+            field("#s3-bucket-name").value = bucket.bucketName;
+            field("#s3-host").value = bucket.host;
+            field("#s3-region").value = bucket.region;
+            field("#s3-path").value = bucket.path;
+            stopScan();
+            return;
+          }
+        } catch { /* no QR found in this frame */ }
+      }
+      scanTimerId = window.setTimeout(loop, 200);
+    };
+
+    loop();
+  } catch {
+    setScanError("Could not access camera");
+  }
+}
+
+////////////////////////////////////////////
 // UI
 ////////////////////////////////////////////
 
-const { setItems, setError } = setup({
+const { setItems, setError, setDialogError, showQR } = setup({
   title: "S3",
 
   description: html`
@@ -67,6 +153,7 @@ const { setItems, setError } = setup({
   `,
 
   formFields: html`
+    <video id="s3-scan-video" class="s3-scan-video" autoplay playsinline hidden></video>
     <label>Access key <input id="s3-access-key" required></label>
     <label>Secret key <input id="s3-secret-key" type="password" required></label>
     <label>Bucket name <input id="s3-bucket-name" placeholder="my-bucket" required></label>
@@ -76,6 +163,13 @@ const { setItems, setError } = setup({
     <p class="caption">* Required fields</p>
   `,
 
+  footerActions: html`
+    <button id="s3-scan-btn" type="button" style="margin-inline-start: auto" @click="${handleScanClick}">
+      <i class="ph-fill ph-camera"></i>
+      Scan QR code
+    </button>
+  `,
+
   onSubmit: (mode) => addBucket(mode),
 
   onOutputActivate: async () => {
@@ -83,16 +177,22 @@ const { setItems, setError } = setup({
   },
 });
 
+const setScanError = setDialogError;
+
+document.querySelector("#connect-dialog")?.addEventListener("close", stopScan);
+
 const accessKeyInput =
   /** @type {HTMLInputElement} */ (document.querySelector("#s3-access-key"));
 const secretKeyInput =
   /** @type {HTMLInputElement} */ (document.querySelector("#s3-secret-key"));
 const bucketNameInput =
   /** @type {HTMLInputElement} */ (document.querySelector("#s3-bucket-name"));
-const hostInput = /** @type {HTMLInputElement} */ (document.querySelector("#s3-host"));
+const hostInput =
+  /** @type {HTMLInputElement} */ (document.querySelector("#s3-host"));
 const regionInput =
   /** @type {HTMLInputElement} */ (document.querySelector("#s3-region"));
-const pathInput = /** @type {HTMLInputElement} */ (document.querySelector("#s3-path"));
+const pathInput =
+  /** @type {HTMLInputElement} */ (document.querySelector("#s3-path"));
 
 ////////////////////////////////////////////
 // REACTIVE LIST
@@ -138,16 +238,25 @@ effect(() => {
   }
 
   setItems(
-    [...allBuckets.values()].map(({ name, host, uri, isInput, isOutput }) => ({
-      name,
-      detail: host,
-      isInput,
-      isOutput,
-      isSelectedOutput: isOutput && isSelectedOutput,
-      isDisabled: uri ? sourcesOrchestrator.isDisabled(uri) : false,
-      onRemove: () => removeBucket(uri, isOutput),
-      onToggleDisabled: uri ? () => sourcesOrchestrator.toggle(uri) : undefined,
-    })),
+    [...allBuckets.values()].map(({ name, host, uri, isInput, isOutput }) => {
+      const qrUri = uri ??
+        buildURI(
+          /** @type {NonNullable<typeof outputBucket>} */ (outputBucket),
+        );
+      return {
+        name,
+        detail: host,
+        isInput,
+        isOutput,
+        isSelectedOutput: isOutput && isSelectedOutput,
+        isDisabled: uri ? sourcesOrchestrator.isDisabled(uri) : false,
+        onShowQR: () => showQR(qrUri),
+        onRemove: () => removeBucket(uri, isOutput),
+        onToggleDisabled: uri
+          ? () => sourcesOrchestrator.toggle(uri)
+          : undefined,
+      };
+    }),
   );
 });
 ////////////////////////////////////////////
