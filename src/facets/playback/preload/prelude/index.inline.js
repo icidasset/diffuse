@@ -22,7 +22,7 @@ async function setup() {
     customElements.whenDefined(queue.localName),
   ]);
 
-  /** @type {number | undefined} */
+  /** @type {ReturnType<typeof setTimeout> | undefined} */
   let preloadTimeout;
 
   effect(() => {

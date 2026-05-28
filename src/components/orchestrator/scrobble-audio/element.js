@@ -78,7 +78,7 @@ class ScrobbleAudioOrchestrator extends BroadcastableDiffuseElement {
   /** Date.now() when the timer was last resumed; null when paused. */
   #timerResumedAt = /** @type {number | null} */ (null);
 
-  /** @type {number | null} */
+  /** @type {ReturnType<typeof setInterval> | null} */
   #intervalId = null;
 
   // EFFECT

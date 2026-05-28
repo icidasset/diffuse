@@ -9,7 +9,7 @@ import { effect, signal } from "~/common/signal.js";
 
 import { nothing } from "~/common/element.js";
 
-import { deleteFacet, toggleFacetEnabled } from "./crud.js";
+import { deleteFacet, toggleFacetEnabled, toggleFacetPinned } from "./crud.js";
 import { output } from "./output.js";
 import { openAddFromURIModal } from "./from-uri.js";
 
@@ -27,16 +27,30 @@ effect(() => {
   localStorage.setItem(FILTER_STORAGE_KEY, activeFilter.get());
 });
 
+const UNPINNED_COLLAPSED_KEY = "diffuse/dashboard/unpinned-collapsed";
+const unpinnedCollapsed = signal(
+  localStorage.getItem(UNPINNED_COLLAPSED_KEY) === "true",
+);
+
+effect(() => {
+  localStorage.setItem(
+    UNPINNED_COLLAPSED_KEY,
+    String(unpinnedCollapsed.get()),
+  );
+});
+
 /** @param {string} filter */
 function setFilter(filter) {
   const url = new URL(location.href);
   url.searchParams.delete("filter");
   history.replaceState(null, "", url);
   activeFilter.set(filter);
+  unpinnedCollapsed.set(false);
 }
 
 /**
  * @import OutputOrchestrator from "~/components/orchestrator/output/element.js";
+ * @import {Facet} from "~/definitions/types.d.ts";
  */
 
 const emptyFacetsList = () =>
@@ -110,21 +124,22 @@ function _renderList(output, listEl) {
 
   const filter = activeFilter.get();
 
-  const col = facetsCol.state === "loaded"
-    ? [...facetsCol.data]
-      .filter((c) =>
-        filter === "base" ? !!c.tags?.includes("base") : (filter === "all" ||
-          (filter === "prelude"
-            ? c.kind === "prelude"
-            : c.kind !== "prelude")) &&
-          !c.tags?.includes("base")
-      )
-      .sort((a, b) => {
-        return a.name.toLocaleLowerCase().localeCompare(
-          b.name.toLocaleLowerCase(),
-        ) || a.id.localeCompare(b.id);
-      })
+  /** @param {Facet} a @param {Facet} b */
+  const sortByName = (a, b) =>
+    a.name.toLocaleLowerCase().localeCompare(b.name.toLocaleLowerCase()) ||
+    a.id.localeCompare(b.id);
+
+  const filtered = facetsCol.state === "loaded"
+    ? [...facetsCol.data].filter((c) =>
+      filter === "base" ? !!c.tags?.includes("base") : (filter === "all" ||
+        (filter === "prelude" ? c.kind === "prelude" : c.kind !== "prelude")) &&
+        !c.tags?.includes("base")
+    )
     : [];
+
+  const pinnedCol = filtered.filter((c) => c.pinned).sort(sortByName);
+  const unpinnedCol = filtered.filter((c) => !c.pinned).sort(sortByName);
+  const col = pinnedCol.concat(unpinnedCol);
 
   const selected = output.selected();
   const outputLabel = selected?.label ?? selected?.getAttribute?.("label") ??
@@ -190,123 +205,163 @@ function _renderList(output, listEl) {
     </div>
   `;
 
+  /** @param {Facet[]} items */
+  const renderItems = (items) =>
+    items.map((c) => {
+      const color = FacetCategory.color(c);
+
+      const title = c.kind === "prelude"
+        ? html`
+          <span style="display: inline-block; padding: var(--space-3xs) 0">
+            ${c.name}
+          </span>
+        `
+        : html`
+          <a
+            href="l/?id=${c.id}"
+            style="display: inline-block; padding: var(--space-3xs) 0"
+          >
+            ${c.name}
+          </a>
+        `;
+
+      return keyed(
+        c.id,
+        html`
+          <li
+            class="grid-item"
+            style="--grid-item-color: ${color}"
+            ?data-disabled="${!(c.enabled ?? true)}"
+          >
+            <div class="grid-item__contents">
+              <div class="grid-item__title" style="color: ${color}">
+                ${title}
+              </div>
+              <div class="list-description">
+                <div>
+                  ${c.description?.trim().length
+                    ? unsafeHTML(
+                      marked.parse(c.description, { async: false }),
+                    )
+                    : nothing}
+                </div>
+                <div style="opacity: 0.55">
+                  ${c.uri && !c.html
+                    ? html`
+                      <span class="with-icon">
+                        <i class="ph-fill ph-binoculars"></i>
+                        <span>Tracking the original <a href="${c
+                          .uri}">URI</a></span>
+                      </span>
+                    `
+                    : html`
+                      <span class="with-icon">
+                        <i class="ph-fill ph-code-simple"></i>
+                        <span>Custom code</span>
+                      </span>
+                    `}
+                </div>
+              </div>
+            </div>
+
+            <div class="grid-item__menu ${classMap({
+              "grid-item__menu--active": c.enabled ?? true,
+            })}">
+              <button
+                class="button--transparent"
+                title="${(c.enabled ?? true)
+                  ? c.kind === "prelude" ? "Disable" : "Dim"
+                  : c.kind === "prelude"
+                  ? "Enable"
+                  : "Light"}"
+                @click="${toggleFacetEnabled({ id: c.id })}"
+              >
+                <i class="${(c.enabled ?? true)
+                  ? c.kind === "prelude"
+                    ? "ph-fill ph-lightning"
+                    : "ph-fill ph-eye"
+                  : c.kind === "prelude"
+                  ? "ph-bold ph-lightning-slash"
+                  : "ph-bold ph-eye-slash"}"></i>
+              </button>
+              <hr />
+              <button
+                class="button--transparent"
+                title="More actions"
+                popovertarget="facet-menu-${c.id}"
+              >
+                <i class="ph-bold ph-dots-three-vertical"></i>
+              </button>
+              <div id="facet-menu-${c.id}" class="dropdown" popover>
+                <a
+                  class="with-icon"
+                  href="#"
+                  @click="${(/** @type {MouseEvent} */ e) => {
+                    e.preventDefault();
+                    toggleFacetPinned({ id: c.id })();
+                  }}"
+                >
+                  <i class="${c.pinned
+                    ? "ph-fill ph-push-pin-slash"
+                    : "ph-fill ph-push-pin"}"></i>
+                  ${c.pinned ? "Unpin" : "Pin"}
+                </a>
+                <a
+                  class="with-icon"
+                  href="create/?id=${encodeURIComponent(c.id)}"
+                >
+                  <i class="ph-fill ph-code-block"></i>
+                  Edit
+                </a>
+                <a
+                  class="with-icon"
+                  href="#"
+                  @click="${(/** @type {MouseEvent} */ e) => {
+                    e.preventDefault();
+                    deleteFacet({ id: c.id })();
+                  }}"
+                >
+                  <i class="ph-fill ph-skull"></i>
+                  Delete
+                </a>
+              </div>
+            </div>
+          </li>
+        `,
+      );
+    });
+
+  const collapsed = unpinnedCollapsed.get();
+  if (pinnedCol.length === 0 && collapsed) {
+    unpinnedCollapsed.set(false);
+    return;
+  }
+
   const h = col.length || filter !== "all"
     ? html`
-      ${filterBar}
-      <ul class="grid" style="margin: 0">
-        ${col.map((c, index) => {
-          const color = FacetCategory.color(c);
-          const kind = FacetCategory.name(c);
-
-          const title = c.kind === "prelude"
-            ? html`
-              <span style="display: inline-block; padding: var(--space-3xs) 0">
-                ${c.name}
-              </span>
-            `
-            : html`
-              <a
-                href="l/?id=${c
-                  .id}"
-                style="display: inline-block; padding: var(--space-3xs) 0"
-              >
-                ${c.name}
-              </a>
-            `;
-
-          return keyed(
-            c.id,
-            html`
-              <li
-                class="grid-item"
-                style="--grid-item-color: ${color}"
-                ?data-disabled="${!(c.enabled ?? true)}"
-              >
-                <div class="grid-item__contents">
-                  <div class="grid-item__title" style="color: ${color}">
-                    ${title}
-                  </div>
-                  <div class="list-description">
-                    <div>
-                      ${c.description?.trim().length
-                        ? unsafeHTML(
-                          marked.parse(c.description, { async: false }),
-                        )
-                        : nothing}
-                    </div>
-                    <div>
-                      ${c.uri && !c.html
-                        ? html`
-                          <span class="with-icon">
-                            <i class="ph-fill ph-binoculars"></i>
-                            <span>Tracking the original <a href="${c
-                              .uri}">URI</a></span>
-                          </span>
-                        `
-                        : html`
-                          <span class="with-icon">
-                            <i class="ph-fill ph-code-simple"></i>
-                            <span>Custom code</span>
-                          </span>
-                        `}
-                    </div>
-                  </div>
-                </div>
-
-                <div class="grid-item__menu ${classMap({
-                  "grid-item__menu--active": c.enabled ?? true,
-                })}">
-                  <button
-                    class="button--transparent"
-                    title="${(c.enabled ?? true)
-                      ? c.kind === "prelude" ? "Disable" : "Dim"
-                      : c.kind === "prelude"
-                      ? "Enable"
-                      : "Light"}"
-                    @click="${toggleFacetEnabled({ id: c.id })}"
-                  >
-                    <i class="${(c.enabled ?? true)
-                      ? c.kind === "prelude"
-                        ? "ph-fill ph-lightning"
-                        : "ph-fill ph-eye"
-                      : c.kind === "prelude"
-                      ? "ph-bold ph-lightning-slash"
-                      : "ph-bold ph-eye-slash"}"></i>
-                  </button>
-                  <hr />
-                  <button
-                    class="button--transparent"
-                    title="More actions"
-                    popovertarget="facet-menu-${c.id}"
-                  >
-                    <i class="ph-bold ph-dots-three-vertical"></i>
-                  </button>
-                  <div id="facet-menu-${c.id}" class="dropdown" popover>
-                    <a
-                      class="with-icon"
-                      href="create/?id=${encodeURIComponent(c.id)}"
-                    >
-                      <i class="ph-fill ph-code-block"></i>
-                      Edit
-                    </a>
-                    <a
-                      class="with-icon"
-                      href="#"
-                      @click="${(/** @type {MouseEvent} */ e) => {
-                        e.preventDefault();
-                        deleteFacet({ id: c.id })();
-                      }}"
-                    >
-                      <i class="ph-fill ph-skull"></i>
-                      Delete
-                    </a>
-                  </div>
-                </div>
-              </li>
-            `,
-          );
-        })}
-      </ul>
+      ${filterBar} ${pinnedCol.length
+        ? html`
+          <ul class="grid" style="margin: 0">${renderItems(pinnedCol)}</ul>
+        `
+        : nothing} ${pinnedCol.length && unpinnedCol.length
+        ? html`
+          <div class="grid-section-divider">
+            <button
+              title="${collapsed ? "Show unpinned" : "Hide unpinned"}"
+              @click="${() => unpinnedCollapsed.set(!collapsed)}"
+            >
+              <i class="ph-fill ${collapsed
+                ? "ph-caret-circle-down"
+                : "ph-caret-circle-up"}"></i>
+            </button>
+            <hr class="hr--dashes" />
+          </div>
+        `
+        : nothing} ${unpinnedCol.length && !collapsed
+        ? html`
+          <ul class="grid" style="margin: 0">${renderItems(unpinnedCol)}</ul>
+        `
+        : nothing}
     `
     : html`
       ${filterBar} ${emptyFacetsList()}

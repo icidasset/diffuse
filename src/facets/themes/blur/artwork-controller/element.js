@@ -34,7 +34,7 @@ class ArtworkController extends DiffuseElement {
 
   // VARIABLES
 
-  /** @type {number | undefined} */
+  /** @type {ReturnType<typeof setTimeout> | undefined} */
   #isLoadingTimeout = undefined;
 
   #isIOS = /iPhone|iPad|iPod/.test(navigator.userAgent) ||

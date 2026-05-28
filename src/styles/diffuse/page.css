@@ -39,8 +39,22 @@ code {
 }
 
 /**
- * Containers
+ * Blocks & Containers
  */
+
+hr {
+  background: var(--border-color);
+  border: 0;
+  height: 1px;
+  margin: var(--space-lg) auto;
+  padding: 0;
+
+  &.hr--dashes {
+    background: transparent;
+    border-top: 1px dashed var(--border-color);
+    height: 0;
+  }
+}
 
 p,
 ul,
@@ -406,11 +420,7 @@ textarea {
     }
 
     hr {
-      background: var(--border-color);
-      border: 0;
-      height: 1px;
       margin: 0;
-      padding: 0;
     }
   }
 
@@ -452,6 +462,29 @@ textarea {
     align-items: center;
     display: flex;
     gap: var(--space-2xs);
+  }
+}
+
+.grid-section-divider {
+  align-items: center;
+  display: flex;
+  gap: var(--space-2xs);
+  margin: var(--space-lg) auto;
+  position: relative;
+
+  button {
+    background: var(--bg-color);
+    color: oklch(from currentColor l c h / 0.55);
+    left: 50%;
+    opacity: 1;
+    position: absolute;
+    top: 50%;
+    transform: translate(-50%, -50%);
+  }
+
+  hr {
+    flex: 1;
+    margin: 0;
   }
 }
 
@@ -789,10 +822,6 @@ ul li::marker {
   min-width: min(var(--container-xs), 100%);
   width: 32.5%;
 }
-
-/**
- * Lists
- */
 
 .list-description {
   color: oklch(from currentColor l c h / 0.6);
