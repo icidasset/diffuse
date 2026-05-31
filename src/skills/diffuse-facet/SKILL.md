@@ -1,11 +1,11 @@
 ---
 name: diffuse-facet
-description: Create an interface or feature facet for Diffuse
+description: Create an interface or feature facet for Diffuse (elements.diffuse.sh)
 user-invocable: true
-version: 0.2.0
+version: 0.2.1
 ---
 
-Create a Diffuse facet and produce the HTML ready to paste into the `create/` page.
+Create a [Diffuse](https://elements.diffuse.sh) facet and produce the HTML ready to paste into the `create/` page.
 
 ## Step 1 — Read the docs
 

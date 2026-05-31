@@ -273,6 +273,10 @@
       "description": "Generate HTML coverage report",
       "command": "deno coverage ./cov --html",
     },
+    "vit:ship:diffuse-facet": {
+      "description": "Build and publish the diffuse-facet skill to vit",
+      "command": "deno task build && deno x vit ship --skill dist/skills/diffuse-facet/",
+    },
   },
   "compilerOptions": {
     "checkJs": true,
