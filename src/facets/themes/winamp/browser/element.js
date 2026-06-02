@@ -645,16 +645,10 @@ class Browser extends DiffuseElement {
 
     return html`
       <link rel="stylesheet" href="vendor/98.css" />
+      <link rel="stylesheet" href="facets/themes/winamp/98-scrollbar.css" />
 
       <style>
       @import "./facets/themes/winamp/98-vars.css";
-
-      ::-webkit-scrollbar-button:vertical:start:increment,
-      ::-webkit-scrollbar-button:vertical:end:decrement,
-      ::-webkit-scrollbar-button:horizontal:start:increment,
-      ::-webkit-scrollbar-button:horizontal:end:decrement {
-        display: none;
-      }
 
       :host {
         display: flex;

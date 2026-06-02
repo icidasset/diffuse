@@ -26,6 +26,7 @@ await foundation.configurator.input();
 await import("~/facets/themes/winamp/browser/element.js");
 await import("~/facets/themes/winamp/window/element.js");
 await import("~/facets/themes/winamp/artwork/element.js");
+await import("~/facets/themes/winamp/track-details/element.js");
 
 const { default: WinampElement } = await import(
   "~/facets/themes/winamp/winamp/element.js"

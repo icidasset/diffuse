@@ -97,6 +97,19 @@
         ></dtw-winamp-artwork>
       </dtw-window>
 
+      <!-- 🎵 -->
+      <dtw-window id="track-details-window" window-style="width: 260px;">
+        <span slot="title-icon"
+          ><img src="images/icons/windows_98/msg_information-0.png" height="14"
+        /></span>
+        <span slot="title">Track details</span>
+
+        <dtw-winamp-track-details
+          controller-orchestrator-selector="do-controller"
+          favourites-orchestrator-selector="do-favourites"
+        ></dtw-winamp-track-details>
+      </dtw-window>
+
       <!-- ⚡️ -->
       <dtw-winamp
         controller-orchestrator-selector="do-controller"
@@ -139,6 +152,12 @@
     <a class="button desktop__item">
       <img src="images/icons/windows_98/imagwmf-1.png" height="32" />
       <label for="artwork-window">Artwork</label>
+    </a>
+
+    <!-- TRACK DETAILS -->
+    <a class="button desktop__item">
+      <img src="images/icons/windows_98/msg_information-0.png" height="32" />
+      <label for="track-details-window">Track details</label>
     </a>
 
     <!-- INSERT -->

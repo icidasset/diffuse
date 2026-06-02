@@ -36,6 +36,7 @@ class WindowElement extends DiffuseElement {
   render({ html }) {
     return html`
       <link rel="stylesheet" href="vendor/98.css" />
+      <link rel="stylesheet" href="facets/themes/winamp/98-scrollbar.css" />
 
       <style>
       dialog {
