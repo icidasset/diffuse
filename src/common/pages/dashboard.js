@@ -5,7 +5,7 @@ import { marked } from "marked";
 import { unsafeHTML } from "lit-html/directives/unsafe-html.js";
 
 import * as FacetCategory from "~/common/facets/category.js";
-import { effect, signal } from "~/common/signal.js";
+import { batch, effect, signal } from "~/common/signal.js";
 
 import { nothing } from "~/common/element.js";
 
@@ -44,8 +44,10 @@ function setFilter(filter) {
   const url = new URL(location.href);
   url.searchParams.delete("filter");
   history.replaceState(null, "", url);
-  activeFilter.set(filter);
-  unpinnedCollapsed.set(false);
+  batch(() => {
+    activeFilter.set(filter);
+    unpinnedCollapsed.set(false);
+  });
 }
 
 /**
@@ -331,11 +333,7 @@ function _renderList(output, listEl) {
       );
     });
 
-  const collapsed = unpinnedCollapsed.get();
-  if (pinnedCol.length === 0 && collapsed) {
-    unpinnedCollapsed.set(false);
-    return;
-  }
+  const collapsed = unpinnedCollapsed.get() && pinnedCol.length > 0;
 
   const h = col.length || filter !== "all"
     ? html`
