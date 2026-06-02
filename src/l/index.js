@@ -36,7 +36,12 @@ effect(() => {
   const key = preludeKey();
   if (key === null) return;
   if (initialPreludeKey === null) { initialPreludeKey = key; return; }
-  if (key !== initialPreludeKey) window.location.reload();
+  if (key !== initialPreludeKey) {
+    const lastReload = Number(sessionStorage.getItem("diffuse/l/last-reload") ?? 0);
+    if (Date.now() - lastReload < 60_000) return;
+    sessionStorage.setItem("diffuse/l/last-reload", String(Date.now()));
+    window.location.reload();
+  }
 });
 
 // Load

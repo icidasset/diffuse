@@ -273,9 +273,6 @@ class DaslBytesSyncOutputTransformer extends OutputTransformer {
     const promises = [];
 
     collection.forEach((a) => {
-      if (!newSet.has(a.id)) return;
-
-      // Item is new, calculate CID and add it to the `current` dictionary
       const encoded = encode(a);
 
       promises.push((async () => {
