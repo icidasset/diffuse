@@ -70,16 +70,16 @@ main {
 
   @media (min-width: 63rem) {
     gap: var(--space-sm);
-    padding: var(--space-lg) var(--space-md);
+    padding: var(--space-lg) var(--space-3xl);
   }
 
   @media (min-width: 84rem) {
     gap: var(--space-lg);
-    padding: var(--space-2xl) var(--space-md);
+    padding: var(--space-2xl) var(--space-3xl);
   }
 
   @media (min-width: 126rem) {
-    padding: var(--space-3xl) 0;
+    padding: var(--space-3xl) var(--space-md);
   }
 }
 
@@ -108,7 +108,7 @@ db-artwork-controller,
   height: 50vh;
 
   @media (min-width: 35rem) {
-    grid-column: 8 / span 3;
+    grid-column: 8 / span 5;
     grid-row: 1;
     height: auto;
   }
@@ -382,7 +382,7 @@ main.settings-open #settings-panel {
   display: flex;
   font-size: var(--fs-sm);
   gap: var(--space-2xs);
-  grid-column: 8 / span 3;
+  grid-column: 8 / span 5;
   grid-row: 2;
 
   button,
