@@ -1,8 +1,10 @@
 .DS_Store
 AGENTS.md
 node_modules
+skills-lock.json
 
 /.claude
+/.vit
 /_site
 /_vendor
 /dist
