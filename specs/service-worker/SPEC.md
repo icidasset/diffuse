@@ -4,7 +4,7 @@
 
 - It must be able to serve every resource offline that has been requested before.
 - Every file must be cached by CID.
-- The `dist` contains a file tree in the form of a JSON file which maps the path to the correct CID for the latest version.
+- The file tree (a map of path → CID for file) is embedded directly in the service worker at build time. Because every build produces a new service worker, the embedded tree is always current.
 - Every new build means a new service worker.
 - All pages must use the same code.
 - When a new service worker is available, install and activate it immediately, while still making sure all pages are on the same service worker. This is done through sending a `{ type: "sw-activated" }` message to the client, on which they must reload the page.

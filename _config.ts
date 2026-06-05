@@ -368,24 +368,20 @@ async function buildFileTree(
 }
 
 async function writeFileTree() {
-  const RAW = 0x55;
-
-  // Stamp the built SW with a unique build ID so the browser always detects a
-  // SW update on each build, not just when the SW source itself changes.
-  // Do this before buildFileTree (and before brotli's stale-sidecar cleanup)
-  // so the stamped version is the one captured in the tree CID.  Also delete
-  // any brotli'd copy of the *un*stamped SW so Caddy's precompressed-br
-  // serving never delivers it to the browser's update checker.
   const swDist = "./dist/service-worker.js";
+
+  // Remove stale brotli'd SW so Caddy never serves the old compressed version
+  // while the plain file has been updated.
   try {
     Deno.removeSync(`${swDist}.br`);
   } catch { /* already gone */ }
-  const swSource = Deno.readTextFileSync(swDist)
-    .replace(/\n\/\/ @build \S+\n$/, "");
-  const swStamped = `${swSource}\n// @build ${crypto.randomUUID()}\n`;
-  Deno.writeTextFileSync(swDist, swStamped);
 
   const tree = await buildFileTree("dist/");
+
+  // The SW is not included in its own embedded tree — the browser manages the
+  // SW lifecycle independently and never fetches it through the SW's handler.
+  delete tree["service-worker.js"];
+  delete tree["service-worker.js.br"];
 
   // Remove any .br sidecar that is older than its plain counterpart — this
   // catches cases where brotli compression did not re-run after an asset
@@ -405,23 +401,24 @@ async function writeFileTree() {
     } catch { /* .br sidecar doesn't exist — nothing to do */ }
   }
 
-  tree["service-worker.js"] = await createCID(
-    RAW,
-    new TextEncoder().encode(swStamped),
-  );
-
-  // Exclude file-tree.json from its own contents (self-referential).
-  delete tree["file-tree.json"];
-  delete tree["file-tree.json.br"];
-
   const sorted = Object.fromEntries(
     Object.keys(tree).sort().map((k) => [k, tree[k]]),
   );
 
-  Deno.writeTextFileSync(
-    "./dist/file-tree.json",
-    JSON.stringify(sorted, null, 2),
-  );
+  // Inject the file tree into the compiled SW and stamp with a build ID so
+  // the browser always detects an update on each build.
+  //
+  // The placeholder "__FILE_TREE__" may survive as-is or may be folded by
+  // esbuild into `JSON.parse("__FILE_TREE__")` → `"__FILE_TREE__"`. Both
+  // patterns are replaced with the actual object literal so that `FILE_TREE`
+  // is always an object in the running SW, never a string.
+  const treeJson = JSON.stringify(sorted);
+  const swSource = Deno.readTextFileSync(swDist)
+    .replace(/\n\/\/ @build \S+\n$/, "")
+    .replace('JSON.parse("__FILE_TREE__")', () => treeJson)
+    .replace('"__FILE_TREE__"', () => treeJson);
+  const swStamped = `${swSource}\n// @build ${crypto.randomUUID()}\n`;
+  Deno.writeTextFileSync(swDist, swStamped);
 }
 
 site.addEventListener("afterBuild", writeFileTree);

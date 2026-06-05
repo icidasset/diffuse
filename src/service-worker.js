@@ -2,9 +2,8 @@
 
 import { create as createCid } from "./common/cid.js";
 
-const fileTreePromise = fetch("./file-tree.json", { cache: "no-cache" })
-  .then((r) => /** @type {Promise<Record<string, string>>} */ (r.json()))
-  .catch(() => null);
+/** @type {Record<string, string>} */
+const FILE_TREE = JSON.parse("__FILE_TREE__");
 
 /** Media content types to ignore */
 const MEDIA_CONTENT_TYPE = /^(audio|video)\//;
@@ -145,17 +144,15 @@ async function openCaches() {
 }
 
 /**
- * Looks up a pathname in the pre-built file tree and returns its CID, or
- * `undefined` if the entry is absent or the tree failed to load.
+ * Looks up a pathname in the embedded file tree and returns its CID, or
+ * `undefined` if the entry is absent.
  *
  * @param {string} pathname - e.g. "/components/foo.js"
- * @returns {Promise<string | undefined>}
+ * @returns {string | undefined}
  */
-async function cidFromTree(pathname) {
-  const tree = await fileTreePromise;
-  if (!tree) return undefined;
+function cidFromTree(pathname) {
   const key = pathname.replace(/^\//, "");
-  return tree[key];
+  return FILE_TREE[key];
 }
 
 /**
@@ -227,7 +224,7 @@ async function lookup(request) {
 async function handleFetch(request) {
   if (navigator.onLine) {
     const { pathname } = new URL(request.url);
-    const cid = await cidFromTree(pathname);
+    const cid = cidFromTree(pathname);
     if (cid !== undefined) {
       const { content } = await openCaches();
       const cached = await content.match(cidUrl(cid));
