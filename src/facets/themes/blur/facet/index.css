@@ -13,6 +13,12 @@ body {
   transition-property: background-color;
 }
 
+#container {
+  display: flex;
+  align-items: center;
+  height: 100vh;
+}
+
 /***********************************
  * Background overlay
  ***********************************/
@@ -56,21 +62,29 @@ main {
   display: flex;
   flex-direction: column;
   gap: var(--space-xs);
-  height: 100dvh;
+  height: 100%;
   margin: 0 auto;
   max-width: var(--container-9xl);
   overflow: hidden;
   padding: var(--space-xs);
+  width: 100%;
 
-  @media (min-width: 35rem) {
+  @media (min-width: 35rem) and (height < 42rem) {
     display: grid;
     grid-template-columns: repeat(10, 1fr);
     grid-template-rows: 1fr;
   }
 
-  @media (min-width: 63rem) {
-    gap: var(--space-sm);
-    padding: var(--space-lg) var(--space-3xl);
+  @media (min-width: 56rem) {
+    display: grid;
+    grid-template-columns: repeat(10, 1fr);
+    grid-template-rows: 1fr;
+    max-height: var(--container-5xl);
+  }
+
+  @media (min-width: 70rem) {
+    gap: var(--space-md);
+    padding: var(--space-3xl);
   }
 
   @media (min-width: 84rem) {
@@ -107,7 +121,13 @@ db-artwork-controller,
   flex-shrink: 0;
   height: 50vh;
 
-  @media (min-width: 35rem) {
+  @media (min-width: 35rem) and (height < 42rem) {
+    grid-column: 8 / span 5;
+    grid-row: 1;
+    height: auto;
+  }
+
+  @media (min-width: 56rem) {
     grid-column: 8 / span 5;
     grid-row: 1;
     height: auto;
@@ -115,7 +135,12 @@ db-artwork-controller,
 }
 
 db-browser {
-  @media (min-width: 35rem) {
+  @media (min-width: 35rem) and (height < 42rem) {
+    grid-column: 1 / span 7;
+    grid-row: 1 / span 2;
+  }
+
+  @media (min-width: 56rem) {
     grid-column: 1 / span 7;
     grid-row: 1 / span 2;
   }
