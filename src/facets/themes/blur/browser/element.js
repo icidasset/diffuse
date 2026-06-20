@@ -743,11 +743,12 @@ class Browser extends DiffuseElement {
     if (!panel) return;
     const panelRect = panel.getBoundingClientRect();
     const margin = 200;
-    for (const card of this.root().querySelectorAll(
-      ".cover-card[data-album-key]",
-    )) {
-      const albumKey =
-        /** @type {HTMLElement} */ (card).dataset.albumKey;
+    for (
+      const card of this.root().querySelectorAll(
+        ".cover-card[data-album-key]",
+      )
+    ) {
+      const albumKey = /** @type {HTMLElement} */ (card).dataset.albumKey;
       if (
         !albumKey || this.#coverArtCache.has(albumKey) ||
         this.#pendingArtFetch.has(albumKey)
@@ -1221,7 +1222,9 @@ class Browser extends DiffuseElement {
                       class="cover-card"
                       data-album-key="${artistKey}"
                       @click="${() => {
-                        const panel = this.root().querySelector(".cover-scroll-panel");
+                        const panel = this.root().querySelector(
+                          ".cover-scroll-panel",
+                        );
                         if (panel) this.#coverScrollTop = panel.scrollTop;
                         this.#openCoverItem.value = {
                           type: "artist",
@@ -1305,7 +1308,9 @@ class Browser extends DiffuseElement {
                     class="cover-card"
                     data-album-key="${albumKey}"
                     @click="${() => {
-                      const panel = this.root().querySelector(".cover-scroll-panel");
+                      const panel = this.root().querySelector(
+                        ".cover-scroll-panel",
+                      );
                       if (panel) this.#coverScrollTop = panel.scrollTop;
                       this.#openCoverItem.value = {
                         type: "album",
@@ -1727,9 +1732,7 @@ class Browser extends DiffuseElement {
   #renderPlaylistMenu(html, playlist) {
     return html`
       <button
-        class="browser-button browser-button--playlist ${playlist
-          ? `browser-button--active`
-          : ``}"
+        class="browser-button browser-button--playlist"
         @click="${() => {
           this.#playlistPickerState.value = { mode: "filter" };
         }}"
