@@ -87,6 +87,27 @@ export function checkIsLatest(versionOrCid, lastArtifact) {
 }
 
 /**
+ * Coerce a version string that may contain `x` wildcards (e.g. `4.x-nightly`)
+ * into a parseable semver string (e.g. `4.99.0-nightly`). Returns the original
+ * string if it's already parseable, or `null` if coercion fails.
+ *
+ * @param {string} version
+ * @returns {string | null}
+ */
+function tryCoerceVersion(version) {
+  if (canParse(version)) return version;
+  const coerced = version.replace(/[xX]/g, "99");
+  if (canParse(coerced)) return coerced;
+  // Fill in missing patch segment (e.g., "4.99-nightly" -> "4.99.0-nightly")
+  const withPatch = coerced.replace(
+    /^(\d+\.\d+)([+-]|$)/,
+    "$1.0$2",
+  );
+  if (canParse(withPatch)) return withPatch;
+  return null;
+}
+
+/**
  * @param {Record<string, { version: string, cid: string }>} artifacts
  * @param {{ includePrerelease?: boolean }} [options]
  * @returns {{ version: string, cid: string } | null}
@@ -121,6 +142,32 @@ export function checkIsLatest(versionOrCid, lastArtifact) {
  * if (getLatestArtifact(artifacts)?.cid !== "a") throw new Error("should ignore non-semver versions");
  * ```
  *
+ * @example Coerces x-wildcard prerelease (4.x-nightly beats 3.5.0)
+ * ```js
+ * import { getLatestArtifact } from "~/common/pages/version-upgrade.js";
+ *
+ * const artifacts = {
+ *   a: { cid: "a", version: "3.5.0" },
+ *   b: { cid: "b", version: "4.x-nightly" },
+ * };
+ * if (getLatestArtifact(artifacts)?.cid !== "b") {
+ *   throw new Error("4.x-nightly should be latest");
+ * }
+ * ```
+ *
+ * @example Coerced x-wildcard with prerelease beats higher stable of same major
+ * ```js
+ * import { getLatestArtifact } from "~/common/pages/version-upgrade.js";
+ *
+ * const artifacts = {
+ *   a: { cid: "a", version: "4.5.1" },
+ *   b: { cid: "b", version: "4.x-nightly" },
+ * };
+ * if (getLatestArtifact(artifacts, { includePrerelease: true })?.cid !== "b") {
+ *   throw new Error("4.x-nightly should beat 4.5.1 when includePrerelease is true");
+ * }
+ * ```
+ *
  * @example Excludes prerelease artifacts when includePrerelease is false
  * ```js
  * import { getLatestArtifact } from "~/common/pages/version-upgrade.js";
@@ -137,6 +184,7 @@ export function checkIsLatest(versionOrCid, lastArtifact) {
  * }
  * ```
  */
+
 export function getLatestArtifact(
   artifacts,
   { includePrerelease = true } = {},
@@ -144,14 +192,15 @@ export function getLatestArtifact(
   return Object.values(artifacts).reduce(
     /** @param {{ version: string, cid: string } | null} max */
     (max, artifact) => {
-      if (!canParse(artifact.version)) return max;
+      const comparable = tryCoerceVersion(artifact.version);
+      if (!comparable) return max;
       if (
-        !includePrerelease && parseSemver(artifact.version).prerelease?.length
+        !includePrerelease && parseSemver(comparable).prerelease?.length
       ) return max;
       if (!max) return artifact;
       return greaterThan(
-          parseSemver(artifact.version),
-          parseSemver(max.version),
+          parseSemver(comparable),
+          parseSemver(tryCoerceVersion(max.version) ?? max.version),
         )
         ? artifact
         : max;
