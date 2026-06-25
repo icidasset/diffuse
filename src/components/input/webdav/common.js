@@ -182,13 +182,14 @@ export function groupUrisByServer(uris) {
 
 /**
  * @param {Server} server
+ * @returns {Promise<import("@specs/components/input/types.d.ts").ConsultResult>}
  */
 async function checkAccess(server) {
-  try {
-    const url = toHttpUrl(server, server.dir);
-    const controller = new AbortController();
-    const timeoutId = setTimeout(() => controller.abort(), 5000);
+  const url = toHttpUrl(server, server.dir);
+  const controller = new AbortController();
+  const timeoutId = setTimeout(() => controller.abort(), 5000);
 
+  try {
     const response = await fetch(url, {
       method: "PROPFIND",
       headers: {
@@ -199,9 +200,10 @@ async function checkAccess(server) {
     });
 
     clearTimeout(timeoutId);
-    return response.status === 207 || response.ok;
+    return (response.status === 207 || response.ok) ? "yes" : "no";
   } catch {
-    return false;
+    clearTimeout(timeoutId);
+    return "unsure";
   }
 }
 

@@ -55,11 +55,19 @@ export function buildURI(server, args) {
 
 /**
  * @param {Server} server
+ * @returns {Promise<import("@specs/components/input/types.d.ts").ConsultResult>}
  */
 export async function consultServer(server) {
   const client = createClient(server);
-  const resp = await client.ping().catch(() => undefined);
-  return resp?.status?.toLowerCase() === "ok";
+  let resp;
+  try {
+    resp = await client.ping();
+  } catch {
+    // Transport error (network blip, timeout): inconclusive — don't
+    // cache a sticky "no" for the full consult TTL.
+    return "unsure";
+  }
+  return resp?.status?.toLowerCase() === "ok" ? "yes" : "no";
 }
 
 export const consultServerCached = cachedConsult(consultServer, serverId);

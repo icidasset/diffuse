@@ -96,7 +96,7 @@ export async function groupConsult({ data, ports }) {
       if (!input) {
         return {
           [scheme]: {
-            available: false,
+            available: "no",
             reason: "Unsupported scheme",
             scheme,
             uris: groups[scheme] ?? [],

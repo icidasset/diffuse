@@ -157,23 +157,28 @@ export function groupUrisByServer(uris) {
 
 /**
  * @param {Server} server
- * @returns {Promise<boolean>}
+ * @returns {Promise<import("@specs/components/input/types.d.ts").ConsultResult>}
  */
 async function checkAccess(server) {
-  try {
-    const url = toHttpUrl(server, server.dir);
-    const controller = new AbortController();
-    const timeoutId = setTimeout(() => controller.abort(), 5000);
+  const url = toHttpUrl(server, server.dir);
+  const controller = new AbortController();
+  const timeoutId = setTimeout(() => controller.abort(), 5000);
 
+  try {
     const response = await fetch(url, {
       headers: { "Accept": "application/json" },
       signal: controller.signal,
     });
 
     clearTimeout(timeoutId);
-    return response.ok;
+    return response.ok ? "yes" : "no";
   } catch {
-    return false;
+    // Network error or timeout: inconclusive — let `cachedConsult` fall
+    // back to the last known availability instead of caching a sticky
+    // "no" for the full TTL (which would hide every track from this
+    // server for 5 minutes after a laptop wake).
+    clearTimeout(timeoutId);
+    return "unsure";
   }
 }
 
@@ -183,64 +188,91 @@ export const checkAccessCached = cachedConsult(checkAccess, serverId);
  * List all files on the server under server.dir using JSON directory listing.
  * Fetches each directory with `Accept: application/json` and recurses into subdirs.
  *
+ * Returns `null` if the root directory listing could not be fetched at all
+ * (network error, non-2xx, or non-JSON response) — this signals a transient
+ * outage rather than "directory is genuinely empty" so the caller can
+ * preserve previously-cached tracks instead of wiping them with a placeholder.
+ *
  * @param {Server} server
- * @returns {Promise<string[]>}
+ * @returns {Promise<string[] | null>}
  */
 export async function listFiles(server) {
   const paths = /** @type {string[]} */ ([]);
   const exclude = new Set(server.exclude ?? []);
-  await listDir(server, server.dir, paths, exclude);
+
+  let rootEntries;
+  try {
+    rootEntries = await fetchDirEntries(server, server.dir);
+  } catch {
+    // Root fetch failed — server unreachable or not a JSON listing.
+    // The caller can use this to preserve cached tracks rather than
+    // replacing them with a placeholder.
+    return null;
+  }
+
+  await walkEntries(server, server.dir, rootEntries, paths, exclude);
   return paths;
 }
 
 /**
  * @param {Server} server
  * @param {string} dir
- * @param {string[]} paths
- * @param {Set<string>} exclude
+ * @returns {Promise<unknown[]>}
  */
-async function listDir(server, dir, paths, exclude) {
+async function fetchDirEntries(server, dir) {
   const url = toHttpUrl(server, dir);
+  const controller = new AbortController();
+  const timeoutId = setTimeout(() => controller.abort(), 10000);
 
   let response;
   try {
-    const controller = new AbortController();
-    const timeoutId = setTimeout(() => controller.abort(), 10000);
-
     response = await fetch(url, {
       headers: { "Accept": "application/json" },
       signal: controller.signal,
     });
-
+  } finally {
     clearTimeout(timeoutId);
-  } catch {
-    return;
   }
 
-  if (!response.ok) return;
+  if (!response.ok) throw new Error(`dir fetch failed: ${response.status}`);
 
   /** @type {unknown} */
-  let data;
-  try {
-    data = await response.json();
-  } catch {
-    return;
-  }
+  const data = await response.json();
+  if (!Array.isArray(data)) throw new Error("dir listing is not an array");
+  return /** @type {unknown[]} */ (data);
+}
 
-  if (!Array.isArray(data)) return;
-
+/**
+ * @param {Server} server
+ * @param {string} dir
+ * @param {unknown[]} entries
+ * @param {string[]} paths
+ * @param {Set<string>} exclude
+ */
+async function walkEntries(server, dir, entries, paths, exclude) {
   const basePath = dir.endsWith("/") ? dir : dir + "/";
 
-  for (const entry of data) {
-    if (!entry || typeof entry.name !== "string" || !entry.type) continue;
+  for (const entry of entries) {
+    if (!entry || typeof /** @type {any} */ (entry).name !== "string" ||
+      !/** @type {any} */ (entry).type) {
+      continue;
+    }
 
     // Encode each path segment so URIs stay valid for non-ASCII filenames.
-    const encodedName = encodeURIComponent(entry.name);
+    const encodedName = encodeURIComponent(/** @type {any} */ (entry).name);
     const entryPath = basePath + encodedName;
 
-    if (entry.type === "directory") {
-      if (!exclude.has(entry.name)) await listDir(server, entryPath, paths, exclude);
-    } else if (entry.type === "file") {
+    if (/** @type {any} */ (entry).type === "directory") {
+      if (exclude.has(/** @type {any} */ (entry).name)) continue;
+      // A failing subdir shouldn't fail the whole walk — skip it and
+      // keep going, matching the previous tolerant behaviour.
+      try {
+        const subEntries = await fetchDirEntries(server, entryPath);
+        await walkEntries(server, entryPath, subEntries, paths, exclude);
+      } catch {
+        // Subdir unavailable: skip.
+      }
+    } else if (/** @type {any} */ (entry).type === "file") {
       paths.push(entryPath);
     }
   }

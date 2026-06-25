@@ -188,12 +188,18 @@ export async function fetchMetadata(streamUrl) {
   }
 }
 
-/** @param {string} uri */
+/**
+ * @param {string} uri
+ * @returns {Promise<import("@specs/components/input/types.d.ts").ConsultResult>}
+ */
 async function consultStream(uri) {
   const parsed = parseURI(uri);
-  if (!parsed) return false;
+  if (!parsed) return "no";
   const metadata = await fetchMetadata(parsed.streamUrl);
-  return metadata !== undefined;
+  // `fetchMetadata` swallows transport/parse errors as `undefined`;
+  // treat that as inconclusive so a network blip doesn't hide the
+  // stream for the full consult TTL.
+  return metadata === undefined ? "unsure" : "yes";
 }
 
 export const consultStreamCached = cachedConsult(

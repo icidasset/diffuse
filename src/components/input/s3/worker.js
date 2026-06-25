@@ -81,7 +81,7 @@ export async function groupConsult(uris) {
       const available = await consultBucketCached(bucket);
 
       /** @type {ConsultGrouping} */
-      const grouping = available
+      const grouping = available === "yes"
         ? { available, scheme: SCHEME, uris }
         : { available, reason: "Bucket unavailable", scheme: SCHEME, uris };
 

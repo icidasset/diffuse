@@ -11,11 +11,26 @@ import type { DiffuseElement } from "~/common/element.js";
  */
 export type Consult =
   | { supported: false; reason: string }
-  | { supported: true; consult: "undetermined" | boolean };
+  | { supported: true; consult: "undetermined" | ConsultResult };
 
-export type ConsultGrouping =
-  | { available: false; reason: string; scheme: string; uris: string[] }
-  | { available: true; scheme: string; uris: string[] };
+/**
+ * Tri-state availability for a single source.
+ *
+ * - `"yes"`    → the source confirmed it is reachable;
+ * - `"no"`     → the source explicitly rejected (e.g. HTTP 404, auth fail);
+ * - `"unsure"` → the consult was inconclusive (network blip, timeout,
+ *                aborted fetch). Consult results are never cached in
+ *                this state, and consumers should treat the source
+ *                optimistically rather than hiding it.
+ */
+export type ConsultResult = "yes" | "no" | "unsure";
+
+export type ConsultGrouping = {
+  available: ConsultResult;
+  reason?: string;
+  scheme: string;
+  uris: string[];
+};
 
 export type GroupConsult = Record<string, ConsultGrouping>;
 

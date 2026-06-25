@@ -72,10 +72,12 @@ export async function groupConsult(uris) {
   const promises = Object.entries(groups).map(
     async ([_domainId, { host, uris }]) => {
       const testUri = uris[0];
-      const available = testUri ? await consultHostCached(testUri) : false;
+      const available = /** @type {import("@specs/components/input/types.d.ts").ConsultResult} */ (
+        testUri ? await consultHostCached(testUri) : "no"
+      );
 
       /** @type {ConsultGrouping} */
-      const grouping = available
+      const grouping = available === "yes"
         ? { available, scheme: SCHEME, uris }
         : { available, reason: "Host unreachable", scheme: SCHEME, uris };
 

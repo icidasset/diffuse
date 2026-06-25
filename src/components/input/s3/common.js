@@ -63,10 +63,18 @@ export function buildURI(bucket, path) {
 
 /**
  * @param {Bucket} bucket
+ * @returns {Promise<import("@specs/components/input/types.d.ts").ConsultResult>}
  */
 export async function consultBucket(bucket) {
   const client = createClient(bucket);
-  return await client.bucketExists(bucket.bucketName);
+  try {
+    const exists = await client.bucketExists(bucket.bucketName);
+    return exists ? "yes" : "no";
+  } catch {
+    // Network/credentials/transport error: inconclusive — don't let a
+    // transient blip flip this bucket to "no" for the full consult TTL.
+    return "unsure";
+  }
 }
 
 export const consultBucketCached = cachedConsult(consultBucket, bucketId);

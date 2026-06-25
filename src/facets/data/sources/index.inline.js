@@ -106,9 +106,13 @@ async function checkOnlineStatus(sourcesRecord) {
   const entries = await Promise.all(
     sources.map(async ({ uri }) => {
       const result = await inputConfigurator.consult(uri);
+      // `cachedConsult` normalises `"unsure"` (transient consult failure)
+      // to `"no"` without caching it — so a brief network blip after laptop
+      // wake shows "Offline" transiently and flips back to "Online" on the
+      // next consult, rather than sticking "Offline" for the full TTL.
       const online =
         result.supported && result.consult !== "undetermined"
-          ? result.consult
+          ? result.consult === "yes"
           : null;
       return /** @type {[string, boolean | null]} */ ([trackPrefix(uri), online]);
     }),

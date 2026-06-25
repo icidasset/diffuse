@@ -94,7 +94,7 @@ export async function groupConsult(uris) {
       const available = await consultServerCached(server);
 
       /** @type {ConsultGrouping} */
-      const grouping = available
+      const grouping = available === "yes"
         ? { available, scheme: SCHEME, uris }
         : { available, reason: "Server ping failed", scheme: SCHEME, uris };
 

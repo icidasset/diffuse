@@ -83,7 +83,7 @@ export async function groupConsult(uris) {
       const available = await checkAccessCached(server);
 
       /** @type {ConsultGrouping} */
-      const grouping = available
+      const grouping = available === "yes"
         ? { available, scheme: SCHEME, uris }
         : { available, reason: "WebDAV server unreachable", scheme: SCHEME, uris };
 

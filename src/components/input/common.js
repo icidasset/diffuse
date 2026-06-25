@@ -1,4 +1,5 @@
 /**
+ * @import {ConsultResult} from "@specs/components/input/types.d.ts"
  * @import {Track} from "~/definitions/types.d.ts"
  */
 
@@ -6,28 +7,65 @@
  * Creates a time-cached version of an async consult function.
  * Results are cached per key for the given TTL.
  *
+ * The underlying `fn` returns a {@link ConsultResult}:
+ *   - `"yes"` → server confirmed reachable (cached for the full TTL);
+ *   - `"no"`  → server explicitly rejected, or a transient consult
+ *               failure occurred (cached for the full TTL only when the
+ *               underlying fn actually returned `"no"`; an `"unsure"`
+ *               result is **not** cached — the next consult retries
+ *               immediately);
+ *   - `"unsure"` → inconclusive (network blip, timeout, aborted fetch).
+ *
+ * The wrapper normalises `"unsure"` to `"no"` for the caller: we can't
+ * confirm availability, so callers should hide the source's tracks
+ * until a real consult succeeds. The key difference vs. a genuine
+ * `"no"` is purely about caching: `"unsure"` is never written to the
+ * cache, so the next consult call will retry the underlying fn rather
+ * than wait out the TTL.
+ *
  * @template T
- * @param {(arg: T) => Promise<boolean>} fn
+ * @param {(arg: T) => Promise<ConsultResult>} fn
  * @param {(arg: T) => string} keyFn
  * @param {number} ttl - Cache TTL in milliseconds
- * @returns {(arg: T) => Promise<boolean>}
+ * @returns {(arg: T) => Promise<ConsultResult>}
  *
  * @example Caches results and avoids calling fn more than once per key
  * ```js
  * import { cachedConsult } from "~/components/input/common.js";
  *
  * let callCount = 0;
- * const cached = cachedConsult(async (uri) => { callCount++; return true; }, (uri) => uri);
+ * const cached = cachedConsult(async () => { callCount++; return "yes"; }, (k) => k);
  *
- * const r1 = await cached("https://example.com/stream");
- * const r2 = await cached("https://example.com/stream");
+ * const r1 = await cached("k");
+ * const r2 = await cached("k");
  *
- * if (r1 !== true || r2 !== true) throw new Error("should return cached value");
+ * if (r1 !== "yes" || r2 !== "yes") throw new Error("should return cached value");
  * if (callCount !== 1) throw new Error("fn should only be called once per key");
+ * ```
+ *
+ * @example An `"unsure"` result is normalised to `"no"` and not cached
+ * ```js
+ * import { cachedConsult } from "~/components/input/common.js";
+ *
+ * let n = 0;
+ * const cached = cachedConsult(
+ *   async () => (n++ === 0 ? "unsure" : "yes"),
+ *   (k) => k,
+ * );
+ *
+ * // First call: fn returns "unsure". The wrapper returns "no" without
+ * // caching, so the caller hides the source's tracks until a real
+ * // consult succeeds.
+ * const r1 = await cached("k");
+ * if (r1 !== "no") throw new Error("first call should normalise \"unsure\" to \"no\"");
+ *
+ * // Second call: cache is empty so fn runs again and returns "yes".
+ * const r2 = await cached("k");
+ * if (r2 !== "yes") throw new Error("second call should return the fresh \"yes\"");
  * ```
  */
 export function cachedConsult(fn, keyFn, ttl = 60_000 * 5) {
-  /** @type {Map<string, { value: boolean; expiry: number }>} */
+  /** @type {Map<string, { value: ConsultResult; expiry: number }>} */
   const cache = new Map();
 
   return async (arg) => {
@@ -40,6 +78,18 @@ export function cachedConsult(fn, keyFn, ttl = 60_000 * 5) {
     }
 
     const value = await fn(arg);
+
+    // `"unsure"` means we couldn't confirm availability — surface it
+    // as `"no"` to callers (their tracks shouldn't show until a real
+    // consult succeeds), but never cache it so the next consult call
+    // retries the underlying fn immediately rather than waiting out
+    // the TTL. This is what distinguishes a transient network blip
+    // from a server-confirmed `"no"`: both look like "unavailable" to
+    // callers, but only the latter sticks for the cache window.
+    if (value === "unsure") {
+      return "no";
+    }
+
     cache.set(key, { value, expiry: now + ttl });
     return value;
   };

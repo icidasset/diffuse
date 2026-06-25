@@ -193,7 +193,15 @@ class ScopedTracksOrchestrator extends BroadcastableDiffuseElement {
       const availableUris = new Set();
 
       Object.values(groups).forEach((value) => {
-        if (value.available === false) return;
+        // Only include tracks whose source confirmed availability ("yes").
+        // Both "no" (server explicitly rejected) and "unsure" (transient
+        // consult failure — e.g. a laptop waking up before the network
+        // is fully back) hide the source's tracks until a real consult
+        // succeeds. `cachedConsult` normalises "unsure" to "no" for callers
+        // (without caching it), so a brief blip doesn't pin availability
+        // to "unavailable" for the full TTL — the next consult retries
+        // immediately and repopulates the browser once the server responds.
+        if (value.available !== "yes") return;
         for (const uri of value.uris) {
           availableUris.add(uri);
         }

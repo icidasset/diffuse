@@ -79,7 +79,7 @@ export async function groupConsult(uris) {
       const available = await checkAccessCached(account.accessToken);
 
       /** @type {ConsultGrouping} */
-      const grouping = available
+      const grouping = available === "yes"
         ? { available, scheme: SCHEME, uris }
         : { available, reason: "Dropbox access denied", scheme: SCHEME, uris };
 

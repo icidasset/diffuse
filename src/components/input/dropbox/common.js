@@ -210,17 +210,23 @@ export async function getTemporaryLink(accessToken, filePath) {
 
 /**
  * @param {string} accessToken
- * @returns {Promise<boolean>}
+ * @returns {Promise<import("@specs/components/input/types.d.ts").ConsultResult>}
  */
 export async function checkAccess(accessToken) {
-  const resp = await fetch(
-    "https://api.dropboxapi.com/2/users/get_current_account",
-    {
-      method: "POST",
-      headers: { "Authorization": `Bearer ${accessToken}` },
-    },
-  );
-  return resp.ok;
+  try {
+    const resp = await fetch(
+      "https://api.dropboxapi.com/2/users/get_current_account",
+      {
+        method: "POST",
+        headers: { "Authorization": `Bearer ${accessToken}` },
+      },
+    );
+    return resp.ok ? "yes" : "no";
+  } catch {
+    // Network error: inconclusive — let `cachedConsult` keep the last
+    // known availability rather than caching a sticky "no".
+    return "unsure";
+  }
 }
 
 export const checkAccessCached = cachedConsult(checkAccess, (token) => token);

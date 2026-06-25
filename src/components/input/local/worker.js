@@ -54,7 +54,7 @@ export async function consult(fileUriOrScheme) {
     mode: "read",
   });
 
-  return { supported: true, consult: permission === "granted" };
+  return { supported: true, consult: permission === "granted" ? "yes" : "no" };
 }
 
 /**
@@ -98,15 +98,14 @@ export async function groupConsult(uris) {
 
     const available =
       (await /** @type {any} */ (handle).queryPermission({ mode: "read" })) ===
-        "granted";
+        "granted"
+        ? /** @type {const} */ ("yes")
+        : /** @type {const} */ ("no");
 
     /** @type {ConsultGrouping} */
-    const grouping = available ? { available, scheme: SCHEME, uris } : {
-      available: false,
-      reason: "Permission not granted",
-      scheme: SCHEME,
-      uris,
-    };
+    const grouping = available === "yes"
+      ? { available, scheme: SCHEME, uris }
+      : { available, reason: "Permission not granted", scheme: SCHEME, uris };
 
     return [{ key: groupKey(SCHEME, tid), grouping }];
   });

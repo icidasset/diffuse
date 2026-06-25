@@ -35,7 +35,7 @@ export async function consult(uriOrScheme) {
   }
 
   const cached = await IDB.get(CACHE_KEY_PREFIX + uriOrScheme);
-  return { supported: true, consult: cached !== undefined };
+  return { supported: true, consult: cached !== undefined ? "yes" : "no" };
 }
 
 /**
@@ -65,7 +65,7 @@ export async function groupConsult(uris) {
 
   return {
     [SCHEME]: {
-      available: true,
+      available: "yes",
       scheme: SCHEME,
       uris: uris.filter((_, i) => cached[i] !== undefined),
     },

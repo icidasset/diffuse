@@ -239,19 +239,25 @@ export function parseURI(uriString) {
   }
 }
 
-/** @param {string} uri */
+/**
+ * @param {string} uri
+ * @returns {Promise<import("@specs/components/input/types.d.ts").ConsultResult>}
+ */
 async function consultHost(uri) {
+  const controller = new AbortController();
+  const timeoutId = setTimeout(() => controller.abort(), 5000);
   try {
-    const controller = new AbortController();
-    const timeoutId = setTimeout(() => controller.abort(), 5000);
     const response = await fetch(uri, {
       method: "HEAD",
       signal: controller.signal,
     });
     clearTimeout(timeoutId);
-    return response.ok;
+    return response.ok ? "yes" : "no";
   } catch {
-    return false;
+    // Network/timeout error: inconclusive — let `cachedConsult` fall
+    // back to the last known value rather than caching a sticky "no".
+    clearTimeout(timeoutId);
+    return "unsure";
   }
 }
 

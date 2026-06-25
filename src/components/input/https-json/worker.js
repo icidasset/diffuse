@@ -83,7 +83,7 @@ export async function groupConsult(uris) {
       const available = await checkAccessCached(server);
 
       /** @type {ConsultGrouping} */
-      const grouping = available
+      const grouping = available === "yes"
         ? { available, scheme: SCHEME, uris }
         : { available, reason: "Server unreachable", scheme: SCHEME, uris };
 
@@ -114,48 +114,70 @@ export async function list(cachedTracks = []) {
     });
   });
 
-  const promises = Object.entries(groups).map(async ([id, { server }]) => {
-    const files = await listFiles(server);
+  const promises = Object.entries(groups).map(
+    async ([id, { server, tracks: cachedServerTracks }]) => {
+      const files = await listFiles(server);
 
-    let tracks = files
-      .filter((path) => isAudioFile(path))
-      .map((path) => {
-        const cachedTrack = cache[id]?.[safeDecodeURIComponent(path)];
+      // `listFiles` returns `null` when the root directory listing could
+      // not be fetched at all (e.g. the server was briefly unreachable
+      // right after a laptop wake). In that case, preserve the previously
+      // cached tracks for this server rather than replacing them with a
+      // single placeholder — otherwise an interrupted refresh would wipe
+      // the user's library and cascade into an empty browser view.
+      if (files === null) {
+        if (cachedServerTracks.length) return cachedServerTracks;
 
-        const trackId = cachedTrack?.id || TID.now();
-        const stats = cachedTrack?.stats;
-        const tags = cachedTrack?.tags;
+        const now = new Date().toISOString();
+        return [/** @type {Track} */ ({
+          $type: "sh.diffuse.output.track",
+          id: TID.now(),
+          createdAt: now,
+          updatedAt: now,
+          kind: "placeholder",
+          uri: buildURI(server),
+        })];
+      }
+
+      let tracks = files
+        .filter((path) => isAudioFile(path))
+        .map((path) => {
+          const cachedTrack = cache[id]?.[safeDecodeURIComponent(path)];
+
+          const trackId = cachedTrack?.id || TID.now();
+          const stats = cachedTrack?.stats;
+          const tags = cachedTrack?.tags;
+          const now = new Date().toISOString();
+
+          /** @type {Track} */
+          const track = {
+            $type: "sh.diffuse.output.track",
+            id: trackId,
+            createdAt: cachedTrack?.createdAt ?? now,
+            updatedAt: cachedTrack?.updatedAt ?? now,
+            stats,
+            tags,
+            uri: buildURI(server, path),
+          };
+
+          return track;
+        });
+
+      if (!tracks.length) {
         const now = new Date().toISOString();
 
-        /** @type {Track} */
-        const track = {
+        tracks = [{
           $type: "sh.diffuse.output.track",
-          id: trackId,
-          createdAt: cachedTrack?.createdAt ?? now,
-          updatedAt: cachedTrack?.updatedAt ?? now,
-          stats,
-          tags,
-          uri: buildURI(server, path),
-        };
+          id: TID.now(),
+          createdAt: now,
+          updatedAt: now,
+          kind: "placeholder",
+          uri: buildURI(server),
+        }];
+      }
 
-        return track;
-      });
-
-    if (!tracks.length) {
-      const now = new Date().toISOString();
-
-      tracks = [{
-        $type: "sh.diffuse.output.track",
-        id: TID.now(),
-        createdAt: now,
-        updatedAt: now,
-        kind: "placeholder",
-        uri: buildURI(server),
-      }];
-    }
-
-    return tracks;
-  });
+      return tracks;
+    },
+  );
 
   return (await Promise.all(promises)).flat(1);
 }
