@@ -1,0 +1,133 @@
+{
+  "version": "5",
+  "specifiers": {
+    "jsr:@okikio/transferables@^1.0.2": "1.0.2",
+    "jsr:@std/xml@0.1": "0.1.2",
+    "jsr:@vicary/debounce-microtask@~0.1.8": "0.1.8",
+    "npm:@atcute/tid@^1.1.2": "1.1.2",
+    "npm:fast-uri@3.1.0": "3.1.0",
+    "npm:query-string@^9.3.1": "9.4.0",
+    "npm:subsonic-api@^3.2.0": "3.3.1",
+    "npm:xxh32@^2.0.5": "2.0.5"
+  },
+  "jsr": {
+    "@okikio/transferables@1.0.2": {
+      "integrity": "46a80015a1c4672b0b246e38838b3ea1e2edc6c775a235184a2f8eb49a8314f7"
+    },
+    "@std/xml@0.1.2": {
+      "integrity": "a17a771548f10895b9a2a54b39b52e2e27e0617e0e05bb5919c04c87f89007f0"
+    },
+    "@vicary/debounce-microtask@0.1.8": {
+      "integrity": "fe180e0c599903ccf7a93e719ea986c48affc1ff78951a1bc0ccb874aa30fd0e"
+    }
+  },
+  "npm": {
+    "@atcute/tid@1.1.2": {
+      "integrity": "sha512-bmPuOX/TOfcm/vsK9vM98spjkcx2wgd9S2PeK5oLgEr8IbNRPq7iMCAPzOL1nu5XAW3LlkOYQEbYRcw5vcQ37w==",
+      "dependencies": [
+        "@atcute/time-ms"
+      ]
+    },
+    "@atcute/time-ms@1.3.2": {
+      "integrity": "sha512-F+qOyR9pO55g1d/QmN+Gr+fimoUQQLusdGSB6pjV0wW5KPILR4oQ4e2ZhWzqUbeHLAgWvgoTTMsMDdz62Xa2tg=="
+    },
+    "decode-uri-component@0.4.1": {
+      "integrity": "sha512-+8VxcR21HhTy8nOt6jf20w0c9CADrw1O8d+VZ/YzzCt4bJ3uBjw+D1q2osAB8RnpwwaeYBxy0HyKQxD5JBMuuQ=="
+    },
+    "fast-uri@3.1.0": {
+      "integrity": "sha512-iPeeDKJSWf4IEOasVVrknXpaBV0IApz/gp7S2bb7Z4Lljbl2MGJRqInZiUrQwV16cpzw/D3S5j5Julj/gT52AA=="
+    },
+    "filter-obj@5.1.0": {
+      "integrity": "sha512-qWeTREPoT7I0bifpPUXtxkZJ1XJzxWtfoWWkdVGqa+eCr3SHW/Ocp89o8vLvbUuQnadybJpjOKu4V+RwO6sGng=="
+    },
+    "query-string@9.4.0": {
+      "integrity": "sha512-ivvWyHqU9K1Log4hJFhqVIIMoEi0nzmlRhvk2pPcTuQH/Y0K5iTTMxEx7R0PRHD2Z1hMVbWnjfsEWbIKIK+3IA==",
+      "dependencies": [
+        "decode-uri-component",
+        "filter-obj",
+        "split-on-first"
+      ]
+    },
+    "split-on-first@3.0.0": {
+      "integrity": "sha512-qxQJTx2ryR0Dw0ITYyekNQWpz6f8dGd7vffGNflQQ3Iqj9NJ6qiZ7ELpZsJ/QBhIVAiDfXdag3+Gp8RvWa62AA=="
+    },
+    "subsonic-api@3.3.1": {
+      "integrity": "sha512-0320kOsY8ym4wSR1rwVUqEYpMaa7zjbER26SsI8akO6P22DRW7iEliJLreuj7aKSE0t7FT/NbvbVXgm8PqU4yg=="
+    },
+    "xxh32@2.0.5": {
+      "integrity": "sha512-glQIaPvLHV4xG2Sn0E4mZWY25JT34+XcG4e2c8OMIH2SXxVrm6MmJ8miCsqGBLtf+rn2YcaeS11vq/66vkXGUQ=="
+    }
+  },
+  "workspace": {
+    "dependencies": [
+      "jsr:@astral/astral@0.5.5",
+      "jsr:@bradenmacdonald/s3-lite-client@~0.9.5",
+      "jsr:@char/cbor@~0.1.4",
+      "jsr:@cloudradio/icy-parser@^1.0.2",
+      "jsr:@fcrozatier/htmlcrunch@^1.5.1",
+      "jsr:@fry69/deep-diff@~0.1.10",
+      "jsr:@mary/ds-queue@~0.1.3",
+      "jsr:@okikio/transferables@^1.0.2",
+      "jsr:@paulmillr/qr@0.6",
+      "jsr:@std/expect@1.0.18",
+      "jsr:@std/fs@^1.0.23",
+      "jsr:@std/html@^1.0.5",
+      "jsr:@std/path@^1.1.4",
+      "jsr:@std/semver@^1.0.8",
+      "jsr:@std/testing@1.0.17",
+      "jsr:@std/xml@0.1",
+      "jsr:@vicary/debounce-microtask@~0.1.8",
+      "jsr:@zip-js/zip-js@2",
+      "npm:98.css@~0.1.21",
+      "npm:@atcute/atproto@^3.1.10",
+      "npm:@atcute/car@^5.1.1",
+      "npm:@atcute/cbor@^2.3.2",
+      "npm:@atcute/cid@^2.4.1",
+      "npm:@atcute/client@^4.2.1",
+      "npm:@atcute/firehose@0.1",
+      "npm:@atcute/identity-resolver@^1.2.2",
+      "npm:@atcute/lex-cli@^2.5.3",
+      "npm:@atcute/lexicons@^1.2.9",
+      "npm:@atcute/oauth-browser-client@3",
+      "npm:@atcute/repo@~0.1.3",
+      "npm:@atcute/tid@^1.1.2",
+      "npm:@atcute/uint8array@^1.1.1",
+      "npm:@automerge/automerge@^3.2.4",
+      "npm:@awesome.me/webawesome@^3.3.1",
+      "npm:@codemirror/autocomplete@^6.20.1",
+      "npm:@codemirror/lang-css@^6.3.1",
+      "npm:@codemirror/lang-html@^6.4.11",
+      "npm:@codemirror/lang-javascript@^6.2.5",
+      "npm:@dotenv-run/esbuild@^1.5.1",
+      "npm:@fortawesome/free-regular-svg-icons@^7.2.0",
+      "npm:@noble/ciphers@^2.1.1",
+      "npm:@noble/hashes@^2.0.1",
+      "npm:@orama/orama@^3.1.18",
+      "npm:@phosphor-icons/web@^2.1.2",
+      "npm:@tokenizer/http@~0.9.2",
+      "npm:@tokenizer/range@~0.13.1",
+      "npm:@types/wicg-file-system-access@^2023.10.7",
+      "npm:alien-signals@^3.1.2",
+      "npm:autoprefixer@^10.4.27",
+      "npm:bs58check@4",
+      "npm:butterchurn-presets@3.0.0-beta.4",
+      "npm:butterchurn@3.0.0-beta.5",
+      "npm:codemirror@^6.0.2",
+      "npm:cssnano@^7.1.3",
+      "npm:esbuild-plugin-wasm@^1.1.0",
+      "npm:esbuild-plugins-node-modules-polyfill@^1.8.1",
+      "npm:fast-average-color@^9.5.0",
+      "npm:idb-keyval@^6.2.2",
+      "npm:iso-base@^4.3.0",
+      "npm:kmenu@^2.0.3",
+      "npm:lit-html@^3.3.2",
+      "npm:marked@^17.0.4",
+      "npm:music-metadata@^11.12.2",
+      "npm:query-string@^9.3.1",
+      "npm:subsonic-api@^3.2.0",
+      "npm:temporal-polyfill@~0.3.2",
+      "npm:throttle-debounce@^5.0.2",
+      "npm:xxh32@^2.0.5"
+    ]
+  }
+}

@@ -68,7 +68,7 @@ export function createLoader(config) {
   /** @type {string | null} */
   let loader = null;
 
-  effect(async () => {
+  effect(() => {
     /** @type {LoadableItem | undefined} */
     let item = undefined;
 
@@ -115,7 +115,7 @@ export function createLoader(config) {
     }
 
     // Make sure HTML is loaded when a URI is specified
-    await ensureHTML(item).catch((err) => {
+    ensureHTML(item).catch((err) => {
       if (swControllerChanging) return;
       renderError(container, `Failed to load URI: ${item.uri}`, {
         context: err,
