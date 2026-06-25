@@ -140,7 +140,7 @@ class ArtworkWindowElement extends DiffuseElement {
 
       <div class="art">
         ${url
-          ? html`<img src="${url}" alt="" />`
+          ? html`<img src="${url}" decoding="async" alt="" />`
           : html`<span class="no-artwork">No artwork</span>`}
       </div>
     `;
