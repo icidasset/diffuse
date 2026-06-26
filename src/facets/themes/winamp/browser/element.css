@@ -1,0 +1,188 @@
+:host {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+}
+
+/***********************************
+* SEARCH
+***********************************/
+
+search {
+  margin-bottom: var(--grouped-button-spacing);
+}
+
+search input {
+  color: inherit;
+  flex: 1;
+}
+
+search select {
+  color: inherit;
+  max-width: 33%;
+}
+
+/***********************************
+* TABLE
+***********************************/
+
+.sunken-panel {
+  flex: 1;
+  min-height: 80px;
+  outline: none;
+}
+
+:host([resizable]) .sunken-panel {
+  resize: both;
+}
+
+.virtual-header {
+  position: sticky;
+  top: 0;
+  z-index: 1;
+}
+
+table {
+  color: var(--text-color);
+  table-layout: fixed;
+  width: 100%;
+}
+
+table th {
+  cursor: pointer;
+  user-select: none;
+  width: 30%;
+
+  &:after {
+    font-size: 82%;
+    position: absolute;
+    right: 6px;
+  }
+
+  &:first-child {
+    width: 40%;
+  }
+}
+
+table th[aria-sort="ascending"]::after {
+  content: " ▼";
+}
+
+table th[aria-sort="descending"]::after {
+  content: " ▲";
+}
+
+.virtual-scroll table {
+  will-change: transform;
+}
+
+table tbody tr {
+  cursor: pointer;
+}
+
+table td {
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/***********************************
+* ACTIONS
+***********************************/
+
+.actions-row {
+  flex-wrap: wrap;
+  margin-top: var(--element-spacing);
+}
+
+/***********************************
+* PLAYLIST PICKER
+***********************************/
+
+.picker-overlay {
+  align-items: center;
+  background: rgba(0, 0, 0, 0.4);
+  bottom: 0;
+  display: flex;
+  justify-content: center;
+  left: 0;
+  position: fixed;
+  right: 0;
+  top: 0;
+  z-index: 100;
+}
+
+.picker-window {
+  min-width: 240px;
+  max-width: 320px;
+}
+
+.picker-body {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+
+  form {
+    margin-bottom: 0;
+  }
+}
+
+.picker-list {
+  border: 2px inset #dfdfdf;
+  display: flex;
+  flex-direction: column;
+  max-height: 200px;
+  overflow-y: auto;
+  padding: 2px;
+}
+
+.picker-item {
+  background: none;
+  border: none;
+  box-shadow: none;
+  cursor: pointer;
+  font-family: "Pixelated MS Sans Serif", Arial, "Apple Color Emoji", "Segoe UI Emoji", "Noto Color Emoji", sans-serif;
+  padding: 2px 4px;
+  text-align: left;
+  width: 100%;
+
+  &:hover {
+    background: var(--dialog-blue);
+    color: #fff;
+  }
+}
+
+.picker-item--create {
+  font-style: italic;
+}
+
+.picker-group-label {
+  color: gray;
+  font-size: 90%;
+  margin-top: 4px;
+  padding: 0 4px;
+  user-select: none;
+}
+
+.picker-form-actions {
+  justify-content: flex-end;
+  margin-top: 4px;
+}
+
+/***********************************
+* GROUP HEADERS
+***********************************/
+
+table tbody tr.group-header {
+  cursor: default;
+
+  & td {
+    background: var(--button-face);
+    border-bottom: 1px solid var(--button-shadow);
+    color: var(--button-shadow);
+    font-size: 82%;
+    letter-spacing: 0.05em;
+    padding: 0 4px;
+    text-transform: uppercase;
+    user-select: none;
+  }
+}

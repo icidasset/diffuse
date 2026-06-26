@@ -9,6 +9,7 @@ import {
 } from "~/common/element.js";
 import { computed, signal, untracked } from "~/common/signal.js";
 import * as Playlist from "~/common/playlist.js";
+import { repeat } from "~/vendor/lit-html/directives/repeat.js";
 
 /**
  * @import {RenderArg} from "~/common/element.d.ts"
@@ -18,7 +19,7 @@ import * as Playlist from "~/common/playlist.js";
  */
 
 const ROW_HEIGHT = 14;
-const OVERSCAN = 20;
+const OVERSCAN = 10;
 
 /** @type {Record<string, string[]>} */
 const COLUMN_SORT = {
@@ -77,6 +78,20 @@ class Browser extends DiffuseElement {
   );
 
   #cachedUris = signal(/** @type {Set<string>} */ (new Set()));
+
+  #selectedTracks = computed(() => {
+    const tracks = this.$provider.value?.tracks() ?? [];
+    const highlightedTracks = this.$highlightedTracks.value;
+    if (highlightedTracks.size === 0) return [];
+    return tracks.filter((t) => highlightedTracks.has(t.id));
+  });
+
+  #allCached = computed(() => {
+    const selectedTracks = this.#selectedTracks();
+    if (selectedTracks.length === 0) return false;
+    const cachedUris = this.#cachedUris.value;
+    return selectedTracks.every((t) => cachedUris.has(t.uri));
+  });
 
   #playlistPickerState = signal(
     /** @type {{ mode: "add"; tracks: Track[] } | { mode: "create"; tracks: Track[] } | null} */ (null),
@@ -224,14 +239,14 @@ class Browser extends DiffuseElement {
         "scroll",
         () => {
           this.#scrollTop = panel.scrollTop;
-          this.#renderIfWindowChanged(panel);
+this.#renderIfWindowChanged();
         },
         { passive: true },
       );
 
       this.#resizeObserver = new ResizeObserver((entries) => {
         this.#viewportHeight = entries[0].contentRect.height;
-        this.#renderIfWindowChanged(panel);
+        this.#renderIfWindowChanged();
       });
 
       this.#resizeObserver.observe(panel);
@@ -249,10 +264,7 @@ class Browser extends DiffuseElement {
     return { startIndex, endIndex: startIndex + visibleCount };
   }
 
-  /**
-   * @param {Element} panel
-   */
-  #renderIfWindowChanged(panel) {
+  #renderIfWindowChanged() {
     const { startIndex, endIndex } = this.#computeWindow();
 
     if (
@@ -262,9 +274,7 @@ class Browser extends DiffuseElement {
       return;
     }
 
-    const scrollTop = panel.scrollTop;
     this.forceRender();
-    panel.scrollTop = scrollTop;
   }
 
   // EVENTS
@@ -638,207 +648,14 @@ class Browser extends DiffuseElement {
     const topPad = startIndex * ROW_HEIGHT;
 
     const highlightedTracks = this.$highlightedTracks.value;
-    const selectedTracks = tracks.filter((t) => highlightedTracks.has(t.id));
-    const cachedUris = this.#cachedUris.value;
-    const allCached = selectedTracks.length > 0 &&
-      selectedTracks.every((t) => cachedUris.has(t.uri));
+    const selectedTracks = this.#selectedTracks();
+    const allCached = this.#allCached();
 
     return html`
       <link rel="stylesheet" href="vendor/98.css" />
       <link rel="stylesheet" href="facets/themes/winamp/98-scrollbar.css" />
-
-      <style>
-      @import "./facets/themes/winamp/98-vars.css";
-
-      :host {
-        display: flex;
-        flex-direction: column;
-        height: 100%;
-      }
-
-      /***********************************
-      * SEARCH
-      ***********************************/
-
-      search {
-        margin-bottom: var(--grouped-button-spacing);
-      }
-
-      search input {
-        color: inherit;
-        flex: 1;
-      }
-
-      search select {
-        color: inherit;
-        max-width: 33%;
-      }
-
-      /***********************************
-      * TABLE
-      ***********************************/
-
-      .sunken-panel {
-        flex: 1;
-        min-height: 80px;
-        outline: none;
-      }
-
-      :host([resizable]) .sunken-panel {
-        resize: both;
-      }
-
-      .virtual-header {
-        position: sticky;
-        top: 0;
-        z-index: 1;
-      }
-
-      table {
-        color: var(--text-color);
-        table-layout: fixed;
-        width: 100%;
-      }
-
-      table th {
-        cursor: pointer;
-        user-select: none;
-        width: 30%;
-
-        &:after {
-          font-size: 82%;
-          position: absolute;
-          right: 6px;
-        }
-
-        &:first-child {
-          width: 40%;
-        }
-      }
-
-      table th[aria-sort="ascending"]::after {
-        content: " ▼";
-      }
-
-      table th[aria-sort="descending"]::after {
-        content: " ▲";
-      }
-
-      .virtual-scroll table {
-        will-change: transform;
-      }
-
-      table tbody tr {
-        cursor: pointer;
-      }
-
-      table td {
-        overflow: hidden;
-        text-overflow: ellipsis;
-      }
-
-      /***********************************
-      * ACTIONS
-      ***********************************/
-
-      .actions-row {
-        flex-wrap: wrap;
-        margin-top: var(--element-spacing);
-      }
-
-      /***********************************
-      * PLAYLIST PICKER
-      ***********************************/
-
-      .picker-overlay {
-        align-items: center;
-        background: rgba(0, 0, 0, 0.4);
-        bottom: 0;
-        display: flex;
-        justify-content: center;
-        left: 0;
-        position: fixed;
-        right: 0;
-        top: 0;
-        z-index: 100;
-      }
-
-      .picker-window {
-        min-width: 240px;
-        max-width: 320px;
-      }
-
-      .picker-body {
-        display: flex;
-        flex-direction: column;
-        gap: 6px;
-
-        form {
-          margin-bottom: 0;
-        }
-      }
-
-      .picker-list {
-        border: 2px inset #dfdfdf;
-        display: flex;
-        flex-direction: column;
-        max-height: 200px;
-        overflow-y: auto;
-        padding: 2px;
-      }
-
-      .picker-item {
-        background: none;
-        border: none;
-        box-shadow: none;
-        cursor: pointer;
-        font-family: "Pixelated MS Sans Serif", Arial, "Apple Color Emoji", "Segoe UI Emoji", "Noto Color Emoji", sans-serif;
-        padding: 2px 4px;
-        text-align: left;
-        width: 100%;
-
-        &:hover {
-          background: var(--dialog-blue);
-          color: #fff;
-        }
-      }
-
-      .picker-item--create {
-        font-style: italic;
-      }
-
-      .picker-group-label {
-        color: gray;
-        font-size: 90%;
-        margin-top: 4px;
-        padding: 0 4px;
-        user-select: none;
-      }
-
-      .picker-form-actions {
-        justify-content: flex-end;
-        margin-top: 4px;
-      }
-
-      /***********************************
-      * GROUP HEADERS
-      ***********************************/
-
-      table tbody tr.group-header {
-        cursor: default;
-
-        & td {
-          background: var(--button-face);
-          border-bottom: 1px solid var(--button-shadow);
-          color: var(--button-shadow);
-          font-size: 82%;
-          letter-spacing: 0.05em;
-          padding: 0 4px;
-          text-transform: uppercase;
-          user-select: none;
-        }
-      }
-      </style>
+      <link rel="stylesheet" href="facets/themes/winamp/98-vars.css" />
+      <link rel="stylesheet" href="facets/themes/winamp/browser/element.css" />
 
       <search class="field-row">
         <label for="search-input">Search:</label>
@@ -957,7 +774,13 @@ class Browser extends DiffuseElement {
                     <td></td>
                   </tr>
                 `
-                : visibleItems.map((item) => {
+                : repeat(
+                  visibleItems,
+                  (item) =>
+                    item.type === "group"
+                      ? `group:${item.label}`
+                      : `track:${item.track.id}`,
+                  (item) => {
                   if (item.type === "group") {
                     return html`
                       <tr class="group-header">
