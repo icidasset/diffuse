@@ -289,7 +289,7 @@ class ATProtoOutput extends BroadcastedOutputElement {
     const subscription = new FirehoseSubscription({
       service: wssUrl,
       nsid: ComAtprotoSyncSubscribeRepos.mainSchema,
-      validateMessages: false,
+      validateEvents: false,
     });
 
     const iter = subscription[Symbol.asyncIterator]();
