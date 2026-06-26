@@ -1,4 +1,5 @@
 import {
+  effect as alienEffect,
   endBatch,
   setActiveSub,
   signal as alienSignal,
@@ -6,6 +7,31 @@ import {
 } from "alien-signals";
 
 export * from "alien-signals";
+
+/**
+ * `effect` wrapper that tolerates async effect bodies.
+ *
+ * alien-signals v3.2.0+ stores `e.cleanup = e.fn()` and invokes
+ * `cleanup()` when the effect re-runs or is disposed. An async effect body
+ * returns a `Promise`, which is not a function — calling it later throws
+ * `TypeError: cleanup is not a function`. This wrapper normalises a
+ * `Promise` (or any thenable) return to `undefined` so async effect bodies
+ * are safe to use without manual try/catch around the return value.
+ *
+ * Sync effect bodies that return a real cleanup function are passed
+ * through unchanged.
+ *
+ * @param {() => (unknown | Promise<unknown>)} fn
+ * @returns {() => void}
+ */
+export function effect(fn) {
+  return alienEffect(() => {
+    const cleanup = fn();
+    return cleanup && typeof /** @type {any} */ (cleanup).then === "function"
+      ? /** @type {void} */ (undefined)
+      : /** @type {(() => void) | void} */ (cleanup);
+  });
+}
 
 /**
  * @import {Signal, SignalReader, SignalWriter} from "./signal.d.ts"
