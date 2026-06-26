@@ -52,6 +52,14 @@ export async function musicMetadataTags({
 
     /** @type {any} */
     const tokenizer = await rangeTokenizer(httpClient);
+    // The range tokenizer's fileInfo comes from the HEAD response, which only
+    // has size/mimeType — no path. Without a path or a recognised MIME-type,
+    // music-metadata falls back to content-sniffing, which rejects some files
+    // (e.g. `audio/x-m4a`, or servers returning `application/octet-stream`).
+    // Provide the filename so it can pick a parser by extension instead.
+    if (filename) {
+      tokenizer.fileInfo = { ...tokenizer.fileInfo, path: filename };
+    }
     meta = await parseFromTokenizer(tokenizer, { skipCovers: !includeArtwork });
   } else if (stream) {
     meta = await parseWebStream(stream, { mimeType }, {
