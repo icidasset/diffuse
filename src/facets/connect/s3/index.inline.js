@@ -134,6 +134,24 @@ async function handleScanClick() {
   }
 }
 
+// The output configurator can't find custom outputs (added by the
+// output-bundle prelude) during its initial connectedCallback, so it
+// re-loads the selected output via `loadSelected()` which is async.
+// Wait for that to settle before rendering the UI, otherwise
+// `selected()` is still null here and the "Use as userdata storage"
+// button would show even though S3 is already configured as the
+// user's output.
+if (outputOrchestrator.hasSelected() && !outputOrchestrator.selected()) {
+  await new Promise((resolve) => {
+    const stop = effect(() => {
+      if (outputOrchestrator.selected()) {
+        stop();
+        resolve(undefined);
+      }
+    });
+  });
+}
+
 ////////////////////////////////////////////
 // UI
 ////////////////////////////////////////////
