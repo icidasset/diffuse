@@ -834,6 +834,21 @@ ul li::marker {
   }
 }
 
+.grid-item__author {
+  font-size: calc(var(--fs-xs) * 0.9);
+  margin-bottom: var(--space-3xs);
+  opacity: 0.3;
+
+  a {
+    text-decoration: none;
+
+    &:hover {
+      text-decoration: underline;
+      text-underline-offset: 3px;
+    }
+  }
+}
+
 .table-of-contents {
   font-weight: 300;
   list-style: none;

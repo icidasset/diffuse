@@ -59,6 +59,11 @@
         <div class="list-description">
           {{ item.desc |> md(true) }}
         </div>
+        {{ if item.author }}
+          <div class="grid-item__author">
+            {{ item.author |> md(true) }}
+          </div>
+        {{ /if }}
       </div>
       <div class="grid-item__menu">
         <button
