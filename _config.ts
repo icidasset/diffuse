@@ -17,6 +17,7 @@ import cssnano from "cssnano";
 import { Uint8ArrayReader, Uint8ArrayWriter, ZipWriter } from "@zip-js/zip-js";
 
 import { create as createCID } from "~/common/cid.js";
+import { generateManifest } from "./tasks/cem.js";
 
 const site = lume({
   dest: "./dist",
@@ -341,6 +342,18 @@ site.addEventListener("afterBuild", async () => {
 
   Deno.writeFileSync("dist/skills/diffuse-facet.zip", await zipWriter.close());
 });
+
+////////////////////////////////////////////
+// CUSTOM ELEMENTS MANIFEST
+////////////////////////////////////////////
+
+// Generate `dist/custom-elements.json` (+ brotli sidecar) as a build artifact.
+// Runs in `afterBuild`, before `writeFileTree` below, so the manifest is
+// included in the service-worker file tree and available offline.
+site.addEventListener(
+  "afterBuild",
+  () => generateManifest(import.meta.dirname!),
+);
 
 ////////////////////////////////////////////
 // FILE TREE

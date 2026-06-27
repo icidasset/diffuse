@@ -65,6 +65,7 @@
 
     // Build
     "@atcute/lex-cli": "npm:@atcute/lex-cli@^3.1.0",
+    "@custom-elements-manifest/analyzer": "npm:@custom-elements-manifest/analyzer@^0.11.0",
     "@dotenv-run/esbuild": "npm:@dotenv-run/esbuild@^1.5.2",
     "@std/fs": "jsr:@std/fs@^1.0.24",
     "@std/path": "jsr:@std/path@^1.1.5",
@@ -237,6 +238,10 @@
     "gen:defs:types": {
       "description": "Generate definition Typescript types",
       "command": "deno run -A npm:@atcute/lex-cli generate -c ./lexicon.config.js && deno run -A ./tasks/replace-gen-import-extensions.ts",
+    },
+    "gen:manifest": {
+      "description": "Generate the custom-elements.json manifest",
+      "command": "deno run -A ./tasks/gen-manifest.js",
     },
     "lume": {
       "description": "Run Lume command",
