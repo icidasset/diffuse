@@ -1,6 +1,6 @@
 # Artwork components
 
-These components are responsible to fetch artwork for a `Track`, if possible.
+These components fetch artwork for a `Track`, if possible.
 
 
 ## Requirements
