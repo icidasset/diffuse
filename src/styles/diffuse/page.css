@@ -561,7 +561,6 @@ h3 {
   font-weight: 800;
   line-height: 1;
   margin: var(--space-xl) 0 var(--space-sm);
-  text-transform: uppercase;
 }
 
 h2 + h3 {
