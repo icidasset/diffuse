@@ -22,6 +22,8 @@ const importPlaylistItemsBtn =
   ));
 const importFacetsBtn =
   /** @type {HTMLButtonElement} */ (document.querySelector("#import-facets"));
+const importSettingsBtn =
+  /** @type {HTMLButtonElement} */ (document.querySelector("#import-settings"));
 const statusEl = /** @type {HTMLElement} */ (document.querySelector("#status"));
 const replaceCheckbox =
   /** @type {HTMLInputElement} */ (document.querySelector("#replace"));
@@ -49,12 +51,14 @@ effect(() => {
 exportBtn.onclick = async () => {
   const facets = await Output.data(output.facets);
   const playlistItems = await Output.data(output.playlistItems);
+  const settings = await Output.data(output.settings);
   const tracks = await Output.data(output.tracks);
 
   const data = {
     exportedAt: new Date().toISOString(),
     facets,
     playlistItems,
+    settings,
     tracks,
   };
 
@@ -82,6 +86,7 @@ fileInput.onchange = async () => {
   importTracksBtn.disabled = true;
   importPlaylistItemsBtn.disabled = true;
   importFacetsBtn.disabled = true;
+  importSettingsBtn.disabled = true;
 
   if (!file) return;
 
@@ -106,6 +111,10 @@ fileInput.onchange = async () => {
 
   if (Array.isArray(json?.facets) && json.facets.length > 0) {
     importFacetsBtn.disabled = false;
+  }
+
+  if (Array.isArray(json?.settings) && json.settings.length > 0) {
+    importSettingsBtn.disabled = false;
   }
 };
 
@@ -196,6 +205,33 @@ importFacetsBtn.onclick = async () => {
   } finally {
     setButtonLabel(importFacetsBtn, " Import facets");
     importFacetsBtn.disabled = false;
+  }
+};
+
+// Import settings
+importSettingsBtn.onclick = async () => {
+  /** @type {any[]} */
+  const settings = json?.settings;
+  if (!Array.isArray(settings) || settings.length === 0) return;
+
+  importSettingsBtn.disabled = true;
+  setButtonLabel(importSettingsBtn, " Importing ...");
+  try {
+    if (replaceCheckbox.checked) {
+      await output.settings.save(settings);
+      showStatus(`Imported ${settings.length} setting(s).`, "success");
+    } else {
+      const existing = await Output.data(output.settings);
+      const merged = Output.mergeById(existing, settings);
+      await output.settings.save(merged);
+      showStatus(`Merged ${settings.length} setting(s).`, "success");
+    }
+  } catch (err) {
+    console.error("Import failed:", err);
+    showStatus(`Import failed: ${/** @type {Error} */ (err).message}`, "error");
+  } finally {
+    setButtonLabel(importSettingsBtn, " Import settings");
+    importSettingsBtn.disabled = false;
   }
 };
 
