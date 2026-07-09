@@ -148,6 +148,13 @@
     "desc": "Export all data as a JSON snapshot, or restore from a previously exported file."
   },
   {
+    "url": "facets/themes/ipod/facet/index.html",
+    "title": "iPod",
+    "category": "Themes",
+    "author": "A theme by [@tokono.ma](https://bsky.app/profile/tokono.ma)",
+    "desc": "A recreation of the click-wheel iPod UI. Spin the wheel to scroll, tap the ring for menu / prev / next / play, and press the centre button to select. Alternatively, use your keyboard arrow keys."
+  },
+  {
     "url": "facets/data/playlists/index.html",
     "title": "Playlists",
     "category": "Data",
