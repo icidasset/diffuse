@@ -35,6 +35,14 @@
     "desc": "Collection browser and search with favourite toggling, date grouping, and virtual scrolling."
   },
   {
+    "url": "facets/themes/blur-classic/facet/index.html",
+    "title": "Blur Classic",
+    "category": "Themes",
+    "featured": true,
+    "author": "A theme by [@tokono.ma](https://bsky.app/profile/tokono.ma)",
+    "desc": "The classic Diffuse browser and playback console on top of the Blur background system. A nostalgic, minimal audio bar with light indicators."
+  },
+  {
     "url": "facets/data/cache-tracks/index.html",
     "title": "Cache Tracks",
     "kind": "prelude",

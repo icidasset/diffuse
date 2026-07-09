@@ -1,0 +1,160 @@
+:host {
+  --transition-durition: 750ms;
+  container-type: inline-size;
+  display: block;
+  font-size: var(--fs-xs);
+  font-size: calc(var(--fs-sm) * 0.85);
+}
+
+main {
+  color: white;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  position: relative;
+  transition:
+    color var(--transition-durition),
+    opacity var(--transition-durition);
+}
+
+/* Now playing */
+
+.now-playing {
+  color: white;
+  font-style: italic;
+  font-weight: 400;
+  line-height: var(--leading-normal);
+  margin: var(--space-3xs) 0 0;
+  overflow: hidden;
+  padding: var(--space-sm) 0 var(--space-xs);
+  text-align: center;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  width: 100%;
+}
+
+/* Progress bar */
+
+.progress {
+  cursor: pointer;
+  padding: var(--space-2xs) 0;
+}
+
+.progress__track {
+  background-color: rgba(255, 255, 255, 0.25);
+  border-radius: var(--radius-sm);
+  height: 3px;
+  overflow: hidden;
+}
+
+.progress__fill {
+  background-color: rgba(255, 255, 255, 0.325);
+  height: 3px;
+  transition: width 250ms linear;
+}
+
+/* Controls */
+
+.controls {
+  align-items: center;
+  color: rgba(255, 255, 255, 0.9);
+  display: flex;
+  justify-content: space-between;
+  margin: var(--space-2xs);
+  padding: 0;
+  user-select: none;
+
+  @container (min-width: 28em) {
+    justify-content: center;
+  }
+}
+
+.control-btn {
+  align-items: center;
+  background: none;
+  border: 0;
+  color: inherit;
+  cursor: pointer;
+  display: flex;
+  flex-direction: column;
+  font-family: inherit;
+  margin: 0 var(--space-sm);
+  padding: 0 var(--space-3xs);
+
+  @container (min-width: 42em) {
+    margin: 0 var(--space-md);
+  }
+}
+
+.control-btn__icon {
+  align-items: center;
+  display: flex;
+  height: 20px;
+  justify-content: center;
+  margin: var(--space-2xs) 0;
+
+  i {
+    line-height: 0;
+  }
+}
+
+.control-btn__icon i.ph-repeat,
+.control-btn__icon i.ph-shuffle {
+  font-size: 110%;
+}
+
+.control-btn__icon i.ph-rewind,
+.control-btn__icon i.ph-fast-forward {
+  font-size: 110%;
+}
+
+/* Light indicators */
+
+.light {
+  height: 4px;
+}
+
+.light--placeholder {
+  height: 4px;
+  width: 0;
+}
+
+.light--small {
+  border-radius: 50%;
+  height: 4px;
+  width: 4px;
+  background-color: rgba(255, 255, 255, 0.25);
+}
+
+.light--small.light--on-blue {
+  background-color: rgb(157, 174, 255);
+}
+
+.light--large {
+  border-radius: var(--radius-sm);
+  height: 4px;
+  position: relative;
+  width: 17px;
+  left: -2px;
+  background-color: rgba(255, 255, 255, 0.25);
+}
+
+.light--large.light--on-green {
+  background-color: rgb(198, 254, 153);
+}
+
+/* Play text */
+
+.play-text {
+  font-family: Arial, ui-sans-serif, system-ui, sans-serif;
+  font-size: 85%;
+  font-weight: 700;
+  letter-spacing: 4px;
+  white-space: nowrap;
+}
+
+/* Loading spinner */
+
+.menu__loader {
+  cursor: pointer;
+}
