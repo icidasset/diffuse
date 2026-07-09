@@ -23,6 +23,8 @@ const importPlaylistItemsBtn =
 const importFacetsBtn =
   /** @type {HTMLButtonElement} */ (document.querySelector("#import-facets"));
 const statusEl = /** @type {HTMLElement} */ (document.querySelector("#status"));
+const replaceCheckbox =
+  /** @type {HTMLInputElement} */ (document.querySelector("#replace"));
 
 /** @type {Record<string, any> | null} */
 let json = null;
@@ -125,8 +127,15 @@ importTracksBtn.onclick = async () => {
   importTracksBtn.disabled = true;
   setButtonLabel(importTracksBtn, " Importing ...");
   try {
-    await output.tracks.save(tracks);
-    showStatus(`Imported ${tracks.length} track(s).`, "success");
+    if (replaceCheckbox.checked) {
+      await output.tracks.save(tracks);
+      showStatus(`Imported ${tracks.length} track(s).`, "success");
+    } else {
+      const existing = await Output.data(output.tracks);
+      const merged = Output.mergeById(existing, tracks);
+      await output.tracks.save(merged);
+      showStatus(`Merged ${tracks.length} track(s).`, "success");
+    }
   } catch (err) {
     console.error("Import failed:", err);
     showStatus(`Import failed: ${/** @type {Error} */ (err).message}`, "error");
@@ -145,7 +154,13 @@ importPlaylistItemsBtn.onclick = async () => {
   importPlaylistItemsBtn.disabled = true;
   setButtonLabel(importPlaylistItemsBtn, " Importing ...");
   try {
-    await output.playlistItems.save(playlistItems);
+    if (replaceCheckbox.checked) {
+      await output.playlistItems.save(playlistItems);
+    } else {
+      const existing = await Output.data(output.playlistItems);
+      const merged = Output.mergeById(existing, playlistItems);
+      await output.playlistItems.save(merged);
+    }
     const playlistCount = new Set(playlistItems.map((p) => p.playlist)).size;
     showStatus(`Imported ${playlistCount} playlist(s).`, "success");
   } catch (err) {
@@ -166,8 +181,15 @@ importFacetsBtn.onclick = async () => {
   importFacetsBtn.disabled = true;
   setButtonLabel(importFacetsBtn, " Importing ...");
   try {
-    await output.facets.save(facets);
-    showStatus(`Imported ${facets.length} facet(s).`, "success");
+    if (replaceCheckbox.checked) {
+      await output.facets.save(facets);
+      showStatus(`Imported ${facets.length} facet(s).`, "success");
+    } else {
+      const existing = await Output.data(output.facets);
+      const merged = Output.mergeById(existing, facets);
+      await output.facets.save(merged);
+      showStatus(`Merged ${facets.length} facet(s).`, "success");
+    }
   } catch (err) {
     console.error("Import failed:", err);
     showStatus(`Import failed: ${/** @type {Error} */ (err).message}`, "error");

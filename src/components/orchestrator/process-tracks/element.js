@@ -3,7 +3,7 @@ import {
   defineElement,
   query,
 } from "~/common/element.js";
-import { data, mergeTracks } from "~/common/output.js";
+import { data, mergeById } from "~/common/output.js";
 import { signal, untracked } from "~/common/signal.js";
 import { listen } from "~/common/worker.js";
 
@@ -138,7 +138,7 @@ class ProcessTracksOrchestrator extends BroadcastableDiffuseElement {
     listen("patch", /** @param {Track[]} tracks */ async (tracks) => {
       if (!this.output) return;
       const existing = await data(this.output.tracks);
-      const merged = mergeTracks(existing, tracks);
+      const merged = mergeById(existing, tracks);
       this.output.tracks.save(merged);
     }, link);
 
@@ -205,10 +205,13 @@ class ProcessTracksOrchestrator extends BroadcastableDiffuseElement {
     const settings = await data(this.output.settings);
     const disabledUris = parseDisabledUris(settings);
 
-    const result = await this.#proxy.process({ tracks: cachedTracks, disabledUris });
+    const result = await this.#proxy.process({
+      tracks: cachedTracks,
+      disabledUris,
+    });
 
     if (result) {
-      await this.output.tracks.save(mergeTracks(cachedTracks, result));
+      await this.output.tracks.save(mergeById(cachedTracks, result));
     }
 
     // Fin

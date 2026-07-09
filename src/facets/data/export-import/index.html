@@ -12,6 +12,17 @@
     width: auto;
   }
 
+  .checkbox-row {
+    align-items: center;
+    flex-direction: row;
+    gap: var(--space-2xs);
+    margin-top: var(--space-2xs);
+
+    input {
+      width: auto;
+    }
+  }
+
   .status {
     font-size: var(--fs-xs);
   }
@@ -41,7 +52,7 @@
     <h1>Export &amp; Import</h1>
     <p>
       Export all Diffuse data to a JSON snapshot, or restore from a previously exported file.
-      Importing replaces all data in that category.
+      Importing replaces all data in that category by default; uncheck the option to merge instead.
     </p>
   </div>
 
@@ -58,6 +69,11 @@
     <div>
       <input id="file" type="file" accept=".json,application/json" />
     </div>
+
+    <label class="checkbox-row">
+      <input id="replace" type="checkbox" checked />
+      <span>Replace existing data</span>
+    </label>
 
     <hr />
 
