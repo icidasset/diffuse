@@ -13,5 +13,7 @@
       "type": "image/png"
     }
   ],
+  "start_url": ".",
+  "scope": ".",
   "display": "standalone"
 }
