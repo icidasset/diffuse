@@ -40,6 +40,14 @@ class AudioEngine extends BroadcastableDiffuseElement {
   #items = signal(/** @type {AudioUrl[]} */ ([]));
   #volume = signal(0.75);
 
+  /**
+   * True while a play has been requested but the audio hasn't actually started
+   * yet. Keeps `isPlaying` from briefly dropping to `false` during track
+   * transitions, which on iOS can cause the Media Session to report "paused"
+   * and interrupt the audio session.
+   */
+  #pendingPlay = signal(false);
+
   /** @type {Map<string, ReadableStream>} Streams pending MediaSource setup */
   #streams = new Map();
 
@@ -52,6 +60,8 @@ class AudioEngine extends BroadcastableDiffuseElement {
   volume = this.#volume.get;
 
   isPlaying = computed(() => {
+    if (this.#pendingPlay.value) return true;
+
     const item = this.items()?.[0];
     if (!item) return false;
 
@@ -201,10 +211,34 @@ class AudioEngine extends BroadcastableDiffuseElement {
       const promise = audio.play() || Promise.resolve();
       item.$state.isPlaying.set(true);
 
+      promise.then(() => {
+        this.#pendingPlay.set(false);
+      });
+
       promise.catch((e) => {
         if (!audio.isConnected) {
-          return; /* The node was removed from the DOM, we can ignore this error */
+          /* The node was removed from the DOM, we can ignore this error */
+          return;
         }
+
+        // On iOS Safari `preload="auto"` is downgraded to `metadata` (or
+        // `none` on cellular), so a freshly-created <audio> element may not
+        // have loaded when play() is called right after a track change.
+        // `play()` rejects with AbortError / NotAllowedError in that case.
+        //
+        // Keep `isPlaying` true and let `canplayEvent` retry once the browser
+        // has buffered enough data. Kick off loading explicitly if the
+        // element hasn't started fetching yet (networkState === NETWORK_EMPTY).
+        if (audio.readyState < HTMLMediaElement.HAVE_FUTURE_DATA) {
+          if (
+            audio.networkState === HTMLMediaElement.NETWORK_EMPTY
+          ) {
+            audio.load();
+          }
+          return;
+        }
+
+        this.#pendingPlay.set(false);
         const err =
           "Couldn't play audio automatically. Please resume playback manually.";
         console.error(err, e);
@@ -319,6 +353,10 @@ class AudioEngine extends BroadcastableDiffuseElement {
     );
 
     if (hasNewIds || hasPreloadChanges || hasUrlChanges) {
+      // Set `#pendingPlay` before the items signal changes so `isPlaying`
+      // doesn't briefly drop to false between the old track ending and the
+      // new one starting.
+      if (args.play) this.#pendingPlay.set(true);
       this.#items.value = resolvedAudio;
     }
 
@@ -336,7 +374,12 @@ class AudioEngine extends BroadcastableDiffuseElement {
       }
     }
 
-    if (args.play) this.play(args.play);
+    if (args.play) {
+      if (!hasNewIds && !hasPreloadChanges && !hasUrlChanges) {
+        this.#pendingPlay.set(true);
+      }
+      this.play(args.play);
+    }
   }
 
   // STREAMS
@@ -794,6 +837,13 @@ class AudioEngineItem extends BroadcastableDiffuseElement {
     }
 
     finishedLoading(event);
+
+    // On iOS the initial play() call (made before the audio had loaded) may
+    // have rejected. Now that the element is ready, retry playback if it
+    // should be playing but is still paused.
+    if (item?.$state.isPlaying.get() && audio.paused) {
+      item.engine?.play({ audioId: item.id });
+    }
   }
 
   /**
