@@ -119,6 +119,7 @@
   border-left: 1px solid var(--border-color);
   border-radius: 0;
   font-size: var(--fs-sm);
+  font-weight: 500;
   margin-left: var(--space-3xs);
   max-width: 12rem;
   overflow: hidden;

@@ -43,13 +43,13 @@ main {
 .progress__track {
   background-color: rgba(255, 255, 255, 0.25);
   border-radius: var(--radius-sm);
-  height: 3px;
+  height: 0.23em;
   overflow: hidden;
 }
 
 .progress__fill {
   background-color: rgba(255, 255, 255, 0.325);
-  height: 3px;
+  height: 0.23em;
   transition: width 250ms linear;
 }
 
@@ -89,7 +89,7 @@ main {
 .control-btn__icon {
   align-items: center;
   display: flex;
-  height: 20px;
+  height: 1.54em;
   justify-content: center;
   margin: var(--space-2xs) 0;
 
@@ -100,29 +100,29 @@ main {
 
 .control-btn__icon i.ph-repeat,
 .control-btn__icon i.ph-shuffle {
-  font-size: 110%;
+  font-size: 1.1em;
 }
 
 .control-btn__icon i.ph-rewind,
 .control-btn__icon i.ph-fast-forward {
-  font-size: 110%;
+  font-size: 1.1em;
 }
 
 /* Light indicators */
 
 .light {
-  height: 4px;
+  height: 0.31em;
 }
 
 .light--placeholder {
-  height: 4px;
+  height: 0.31em;
   width: 0;
 }
 
 .light--small {
   border-radius: 50%;
-  height: 4px;
-  width: 4px;
+  height: 0.31em;
+  width: 0.31em;
   background-color: rgba(255, 255, 255, 0.25);
 }
 
@@ -132,10 +132,10 @@ main {
 
 .light--large {
   border-radius: var(--radius-sm);
-  height: 4px;
+  height: 0.31em;
   position: relative;
-  width: 17px;
-  left: -2px;
+  width: 1.31em;
+  left: -0.15em;
   background-color: rgba(255, 255, 255, 0.25);
 }
 
@@ -147,14 +147,8 @@ main {
 
 .play-text {
   font-family: Arial, ui-sans-serif, system-ui, sans-serif;
-  font-size: 85%;
+  font-size: 0.85em;
   font-weight: 700;
-  letter-spacing: 4px;
+  letter-spacing: 0.31em;
   white-space: nowrap;
-}
-
-/* Loading spinner */
-
-.menu__loader {
-  cursor: pointer;
 }

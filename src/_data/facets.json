@@ -40,7 +40,7 @@
     "category": "Themes",
     "featured": true,
     "author": "A theme by [@tokono.ma](https://bsky.app/profile/tokono.ma)",
-    "desc": "The classic Diffuse browser and playback console on top of the Blur background system. A nostalgic, minimal audio bar with light indicators."
+    "desc": "A recreation of the Diffuse v3 theme with the browser of the new Blur theme."
   },
   {
     "url": "facets/data/cache-tracks/index.html",

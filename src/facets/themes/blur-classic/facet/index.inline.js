@@ -89,11 +89,56 @@ document.querySelector("#btn-new-deck")?.addEventListener("click", async () => {
   window.open(url.toString(), "_blank");
 });
 
-document.querySelector("#btn-settings")?.addEventListener("click", () => {
-  const main = document.querySelector("main");
-  const btn = document.querySelector("#btn-settings");
-  const isOpen = main?.classList.toggle("settings-open") ?? false;
-  btn?.setAttribute("data-active", isOpen ? "t" : "f");
+const settingsBtn = document.querySelector("#btn-settings");
+const settingsPanel =
+  /** @type {HTMLElement | null} */ (document.querySelector("#settings-panel"));
+const settingsBackdrop = document.querySelector("#settings-backdrop");
+const browserEl = document.querySelector("db-browser");
+
+let settingsOpen = false;
+
+function positionSettingsPanel() {
+  if (!browserEl || !settingsPanel) return;
+  const rect = browserEl.getBoundingClientRect();
+  settingsPanel.style.top = `${rect.top}px`;
+  settingsPanel.style.left = `${rect.left}px`;
+  settingsPanel.style.width = `${rect.width}px`;
+  settingsPanel.style.height = `${rect.height}px`;
+}
+
+function openSettings() {
+  settingsOpen = true;
+  positionSettingsPanel();
+  settingsBackdrop?.classList.add("settings-open");
+  settingsPanel?.classList.add("settings-open");
+  settingsBtn?.setAttribute("data-active", "t");
+}
+
+function closeSettings() {
+  settingsOpen = false;
+  settingsBackdrop?.classList.remove("settings-open");
+  settingsPanel?.classList.remove("settings-open");
+  settingsBtn?.setAttribute("data-active", "f");
+}
+
+settingsBtn?.addEventListener("click", () => {
+  if (settingsOpen) closeSettings();
+  else openSettings();
+});
+
+settingsBackdrop?.addEventListener("click", closeSettings);
+
+document.querySelector("#settings-close")?.addEventListener(
+  "click",
+  closeSettings,
+);
+
+document.addEventListener("keydown", (e) => {
+  if (e.key === "Escape" && settingsOpen) closeSettings();
+});
+
+window.addEventListener("resize", () => {
+  if (settingsOpen) positionSettingsPanel();
 });
 
 ////////////////////////////////////////////

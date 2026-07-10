@@ -189,7 +189,6 @@ class ClassicController extends DiffuseElement {
     return html`
       <link rel="stylesheet" href="vendor/@phosphor-icons/web/bold/style.css" />
       <link rel="stylesheet" href="vendor/@phosphor-icons/web/fill/style.css" />
-      <link rel="stylesheet" href="styles/animations.css" />
       <link rel="stylesheet"
         href="facets/themes/blur-classic/controller/element.css" />
 
@@ -226,20 +225,9 @@ class ClassicController extends DiffuseElement {
             </span>
           </button>
 
-          <!-- loading -->
-          <div
-            class="control-btn menu__loader animate-bounce"
-            style="display: ${this.#isLoading.value ? "flex" : "none"};"
-          >
-            <span class="light light--placeholder"></span>
-            <span class="control-btn__icon">
-              <i class="ph-fill ph-vinyl-record" title="Loading ..."></i>
-            </span>
-          </div>
-
           <!-- error -->
           <button
-            class="control-btn menu__loader"
+            class="control-btn"
             style="display: ${this.#audioError.value ? "flex" : "none"};"
             title="Reload"
             @click="${this.reload}"
@@ -255,9 +243,7 @@ class ClassicController extends DiffuseElement {
             class="control-btn"
             title="${playing ? "Pause" : "Play"}"
             @click="${this.playPause}"
-            style="display: ${!this.#isLoading.value && !this.#audioError.value
-              ? "flex"
-              : "none"};"
+            style="display: ${this.#audioError.value ? "none" : "flex"};"
           >
             <span class="light light--large ${playing
               ? "light--on-green"

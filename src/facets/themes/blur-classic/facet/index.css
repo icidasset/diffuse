@@ -1,4 +1,5 @@
 body {
+  background-color: var(--facet-bg-color, var(--bg-color));
   color: var(--text-color);
   display: flex;
   flex-direction: column;
@@ -86,25 +87,19 @@ main {
  ***********************************/
 
 db-blur-classic-controller,
-db-browser,
-#settings-panel {
+db-browser {
   border-radius: var(--radius-md);
   overflow: hidden;
   width: 100%;
 }
 
-db-browser,
-#settings-panel {
-  box-shadow: var(--box-shadow-md);
-}
-
 db-browser {
+  box-shadow: var(--box-shadow-md);
   flex: 1;
   min-height: 350px;
 }
 
-db-blur-classic-controller,
-#settings-panel {
+db-blur-classic-controller {
   flex-shrink: 0;
 }
 
@@ -112,18 +107,52 @@ db-blur-classic-controller,
  * Settings panel
  ***********************************/
 
+#settings-backdrop {
+  background: rgba(0, 0, 0, 0.5);
+  inset: 0;
+  opacity: 0;
+  pointer-events: none;
+  position: fixed;
+  transition: opacity 250ms;
+  z-index: 100;
+}
+
+#settings-backdrop.settings-open {
+  opacity: 1;
+  pointer-events: auto;
+}
+
 #settings-panel {
+  border-radius: var(--radius-md);
+  box-shadow: var(--box-shadow-md);
   display: none;
-}
-
-main.settings-open db-blur-classic-controller {
-  display: none;
-}
-
-main.settings-open #settings-panel {
-  display: flex;
   flex-direction: column;
-  max-height: 50vh;
+  overflow: hidden;
+  position: fixed;
+  z-index: 101;
+}
+
+#settings-close {
+  background: none;
+  border: 0;
+  color: var(--text-color);
+  cursor: pointer;
+  font-size: 1.25rem;
+  line-height: 1;
+  opacity: 0.5;
+  padding: var(--space-xs);
+  position: absolute;
+  right: 0;
+  top: 0;
+  z-index: 1;
+
+  &:hover {
+    opacity: 1;
+  }
+}
+
+#settings-panel.settings-open {
+  display: flex;
 }
 
 .settings-scroll {
