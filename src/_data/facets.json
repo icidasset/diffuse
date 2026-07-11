@@ -35,6 +35,13 @@
     "desc": "Collection browser and search with favourite toggling, date grouping, and virtual scrolling."
   },
   {
+    "url": "facets/themes/catalogue-one/facet/index.html",
+    "title": "Catalogue One",
+    "category": "Themes",
+    "author": "A theme by [@tokono.ma](https://bsky.app/profile/tokono.ma)",
+    "desc": "A visual, cover-art-first browsing experience. Browse your collection as grids of albums and artists, manage the queue, and control playback."
+  },
+  {
     "url": "facets/themes/blur-classic/facet/index.html",
     "title": "Blur Classic",
     "category": "Themes",

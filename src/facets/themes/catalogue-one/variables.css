@@ -1,0 +1,12 @@
+:root,
+:host {
+  --cat-bg: oklch(14% 0.01 280);
+  --cat-surface: oklch(20% 0.012 280);
+  --cat-surface-hover: oklch(25% 0.012 280);
+  --cat-text: oklch(88% 0.005 280);
+  --cat-text-dim: oklch(58% 0.008 280);
+  --cat-accent: oklch(68% 0.18 300);
+  --cat-accent-text: oklch(98% 0 0);
+  --cat-border: oklch(30% 0.01 280);
+  --cat-shadow: 0 8px 32px oklch(0% 0 0 / 0.4);
+}
