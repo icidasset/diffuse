@@ -250,6 +250,27 @@
     "desc": "Arrange multiple facets side-by-side in a resizable split-panel layout."
   },
   {
+    "url": "facets/themes/tidal/facet/index.html",
+    "title": "Tidal",
+    "category": "Themes",
+    "incomplete": true,
+    "desc": "A Tidal-inspired browser. Pick a playlist from the sidebar, browse albums and artists, and play tracks."
+  },
+  {
+    "url": "facets/themes/tidal/browser/facet/index.html",
+    "title": "Tidal / Browser",
+    "category": "Browsing",
+    "incomplete": true,
+    "desc": "Tidal-style collection browser and search with a playlist sidebar and album / artist grids."
+  },
+  {
+    "url": "facets/themes/tidal/player/facet/index.html",
+    "title": "Tidal / Player",
+    "category": "Playback",
+    "incomplete": true,
+    "desc": "Tidal-style now-playing bar with playback controls, progress and volume."
+  },
+  {
     "url": "facets/data/v3-import/index.html",
     "title": "V3.x Import",
     "category": "Data",
@@ -268,26 +289,5 @@
     "title": "Winamp / Browser",
     "category": "Browsing",
     "desc": "Collection browser and search."
-  },
-  {
-    "url": "facets/themes/tidal/facet/index.html",
-    "title": "Tidal",
-    "category": "Themes",
-    "incomplete": true,
-    "desc": "🚧 A Tidal-inspired browser. Pick a playlist from the sidebar, browse albums and artists, and play tracks."
-  },
-  {
-    "url": "facets/themes/tidal/browser/facet/index.html",
-    "title": "Tidal / Browser",
-    "category": "Browsing",
-    "incomplete": true,
-    "desc": "🚧 Tidal-style collection browser and search with a playlist sidebar and album / artist grids."
-  },
-  {
-    "url": "facets/themes/tidal/player/facet/index.html",
-    "title": "Tidal / Player",
-    "category": "Playback",
-    "incomplete": true,
-    "desc": "🚧 Tidal-style now-playing bar with playback controls, progress and volume."
   }
 ]

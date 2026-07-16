@@ -1,3 +1,6 @@
+{{ set completeItems = items.filter((i) => !i.incomplete) }}
+{{ set incompleteItems = items.filter((i) => i.incomplete) }}
+
 <div class="grid-filter">
   <span class="grid-filter--label">Filter by</span>
 
@@ -14,81 +17,22 @@
 </div>
 
 <ul class="grid" style="margin-top: var(--space-xs);">
-  {{ for index, item of items }}
-    {{ set color = (() => {
-      switch (item.kind) {
-        case "prelude": return "var(--accent-twist-4)";
-        default: return "var(--accent-twist-2)";
-      }
-    })() }}
-
-    {{ set kind = (() => {
-      // return item.kind ?? "interactive"
-      switch (item.kind) {
-        case "prelude": return "feature";
-        default: return "interface";
-      }
-    })() }}
-
-    {{ set facetUri = item.url |> facetURI }}
-
-    <li
-      class="grid-item"
-      style="--grid-item-color: {{color}}"
-      data-active-color="{{color}}"
-      data-description="{{item.desc.trim()}}"
-      data-name="{{item.title}}"
-      data-category="{{ item.category ?? `` }}"
-      data-kind="{{item.kind ?? `interface`}}"
-      data-tags="{{ item.tags?.join(',') ?? `` }}"
-      data-uri="{{ facetUri }}"
-    >
-      <div class="grid-item__contents">
-        <div class="grid-item__title">
-          {{ if item.kind === "prelude" }}
-            <span style="color: {{ color }}; padding: var(--space-3xs) 0">
-              {{item.title}}
-            </span>
-          {{ else }}
-            <a href="{{ item.url |> facetLoaderURL }}" style="color: {{ color }}; padding: var(--space-3xs) 0">
-              {{item.title}}
-            </a>
-          {{ /if }}
-          <span style="flex: 1"></span>
-        </div>
-        <div class="list-description">
-          {{ item.desc |> md(true) }}
-        </div>
-        {{ if item.author }}
-          <div class="grid-item__author">
-            {{ item.author |> md(true) }}
-          </div>
-        {{ /if }}
-      </div>
-      <div class="grid-item__menu">
-        <button
-          class="button--transparent"
-          data-action="toggle"
-          style="opacity: 0"
-          title="{{ item.kind === `prelude` ? `Add` : `Bookmark` }}"
-        >
-          <i class="ph-bold {{ item.kind === `prelude` ? `ph-plus` : `ph-bookmark` }}"></i>
-        </button>
-        <hr />
-        <button
-          class="button--transparent"
-          title="More actions"
-          popovertarget="grid-item-menu-{{ index }}"
-        >
-          <i class="ph-bold ph-dots-three-vertical"></i>
-        </button>
-        <div id="grid-item-menu-{{ index }}" class="dropdown" popover>
-          <a class="with-icon" href="create/?uri={{ encodeURIComponent(facetUri) }}&name={{ encodeURIComponent(item.title) }}&kind={{ item.kind ?? `interface` }}&description={{ encodeURIComponent(item.desc.trim()) }}">
-            <i class="ph-fill ph-code-block"></i>
-            Open code in editor
-          </a>
-        </div>
-      </div>
-    </li>
+  {{ for index, item of completeItems }}
+    {{ await comp["grid-item"]({ item, index }) }}
   {{ /for }}
 </ul>
+
+{{ if incompleteItems.length > 0 }}
+  <hr class="hr--dashes" />
+
+  <p style="align-items: center; display: flex; font-weight: 600; gap: var(--space-3xs); justify-content: center; margin-bottom: var(--space-lg); max-width: 100%; opacity: 0.6;">
+    <i class="ph-fill ph-crane"></i>
+    <!-- Work in progress -->
+  </p>
+
+  <ul class="grid">
+    {{ for index, item of incompleteItems }}
+      {{ await comp["grid-item"]({ item, index: index + completeItems.length }) }}
+    {{ /for }}
+  </ul>
+{{ /if }}
