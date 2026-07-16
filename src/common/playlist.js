@@ -109,6 +109,96 @@ export function filterByPlaylist(tracks, playlistItems) {
 }
 
 /**
+ * Order already-playlist-member tracks by their playlist's `positionedAfter`
+ * chain. Tracks are bucketed to the first playlist item (in chain order) that
+ * they match; each track appears only once. Tracks not matched by any item are
+ * dropped (the caller is expected to pre-filter with `filterByPlaylist`).
+ *
+ * When the playlist is unordered (or empty), the input tracks are returned
+ * unchanged so the caller can fall back to its own sort.
+ *
+ * @param {Track[]} tracks  Tracks already known to belong to the playlist.
+ * @param {PlaylistItem[]} items  Items of a single playlist.
+ * @returns {Track[]}
+ *
+ * @example Orders tracks by their playlist item chain
+ * ```js
+ * import { orderByPlaylist } from "~/common/playlist.js";
+ *
+ * const tracks = [
+ *   { $type: "sh.diffuse.output.track", id: "t-b", uri: "http://x/b.mp3", tags: { title: "B" } },
+ *   { $type: "sh.diffuse.output.track", id: "t-a", uri: "http://x/a.mp3", tags: { title: "A" } },
+ *   { $type: "sh.diffuse.output.track", id: "t-c", uri: "http://x/c.mp3", tags: { title: "C" } },
+ * ];
+ * const items = [
+ *   { $type: "sh.diffuse.output.playlistItem", id: "i-b", playlist: "p", criteria: [{ field: "tags.title", value: "B" }], positionedAfter: "i-a" },
+ *   { $type: "sh.diffuse.output.playlistItem", id: "i-a", playlist: "p", criteria: [{ field: "tags.title", value: "A" }], positionedAfter: undefined },
+ *   { $type: "sh.diffuse.output.playlistItem", id: "i-c", playlist: "p", criteria: [{ field: "tags.title", value: "C" }], positionedAfter: "i-b" },
+ * ];
+ * // @ts-ignore
+ * const result = orderByPlaylist(tracks, items);
+ * if (result.map((t) => t.id).join(",") !== "t-a,t-b,t-c") throw new Error("should follow chain order");
+ * ```
+ *
+ * @example Returns tracks unchanged for unordered playlists
+ * ```js
+ * import { orderByPlaylist } from "~/common/playlist.js";
+ *
+ * const tracks = [{ $type: "sh.diffuse.output.track", id: "t-a", uri: "http://x/a.mp3", tags: { title: "A" } }];
+ * const items = [{ $type: "sh.diffuse.output.playlistItem", id: "i-a", playlist: "p", criteria: [{ field: "tags.title", value: "A" }] }];
+ * // @ts-ignore
+ * const result = orderByPlaylist(tracks, items);
+ * if (result !== tracks) throw new Error("unordered playlists should return input untouched");
+ * ```
+ *
+ * @example A track matching multiple items appears only under the first
+ * ```js
+ * import { orderByPlaylist } from "~/common/playlist.js";
+ *
+ * const tracks = [
+ *   { $type: "sh.diffuse.output.track", id: "t-a", uri: "http://x/a.mp3", tags: { artist: "X", title: "A" } },
+ * ];
+ * const items = [
+ *   { $type: "sh.diffuse.output.playlistItem", id: "i-a", playlist: "p", criteria: [{ field: "tags.artist", value: "X" }], positionedAfter: undefined },
+ *   { $type: "sh.diffuse.output.playlistItem", id: "i-b", playlist: "p", criteria: [{ field: "tags.title", value: "A" }], positionedAfter: "i-a" },
+ * ];
+ * // @ts-ignore
+ * const result = orderByPlaylist(tracks, items);
+ * if (result.length !== 1) throw new Error("track should appear only once");
+ * ```
+ */
+export function orderByPlaylist(tracks, items) {
+  if (!items.length) return tracks;
+
+  // Detect ordered state for the (single) playlist the items belong to.
+  const grouped = gather(items);
+  const meta = grouped.values().next().value;
+  if (!meta || meta.unordered) return tracks;
+
+  const orderedItems = sort(items);
+  const claimed = new Set();
+  /** @type {Track[]} */
+  const out = [];
+
+  for (const item of orderedItems) {
+    let matchedAny = false;
+    for (const track of tracks) {
+      if (claimed.has(track.id)) continue;
+      if (match(track, item)) {
+        claimed.add(track.id);
+        out.push(track);
+        matchedAny = true;
+      }
+    }
+    // Items with no matching tracks don't contribute to the output but the
+    // chain still proceeds so following items can claim what they can.
+    void matchedAny;
+  }
+
+  return out;
+}
+
+/**
  * Bundle playlist items into their respective playlists.
  *
  * @param {PlaylistItem[]} items

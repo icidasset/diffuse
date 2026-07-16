@@ -5,7 +5,7 @@ import {
   queryOptional,
 } from "~/common/element.js";
 import { batch, computed, signal } from "~/common/signal.js";
-import { filterByPlaylist } from "~/common/playlist.js";
+import { filterByPlaylist, gather, orderByPlaylist } from "~/common/playlist.js";
 import { safeDecodeURIComponent } from "~/common/utils.js";
 import { listen } from "~/common/worker.js";
 
@@ -87,6 +87,26 @@ class ScopedTracksOrchestrator extends BroadcastableDiffuseElement {
   supplyFingerprint = this.#supplyFingerprint.get;
   tracks = this.#tracksFinal.get;
   groups = this.#tracksGrouped;
+
+  /**
+   * A computed signal that reflects wether or not
+   * the selected playlist should be rendered in order
+   * (the order the items have in the playlist itself).
+   *
+   * It only will return true if all of the following is true:
+   * - A playlist is selected and that playlist is deemed ordered
+   *   (at least one item has a non-empty `positionedAfter` property)
+   * - No groupBy scope was set
+   * - No sortBy scope was set or it was set to an empty list
+   */
+  playlistIsOrdered = computed(() => {
+    const playlistItems = this.#selectedPlaylistItems();
+    const playlistName = this.#scope.value?.playlist();
+
+    return playlistItems?.length && playlistName
+      ? gather(playlistItems).get(playlistName)?.unordered === false
+      : false;
+  })
 
   // LIFECYCLE
 
@@ -258,6 +278,12 @@ class ScopedTracksOrchestrator extends BroadcastableDiffuseElement {
         final = final.filter((t) =>
           !disabledSources.some((source) => t.uri.startsWith(source))
         );
+      }
+
+      if (this.playlistIsOrdered()) {
+        final = orderByPlaylist(final, /** @type {import("~/definitions/types.d.ts").PlaylistItem[]} */ (playlistItems));
+        this.#tracksFinal.set(final);
+        return;
       }
 
       // When groupBy is active, sort by group key first using the group's
