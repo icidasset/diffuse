@@ -89,7 +89,7 @@ export function mergeById(existing, incoming) {
 
 /**
  * @template T
- * @param {{ collection: SignalReader<{ state: "loading" } | { state: "loaded"; data: T }> }} output
+ * @param {{ collection: SignalReader<{ state: "loading" } | { state: "loaded"; data: T } | { state: "error" }> }} output
  * @returns {Promise<T>}
  *
  * @example Resolves immediately when collection is already loaded

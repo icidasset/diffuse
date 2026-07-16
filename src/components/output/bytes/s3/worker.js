@@ -15,18 +15,18 @@ import { OBJECT_PREFIX } from "./constants.js";
  * @type {S3OutputWorkerActions["get"]}
  */
 export async function get({ bucket, name }) {
-  const client = createClient(bucket);
-  const path = bucket.path.replace(/(^\/+|\/+$)/g, "");
-  const key = path
-    ? `${path}/${OBJECT_PREFIX}${name}`
-    : `${OBJECT_PREFIX}${name}`;
-
   try {
+    const client = createClient(bucket);
+    const path = bucket.path.replace(/(^\/+|\/+$)/g, "");
+    const key = path
+      ? `${path}/${OBJECT_PREFIX}${name}`
+      : `${OBJECT_PREFIX}${name}`;
+
     const response = await client.getObject(key);
     const buffer = await response.arrayBuffer();
     return new Uint8Array(buffer);
-  } catch (err) {
-    // Object doesn't exist yet, return undefined
+  } catch (_err) {
+    // Object doesn't exist yet, or client creation failed — return undefined
     return undefined;
   }
 }
@@ -35,13 +35,18 @@ export async function get({ bucket, name }) {
  * @type {S3OutputWorkerActions["put"]}
  */
 export async function put({ bucket, data, name }) {
-  const client = createClient(bucket);
-  const path = bucket.path.replace(/(^\/+|\/+$)/g, "");
-  const key = path
-    ? `${path}/${OBJECT_PREFIX}${name}`
-    : `${OBJECT_PREFIX}${name}`;
+  try {
+    const client = createClient(bucket);
+    const path = bucket.path.replace(/(^\/+|\/+$)/g, "");
+    const key = path
+      ? `${path}/${OBJECT_PREFIX}${name}`
+      : `${OBJECT_PREFIX}${name}`;
 
-  await client.putObject(key, data);
+    await client.putObject(key, data);
+  } catch (err) {
+    console.error("Failed to put S3 object:", err);
+    throw err;
+  }
 }
 
 ////////////////////////////////////////////

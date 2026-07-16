@@ -80,7 +80,7 @@ export function outputManager(
       .empty()),
   );
   const cs = signal(
-    /** @type {"loading" | "loaded" | "sleeping"} */ ("sleeping"),
+    /** @type {"loading" | "loaded" | "sleeping" | "error"} */ ("sleeping"),
     { compare: strictEquality },
   );
 
@@ -89,7 +89,7 @@ export function outputManager(
       .empty()),
   );
   const pls = signal(
-    /** @type {"loading" | "loaded" | "sleeping"} */ ("sleeping"),
+    /** @type {"loading" | "loaded" | "sleeping" | "error"} */ ("sleeping"),
     { compare: strictEquality },
   );
 
@@ -98,7 +98,7 @@ export function outputManager(
       .empty()),
   );
   const ss = signal(
-    /** @type {"loading" | "loaded" | "sleeping"} */ ("sleeping"),
+    /** @type {"loading" | "loaded" | "sleeping" | "error"} */ ("sleeping"),
     { compare: strictEquality },
   );
 
@@ -106,36 +106,56 @@ export function outputManager(
     /** @type {Encoding extends null ? Track[] : Encoding} */ (tracks.empty()),
   );
   const ts = signal(
-    /** @type {"loading" | "loaded" | "sleeping"} */ ("sleeping"),
+    /** @type {"loading" | "loaded" | "sleeping" | "error"} */ ("sleeping"),
     { compare: strictEquality },
   );
 
   async function loadFacets() {
     if (init && (await init()) === false) return;
     cs.value = "loading";
-    c.value = await facets.get();
-    cs.value = "loaded";
+    try {
+      c.value = await facets.get();
+      cs.value = "loaded";
+    } catch (err) {
+      console.error("Failed to load facets:", err);
+      cs.value = "error";
+    }
   }
 
   async function loadPlaylistItems() {
     if (init && (await init()) === false) return;
     pls.value = "loading";
-    pl.value = await playlistItems.get();
-    pls.value = "loaded";
+    try {
+      pl.value = await playlistItems.get();
+      pls.value = "loaded";
+    } catch (err) {
+      console.error("Failed to load playlist items:", err);
+      pls.value = "error";
+    }
   }
 
   async function loadSettings() {
     if (init && (await init()) === false) return;
     ss.value = "loading";
-    s.value = await settings.get();
-    ss.value = "loaded";
+    try {
+      s.value = await settings.get();
+      ss.value = "loaded";
+    } catch (err) {
+      console.error("Failed to load settings:", err);
+      ss.value = "error";
+    }
   }
 
   async function loadTracks() {
     if (init && (await init()) === false) return;
     ts.value = "loading";
-    t.value = await tracks.get();
-    ts.value = "loaded";
+    try {
+      t.value = await tracks.get();
+      ts.value = "loaded";
+    } catch (err) {
+      console.error("Failed to load tracks:", err);
+      ts.value = "error";
+    }
   }
 
   return {
@@ -144,6 +164,8 @@ export function outputManager(
         if (untracked(() => cs.value === "sleeping")) loadFacets();
         return cs.value === "loaded"
           ? { state: "loaded", data: c.value }
+          : cs.value === "error"
+          ? { state: "error" }
           : { state: "loading" };
       }),
       reload: loadFacets,
@@ -160,6 +182,8 @@ export function outputManager(
         if (untracked(() => pls.value === "sleeping")) loadPlaylistItems();
         return pls.value === "loaded"
           ? { state: "loaded", data: pl.value }
+          : pls.value === "error"
+          ? { state: "error" }
           : { state: "loading" };
       }),
       reload: loadPlaylistItems,
@@ -176,6 +200,8 @@ export function outputManager(
         if (untracked(() => ss.value === "sleeping")) loadSettings();
         return ss.value === "loaded"
           ? { state: "loaded", data: s.value }
+          : ss.value === "error"
+          ? { state: "error" }
           : { state: "loading" };
       }),
       reload: loadSettings,
@@ -192,6 +218,8 @@ export function outputManager(
         if (untracked(() => ts.value === "sleeping")) loadTracks();
         return ts.value === "loaded"
           ? { state: "loaded", data: t.value }
+          : ts.value === "error"
+          ? { state: "error" }
           : { state: "loading" };
       }),
       reload: loadTracks,

@@ -64,6 +64,7 @@ class ATProtoOutputSyncTransformer extends OutputTransformer {
           if (!l) return { state: "loading" };
           const c = l[name].collection();
           if (c.state === "loading") return c;
+          if (c.state === "error") return c;
           return { state: "loaded", data: c.data ?? [] };
         }),
         reload: async () => {

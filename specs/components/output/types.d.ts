@@ -7,6 +7,11 @@ import type {
   Track,
 } from "~/definitions/types.d.ts";
 
+export type OutputCollectionState<T> =
+  | { state: "loading" }
+  | { state: "loaded"; data: T }
+  | { state: "error" };
+
 export type OutputElement<Encoding = null> =
   & DiffuseElement
   & OutputManagerDeputy<Encoding>;
@@ -18,8 +23,7 @@ export type OutputManagerDeputy<Encoding = null> =
 export type OutputManager<Encoding = null> = {
   facets: {
     collection: SignalReader<
-      | { state: "loading" }
-      | { state: "loaded"; data: Encoding extends null ? Facet[] : Encoding }
+      OutputCollectionState<Encoding extends null ? Facet[] : Encoding>
     >;
     reload: () => Promise<void>;
     save: (
@@ -28,8 +32,7 @@ export type OutputManager<Encoding = null> = {
   };
   playlistItems: {
     collection: SignalReader<
-      | { state: "loading" }
-      | { state: "loaded"; data: Encoding extends null ? PlaylistItem[] : Encoding }
+      OutputCollectionState<Encoding extends null ? PlaylistItem[] : Encoding>
     >;
     reload: () => Promise<void>;
     save: (
@@ -38,8 +41,7 @@ export type OutputManager<Encoding = null> = {
   };
   settings: {
     collection: SignalReader<
-      | { state: "loading" }
-      | { state: "loaded"; data: Encoding extends null ? Setting[] : Encoding }
+      OutputCollectionState<Encoding extends null ? Setting[] : Encoding>
     >;
     reload: () => Promise<void>;
     save: (
@@ -54,8 +56,7 @@ export type OutputManager<Encoding = null> = {
   };
   tracks: {
     collection: SignalReader<
-      | { state: "loading" }
-      | { state: "loaded"; data: Encoding extends null ? Track[] : Encoding }
+      OutputCollectionState<Encoding extends null ? Track[] : Encoding>
     >;
     reload: () => Promise<void>;
     save: (tracks: Encoding extends null ? Track[] : Encoding) => Promise<void>;

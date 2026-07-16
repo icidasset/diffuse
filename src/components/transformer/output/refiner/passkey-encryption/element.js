@@ -57,7 +57,9 @@ class PasskeyEncryptionTransformer extends OutputTransformer {
 
       collection: computed(() => {
         const col = base.settings.collection();
-        if (col?.state !== "loaded") return { state: "loading" };
+        if (col?.state !== "loaded") {
+          return col?.state === "error" ? { state: "error" } : { state: "loading" };
+        }
 
         const key = encryptionKey.get();
 
@@ -113,7 +115,9 @@ class PasskeyEncryptionTransformer extends OutputTransformer {
       const col = base.tracks.collection();
 
       if (col?.state !== "loaded") {
-        return { state: "loading", locked: [], unlocked: [] };
+        return col?.state === "error"
+          ? { state: "error", locked: [], unlocked: [] }
+          : { state: "loading", locked: [], unlocked: [] };
       }
 
       const key = encryptionKey.get();
@@ -258,7 +262,7 @@ class PasskeyEncryptionTransformer extends OutputTransformer {
     const stopSettings = this.effect(() => {
       if (savedSettings) { stopSettings(); return; }
       const col = this.settings.collection();
-      if (col.state === "loading") return;
+      if (col.state !== "loaded") return;
       savedSettings = true;
       this.settings.save(col.data);
     });
@@ -266,7 +270,7 @@ class PasskeyEncryptionTransformer extends OutputTransformer {
     const stopTracks = this.effect(() => {
       if (savedTracks) { stopTracks(); return; }
       const col = this.tracks.collection();
-      if (col.state === "loading") return;
+      if (col.state !== "loaded") return;
       savedTracks = true;
       this.tracks.save(col.data);
     });

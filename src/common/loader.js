@@ -37,7 +37,7 @@ if ("serviceWorker" in navigator) {
  * @typedef {object} LoaderConfig
  * @property {string} $type - The atproto $type
  * @property {string} label - Human-readable label for error messages (e.g. "Facet", "Theme")
- * @property {() => { collection: SignalReader<{ state: "loading" } | { state: "loaded"; data: LoadableItem[] }> }} source - The collection source
+ * @property {() => { collection: SignalReader<{ state: "loading" } | { state: "loaded"; data: LoadableItem[] } | { state: "error" }> }} source - The collection source
  * @property {(item: LoadableItem) => void} render - Renders the loaded item
  */
 
@@ -93,6 +93,9 @@ export function createLoader(config) {
     } else {
       const source = config.source();
       const col = source.collection();
+      if (col.state === "error") {
+        return renderError(container, `Failed to load ${config.label.toLowerCase()}`);
+      }
       if (col.state !== "loaded") return;
       const collection = col.data;
 

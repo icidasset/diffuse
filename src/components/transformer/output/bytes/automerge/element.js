@@ -36,8 +36,8 @@ class AutomergeBytesOutputTransformer extends OutputTransformer {
 
     /**
      * @template T
-     * @param {SignalReader<{ state: "loading" } | { state: "loaded"; data: Uint8Array | undefined }>} localCollection
-     * @param {SignalReader<{ state: "loading" } | { state: "loaded"; data: Uint8Array | undefined }>} remoteCollection
+     * @param {SignalReader<{ state: "loading" } | { state: "loaded"; data: Uint8Array | undefined } | { state: "error" }>} localCollection
+     * @param {SignalReader<{ state: "loading" } | { state: "loaded"; data: Uint8Array | undefined } | { state: "error" }>} remoteCollection
      * @param {Automerge.Doc<T>} initial
      * @returns {SignalReader<{ doc: Automerge.Doc<T>; diverged: boolean; local: boolean; remote: boolean; remoteLoaded: boolean; }>}
      */
@@ -254,11 +254,11 @@ export function loadDocument(value) {
 
 /**
  * @template {Record<string, any>} T
- * @param {SignalReader<{ collection: SignalReader<{ state: "loading" } | { state: "loaded"; data: Uint8Array | undefined }>, reload: () => Promise<void>, save: (bytes: Uint8Array) => Promise<void> } | undefined>} local
- * @param {{ collection: SignalReader<{ state: "loading" } | { state: "loaded"; data: Uint8Array | undefined }>, reload: () => Promise<void>, save: (bytes: Uint8Array) => Promise<void> }} remote
+ * @param {SignalReader<{ collection: SignalReader<{ state: "loading" } | { state: "loaded"; data: Uint8Array | undefined } | { state: "error" }>, reload: () => Promise<void>, save: (bytes: Uint8Array) => Promise<void> } | undefined>} local
+ * @param {{ collection: SignalReader<{ state: "loading" } | { state: "loaded"; data: Uint8Array | undefined } | { state: "error" }>, reload: () => Promise<void>, save: (bytes: Uint8Array) => Promise<void> }} remote
  * @param {SignalReader<Automerge.Doc<{ collection: T[] }>>} document
  * @param {{ stripUndefined?: boolean }} [opts]
- * @returns {{ collection: SignalReader<{ state: "loading" } | { state: "loaded"; data: T[] }>, reload: () => Promise<void>, save: (items: T[]) => Promise<void> }}
+ * @returns {{ collection: SignalReader<{ state: "loading" } | { state: "loaded"; data: T[] } | { state: "error" }>, reload: () => Promise<void>, save: (items: T[]) => Promise<void> }}
  */
 export function automergeEntry(local, remote, document, opts) {
   return {

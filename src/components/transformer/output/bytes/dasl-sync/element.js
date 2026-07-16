@@ -41,8 +41,8 @@ class DaslBytesSyncOutputTransformer extends OutputTransformer {
     /**
      * @template {{ id: string; updatedAt: string }} T
      * @param {string} kind
-     * @param {SignalReader<{ state: "loading" } | { state: "loaded"; data: Uint8Array | undefined }>} localCollection
-     * @param {SignalReader<{ state: "loading" } | { state: "loaded"; data: Uint8Array | undefined }>} remoteCollection
+     * @param {SignalReader<{ state: "loading" } | { state: "loaded"; data: Uint8Array | undefined } | { state: "error" }>} localCollection
+     * @param {SignalReader<{ state: "loading" } | { state: "loaded"; data: Uint8Array | undefined } | { state: "error" }>} remoteCollection
      * @param {{ saveLocal: (bytes: Uint8Array) => Promise<void>; saveRemote: (bytes: Uint8Array) => Promise<void> }} sync
      */
     const state = (
@@ -125,6 +125,9 @@ class DaslBytesSyncOutputTransformer extends OutputTransformer {
               } finally {
                 merging.value = { isBusy: false, lastCID: c.cid ?? "" };
               }
+            }).catch((err) => {
+              console.error("Merge failed:", err);
+              merging.value = { isBusy: false, lastCID: merging.value.lastCID };
             });
           });
         } else {
@@ -410,10 +413,10 @@ class DaslBytesSyncOutputTransformer extends OutputTransformer {
   /**
    * @template {{ id: string; updatedAt: string }} T
    * @param {{ save: (bytes: Uint8Array) => Promise<void> | void }} local
-   * @param {{ collection: SignalReader<{ state: "loading" } | { state: "loaded"; data: Uint8Array | undefined }>, reload: () => Promise<void>, save: (bytes: Uint8Array) => Promise<void> }} remote
+   * @param {{ collection: SignalReader<{ state: "loading" } | { state: "loaded"; data: Uint8Array | undefined } | { state: "error" }>, reload: () => Promise<void>, save: (bytes: Uint8Array) => Promise<void> }} remote
    * @param {SignalReader<boolean>} remoteReady
    * @param {SignalReader<Container<T>>} container
-   * @returns {{ collection: SignalReader<{ state: "loading" } | { state: "loaded"; data: T[] }>, reload: () => Promise<void>, save: (items: T[]) => Promise<void> }}
+   * @returns {{ collection: SignalReader<{ state: "loading" } | { state: "loaded"; data: T[] } | { state: "error" }>, reload: () => Promise<void>, save: (items: T[]) => Promise<void> }}
    */
   managerProp(local, remote, remoteReady, container) {
     return {
