@@ -1,0 +1,70 @@
+<style>
+  @import "./styles/base.css";
+  @import "./styles/diffuse/facet.css";
+  @import "./vendor/@phosphor-icons/web/bold/style.css";
+  @import "./vendor/@phosphor-icons/web/fill/style.css";
+  @import "./facets/themes/tidal/variables.css";
+
+  @layer base, diffuse;
+
+  html,
+  body {
+    height: 100%;
+    margin: 0;
+    overflow: hidden;
+    padding: 0;
+  }
+
+  #container {
+    height: 100%;
+    overflow: hidden;
+  }
+
+  body {
+    background: var(--td-bg);
+  }
+
+  main {
+    display: flex;
+    flex-direction: column;
+    gap: 0;
+    height: 100%;
+    margin: 0;
+    max-height: 100%;
+    min-height: 0;
+    padding: 0;
+  }
+
+  db-tidal-browser {
+    flex: 1;
+    min-height: 0;
+  }
+
+  db-tidal-player {
+    flex-shrink: 0;
+    height: 5rem;
+  }
+</style>
+
+<main>
+  <db-tidal-browser
+    output-selector="do-output"
+    tracks-selector="do-scoped-tracks"
+    queue-engine-selector="de-queue"
+    scope-engine-selector="de-scope"
+    favourites-orchestrator-selector="do-favourites"
+    artwork-selector="do-artwork"
+    cover-groups-orchestrator-selector="do-cover-groups"
+  ></db-tidal-browser>
+
+  <db-tidal-player
+    output-selector="do-output"
+    queue-engine-selector="de-queue"
+    repeat-shuffle-engine-selector="de-repeat-shuffle"
+    artwork-selector="do-artwork"
+    controller-orchestrator-selector="do-controller"
+    favourites-orchestrator-selector="do-favourites"
+  ></db-tidal-player>
+</main>
+
+<script type="module" src="facets/themes/tidal/facet/index.inline.js"></script>

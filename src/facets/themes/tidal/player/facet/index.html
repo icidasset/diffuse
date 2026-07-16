@@ -1,0 +1,23 @@
+<style>
+  @import "./styles/base.css";
+  @import "./styles/diffuse/facet.css";
+  @import "./vendor/@phosphor-icons/web/bold/style.css";
+  @import "./vendor/@phosphor-icons/web/fill/style.css";
+  @import "./facets/themes/tidal/variables.css";
+
+  @layer base, diffuse;
+
+  html,
+  body {
+    background: var(--td-bg);
+    margin: 0;
+    padding: 0;
+  }
+
+  db-tidal-player {
+    height: 5rem;
+    display: block;
+  }
+</style>
+
+<script type="module" src="facets/themes/tidal/player/facet/index.inline.js"></script>
