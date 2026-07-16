@@ -89,15 +89,13 @@ class ScopedTracksOrchestrator extends BroadcastableDiffuseElement {
   groups = this.#tracksGrouped;
 
   /**
-   * A computed signal that reflects wether or not
-   * the selected playlist should be rendered in order
-   * (the order the items have in the playlist itself).
-   *
-   * It only will return true if all of the following is true:
-   * - A playlist is selected and that playlist is deemed ordered
-   *   (at least one item has a non-empty `positionedAfter` property)
-   * - No groupBy scope was set
-   * - No sortBy scope was set or it was set to an empty list
+   * Whether the currently selected playlist should be rendered in its own
+   * order (i.e. its playlist items form a `positionedAfter` chain). When
+   * this is true, themes should prefer it over `sortBy` for UI indicators
+   * (e.g. don't highlight the "artist" column as the active sort). It is
+   * independent of `groupBy`/`sortBy` so grouping may still be applied —
+   * in that case tracks are grouped by the `groupBy` key while playlist
+   * order is preserved within each group.
    */
   playlistIsOrdered = computed(() => {
     const playlistItems = this.#selectedPlaylistItems();
@@ -106,7 +104,7 @@ class ScopedTracksOrchestrator extends BroadcastableDiffuseElement {
     return playlistItems?.length && playlistName
       ? gather(playlistItems).get(playlistName)?.unordered === false
       : false;
-  })
+  });
 
   // LIFECYCLE
 
@@ -280,16 +278,25 @@ class ScopedTracksOrchestrator extends BroadcastableDiffuseElement {
         );
       }
 
-      if (this.playlistIsOrdered()) {
-        final = orderByPlaylist(final, /** @type {import("~/definitions/types.d.ts").PlaylistItem[]} */ (playlistItems));
-        this.#tracksFinal.set(final);
-        return;
+      // When an ordered playlist is selected, reorder the filtered tracks by
+      // the playlist's `positionedAfter` chain. The user's `sortBy` is then
+      // ignored so playlist order is preserved — but `groupBy` still applies:
+      // tracks are grouped by the group key, and because `Array.sort` is
+      // stable, playlist order is retained within each group.
+      const playlistOrdered = this.playlistIsOrdered();
+
+      if (playlistOrdered) {
+        final = orderByPlaylist(
+          final,
+          /** @type {import("~/definitions/types.d.ts").PlaylistItem[]} */ (playlistItems),
+        );
       }
 
       // When groupBy is active, sort by group key first using the group's
       // canonical direction (from GROUP_BY_SORT_OVERRIDES, or user's direction
       // for firstLetter). Within each group, sort by the user's sortBy and
-      // sortDirection as normal.
+      // sortDirection as normal — unless an ordered playlist is active, in
+      // which case sortBy is skipped (playlist order wins within groups).
       //
       // Schwartzian transform: precompute all keys once (O(N)) so the
       // comparator never re-parses URLs or re-splits dot-paths (O(N log N)).
@@ -298,7 +305,7 @@ class ScopedTracksOrchestrator extends BroadcastableDiffuseElement {
         : undefined;
       const groupDir =
         (groupOverride?.sortDirection ?? sortDirection) === "desc" ? -1 : 1;
-      const userFields = sortBy ?? [];
+      const userFields = playlistOrdered ? [] : (sortBy ?? []);
       const userDir = sortDirection === "desc" ? -1 : 1;
       const splitPaths = userFields.map((f) => f.split("."));
 
