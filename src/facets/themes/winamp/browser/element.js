@@ -622,14 +622,24 @@ this.#renderIfWindowChanged();
     const searchTerm = this.$scope.value?.searchTerm() ?? "";
     const sortBy = this.$scope.value?.sortBy() ?? [];
     const sortDirection = this.$scope.value?.sortDirection();
-    const sortedColumn = Object.entries(COLUMN_SORT).find(
-      ([, v]) => JSON.stringify(v) === JSON.stringify(sortBy),
-    )?.[0];
+    const playlistOrdered = /** @type {any} */ (this.$provider.value)
+      ?.playlistIsOrdered?.() ?? false;
+    const sortedColumn = playlistOrdered
+      ? undefined
+      : Object.entries(COLUMN_SORT).find(
+        ([, v]) => JSON.stringify(v) === JSON.stringify(sortBy),
+      )?.[0];
 
     const ariaSort = /** @param {string} col */ (col) =>
       sortedColumn === col
         ? (sortDirection === "desc" ? "descending" : "ascending")
         : "none";
+
+    // 1-indexed position of each track within the playlist order
+    const trackPositions = playlistOrdered
+      ? new Map(tracks.map((t, i) => [t.id, i + 1]))
+      : null;
+    const colspan = playlistOrdered ? 4 : 3;
 
     // Virtual list
     if (groups !== this.#lastGroups || tracks !== this.#lastTracks) {
@@ -743,19 +753,25 @@ this.#renderIfWindowChanged();
         <table class="virtual-header">
           <thead>
             <tr>
+              ${playlistOrdered
+                ? html`<th class="col-num">#</th>`
+                : ``}
               <th
+                class="col-title"
                 aria-sort="${ariaSort(`title`)}"
                 @click="${() => this.sortByColumn(`title`)}"
               >
                 Title
               </th>
               <th
+                class="col-artist"
                 aria-sort="${ariaSort(`artist`)}"
                 @click="${() => this.sortByColumn(`artist`)}"
               >
                 Artist
               </th>
               <th
+                class="col-album"
                 aria-sort="${ariaSort(`album`)}"
                 @click="${() => this.sortByColumn(`album`)}"
               >
@@ -767,7 +783,8 @@ this.#renderIfWindowChanged();
         <div class="virtual-scroll" style="height:${totalHeight}px">
           <table style="transform: translateY(${topPad}px)">
             <colgroup>
-              <col style="width:40%">
+              ${playlistOrdered ? html`<col style="width:5%">` : ``}
+              <col style="width:${playlistOrdered ? `35%` : `40%`}">
               <col style="width:30%">
               <col style="width:30%">
             </colgroup>
@@ -775,6 +792,7 @@ this.#renderIfWindowChanged();
               ${isLoading
                 ? html`
                   <tr>
+                    ${playlistOrdered ? html`<td></td>` : ``}
                     <td>Loading ...</td>
                     <td></td>
                     <td></td>
@@ -790,7 +808,7 @@ this.#renderIfWindowChanged();
                   if (item.type === "group") {
                     return html`
                       <tr class="group-header">
-                        <td colspan="3">${item.label}</td>
+                        <td colspan="${colspan}">${item.label}</td>
                       </tr>
                     `;
                   }
@@ -822,6 +840,9 @@ this.#renderIfWindowChanged();
                       }}"
                       @dblclick="${() => this.playTrack(track)}"
                     >
+                      ${playlistOrdered
+                        ? html`<td class="col-num">${trackPositions?.get(track.id)}</td>`
+                        : ``}
                       <td>${track.tags?.title}</td>
                       <td>${track.tags?.artist}</td>
                       <td>${track.tags?.album}</td>

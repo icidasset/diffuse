@@ -220,6 +220,32 @@
   width: var(--space-md);
 }
 
+.col-num {
+  flex-shrink: 0;
+  font-variant-numeric: tabular-nums;
+  width: var(--space-lg);
+}
+
+.table-header .col-num {
+  border-left: 1px solid var(--border-color);
+  cursor: default;
+  margin-right: 0;
+  padding: calc(var(--space-3xs) + 1px) 0 var(--space-3xs) var(--space-2xs);
+  text-align: right;
+}
+
+.track-row .col-num {
+  opacity: 0.5;
+  padding-left: var(--space-2xs);
+}
+
+.track-row .col-num span {
+  display: block;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
 .col-title {
   flex: 2;
   min-width: 0;

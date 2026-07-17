@@ -1373,15 +1373,24 @@ class Browser extends DiffuseElement {
     const tracks = this.$provider.value?.tracks() ?? [];
     const groups = /** @type {any} */ (this.$provider.value)?.groups?.();
     const sortDirection = this.$scope.value?.sortDirection();
+    const playlistOrdered = /** @type {any} */ (this.$provider.value)
+      ?.playlistIsOrdered?.() ?? false;
 
-    const sortedColumn = Object.entries(COLUMN_SORT).find(
-      ([, v]) => JSON.stringify(v) === JSON.stringify(sortBy),
-    )?.[0];
+    const sortedColumn = playlistOrdered
+      ? undefined
+      : Object.entries(COLUMN_SORT).find(
+        ([, v]) => JSON.stringify(v) === JSON.stringify(sortBy),
+      )?.[0];
 
     const ariaSort = /** @param {string} col */ (col) =>
       sortedColumn === col
         ? (sortDirection === "desc" ? "descending" : "ascending")
         : "none";
+
+    // 1-indexed position of each track within the playlist order
+    const trackPositions = playlistOrdered
+      ? new Map(tracks.map((t, i) => [t.id, i + 1]))
+      : null;
 
     // Rebuild flat items and pixel offsets only when data reference changes
     if (groups !== this.#lastGroups || tracks !== this.#lastTracks) {
@@ -1434,6 +1443,9 @@ class Browser extends DiffuseElement {
               <i class="ph-${isFav ? `fill ph-heart` : `bold ph-heart`}"></i>
             </button>
           </div>
+          ${playlistOrdered
+            ? html`<div class="col-num"><span>${trackPositions?.get(track.id)}</span></div>`
+            : ``}
           <div class="col-title">
             <span class="track-title">${trackTitle(track)}</span>
           </div>
@@ -1462,6 +1474,7 @@ class Browser extends DiffuseElement {
     return html`
       <div class="table-header">
         <div class="col-fav"></div>
+        ${playlistOrdered ? html`<div class="col-num">#</div>` : ``}
         <div
           class="col-title ${sortedColumn === `title` ? `col--sorted` : ``}"
           @click="${() => this.sortByColumn(`title`)}"

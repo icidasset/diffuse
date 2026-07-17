@@ -58,10 +58,14 @@ table th {
     position: absolute;
     right: 6px;
   }
+}
 
-  &:first-child {
-    width: 40%;
-  }
+table th.col-title {
+  width: 40%;
+}
+
+table th.col-num + th.col-title {
+  width: 35%;
 }
 
 table th[aria-sort="ascending"]::after {
@@ -70,6 +74,20 @@ table th[aria-sort="ascending"]::after {
 
 table th[aria-sort="descending"]::after {
   content: " ▲";
+}
+
+.col-num {
+  cursor: default;
+  text-align: right;
+  user-select: none;
+}
+
+table th.col-num {
+  width: 5%;
+}
+
+table th.col-num::after {
+  content: none;
 }
 
 .virtual-scroll table {

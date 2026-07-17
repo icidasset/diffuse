@@ -11,10 +11,11 @@ foundation.setup({ title: "Automatic Queue | Diffuse" });
 const main = /** @type {HTMLElement} */ (document.querySelector("main"));
 await foundation.orchestrator.autoQueue();
 
-const [repeatShuffle, scope, output] = await Promise.all([
+const [repeatShuffle, scope, output, scopedTracks] = await Promise.all([
   foundation.engine.repeatShuffle(),
   foundation.engine.scope(),
   foundation.orchestrator.output(),
+  foundation.orchestrator.scopedTracks(),
 ]);
 
 // Elements
@@ -111,7 +112,8 @@ playlistSelect.onchange = () => {
 
 // Sort by state
 effect(() => {
-  const current = JSON.stringify(scope.sortBy());
+  const ordered = scopedTracks.playlistIsOrdered?.() ?? false;
+  const current = ordered ? "[]" : JSON.stringify(scope.sortBy());
   for (const option of sortBySelect.options) {
     if (JSON.stringify(JSON.parse(option.value)) === current) {
       sortBySelect.value = option.value;
