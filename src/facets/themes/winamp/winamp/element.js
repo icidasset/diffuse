@@ -386,6 +386,32 @@ class WinampElement extends DiffuseElement {
           this.#marqueeOverride.value = null;
         }
       });
+
+      // Seek bar: keep the slider pinned to the requested target until the
+      // audio element's real progress has actually caught up to it. Without
+      // this the slider visibly jumps back to the (still-unbuffered) old
+      // position while the MediaSource stream is being re-fed from the new
+      // offset.
+      this.effect(() => {
+        const seekingProgress = this.#seekingProgress.value;
+        if (seekingProgress === null) return;
+        const progress = this.audio()?.progress() ?? 0;
+        if (Math.abs(progress - seekingProgress) < 0.005) {
+          untracked(() => {
+            this.#seekingProgress.value = null;
+          });
+        }
+      });
+
+      // Drop any pending seek target when the current track changes so the
+      // slider can't get stuck on a position that belongs to the previous
+      // track (e.g. a seek that never completes because the track switched).
+      this.effect(() => {
+        this.$controller.value?.$queue.value?.now()?.id;
+        untracked(() => {
+          this.#seekingProgress.value = null;
+        });
+      });
     });
 
     // UI State
@@ -1379,9 +1405,10 @@ class WinampElement extends DiffuseElement {
       this.$controller.value?.$audio.value?.seek({ audioId, percentage });
     }
     this.#marqueeOverride.value = null;
-    setTimeout(() => {
-      this.#seekingProgress.value = null;
-    }, 250);
+    // Keep #seekingProgress pointing at the target until the audio actually
+    // catches up; a fixed timer would make the seek bar jump back to the
+    // (still-unbuffered) real position while the new range is being fetched.
+    // The catch-up effect added in connectedCallback clears it.
   };
 
   #reload = () => {
