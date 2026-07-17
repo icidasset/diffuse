@@ -124,12 +124,11 @@ export function createLoader(config) {
         context: err,
         throw: true,
       });
-    });
-
-    if (item.cid === loadedCid) return;
-
-    loadedCid = item.cid ?? null;
-    config.render(item);
+    }).then(() => {
+      if (item.cid === loadedCid) return;
+      loadedCid = item.cid ?? null;
+      config.render(item);
+    })
   });
 }
 
