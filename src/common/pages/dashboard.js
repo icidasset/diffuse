@@ -9,7 +9,7 @@ import { batch, effect, signal } from "~/common/signal.js";
 
 import { nothing } from "~/common/element.js";
 
-import { deleteFacet, toggleFacetEnabled, toggleFacetPinned } from "./crud.js";
+import { deleteFacet, toggleFacetEnabled, toggleFacetFavourite } from "./crud.js";
 import { output } from "./output.js";
 import { openAddFromURIModal } from "./from-uri.js";
 
@@ -27,15 +27,15 @@ effect(() => {
   localStorage.setItem(FILTER_STORAGE_KEY, activeFilter.get());
 });
 
-const UNPINNED_COLLAPSED_KEY = "diffuse/dashboard/unpinned-collapsed";
-const unpinnedCollapsed = signal(
-  localStorage.getItem(UNPINNED_COLLAPSED_KEY) === "true",
+const UNFAVOURITE_COLLAPSED_KEY = "diffuse/dashboard/unfavourite-collapsed";
+const unfavouriteCollapsed = signal(
+  localStorage.getItem(UNFAVOURITE_COLLAPSED_KEY) === "true",
 );
 
 effect(() => {
   localStorage.setItem(
-    UNPINNED_COLLAPSED_KEY,
-    String(unpinnedCollapsed.get()),
+    UNFAVOURITE_COLLAPSED_KEY,
+    String(unfavouriteCollapsed.get()),
   );
 });
 
@@ -46,7 +46,7 @@ function setFilter(filter) {
   history.replaceState(null, "", url);
   batch(() => {
     activeFilter.set(filter);
-    unpinnedCollapsed.set(false);
+    unfavouriteCollapsed.set(false);
   });
 }
 
@@ -139,9 +139,9 @@ function _renderList(output, listEl) {
     )
     : [];
 
-  const pinnedCol = filtered.filter((c) => c.pinned).sort(sortByName);
-  const unpinnedCol = filtered.filter((c) => !c.pinned).sort(sortByName);
-  const col = pinnedCol.concat(unpinnedCol);
+  const favouriteCol = filtered.filter((c) => c.favourite).sort(sortByName);
+  const unfavouriteCol = filtered.filter((c) => !c.favourite).sort(sortByName);
+  const col = favouriteCol.concat(unfavouriteCol);
 
   const selected = output.selected();
   const outputLabel = selected?.label ?? selected?.getAttribute?.("label") ??
@@ -300,13 +300,14 @@ function _renderList(output, listEl) {
                   href="#"
                   @click="${(/** @type {MouseEvent} */ e) => {
                     e.preventDefault();
-                    toggleFacetPinned({ id: c.id })();
+                    if (!c.favourite) unfavouriteCollapsed.set(false);
+                    toggleFacetFavourite({ id: c.id })();
                   }}"
                 >
-                  <i class="${c.pinned
-                    ? "ph-fill ph-push-pin-slash"
-                    : "ph-fill ph-push-pin"}"></i>
-                  ${c.pinned ? "Unpin" : "Pin"}
+                  <i class="${c.favourite
+                    ? "ph-bold ph-star"
+                    : "ph-fill ph-star"}"></i>
+                  ${c.favourite ? "Unfavourite" : "Favourite"}
                 </a>
                 <a
                   class="with-icon"
@@ -333,20 +334,20 @@ function _renderList(output, listEl) {
       );
     });
 
-  const collapsed = unpinnedCollapsed.get() && pinnedCol.length > 0;
+  const collapsed = unfavouriteCollapsed.get() && favouriteCol.length > 0;
 
   const h = col.length || filter !== "all"
     ? html`
-      ${filterBar} ${pinnedCol.length
+      ${filterBar} ${favouriteCol.length
         ? html`
-          <ul class="grid" style="margin: 0">${renderItems(pinnedCol)}</ul>
+          <ul class="grid" style="margin: 0">${renderItems(favouriteCol)}</ul>
         `
-        : nothing} ${pinnedCol.length && unpinnedCol.length
+        : nothing} ${favouriteCol.length && unfavouriteCol.length
         ? html`
           <div class="grid-section-divider">
             <button
-              title="${collapsed ? "Show unpinned" : "Hide unpinned"}"
-              @click="${() => unpinnedCollapsed.set(!collapsed)}"
+              title="${collapsed ? "Show all" : "Only show favourites"}"
+              @click="${() => unfavouriteCollapsed.set(!collapsed)}"
             >
               <i class="ph-fill ${collapsed
                 ? "ph-caret-circle-down"
@@ -355,9 +356,9 @@ function _renderList(output, listEl) {
             <hr class="hr--dashes" />
           </div>
         `
-        : nothing} ${unpinnedCol.length && !collapsed
+        : nothing} ${unfavouriteCol.length && !collapsed
         ? html`
-          <ul class="grid" style="margin: 0">${renderItems(unpinnedCol)}</ul>
+          <ul class="grid" style="margin: 0">${renderItems(unfavouriteCol)}</ul>
         `
         : nothing}
     `

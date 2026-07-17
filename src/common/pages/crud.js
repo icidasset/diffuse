@@ -39,7 +39,7 @@ export function toggleFacetEnabled({ id }) {
 /**
  * @param {{ id: string }} _
  */
-export function toggleFacetPinned({ id }) {
+export function toggleFacetFavourite({ id }) {
   return async () => {
     const out = await output();
     const col = await Output.data(out.facets);
@@ -47,7 +47,7 @@ export function toggleFacetPinned({ id }) {
     if (!facet) return;
     await out.facets.save([
       ...col.filter((c) => c.id !== id),
-      { ...facet, pinned: !(facet.pinned ?? false), updatedAt: new Date().toISOString() },
+      { ...facet, favourite: !(facet.favourite ?? false), updatedAt: new Date().toISOString() },
     ]);
   };
 }
