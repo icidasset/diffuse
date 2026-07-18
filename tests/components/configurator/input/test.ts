@@ -78,7 +78,7 @@ describe("components/configurator/input", () => {
       ]);
     });
 
-    expect(result["ipfs"]?.available).toBe(false);
+    expect(result["ipfs"]?.available).toBe("no");
     expect(result["ipfs"]?.uris).toEqual(["ipfs://QmA", "ipfs://QmB"]);
   });
 

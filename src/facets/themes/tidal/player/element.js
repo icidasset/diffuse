@@ -133,7 +133,7 @@ class Player extends DiffuseElement {
         }
         const mime = detectMime(bytes);
         const url = URL.createObjectURL(
-          new Blob([bytes], { type: mime }),
+          new Blob([/** @type {BlobPart} */ (bytes)], { type: mime }),
         );
         this.#artUrl.value = url;
       });
@@ -313,10 +313,14 @@ class Player extends DiffuseElement {
   // RENDER
 
   /**
-   * @param {RenderArg} { html }
+   * @param {RenderArg} _
    */
   render({ html }) {
     const artUrl = this.#artUrl.value;
+    const currentTrack = this.$controller.value?.currentTrack();
+    const isFav = currentTrack
+      ? this.$favourites.value?.isFavourite(currentTrack) ?? false
+      : false;
 
     return html`
       <link rel="stylesheet" href="vendor/@phosphor-icons/web/bold/style.css" />
@@ -338,34 +342,19 @@ class Player extends DiffuseElement {
           </div>
           <div class="td-player__meta">
             <span class="td-player__title">
-              ${this.$controller.value?.currentTrack()?.tags?.title ?? ""}
+              ${currentTrack?.tags?.title ?? ""}
             </span>
             <span class="td-player__artist">
-              ${this.$controller.value?.currentTrack()?.tags?.artist ?? ""}
+              ${currentTrack?.tags?.artist ?? ""}
             </span>
           </div>
           <button
-            class="td-player__fav ${this.$controller.value?.currentTrack() &&
-              this.$favourites.value?.isFavourite(
-                this.$controller.value.currentTrack(),
-              )
-              ? `td-player__fav--active`
-              : ""}"
+            class="td-player__fav ${isFav ? `td-player__fav--active` : ""}"
             @click="${this.toggleFavourite}"
-            title="${this.$controller.value?.currentTrack() &&
-              this.$favourites.value?.isFavourite(
-                this.$controller.value.currentTrack(),
-              )
-              ? `Remove from favourites`
-              : `Add to favourites`}"
-            ?disabled="${!this.$controller.value?.currentTrack()}"
+            title="${isFav ? `Remove from favourites` : `Add from favourites`}"
+            ?disabled="${!currentTrack}"
           >
-            <i class="${this.$controller.value?.currentTrack() &&
-              this.$favourites.value?.isFavourite(
-                this.$controller.value.currentTrack(),
-              )
-              ? `ph-fill ph-heart`
-              : `ph-bold ph-heart`}"></i>
+            <i class="${isFav ? `ph-fill ph-heart` : `ph-bold ph-heart`}"></i>
           </button>
         </div>
 

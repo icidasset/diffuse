@@ -1,4 +1,4 @@
-import { parseBlob, parseFromTokenizer, parseWebStream } from "music-metadata";
+import { parseBuffer, parseFromTokenizer, parseWebStream } from "music-metadata";
 import * as URI from "fast-uri";
 import { HttpClient } from "@tokenizer/http";
 import { tokenizer as rangeTokenizer } from "@tokenizer/range";
@@ -11,6 +11,42 @@ import { removeUndefinedValuesFromRecord } from "~/common/utils.js";
  */
 
 // 🛠️
+
+/**
+ * Maps the audio MIME types music-metadata's loaders register to the
+ * extension `findLoaderForExtension` recognises. Used for blob URLs, which
+ * carry no filename, so the parser can be picked by extension instead of
+ * by content-type (whose matcher is broken in the browser bundle).
+ *
+ * @type {Record<string, string>}
+ */
+const MIME_TO_EXT = {
+  "audio/mpeg": "mp3",
+  "audio/mp3": "mp3",
+  "audio/aac": "aac",
+  "audio/aacp": "aacp",
+  "audio/mp4": "m4a",
+  "audio/m4a": "m4a",
+  "audio/ogg": "ogg",
+  "audio/opus": "opus",
+  "audio/speex": "spx",
+  "audio/flac": "flac",
+  "audio/aiff": "aiff",
+  "audio/aif": "aif",
+  "audio/aifc": "aifc",
+  "audio/wav": "wav",
+  "audio/wave": "wav",
+  "audio/vnd.wave": "wav",
+  "audio/x-wav": "wav",
+  "audio/webm": "webm",
+  "audio/ape": "ape",
+  "audio/monkeys-audio": "ape",
+  "audio/musepack": "mpc",
+  "audio/wavpack": "wv",
+  "audio/asf": "asf",
+  "audio/ms-wma": "wma",
+  "audio/dsf": "dsf",
+};
 
 /**
  * @param {{ includeArtwork?: boolean; mimeType?: string; stream?: ReadableStream; urls?: Urls; }} _
@@ -30,7 +66,20 @@ export async function musicMetadataTags({
 
   if (urls?.get.startsWith("blob:")) {
     const blob = await fetch(urls.get).then((r) => r.blob());
-    meta = await parseBlob(blob, { skipCovers: !includeArtwork });
+    // Blob URLs carry no filename, so `filename` above is just the blob's UUID.
+    // Without a path or a recognised MIME-type music-metadata falls back to
+    // content-sniffing, whose content-type matcher is broken in the browser
+    // bundle (the `content-type` CJS interop leaves `default` undefined, so
+    // `findLoaderForContentType` always throws — see the range-tokenizer
+    // branch below for the same issue). Derive a filename from the blob's
+    // MIME type so the parser is picked by extension instead.
+    const ext = MIME_TO_EXT[blob.type];
+    const buffer = new Uint8Array(await blob.arrayBuffer());
+    meta = await parseBuffer(
+      buffer,
+      ext ? { path: `file.${ext}` } : undefined,
+      { skipCovers: !includeArtwork },
+    );
   } else if (urls) {
     const httpClient = new HttpClient(urls.head, {
       resolveUrl: false,

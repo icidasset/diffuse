@@ -191,7 +191,17 @@ class AudioEngine extends BroadcastableDiffuseElement {
    * @type {Actions["pause"]}
    */
   pause({ audioId }) {
-    this.#withAudioNode(audioId, (audio) => audio.pause());
+    this.#withAudioNode(audioId, (audio, item) => {
+      audio.pause();
+      // Set `isPlaying` to false optimistically, mirroring `play()`. The
+      // `pause` event would normally do this via `pauseEvent`, but when
+      // `play()` was called before the audio had buffered enough to start
+      // (e.g. readyState < HAVE_FUTURE_DATA) the browser may never fire a
+      // `pause` event — leaving `isPlaying` stuck on the optimistic `true`
+      // that `play()` set. It also prevents `canplayEvent`'s retry-on-ready
+      // logic from restarting playback after an explicit pause.
+      item.$state.isPlaying.set(false);
+    });
   }
 
   /**

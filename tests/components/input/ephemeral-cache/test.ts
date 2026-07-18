@@ -59,7 +59,7 @@ describe("components/input/ephemeral-cache", () => {
 
     expect(result.supported).toBe(true);
     if (result.supported) {
-      expect(result.consult).toBe(false);
+      expect(result.consult).toBe("no");
     }
   });
 
@@ -88,7 +88,7 @@ describe("components/input/ephemeral-cache", () => {
 
     expect(result.supported).toBe(true);
     if (result.supported) {
-      expect(result.consult).toBe(true);
+      expect(result.consult).toBe("yes");
     }
   });
 
@@ -116,7 +116,7 @@ describe("components/input/ephemeral-cache", () => {
       return result;
     });
 
-    expect(result["ephemeral+cache"]?.available).toBe(true);
+    expect(result["ephemeral+cache"]?.available).toBe("yes");
     expect(result["ephemeral+cache"]?.uris).toEqual([
       "ephemeral+cache://bafkgroupcached",
     ]);
@@ -136,7 +136,7 @@ describe("components/input/ephemeral-cache", () => {
       ]);
     });
 
-    expect(result["ephemeral+cache"]?.available).toBe(true);
+    expect(result["ephemeral+cache"]?.available).toBe("yes");
     expect(result["ephemeral+cache"]?.uris).toEqual([]);
   });
 

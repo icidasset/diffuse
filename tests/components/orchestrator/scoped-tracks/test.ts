@@ -224,7 +224,7 @@ describe("components/orchestrator/scoped-tracks – disabled sources", () => {
         SCHEME = "test";
         sources() { return []; }
         async groupConsult(uris: string[]) {
-          return { all: { available: true, scheme: "test", uris } };
+          return { all: { available: "yes", scheme: "test", uris } };
         }
       }
       customElements.define("di-test-input-1", TestInput);
@@ -274,7 +274,7 @@ describe("components/orchestrator/scoped-tracks – disabled sources", () => {
         SCHEME = "test";
         sources() { return []; }
         async groupConsult(uris: string[]) {
-          return { all: { available: true, scheme: "test", uris } };
+          return { all: { available: "yes", scheme: "test", uris } };
         }
       }
       customElements.define("di-test-input-2", TestInput);
@@ -326,7 +326,7 @@ describe("components/orchestrator/scoped-tracks – disabled sources", () => {
         SCHEME = "test";
         sources() { return []; }
         async groupConsult(uris: string[]) {
-          return { all: { available: true, scheme: "test", uris } };
+          return { all: { available: "yes", scheme: "test", uris } };
         }
       }
       customElements.define("di-test-input-3", TestInput);
@@ -378,7 +378,7 @@ describe("components/orchestrator/scoped-tracks – disabled sources", () => {
         SCHEME = "test";
         sources() { return []; }
         async groupConsult(uris: string[]) {
-          return { all: { available: true, scheme: "test", uris } };
+          return { all: { available: "yes", scheme: "test", uris } };
         }
       }
       customElements.define("di-test-input-4", TestInput);
@@ -430,7 +430,7 @@ describe("components/orchestrator/scoped-tracks – disabled sources", () => {
         SCHEME = "test";
         sources() { return []; }
         async groupConsult(uris: string[]) {
-          return { all: { available: true, scheme: "test", uris } };
+          return { all: { available: "yes", scheme: "test", uris } };
         }
       }
       customElements.define("di-test-input-5", TestInput);
