@@ -4,7 +4,7 @@ import {
   query,
   whenElementsDefined,
 } from "~/common/element.js";
-import { batch, signal, untracked } from "~/common/signal.js";
+import { batch, computed, signal, untracked } from "~/common/signal.js";
 import { repeat } from "lit-html/directives/repeat.js";
 import { guard } from "lit-html/directives/guard.js";
 
@@ -278,6 +278,84 @@ class WinampElement extends DiffuseElement {
   #playlistSize = { width: 275, height: 232 };
   #milkdropPos = { x: 275, y: 0 };
   #milkdropSize = { width: 275, height: 232 };
+
+  // COMPUTED — memoised so frequent re-renders (e.g. on every `timeupdate`
+  // during playback) don't rebuild a Map / array of 20+ rows each frame.
+
+  #trackMap = computed(() => {
+    const col = this.$controller.value?.$output.value?.tracks.collection();
+    if (col?.state !== "loaded") return new Map();
+    return new Map(col.data.map((t) => [t.id, t]));
+  });
+
+  #allItems = computed(() => {
+    const { past, now, future } = this.#playlist.value;
+    return [...past, ...(now ? [now] : []), ...future];
+  });
+
+  #displayItems = computed(() => {
+    const allItems = this.#allItems();
+    const dragState = this.#dragState.value;
+    if (!dragState || dragState.fromIdx === dragState.toIdx) return allItems;
+
+    const arr = [...allItems];
+    const selectedIndices = this.#selectedIndices.value;
+    if (dragState.multiDrag && selectedIndices.size > 1) {
+      const sortedSel = [...selectedIndices].sort((a, b) => a - b);
+      const delta = dragState.toIdx - dragState.fromIdx;
+      const selectedSet = new Set(sortedSel);
+      const result = new Array(arr.length).fill(null);
+      sortedSel.forEach((i) => {
+        result[i + delta] = arr[i];
+      });
+      const nonSelected = arr.filter((_, i) => !selectedSet.has(i));
+      let nsIdx = 0;
+      for (let i = 0; i < result.length; i++) {
+        if (result[i] === null) result[i] = nonSelected[nsIdx++];
+      }
+      return result;
+    }
+    const [item] = arr.splice(dragState.fromIdx, 1);
+    arr.splice(dragState.toIdx, 0, item);
+    return arr;
+  });
+
+  #playlistRows = computed(() => {
+    const displayItems = this.#displayItems();
+    const trackMap = this.#trackMap();
+    const allItems = this.#allItems();
+    const { now: nowItem } = this.#playlist.value;
+    const dragState = this.#dragState.value;
+    const selectedIndices = this.#selectedIndices.value;
+    const nowIdx = nowItem ? displayItems.indexOf(nowItem) : -1;
+    const selectedItemSet = dragState && dragState.multiDrag &&
+        selectedIndices.size > 1
+      ? new Set(
+        [...selectedIndices].map((/** @type {number} */ i) => allItems[i]),
+      )
+      : null;
+    return displayItems.map((/** @type {Item} */ item, /** @type {number} */ i) => {
+      const track = trackMap.get(item.id);
+      const isCurrent = i === nowIdx;
+      const isSelected = dragState
+        ? (dragState.multiDrag && selectedIndices.size > 1
+          ? selectedItemSet?.has(item) ?? false
+          : i === dragState.toIdx)
+        : selectedIndices.has(i);
+      const artist = track?.tags?.artist ?? "";
+      const title = track?.tags?.title ?? "";
+      const label = artist ? `${artist} - ${title}` : title;
+      const durSec = track?.stats?.duration ? track.stats.duration / 1000 : 0;
+      const dur = durSec > 0
+        ? `${Math.floor(durSec / 60)}:${
+          String(Math.floor(durSec % 60)).padStart(2, "0")
+        }`
+        : "";
+      const color = isCurrent ? "#FFFFFF" : "#00FF00";
+      const bg = isSelected && !isCurrent ? "#0000FF" : "transparent";
+      return { id: item.id, item, idx: i, n: i + 1, label, dur, color, bg };
+    });
+  });
 
   // Butterchurn
   /** @type {any} */
@@ -1965,71 +2043,13 @@ class WinampElement extends DiffuseElement {
     };
 
     // Playlist
-    const queueEl = this.$controller.value?.$queue.value;
-    const { past: queuePast, now: nowItem, future: queueFuture } =
-      this.#playlist.value;
-    const allItems = [
-      ...queuePast,
-      ...(nowItem ? [nowItem] : []),
-      ...queueFuture,
-    ];
-
-    // Apply local drag reorder for visual feedback (worker is only called on mouseup)
+    const { now: nowItem } = this.#playlist.value;
+    const allItems = this.#allItems();
+    const displayItems = this.#displayItems();
+    const trackMap = this.#trackMap();
+    const playlistRows = this.#playlistRows();
     const dragState = this.#dragState.value;
     const selectedIndices = this.#selectedIndices.value;
-    const displayItems = dragState && dragState.fromIdx !== dragState.toIdx
-      ? (() => {
-        const arr = [...allItems];
-        if (dragState.multiDrag && selectedIndices.size > 1) {
-          const sortedSel = [...selectedIndices].sort((a, b) => a - b);
-          const delta = dragState.toIdx - dragState.fromIdx;
-          const selectedSet = new Set(sortedSel);
-          const result = new Array(arr.length).fill(null);
-          sortedSel.forEach((i) => {
-            result[i + delta] = arr[i];
-          });
-          const nonSelected = arr.filter((_, i) => !selectedSet.has(i));
-          let nsIdx = 0;
-          for (let i = 0; i < result.length; i++) {
-            if (result[i] === null) result[i] = nonSelected[nsIdx++];
-          }
-          return result;
-        }
-        const [item] = arr.splice(dragState.fromIdx, 1);
-        arr.splice(dragState.toIdx, 0, item);
-        return arr;
-      })()
-      : allItems;
-
-    const col = this.$controller.value?.$output.value?.tracks.collection();
-    const trackMap = col?.state === "loaded"
-      ? new Map(col.data.map((t) => [t.id, t]))
-      : new Map();
-    const selectedItemSet = new Set(
-      [...selectedIndices].map((i) => allItems[i]),
-    );
-    const nowIdx = nowItem ? displayItems.indexOf(nowItem) : -1;
-    const playlistRows = displayItems.map((item, i) => {
-      const track = trackMap.get(item.id);
-      const isCurrent = i === nowIdx;
-      const isSelected = dragState
-        ? (dragState.multiDrag && selectedIndices.size > 1
-          ? selectedItemSet.has(item)
-          : i === dragState.toIdx)
-        : selectedIndices.has(i);
-      const artist = track?.tags?.artist ?? "";
-      const title = track?.tags?.title ?? "";
-      const label = artist ? `${artist} - ${title}` : title;
-      const durSec = track?.stats?.duration ? track.stats.duration / 1000 : 0;
-      const dur = durSec > 0
-        ? `${Math.floor(durSec / 60)}:${
-          String(Math.floor(durSec % 60)).padStart(2, "0")
-        }`
-        : "";
-      const color = isCurrent ? "#FFFFFF" : "#00FF00";
-      const bg = isSelected && !isCurrent ? "#0000FF" : "transparent";
-      return { id: item.id, item, idx: i, n: i + 1, label, dur, color, bg };
-    });
 
     // Playlist running time display: currentTrackDuration/totalPlaylistDuration
     const nowTrackSec = (() => {
