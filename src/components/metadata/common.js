@@ -27,6 +27,7 @@ const MIME_TO_EXT = {
   "audio/aacp": "aacp",
   "audio/mp4": "m4a",
   "audio/m4a": "m4a",
+  "audio/x-m4a": "m4a",
   "audio/ogg": "ogg",
   "audio/opus": "opus",
   "audio/speex": "spx",
@@ -49,24 +50,34 @@ const MIME_TO_EXT = {
 };
 
 /**
- * @param {{ includeArtwork?: boolean; mimeType?: string; stream?: ReadableStream; urls?: Urls; }} _
+ * @param {string | undefined} mimeType
+ * @returns {string | undefined}
+ */
+function mimeTypeToPath(mimeType) {
+  const ext = mimeType && MIME_TO_EXT[mimeType];
+  return ext ? `file.${ext}` : undefined;
+}
+
+/**
+ * @param {{ includeArtwork?: boolean; filename?: string; mimeType?: string; stream?: ReadableStream; urls?: Urls; }} _
  * @returns {Promise<Extraction>}
  */
 export async function musicMetadataTags({
   includeArtwork,
+  filename,
   mimeType,
   stream,
   urls,
 }) {
   const uri = urls ? URI.parse(urls.get) : undefined;
   const pathParts = uri?.path?.split("/");
-  const filename = pathParts?.[pathParts.length - 1];
+  const urlFilename = pathParts?.[pathParts.length - 1];
 
   let meta;
 
   if (urls?.get.startsWith("blob:")) {
     const blob = await fetch(urls.get).then((r) => r.blob());
-    // Blob URLs carry no filename, so `filename` above is just the blob's UUID.
+    // Blob URLs carry no filename, so the URL path is just the blob's UUID.
     // Without a path or a recognised MIME-type music-metadata falls back to
     // content-sniffing, whose content-type matcher is broken in the browser
     // bundle (the `content-type` CJS interop leaves `default` undefined, so
@@ -105,9 +116,14 @@ export async function musicMetadataTags({
     // has size/mimeType — no path. Without a path or a recognised MIME-type,
     // music-metadata falls back to content-sniffing, which rejects some files
     // (e.g. `audio/x-m4a`, or servers returning `application/octet-stream`).
-    // Provide the filename so it can pick a parser by extension instead.
-    if (filename) {
-      tokenizer.fileInfo = { ...tokenizer.fileInfo, path: filename };
+    // Provide the filename so it can pick a parser by extension instead. Fall
+    // back to the URL path, and then to a synthetic filename derived from the
+    // HEAD response MIME type (useful for temporary links like Dropbox's that
+    // don't preserve the original filename).
+    const path = filename || urlFilename ||
+      mimeTypeToPath(tokenizer.fileInfo?.mimeType);
+    if (path) {
+      tokenizer.fileInfo = { ...tokenizer.fileInfo, path };
     }
     meta = await parseFromTokenizer(tokenizer, { skipCovers: !includeArtwork });
   } else if (stream) {

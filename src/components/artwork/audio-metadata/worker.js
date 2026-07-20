@@ -1,3 +1,4 @@
+import * as URI from "fast-uri";
 import { musicMetadataTags } from "~/components/metadata/common.js";
 import { ostiary, rpc, workerProxy } from "~/common/worker.js";
 
@@ -29,7 +30,12 @@ export async function get({ data: track, ports }) {
     ? undefined
     : await input.resolve({ method: "HEAD", uri: track.uri });
 
+  const trackUri = URI.parse(track.uri);
+  const trackPathParts = trackUri.path?.split("/");
+  const filename = trackPathParts?.[trackPathParts.length - 1];
+
   const meta = await musicMetadataTags({
+    filename,
     includeArtwork: true,
     stream: "stream" in resGet ? resGet.stream : undefined,
     mimeType: "stream" in resGet ? resGet.mimeType : undefined,
