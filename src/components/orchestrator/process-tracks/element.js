@@ -211,7 +211,12 @@ class ProcessTracksOrchestrator extends BroadcastableDiffuseElement {
     });
 
     if (result) {
-      await this.output.tracks.save(mergeById(cachedTracks, result));
+      // Re-read the current output tracks instead of using the stale
+      // `cachedTracks` snapshot from the start of processing. If a track
+      // was deleted from the output while processing was in-flight, it
+      // won't be in `currentTracks`, so `mergeById` won't bring it back.
+      const currentTracks = await data(this.output.tracks);
+      await this.output.tracks.save(mergeById(currentTracks, result));
     }
 
     // Fin

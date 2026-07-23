@@ -113,6 +113,8 @@
     "./components/configurator/metadata/worker.js": "./src/components/configurator/metadata/worker.js",
     "./components/configurator/output/element.js": "./src/components/configurator/output/element.js",
     "./components/configurator/scrobbles/element.js": "./src/components/configurator/scrobbles/element.js",
+    "./components/configurator/upload/element.js": "./src/components/configurator/upload/element.js",
+    "./components/configurator/upload/worker.js": "./src/components/configurator/upload/worker.js",
     "./components/engine/audio/element.js": "./src/components/engine/audio/element.js",
     "./components/engine/queue/element.js": "./src/components/engine/queue/element.js",
     "./components/engine/queue/worker.js": "./src/components/engine/queue/worker.js",
@@ -192,6 +194,9 @@
     "./components/transformer/output/refiner/initial-contents/element.js": "./src/components/transformer/output/refiner/initial-contents/element.js",
     "./components/transformer/output/refiner/passkey-encryption/element.js": "./src/components/transformer/output/refiner/passkey-encryption/element.js",
     "./components/transformer/output/string/json/element.js": "./src/components/transformer/output/string/json/element.js",
+    "./components/upload/dropbox/common.js": "./src/components/upload/dropbox/common.js",
+    "./components/upload/dropbox/element.js": "./src/components/upload/dropbox/element.js",
+    "./components/upload/dropbox/worker.js": "./src/components/upload/dropbox/worker.js",
 
     // .d.ts
     "./common/element.d.ts": "./src/common/element.d.ts",
@@ -203,6 +208,7 @@
     "./components/configurator/input/types.d.ts": "./specs/components/configurator/input/types.d.ts",
     "./components/configurator/metadata/types.d.ts": "./specs/components/configurator/metadata/types.d.ts",
     "./components/configurator/output/types.d.ts": "./specs/components/configurator/output/types.d.ts",
+    "./components/configurator/upload/types.d.ts": "./specs/components/configurator/upload/types.d.ts",
     "./components/engine/audio/types.d.ts": "./specs/components/engine/audio/types.d.ts",
     "./components/engine/queue/types.d.ts": "./specs/components/engine/queue/types.d.ts",
     "./components/input/opensubsonic/types.d.ts": "./specs/components/input/opensubsonic/types.d.ts",
@@ -222,6 +228,7 @@
     "./components/supplement/types.d.ts": "./specs/components/supplement/types.d.ts",
     "./components/transformer/output/bytes/automerge/types.d.ts": "./specs/components/transformer/output/bytes/automerge/types.d.ts",
     "./components/transformer/output/bytes/dasl-sync/types.d.ts": "./specs/components/transformer/output/bytes/dasl-sync/types.d.ts",
+    "./components/upload/types.d.ts": "./specs/components/upload/types.d.ts",
     "./definitions/types.d.ts": "./src/definitions/types.d.ts",
 
     // .ts

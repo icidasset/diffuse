@@ -26,6 +26,9 @@ const signals = {
     scrobbles: signal(
       /** @type {import("~/components/configurator/scrobbles/element.js").CLASS | null} */ (null),
     ),
+    upload: signal(
+      /** @type {import("~/components/configurator/upload/element.js").CLASS | null} */ (null),
+    ),
   },
 
   engine: {
@@ -98,6 +101,7 @@ export const config = {
     metadata: configuratorMetadata,
     input,
     scrobbles,
+    upload,
   },
 
   engine: {
@@ -132,6 +136,7 @@ export const config = {
       metadata: signals.configurator.metadata.get,
       input: signals.configurator.input.get,
       scrobbles: signals.configurator.scrobbles.get,
+      upload: signals.configurator.upload.get,
     },
 
     engine: {
@@ -236,6 +241,17 @@ async function input() {
   i.setAttribute("group", GROUP);
 
   return findExistingOrAdd(i, signals.configurator.input);
+}
+
+async function upload() {
+  const { CLASS: UploadConfigurator } = await import(
+    "~/components/configurator/upload/element.js"
+  );
+
+  const u = new UploadConfigurator();
+  u.setAttribute("group", GROUP);
+
+  return findExistingOrAdd(u, signals.configurator.upload);
 }
 
 /**

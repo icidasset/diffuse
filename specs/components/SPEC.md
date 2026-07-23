@@ -41,6 +41,11 @@ Input components generate tracks and resolve track URIs into audio. They must ad
 Various ways to fetch metadata for tracks. Must adhere to types defined in `metadata/types.d.ts`
 
 
+### Upload
+
+Upload components handle uploading audio files to cloud storage (e.g. Dropbox) and deleting them again. They are paired with input components by scheme: an upload component's `SCHEME` matches the input component that can resolve the URIs it produces. `upload()` returns a URI carrying that scheme, which is stored on a track; the matching input component can then resolve it, and `delete()` the file remotely. Must adhere to types defined in `upload/types.d.ts`
+
+
 ### Output
 
 Output components hold all the user data: facets, playlist items, settings and tracks. They all have the same surface API. Data is exposed via a signal getter called `collection`, one for each kind of data. These components are also responsible loading and saving that data. The data may be encoded, each component decides for its own what the type of the data is. The subcategory states what that type is and this is reflected in the directory structure these components live in:

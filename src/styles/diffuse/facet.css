@@ -186,8 +186,9 @@ button,
   }
 
   &.button--danger {
-    border-color: var(--accent-twist-4);
-    color: var(--accent-twist-4);
+    background-color: var(--accent-twist-4);
+    border-color: transparent;
+    color: var(--bg-color);
   }
 
   &.button--plain {

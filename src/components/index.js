@@ -7,6 +7,7 @@ import * as _ConfiguratorInput from "./configurator/input/element.js"
 import * as _ConfiguratorMetadata from "./configurator/metadata/element.js"
 import * as _ConfiguratorOutput from "./configurator/output/element.js"
 import * as _ConfiguratorScrobbles from "./configurator/scrobbles/element.js"
+import * as _ConfiguratorUpload from "./configurator/upload/element.js"
 import * as _EngineAudio from "./engine/audio/element.js"
 import * as _EngineQueue from "./engine/queue/element.js"
 import * as _EngineRepeatShuffle from "./engine/repeat-shuffle/element.js"
@@ -48,6 +49,7 @@ import * as _TransformerOutputRefinerDefault from "./transformer/output/refiner/
 import * as _TransformerOutputRefinerInitialContents from "./transformer/output/refiner/initial-contents/element.js"
 import * as _TransformerOutputRefinerPasskeyEncryption from "./transformer/output/refiner/passkey-encryption/element.js"
 import * as _TransformerOutputStringJson from "./transformer/output/string/json/element.js"
+import * as _UploadDropbox from "./upload/dropbox/element.js"
 
 export const artwork = {
   audioMetadata: _ArtworkAudioMetadata,
@@ -62,6 +64,7 @@ export const configurator = {
   metadata: _ConfiguratorMetadata,
   output: _ConfiguratorOutput,
   scrobbles: _ConfiguratorScrobbles,
+  upload: _ConfiguratorUpload,
 }
 
 export const engine = {
@@ -140,4 +143,8 @@ export const transformer = {
       json: _TransformerOutputStringJson,
     },
   },
+}
+
+export const upload = {
+  dropbox: _UploadDropbox,
 }

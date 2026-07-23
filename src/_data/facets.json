@@ -83,6 +83,13 @@
     "desc": "Add Dropbox as an audio source."
   },
   {
+    "url": "facets/data/file-manager/index.html",
+    "title": "File Manager",
+    "category": "Data",
+    "featured": true,
+    "desc": "Upload audio files to play them and optionally sync them with your cloud storage. These are automatically added as inputs (aka. sources)."
+  },
+  {
     "url": "facets/connect/https/index.html",
     "title": "Connect / HTTPS",
     "category": "Data",
@@ -155,6 +162,14 @@
     "category": "Data",
     "tags": ["base"],
     "desc": "The default setup for user-data storage output. Adds support for: AT Protocol and S3-compatible storage. For both of these a custom local-first syncing algorithm is used."
+  },
+  {
+    "url": "facets/data/upload-bundle/index.html",
+    "title": "Default Upload Bundle",
+    "kind": "prelude",
+    "category": "Data",
+    "tags": ["base"],
+    "desc": "The default setup for uploading audio files to cloud storage. Adds support for: Dropbox."
   },
   {
     "url": "facets/data/export-import/index.html",
