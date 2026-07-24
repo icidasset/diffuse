@@ -58,12 +58,10 @@ const { setItems, setError } = setup({
       <span>Drop or click to select files</span>
     </label>
 
-    <hr id="local-ephemeral-divider" hidden>
-    <div id="local-ephemeral-row" class="button-row" hidden>
+    <div id="local-ephemeral-row" class="button-row" style="margin-top: var(--space-md);" hidden>
       <button
         id="local-clear-ephemeral-btn"
         class="button--danger button--small"
-        style="width: 100%"
       >
         <i class="ph-bold ph-trash"></i>
         Clear files
@@ -144,10 +142,6 @@ dropzone?.addEventListener("drop", async (e) => {
 // REACTIVE LIST
 ////////////////////////////////////////////
 
-const ephemeralDivider =
-  /** @type {HTMLElement | null} */ (document.querySelector(
-    "#local-ephemeral-divider",
-  ));
 const ephemeralRow =
   /** @type {HTMLElement | null} */ (document.querySelector(
     "#local-ephemeral-row",
@@ -160,7 +154,6 @@ effect(() => {
     t.uri.startsWith("ephemeral+cache://")
   );
 
-  if (ephemeralDivider) ephemeralDivider.hidden = !hasEphemeral;
   if (ephemeralRow) ephemeralRow.hidden = !hasEphemeral;
 
   const entries = localInput?.sources(tracks) ?? [];
