@@ -209,7 +209,7 @@ function renderFileList(listEl, items, prefix) {
 const { setLocalItems, setRemoteItems, setError } = setup({
   title: "File Manager",
   description: html`
-    <p>Upload audio files to play them and optionally sync them with your cloud storage. These are automatically added as inputs (aka. sources).</p>
+    <p>Upload audio files to play them and optionally sync them with your cloud storage. These are automatically added as inputs (aka. sources) and then processed into playable tracks.</p>
 
     <p>
       <small>
@@ -476,7 +476,7 @@ effect(() => {
   uploadIcon.className = "ph-fill ph-cloud-arrow-up";
   uploadLabel.textContent = isBusy
     ? "Uploading ..."
-    : "Connect storage";
+    : "Set up syncing";
 
   litRender(
     html`
