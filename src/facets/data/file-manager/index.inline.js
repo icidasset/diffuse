@@ -434,8 +434,16 @@ effect(() => {
   if (!uploadBtn || !uploadIcon || !uploadLabel || !uploadMenu) return;
   if (!stopSyncBtn || !stopSyncLabel) return;
 
-  const isBusy = uploadState.get() !== "idle";
-  if (uploadIndicator) uploadIndicator.hidden = !isBusy;
+  const state = uploadState.get();
+  const isBusy = state !== "idle";
+  if (uploadIndicator) {
+    uploadIndicator.hidden = !isBusy;
+    uploadIndicator.title = state === "caching"
+      ? "Processing local files …"
+      : state === "uploading"
+      ? "Uploading to cloud storage …"
+      : "";
+  }
 
   const syncing = syncScheme.get();
 
