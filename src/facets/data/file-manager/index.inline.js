@@ -210,6 +210,12 @@ const { setLocalItems, setRemoteItems, setError } = setup({
   title: "File Manager",
   description: html`
     <p>Upload audio files to play them and optionally sync them with your cloud storage. These are automatically added as inputs (aka. sources).</p>
+
+    <p>
+      <small>
+        Got music stored elsewhere, or don't want Diffuse to manage your music? There's a bunch more options to <a href="../l/?path=facets%2Fconnect%2Findex.html">connect</a> to with just read-only access.
+      </small>
+    </p>
   `,
 
   leftContent: html`
