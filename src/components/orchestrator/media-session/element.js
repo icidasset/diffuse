@@ -181,33 +181,33 @@ class MediaSessionOrchestrator extends BroadcastableDiffuseElement {
   #registerActionHandlers() {
     navigator.mediaSession.setActionHandler("play", () => {
       if (!this.audio || !this.queue) return;
-      if (!this.#isLeader) return;
+      if (!this.#isLeader.value) return;
       const now = this.queue.now();
       if (now) this.audio.play({ audioId: now.id });
     });
 
     navigator.mediaSession.setActionHandler("pause", () => {
       if (!this.audio || !this.queue) return;
-      if (!this.#isLeader) return;
+      if (!this.#isLeader.value) return;
       const now = this.queue.now();
       if (now) this.audio.pause({ audioId: now.id });
     });
 
     navigator.mediaSession.setActionHandler("previoustrack", () => {
       if (!this.queue) return;
-      if (!this.#isLeader) return;
+      if (!this.#isLeader.value) return;
       this.queue.unshift();
     });
 
     navigator.mediaSession.setActionHandler("nexttrack", () => {
       if (!this.queue) return;
-      if (!this.#isLeader) return;
+      if (!this.#isLeader.value) return;
       this.queue.shift();
     });
 
     navigator.mediaSession.setActionHandler("seekto", (details) => {
       if (!this.audio || !this.queue) return;
-      if (!this.#isLeader) return;
+      if (!this.#isLeader.value) return;
       const now = this.queue.now();
       if (!now || details.seekTime == null) return;
       const state = this.audio.state(now.id);
