@@ -213,7 +213,7 @@ const { setLocalItems, setRemoteItems, setError } = setup({
 
     <p>
       <small>
-        Got music stored elsewhere, or don't want Diffuse to manage your music? There's a bunch more options to <a href="../l/?path=facets%2Fconnect%2Findex.html">connect</a> to with just read-only access.
+        Got music stored elsewhere, or don't want Diffuse to manage your music? There's a bunch more options to <a href="l/?path=facets%2Fconnect%2Findex.html">connect</a> to with just read-only access.
       </small>
     </p>
   `,
