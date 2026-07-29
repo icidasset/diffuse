@@ -1,6 +1,6 @@
 import { defineElement, DiffuseElement } from "~/common/element.js";
-import { DEFAULT_APP_KEY, SCHEME } from "./constants.js";
-import { accountsFromTracks, buildURI } from "./common.js";
+import { DEFAULT_APP_KEY, PKCE_VERIFIER_KEY, SCHEME } from "./constants.js";
+import { accountsFromTracks, buildURI, generatePKCEPair } from "./common.js";
 
 /**
  * @import {InputActions, InputSchemeProvider} from "@specs/components/input/types.d.ts"
@@ -54,13 +54,22 @@ class DropboxInput extends DiffuseElement {
 
   // 🛠️
 
-  authorize() {
+  async authorize() {
     localStorage.setItem("oauth/callback/redirect_path", location.pathname + location.search);
 
+    // Use the authorization-code flow with PKCE so we receive a
+    // long-lived refresh token that can automatically renew the
+    // short-lived access token (4 h) without user interaction.
+    const { verifier, challenge } = await generatePKCEPair();
+    localStorage.setItem(PKCE_VERIFIER_KEY, verifier);
+
     const params = new URLSearchParams({
-      response_type: "token",
+      response_type: "code",
       client_id: this.appKey,
       redirect_uri: location.origin + "/oauth/callback/",
+      token_access_type: "offline",
+      code_challenge: challenge,
+      code_challenge_method: "S256",
     });
 
     location.assign(`https://www.dropbox.com/oauth2/authorize?${params}`);

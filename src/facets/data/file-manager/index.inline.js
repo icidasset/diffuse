@@ -322,7 +322,7 @@ stopSyncBtn?.addEventListener("click", () => stopSyncing());
 ////////////////////////////////////////////
 
 // Detect the OAuth callback: if `?uploading=<scheme>` is in the URL and
-// `#access_token=...` is in the hash, we just returned from the OAuth
+// `#refresh_token=...` is in the hash, we just returned from the OAuth
 // provider. Clean the URL (remove only the `uploading` param and the hash,
 // preserving any other query parameters the loader needs) and resume the
 // upload flow.
@@ -332,16 +332,16 @@ stopSyncBtn?.addEventListener("click", () => stopSyncing());
 
   if (uploadingScheme) {
     const hashParams = new URLSearchParams(url.hash.slice(1));
-    const accessToken = hashParams.get("access_token");
+    const refreshToken = hashParams.get("refresh_token");
 
     // Clean URL: remove the `uploading` param and the hash, keep everything else.
     url.searchParams.delete("uploading");
     url.hash = "";
     history.replaceState({}, "", url);
 
-    if (accessToken) {
+    if (refreshToken) {
       // Don't await — let the page render while the upload runs.
-      resumeUpload(uploadingScheme, accessToken);
+      resumeUpload(uploadingScheme, refreshToken);
     } else {
       setError("Authorization failed. Please try again.");
     }
@@ -786,15 +786,15 @@ async function startUpload(scheme, uploadElement) {
 }
 
 /**
- * Resumes the sync flow after returning from the OAuth redirect. The access
+ * Resumes the sync flow after returning from the OAuth redirect. The refresh
  * token is in the URL hash; we use it to build a placeholder track (via the
  * upload component's `createSource`), upload files to that account, then save
  * the placeholder track so the matching input component lists the files.
  *
  * @param {string} scheme
- * @param {string} accessToken
+ * @param {string} refreshToken
  */
-async function resumeUpload(scheme, accessToken) {
+async function resumeUpload(scheme, refreshToken) {
   setError(null);
   uploadState.value = "uploading";
 
@@ -820,7 +820,7 @@ async function resumeUpload(scheme, accessToken) {
     // component by scheme.
     const placeholderTrack = await uploadConfigurator.createSource({
       scheme,
-      accessToken,
+      refreshToken,
       directoryPath: UPLOAD_DIRECTORY,
     });
     const uri = placeholderTrack.uri;

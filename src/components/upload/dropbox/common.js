@@ -1,4 +1,4 @@
-import { parseURI } from "~/components/input/dropbox/common.js";
+import { parseURI, getAccessToken } from "~/components/input/dropbox/common.js";
 
 /**
  * @import { Account } from "~/components/input/dropbox/common.js"
@@ -12,12 +12,17 @@ import { parseURI } from "~/components/input/dropbox/common.js";
  * Upload a file to Dropbox. Uses the content-upload endpoint with the
  * file's bytes as the request body.
  *
- * @param {string} accessToken
+ * @param {string} refreshToken
  * @param {string} destinationPath Full Dropbox path (e.g. "/Music/song.mp3").
  * @param {File} file
  * @returns {Promise<{ path_lower: string; name: string } | null>} The uploaded file metadata, or null on failure.
  */
-export async function uploadFile(accessToken, destinationPath, file) {
+export async function uploadFile(refreshToken, destinationPath, file) {
+  const accessToken = await getAccessToken(refreshToken);
+  if (!accessToken) {
+    throw new Error("Dropbox access token could not be refreshed. Please reconnect.");
+  }
+
   const resp = await fetch(
     "https://content.dropboxapi.com/2/files/upload",
     {
@@ -55,11 +60,16 @@ export async function uploadFile(accessToken, destinationPath, file) {
 /**
  * Delete a file from Dropbox.
  *
- * @param {string} accessToken
+ * @param {string} refreshToken
  * @param {string} filePath Full Dropbox path (e.g. "/Music/song.mp3").
  * @returns {Promise<boolean>}
  */
-export async function deleteFile(accessToken, filePath) {
+export async function deleteFile(refreshToken, filePath) {
+  const accessToken = await getAccessToken(refreshToken);
+  if (!accessToken) {
+    throw new Error("Dropbox access token could not be refreshed. Please reconnect.");
+  }
+
   const resp = await fetch(
     "https://api.dropboxapi.com/2/files/delete_v2",
     {
@@ -120,5 +130,5 @@ export function accountFromURI(uri) {
   if (!parsed) {
     throw new Error(`Invalid Dropbox URI: ${uri}`);
   }
-  return { accessToken: parsed.accessToken, directoryPath: parsed.directoryPath };
+  return { refreshToken: parsed.refreshToken, directoryPath: parsed.directoryPath };
 }

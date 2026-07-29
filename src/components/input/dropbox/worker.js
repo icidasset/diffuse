@@ -44,7 +44,7 @@ export async function consult(fileUriOrScheme) {
   const parsed = parseURI(fileUriOrScheme);
   if (!parsed) return { supported: true, consult: "undetermined" };
 
-  const accessible = await checkAccessCached(parsed.accessToken);
+  const accessible = await checkAccessCached(parsed.refreshToken);
   return { supported: true, consult: accessible };
 }
 
@@ -76,7 +76,7 @@ export async function groupConsult(uris) {
 
   const promises = Object.entries(groups).map(
     async ([id, { account, uris }]) => {
-      const available = await checkAccessCached(account.accessToken);
+      const available = await checkAccessCached(account.refreshToken);
 
       /** @type {ConsultGrouping} */
       const grouping = available === "yes"
@@ -111,7 +111,7 @@ export async function list(cachedTracks = []) {
 
   const promises = Object.values(accounts).map(async (account) => {
     const id = accountId(account);
-    const files = await listFiles(account.accessToken, account.directoryPath);
+    const files = await listFiles(account.refreshToken, account.directoryPath);
 
     if (!files) {
       const existing = cachedTracks.find((t) => {
@@ -174,7 +174,7 @@ export async function resolve({ uri }) {
   const parsed = parseURI(uri);
   if (!parsed || parsed.path === "/") return undefined;
 
-  const link = await getTemporaryLink(parsed.accessToken, parsed.path);
+  const link = await getTemporaryLink(parsed.refreshToken, parsed.path);
   if (!link) return undefined;
 
   // Dropbox temporary links expire after 4 hours

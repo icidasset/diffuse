@@ -31,7 +31,7 @@ export async function consult(fileUriOrScheme) {
   const parsed = parseURI(fileUriOrScheme);
   if (!parsed) return { supported: true, consult: "undetermined" };
 
-  const accessible = await checkAccessCached(parsed.accessToken);
+  const accessible = await checkAccessCached(parsed.refreshToken);
   return { supported: true, consult: accessible };
 }
 
@@ -43,7 +43,7 @@ export async function upload({ file, uri, path }) {
   const destinationPath = resolveDestinationPath(account, file, path);
 
   const uploaded = await uploadFile(
-    account.accessToken,
+    account.refreshToken,
     destinationPath,
     file,
   );
@@ -64,14 +64,14 @@ export async function deleteFn(uri) {
     throw new Error(`Invalid Dropbox file URI: ${uri}`);
   }
 
-  await deleteFile(parsed.accessToken, parsed.path);
+  await deleteFile(parsed.refreshToken, parsed.path);
 }
 
 /**
  * @type {Actions['createSource']}
  */
-export async function createSource({ accessToken, directoryPath }) {
-  const uri = buildURI({ accessToken, directoryPath });
+export async function createSource({ refreshToken, directoryPath }) {
+  const uri = buildURI({ refreshToken, directoryPath });
   const now = new Date().toISOString();
   return {
     $type: "sh.diffuse.output.track",

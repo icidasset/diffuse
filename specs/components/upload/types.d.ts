@@ -19,7 +19,7 @@ export type UploadActions = {
    */
   createSource(args: {
     scheme: string;
-    accessToken: string;
+    refreshToken: string;
     directoryPath: string;
   }): Promise<Track>;
 

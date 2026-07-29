@@ -1,5 +1,6 @@
 import { defineElement, DiffuseElement } from "~/common/element.js";
-import { DEFAULT_APP_KEY, SCHEME } from "~/components/input/dropbox/constants.js";
+import { DEFAULT_APP_KEY, PKCE_VERIFIER_KEY, SCHEME } from "~/components/input/dropbox/constants.js";
+import { generatePKCEPair } from "~/components/input/dropbox/common.js";
 
 /**
  * @import {UploadActions, UploadSchemeProvider} from "@specs/components/upload/types.d.ts"
@@ -50,13 +51,19 @@ class DropboxUpload extends DiffuseElement {
 
   // 🛠️
 
-  authorize() {
+  async authorize() {
     localStorage.setItem("oauth/callback/redirect_path", location.pathname + location.search);
 
+    const { verifier, challenge } = await generatePKCEPair();
+    localStorage.setItem(PKCE_VERIFIER_KEY, verifier);
+
     const params = new URLSearchParams({
-      response_type: "token",
+      response_type: "code",
       client_id: this.appKey,
       redirect_uri: location.origin + "/oauth/callback/",
+      token_access_type: "offline",
+      code_challenge: challenge,
+      code_challenge_method: "S256",
     });
 
     location.assign(`https://www.dropbox.com/oauth2/authorize?${params}`);

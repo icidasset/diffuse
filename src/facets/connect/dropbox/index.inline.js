@@ -37,7 +37,7 @@ await Promise.all([
 ////////////////////////////////////////////
 
 const hashParams = new URLSearchParams(location.hash.slice(1));
-let currentToken = hashParams.get("access_token");
+let currentToken = hashParams.get("refresh_token");
 
 if (currentToken) {
   history.replaceState({}, "", location.pathname + location.search);
@@ -153,7 +153,7 @@ document.querySelector("#dropbox-add-btn")?.addEventListener(
       const rawDir = dirInput?.value?.trim() || "/";
       const directoryPath = rawDir.startsWith("/") ? rawDir : "/" + rawDir;
 
-      const account = { accessToken: currentToken, directoryPath };
+      const account = { refreshToken: currentToken, directoryPath };
       const uri = buildURI(account);
       const now = new Date().toISOString();
 
