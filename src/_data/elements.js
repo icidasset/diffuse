@@ -71,6 +71,12 @@ export default {
       title: "Scrobbles",
       desc: "Configure multiple scrobblers (music trackers).",
     },
+    {
+      url: "components/configurator/upload/element.js",
+      title: "Upload",
+      desc:
+        "Takes upload components as children and enables configuring one or more upload destinations.",
+    },
   ],
 
   engines: [
@@ -257,6 +263,12 @@ export default {
       desc:
         "Store your user data on the storage associated with your ATProtocol identity. Data is lexicon shaped by default so this element takes in that data directly without any transformations.",
     },
+    {
+      url: "components/output/bytes/dropbox/element.js",
+      title: "Bytes / Dropbox",
+      desc:
+        "Store output data as raw bytes in the Dropbox app folder.",
+    },
   ],
 
   supplements: [
@@ -326,6 +338,15 @@ export default {
     },
   ],
 
+  upload: [
+    {
+      url: "components/upload/dropbox/element.js",
+      title: "Dropbox",
+      desc:
+        "Uploads and deletes files on Dropbox using the Dropbox v2 HTTP API.",
+    },
+  ],
+
   definitions: [
     {
       url: "definitions/output/collaboration.json",
@@ -345,9 +366,20 @@ export default {
         "Represents a single item in a playlist. Tracks are matched based on the given criteria. A playlist is formed by grouping items by their playlist property.",
     },
     {
+      url: "definitions/output/playlistItemBundle.json",
+      title: "Output / Playlist Item Bundle",
+      desc: "A bundle of playlist items.",
+    },
+    {
       title: "Output / Progress",
       desc: "Used to track progress of (long) audio playback.",
       todo: true,
+    },
+    {
+      url: "definitions/output/setting.json",
+      title: "Output / Setting",
+      desc:
+        "Represents a single application setting as a key-value pair.",
     },
     {
       url: "definitions/output/track.json",

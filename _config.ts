@@ -319,12 +319,17 @@ site.copy("skills/diffuse-facet/SKILL.md");
 site.add("skills");
 
 site.addEventListener("afterBuild", () => {
-  const destDir = "dist/skills/diffuse-facet/docs/definitions";
+  const destDirs = [
+    "dist/definitions",
+    "dist/skills/diffuse-facet/docs/definitions",
+  ];
   for (const f of walkSync("./lexicons/", { includeDirs: false })) {
     const rel = path.relative("./lexicons", f.path);
-    const dest = path.join(destDir, rel);
-    ensureDirSync(path.dirname(dest));
-    Deno.copyFileSync(f.path, dest);
+    for (const destDir of destDirs) {
+      const dest = path.join(destDir, rel);
+      ensureDirSync(path.dirname(dest));
+      Deno.copyFileSync(f.path, dest);
+    }
   }
 });
 

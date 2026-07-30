@@ -34,6 +34,7 @@ styles:
       <li><a href="elements/#output">Output</a></li>
       <li><a href="elements/#supplements">Supplements</a></li>
       <li><a href="elements/#transformers">Transformers</a></li>
+      <li><a href="elements/#upload">Upload</a></li>
       <!---->
       <li style="margin-top: var(--space-xs);"><a href="#definitions">Definitions</a></li>
     </ul>
@@ -113,6 +114,14 @@ styles:
         items: elements.transformers,
         content: `
         Transform data from one format or schema into another. See the definitions section below for more information. Just as configurators, these are intermediates and require to have the same set of actions as the element it targets.
+        `
+      }) }}
+
+      {{ await comp.element({
+        title: "Upload",
+        items: elements.upload,
+        content: `
+          These elements are paired with input elements, extending their functionality. The upload element uploads or removes audio files, and the input element then lists them.
         `
       }) }}
     </div>
