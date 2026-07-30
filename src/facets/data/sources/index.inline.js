@@ -223,7 +223,7 @@ effect(() => {
                 <button
                   class="button--plain button--icon"
                   title="Remove source"
-                  @click="${() => removeSource(uri)}"
+                  @click="${() => removeSource(uri, label)}"
                 >
                   <i class="ph-fill ph-skull"></i>
                 </button>
@@ -242,11 +242,16 @@ effect(() => {
 ////////////////////////////////////////////
 
 async function removeEphemeralSources() {
-  return removeSource(SCHEME_EPHEMERAL_CACHE);
+  return removeSource(SCHEME_EPHEMERAL_CACHE, "Files stored in the browser");
 }
 
-/** @param {string} uri */
-async function removeSource(uri) {
+/**
+ * @param {string} uri
+ * @param {string} name
+ */
+async function removeSource(uri, name) {
+  if (!confirm(`Are you sure you want to remove the source "${name}"?`)) return;
+
   const tracks = await Output.data(outputOrchestrator.tracks);
 
   const detachedTracks = await inputConfigurator.detach({

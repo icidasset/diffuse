@@ -398,7 +398,7 @@ effect(() => {
   setLocalItems(
     localEntries.map(({ label, uri }) => ({
       name: label,
-      onRemove: () => removeLocalEntry(uri),
+      onRemove: () => removeLocalEntry(uri, label),
     })),
   );
 
@@ -424,7 +424,7 @@ effect(() => {
   setRemoteItems(
     remoteEntries.map(({ label, uri }) => ({
       name: label,
-      onRemove: () => removeRemoteEntry(uri),
+      onRemove: () => removeRemoteEntry(uri, label),
     })),
   );
 });
@@ -557,8 +557,12 @@ function enabledSourceUri(scheme) {
   return sources.length > 0 ? sources[0].uri : null;
 }
 
-/** @param {string} uri */
-async function removeLocalEntry(uri) {
+/**
+ * @param {string} uri
+ * @param {string} name
+ */
+async function removeLocalEntry(uri, name) {
+  if (!confirm(`Are you sure you want to remove "${name}"?`)) return;
   setError(null);
   try {
     const tracks = await Output.data(outputOrchestrator.tracks);
@@ -586,8 +590,10 @@ async function removeLocalEntry(uri) {
  * `resumeUpload` picks up the pending delete and retries it.
  *
  * @param {string} uri
+ * @param {string} name
  */
-async function removeRemoteEntry(uri) {
+async function removeRemoteEntry(uri, name) {
+  if (!confirm(`Are you sure you want to remove "${name}"?`)) return;
   setError(null);
   try {
     // Delete the file from the cloud first.

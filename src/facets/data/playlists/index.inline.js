@@ -138,6 +138,8 @@ effect(() => {
 
 /** @param {string} name */
 async function removePlaylist(name) {
+  if (!confirm(`Are you sure you want to remove "${name}"?`)) return;
+
   const playlistItems = await Output.data(outputOrchestrator.playlistItems);
   await outputOrchestrator.playlistItems.save(
     playlistItems.filter((item) => item.playlist !== name),
