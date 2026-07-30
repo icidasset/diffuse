@@ -30,10 +30,14 @@ export async function uploadFile(refreshToken, destinationPath, file) {
       headers: {
         "Authorization": `Bearer ${accessToken}`,
         "Content-Type": "application/octet-stream",
+        // `overwrite` is safe because uploads are content-addressed: the
+        // filename is `<CID>.<ext>`, so the same bytes always map to the same
+        // path (overwrite is a no-op) and different bytes get a different path
+        // (no conflict). This makes re-uploads idempotent instead of spawning
+        // autorenamed duplicates.
         "Dropbox-API-Arg": JSON.stringify({
           path: destinationPath,
-          mode: "add",
-          autorename: true,
+          mode: "overwrite",
           mute: true,
         }).replace(/[^\x00-\x7F]/g, (ch) =>
           "\\u" + ("0000" + ch.charCodeAt(0).toString(16)).slice(-4)

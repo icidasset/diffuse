@@ -45,6 +45,14 @@
   white-space: nowrap;
 }
 
+.file-item__subtitle {
+  color: oklch(from var(--text-color) l c h / 0.5);
+  font-size: var(--fs-xs);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
 .dropzone {
   align-items: center;
   border: 2px dashed var(--border-color);

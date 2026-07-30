@@ -33,6 +33,10 @@ const SYNC_SCHEME_KEY = "file-manager:sync-scheme";
 /** IDB key for storing a pending delete path (retried after reconnection). */
 const PENDING_DELETE_KEY = "file-manager:pending-delete";
 
+/** IDB key for a persisted map of CID → original filename, so the
+ * "Artist - Title" label survives upload (remote tracks) and reloads. */
+const CID_NAMES_KEY = "file-manager:cid-names";
+
 foundation.setup({ title: "File Manager | Diffuse" });
 
 ////////////////////////////////////////////
@@ -64,7 +68,12 @@ await Promise.all([
 /** Maps ephemeral cache URIs to their original filename. */
 const ephemeralNames = new Map();
 
-/** Bumped whenever `ephemeralNames` is updated so the reactive effect re-fires. */
+/** Maps a content CID to its original filename. Persisted to IDB so the label
+ * is available for remote tracks (after upload) and across reloads. */
+const cidNames = new Map();
+
+/** Bumped whenever `ephemeralNames` or `cidNames` is updated so the reactive
+ * effect re-fires (they're plain Maps, not signals). */
 const namesVersion = signal(0);
 
 /** Tracks the upload button state: "idle", "caching", or "uploading". */
@@ -78,7 +87,7 @@ const syncScheme = signal(/** @type {string | null} */ (null));
 ////////////////////////////////////////////
 
 /**
- * @typedef {{ name: string; onRemove: () => void }} FileItem
+ * @typedef {{ name: string; subtitle?: string; onRemove: () => void }} FileItem
  */
 
 /**
@@ -174,11 +183,14 @@ function renderFileList(listEl, items, prefix) {
   litRender(
     html`
       ${items.map(
-        ({ name, onRemove }, index) =>
+        ({ name, subtitle, onRemove }, index) =>
           html`
             <li class="file-item">
               <div class="file-item__info">
                 <span class="file-item__name">${name}</span>
+                ${subtitle
+                  ? html`<span class="file-item__subtitle monospace-font">${subtitle}</span>`
+                  : null}
               </div>
               <button
                 class="button--plain button--icon"
@@ -188,6 +200,17 @@ function renderFileList(listEl, items, prefix) {
                 <i class="ph-fill ph-dots-three-outline-vertical"></i>
               </button>
               <div id="${prefix}-menu-${index}" class="dropdown" popover>
+                ${subtitle
+                  ? html`<button
+                      @click="${(/** @type {MouseEvent} */ e) => {
+                        /** @type {HTMLElement | null} */ (/** @type {HTMLElement} */ (e.currentTarget).closest("[popover]"))?.hidePopover();
+                        navigator.clipboard?.writeText(subtitle).catch(() => {});
+                      }}"
+                    >
+                      <i class="ph-fill ph-copy"></i>
+                      Copy CID
+                    </button>`
+                  : null}
                 <button
                   @click="${(/** @type {MouseEvent} */ e) => {
                     /** @type {HTMLElement | null} */ (/** @type {HTMLElement} */ (e.currentTarget).closest("[popover]"))?.hidePopover();
@@ -356,6 +379,18 @@ stopSyncBtn?.addEventListener("click", () => stopSyncing());
 // `File` blob retains its `.name` across IDB round-trips, so we read it back
 // once on load and seed the in-memory map before the first render.
 await (async () => {
+  // Restore the persisted CID → filename map so remote tracks (uploaded in a
+  // previous session) can still show their "Artist - Title" label.
+  const persisted = await IDB.get(CID_NAMES_KEY);
+  if (persisted) {
+    for (const [cid, name] of Object.entries(persisted)) {
+      cidNames.set(cid, name);
+    }
+  }
+
+  // Recover filenames for tracks still in the ephemeral cache: the cached
+  // `File` blob retains its `.name` across IDB round-trips, so we read it back
+  // once on load and seed the in-memory maps before the first render.
   const tracks = await Output.data(outputOrchestrator.tracks);
   const ephemeralUris = tracks
     .filter((t) => t.uri.startsWith("ephemeral+cache://"))
@@ -365,7 +400,11 @@ await (async () => {
     ephemeralUris.map(async (uri) => {
       if (ephemeralNames.has(uri)) return;
       const blob = await IDB.get(CACHE_KEY_PREFIX + uri);
-      if (blob?.name) ephemeralNames.set(uri, blob.name);
+      if (blob?.name) {
+        ephemeralNames.set(uri, blob.name);
+        const cid = cidFromUri(uri);
+        if (cid) cidNames.set(cid, blob.name);
+      }
     }),
   );
   namesVersion.value++;
@@ -378,32 +417,41 @@ await (async () => {
 }
 
 effect(() => {
-  // Re-fire when ephemeralNames is updated (it's a plain Map, not a signal).
+  // Re-fire when ephemeralNames/cidNames are updated (plain Maps, not signals).
   namesVersion.get();
   const tracksCol = outputOrchestrator.tracks.collection();
   const tracks = tracksCol.state === "loaded" ? tracksCol.data : [];
 
   // Local tracks: ephemeral cache tracks (files cached locally, not yet
-  // uploaded to the cloud).
+  // uploaded to the cloud). The label is the original filename without its
+  // extension (e.g. "Artist - Title"); the CID is shown as a subtitle.
   const localEntries = tracks
     .filter((t) => t.uri.startsWith("ephemeral+cache://"))
-    .map((t) => ({
-      label: ephemeralNames.get(t.uri) ?? t.uri.split("://")[1],
-      uri: t.uri,
-    }))
+    .map((t) => {
+      const cid = cidFromUri(t.uri);
+      const original = ephemeralNames.get(t.uri) ?? cidNames.get(cid);
+      return {
+        label: original ? stemOf(original) : cid,
+        cid,
+        uri: t.uri,
+      };
+    })
     .sort((a, b) =>
       a.label.localeCompare(b.label, undefined, { sensitivity: "base" })
     );
 
   setLocalItems(
-    localEntries.map(({ label, uri }) => ({
+    localEntries.map(({ label, cid, uri }) => ({
       name: label,
+      subtitle: cid,
       onRemove: () => removeLocalEntry(uri, label),
     })),
   );
 
   // Remote tracks: tracks from the selected upload method's input only.
-  // When no upload method is selected, no remote tracks are shown.
+  // When no upload method is selected, no remote tracks are shown. The cloud
+  // file is named `<CID>.<ext>`, so we look up the original filename via the
+  // CID to show "Artist - Title", falling back to the cloud filename.
   const scheme = syncScheme.get();
   const remoteEntries = scheme
     ? tracks
@@ -412,18 +460,24 @@ effect(() => {
             t.uri.startsWith(scheme + "://") &&
             t.kind !== "placeholder",
         )
-        .map((t) => ({
-          label: trackLabel(t.uri),
-          uri: t.uri,
-        }))
+        .map((t) => {
+          const cid = cidFromUri(t.uri);
+          const original = cidNames.get(cid);
+          return {
+            label: original ? stemOf(original) : trackLabel(t.uri),
+            cid,
+            uri: t.uri,
+          };
+        })
         .sort((a, b) =>
           a.label.localeCompare(b.label, undefined, { sensitivity: "base" })
         )
     : [];
 
   setRemoteItems(
-    remoteEntries.map(({ label, uri }) => ({
+    remoteEntries.map(({ label, cid, uri }) => ({
       name: label,
+      subtitle: cid,
       onRemove: () => removeRemoteEntry(uri, label),
     })),
   );
@@ -544,6 +598,52 @@ function trackLabel(uri) {
 }
 
 /**
+ * Extracts the file extension (without the dot) from a filename, or "" if it
+ * has none. Used to build the cloud filename as `<CID>.<ext>`.
+ *
+ * @param {string} name
+ * @returns {string}
+ */
+function extOf(name) {
+  const slash = Math.max(name.lastIndexOf("/"), name.lastIndexOf("\\"));
+  const base = slash >= 0 ? name.slice(slash + 1) : name;
+  const dot = base.lastIndexOf(".");
+  return dot > 0 ? base.slice(dot + 1) : "";
+}
+
+/**
+ * Returns the filename without its extension — the "Artist - Title" part of
+ * "Artist - Title.mp3".
+ *
+ * @param {string} name
+ * @returns {string}
+ */
+function stemOf(name) {
+  const slash = Math.max(name.lastIndexOf("/"), name.lastIndexOf("\\"));
+  const base = slash >= 0 ? name.slice(slash + 1) : name;
+  const dot = base.lastIndexOf(".");
+  return dot > 0 ? base.slice(0, dot) : base;
+}
+
+/**
+ * Extracts the content CID from a track URI. For ephemeral tracks the URI is
+ * `ephemeral+cache://<cid>`; for remote tracks the last path segment is the
+ * uploaded file `<cid>.<ext>`.
+ *
+ * @param {string} uri
+ * @returns {string}
+ */
+function cidFromUri(uri) {
+  const schemeSep = uri.indexOf("://");
+  if (schemeSep < 0) return "";
+  const rest = uri.slice(schemeSep + 3).split("?")[0];
+  const slash = rest.lastIndexOf("/");
+  const file = slash >= 0 ? rest.slice(slash + 1) : rest;
+  const dot = file.lastIndexOf(".");
+  return dot > 0 ? file.slice(0, dot) : file;
+}
+
+/**
  * Finds the first enabled (non-disabled) source URI for the given scheme.
  *
  * @param {string} scheme
@@ -574,6 +674,10 @@ async function removeLocalEntry(uri, name) {
     if (detachedTracks) {
       await outputOrchestrator.tracks.save(detachedTracks);
       ephemeralNames.delete(uri);
+      const cid = cidFromUri(uri);
+      if (cid && cidNames.delete(cid)) {
+        await IDB.set(CID_NAMES_KEY, Object.fromEntries(cidNames));
+      }
       namesVersion.value++;
     }
   } catch (err) {
@@ -598,6 +702,12 @@ async function removeRemoteEntry(uri, name) {
   try {
     // Delete the file from the cloud first.
     await uploadConfigurator.delete(uri);
+
+    // Drop the stored label for this CID; the file is gone.
+    const cid = cidFromUri(uri);
+    if (cid && cidNames.delete(cid)) {
+      await IDB.set(CID_NAMES_KEY, Object.fromEntries(cidNames));
+    }
 
     // Then remove just this track from the output (not the entire source —
     // `inputConfigurator.detach` would remove all tracks for the account).
@@ -651,14 +761,20 @@ async function uploadTracks(sourceUri) {
 
     if (ephemeralTracks.length === 0) return;
 
-    // Reconstruct Files from the IDB-cached blobs with their original names.
-    // The cached blob is itself a `File` and retains its `.name` across IDB
-    // round-trips, so it's a reliable fallback when `ephemeralNames` hasn't
-    // been seeded yet (e.g. right after an OAuth redirect).
+    // Reconstruct Files from the IDB-cached blobs. The uploaded file is
+    // named after its content ID with the original extension preserved
+    // (e.g. "bafy…foo.mp3"), so duplicate uploads don't clobber each other
+    // and the filename is stable across re-uploads. The cached blob is
+    // itself a `File` and retains its `.name` across IDB round-trips, so it's
+    // a reliable fallback when `ephemeralNames` hasn't been seeded yet (e.g.
+    // right after an OAuth redirect).
     const files = await Promise.all(
       ephemeralTracks.map(async (track) => {
         const blob = await IDB.get(CACHE_KEY_PREFIX + track.uri);
-        const name = ephemeralNames.get(track.uri) ?? blob?.name ?? "audio";
+        const original = ephemeralNames.get(track.uri) ?? blob?.name ?? "audio";
+        const cid = cidFromUri(track.uri);
+        const ext = extOf(original);
+        const name = ext ? `${cid}.${ext}` : cid;
         return new File([blob], name, { type: blob?.type ?? "audio/*" });
       }),
     );
@@ -833,14 +949,19 @@ async function resumeUpload(scheme, refreshToken) {
 
     // Upload ephemeral tracks if any.
     if (ephemeralTracks.length > 0) {
-      // Reconstruct Files from the IDB-cached blobs with their original names.
-      // The cached blob is itself a `File` and retains its `.name` across IDB
-      // round-trips, so it's a reliable fallback when `ephemeralNames` hasn't
-      // been seeded yet (e.g. right after an OAuth redirect).
+      // Reconstruct Files from the IDB-cached blobs. The uploaded file is
+      // named after its content ID with the original extension preserved
+      // (e.g. "bafy…foo.mp3"). The cached blob is itself a `File` and retains
+      // its `.name` across IDB round-trips, so it's a reliable fallback when
+      // `ephemeralNames` hasn't been seeded yet (e.g. right after an OAuth
+      // redirect).
       const files = await Promise.all(
         ephemeralTracks.map(async (track) => {
           const blob = await IDB.get(CACHE_KEY_PREFIX + track.uri);
-          const name = ephemeralNames.get(track.uri) ?? blob?.name ?? "audio";
+          const original = ephemeralNames.get(track.uri) ?? blob?.name ?? "audio";
+          const cid = cidFromUri(track.uri);
+          const ext = extOf(original);
+          const name = ext ? `${cid}.${ext}` : cid;
           return new File([blob], name, { type: blob?.type ?? "audio/*" });
         }),
       );
@@ -969,8 +1090,13 @@ async function cacheFiles(files) {
       files.map((file) => inputConfigurator.cacheBlob(file)),
     );
     files.forEach((file, i) => {
-      ephemeralNames.set(uris[i], file.name);
+      const uri = uris[i];
+      ephemeralNames.set(uri, file.name);
+      const cid = cidFromUri(uri);
+      if (cid) cidNames.set(cid, file.name);
     });
+    // Persist the CID → filename map so labels survive upload and reloads.
+    await IDB.set(CID_NAMES_KEY, Object.fromEntries(cidNames));
     namesVersion.value++;
     const now = new Date().toISOString();
     const existingTracks = await Output.data(outputOrchestrator.tracks);
