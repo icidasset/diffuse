@@ -6,6 +6,7 @@ import { NAME as ATPROTO_SYNC_NAME } from "~/components/transformer/output/raw/a
 import { NAME as ATPROTO_PASSKEY_NAME } from "~/components/transformer/output/refiner/passkey-encryption/element.js";
 
 import { NAME as S3_OUTPUT_NAME } from "~/components/output/bytes/s3/element.js";
+import { NAME as DROPBOX_OUTPUT_NAME } from "~/components/output/bytes/dropbox/element.js";
 import { NAME as S3_SYNC_NAME } from "~/components/transformer/output/bytes/dasl-sync/element.js";
 
 
@@ -25,6 +26,7 @@ effect(() => {
 
   atproto(output);
   s3(output);
+  dropbox(output);
 
   output.loadSelected();
 });
@@ -47,6 +49,8 @@ effect(() => {
         return atprotoCustomElements();
       case "do-output__dc-output__s3":
         return s3CustomElements();
+      case "do-output__dc-output__dropbox":
+        return dropboxCustomElements();
     }
   });
 });
@@ -130,6 +134,42 @@ export function s3(output) {
 
 export function s3CustomElements() {
   import("~/components/output/bytes/s3/element.js");
+  import(
+    "~/components/transformer/output/bytes/dasl-sync/element.js"
+  );
+}
+
+////////////////////////////////////////////
+// DROPBOX
+////////////////////////////////////////////
+
+/**
+ * Wraps user data in a custom CBOR encode data structure
+ * which tracks what identifiers are removed.
+ * The transformer used here allows for merging of data.
+ *
+ * @param {OutputOrchestrator} output
+ */
+export function dropbox(output) {
+  const out = document.createElement(DROPBOX_OUTPUT_NAME);
+  out.setAttribute("group", foundation.GROUP);
+  out.setAttribute("id", "do-output__dob-dropbox");
+
+  const sync = document.createElement(S3_SYNC_NAME);
+  sync.setAttribute("group", foundation.GROUP);
+  sync.setAttribute("id", "do-output__dc-output__dropbox");
+  sync.setAttribute("label", "Dropbox");
+  sync.setAttribute("namespace", "dropbox");
+  sync.setAttribute("output-selector", "#do-output__dob-dropbox");
+
+  // Add elements to DOM, make sure the transformer
+  // is added to the configurator so the user can select it.
+  output.append(out);
+  output.outputConfigurator.append(sync);
+}
+
+export function dropboxCustomElements() {
+  import("~/components/output/bytes/dropbox/element.js");
   import(
     "~/components/transformer/output/bytes/dasl-sync/element.js"
   );

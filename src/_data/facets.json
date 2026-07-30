@@ -80,7 +80,7 @@
     "url": "facets/connect/dropbox/index.html",
     "title": "Connect / Dropbox",
     "category": "Data",
-    "desc": "Add Dropbox as an audio source."
+    "desc": "Add Dropbox as an audio source or use it as user-data storage."
   },
   {
     "url": "facets/data/file-manager/index.html",
@@ -161,7 +161,7 @@
     "kind": "prelude",
     "category": "Data",
     "tags": ["base"],
-    "desc": "The default setup for user-data storage output. Adds support for: AT Protocol and S3-compatible storage. For both of these a custom local-first syncing algorithm is used."
+    "desc": "The default setup for user-data storage output. Adds support for: AT Protocol, Dropbox, and S3-compatible storage. For these a custom local-first syncing algorithm is used."
   },
   {
     "url": "facets/data/upload-bundle/index.html",
