@@ -1,5 +1,5 @@
 {
-  "client_id": "https://elements.diffuse.sh/latest/components/output/raw/atproto/oauth-client-metadata.json",
+  "client_id": "https://elements.diffuse.sh/latest/components/output/raw/atproto-passkey/oauth-client-metadata.json",
   "client_name": "Diffuse",
   "client_uri": "https://elements.diffuse.sh",
   "redirect_uris": ["https://elements.diffuse.sh/oauth/callback"],

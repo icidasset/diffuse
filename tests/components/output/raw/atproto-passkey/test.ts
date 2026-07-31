@@ -3,10 +3,10 @@ import { expect } from "@std/expect";
 
 import { testWeb } from "@tests/common/index.ts";
 
-describe("components/output/raw/atproto", () => {
+describe("components/output/raw/atproto-passkey", () => {
   it("did returns null when not authenticated", async () => {
     const result = await testWeb(async () => {
-      const mod = await import("~/components/output/raw/atproto/element.js");
+      const mod = await import("~/components/output/raw/atproto-passkey/element.js");
       const output = new mod.CLASS();
       document.body.append(output);
       return output.did() ?? null;
@@ -17,7 +17,7 @@ describe("components/output/raw/atproto", () => {
 
   it("rev returns null when not authenticated", async () => {
     const result = await testWeb(async () => {
-      const mod = await import("~/components/output/raw/atproto/element.js");
+      const mod = await import("~/components/output/raw/atproto-passkey/element.js");
       const output = new mod.CLASS();
       document.body.append(output);
       return output.rev() ?? null;
@@ -28,7 +28,7 @@ describe("components/output/raw/atproto", () => {
 
   it("ready returns false when not authenticated", async () => {
     const result = await testWeb(async () => {
-      const mod = await import("~/components/output/raw/atproto/element.js");
+      const mod = await import("~/components/output/raw/atproto-passkey/element.js");
       const output = new mod.CLASS();
       document.body.append(output);
       return output.ready();
@@ -39,7 +39,7 @@ describe("components/output/raw/atproto", () => {
 
   it("listRecords returns empty array when not authenticated", async () => {
     const result = await testWeb(async () => {
-      const mod = await import("~/components/output/raw/atproto/element.js");
+      const mod = await import("~/components/output/raw/atproto-passkey/element.js");
       const output = new mod.CLASS();
       document.body.append(output);
       return output.listRecords("sh.diffuse.output.facet");
@@ -50,7 +50,7 @@ describe("components/output/raw/atproto", () => {
 
   it("getLatestCommit returns null when not authenticated", async () => {
     const result = await testWeb(async () => {
-      const mod = await import("~/components/output/raw/atproto/element.js");
+      const mod = await import("~/components/output/raw/atproto-passkey/element.js");
       const output = new mod.CLASS();
       document.body.append(output);
       return output.getLatestCommit();
@@ -61,7 +61,7 @@ describe("components/output/raw/atproto", () => {
 
   it("putRecords resolves without throwing when not authenticated", async () => {
     const result = await testWeb(async () => {
-      const mod = await import("~/components/output/raw/atproto/element.js");
+      const mod = await import("~/components/output/raw/atproto-passkey/element.js");
       const output = new mod.CLASS();
       document.body.append(output);
 
@@ -74,7 +74,7 @@ describe("components/output/raw/atproto", () => {
 
   it("settings.collection is loading initially", async () => {
     const result = await testWeb(async () => {
-      const mod = await import("~/components/output/raw/atproto/element.js");
+      const mod = await import("~/components/output/raw/atproto-passkey/element.js");
       const output = new mod.CLASS();
       document.body.append(output);
       return output.settings.collection().state;
@@ -85,7 +85,7 @@ describe("components/output/raw/atproto", () => {
 
   it("tracks.collection is loading initially", async () => {
     const result = await testWeb(async () => {
-      const mod = await import("~/components/output/raw/atproto/element.js");
+      const mod = await import("~/components/output/raw/atproto-passkey/element.js");
       const output = new mod.CLASS();
       document.body.append(output);
       return output.tracks.collection().state;

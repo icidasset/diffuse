@@ -1,6 +1,6 @@
 import { html, nothing, render as litRender } from "lit-html";
 
-import { NAME as ATPROTO_NAME } from "~/components/output/raw/atproto/element.js";
+import { NAME as ATPROTO_PASSKEY_NAME } from "~/components/output/raw/atproto-passkey/element.js";
 import { NAME as PASSKEY_NAME } from "~/components/transformer/output/refiner/passkey-encryption/element.js";
 import { effect, signal } from "~/common/signal.js";
 import foundation from "~/common/foundation.js";
@@ -10,7 +10,7 @@ import { setup } from "~/facets/connect/common.js";
 foundation.setup({ title: "Connect Atmosphere | Diffuse" });
 
 /**
- * @import { ATProtoOutputElement } from "@specs/components/output/raw/atproto/types.d.ts"
+ * @import { ATProtoPasskeyOutputElement } from "@specs/components/output/raw/atproto-passkey/types.d.ts"
  * @import PasskeyEncryptionTransformer from "~/components/transformer/output/refiner/passkey-encryption/element.js"
  */
 
@@ -21,18 +21,18 @@ foundation.setup({ title: "Connect Atmosphere | Diffuse" });
 const outputOrchestrator = await foundation.orchestrator.output();
 
 await customElements.whenDefined(outputOrchestrator.localName);
-await customElements.whenDefined(ATPROTO_NAME);
+await customElements.whenDefined(ATPROTO_PASSKEY_NAME);
 
 const atprotoOption = await outputOrchestrator.waitForOption("AT Protocol");
-const ATPROTO_OUTPUT_ID = atprotoOption.id;
+const ATPROTO_PASSKEY_OUTPUT_ID = atprotoOption.id;
 
-const atprotoEl = /** @type {ATProtoOutputElement | undefined} */ (
-  outputOrchestrator.root().querySelector(ATPROTO_NAME)
+const atprotoEl = /** @type {ATProtoPasskeyOutputElement | undefined} */ (
+  outputOrchestrator.root().querySelector(ATPROTO_PASSKEY_NAME)
 );
 
 const atprotoPasskeyEl = /** @type {PasskeyEncryptionTransformer | null} */ (
   outputOrchestrator.root().querySelector(
-    `${PASSKEY_NAME}[namespace="atproto"]`,
+    `${PASSKEY_NAME}[namespace="atproto-passkey"]`,
   )
 );
 
@@ -87,12 +87,12 @@ if (outputOrchestrator.hasSelected() && !outputOrchestrator.selected()) {
 ////////////////////////////////////////////
 
 const { setItems } = setup({
-  title: "Atmosphere",
+  title: "Atmosphere (Public)",
   hasInput: false,
 
   description: html`
     <p>
-      Use your AT Protocol identity to store your Diffuse user-data.
+      Use your AT Protocol account for user-data storage. Your data will be stored as public records, but sensitive data can be encrypted using a passkey.
     </p>
   `,
 
@@ -103,7 +103,7 @@ const { setItems } = setup({
   onSubmit: (_mode) => connect(),
 
   onOutputActivate: async () => {
-    await outputOrchestrator.select(ATPROTO_OUTPUT_ID);
+    await outputOrchestrator.select(ATPROTO_PASSKEY_OUTPUT_ID);
   },
 });
 
@@ -117,7 +117,7 @@ const handleInput =
 effect(() => {
   const did = atprotoEl?.did();
   const isSelectedOutput =
-    outputOrchestrator.selected()?.id === ATPROTO_OUTPUT_ID;
+    outputOrchestrator.selected()?.id === ATPROTO_PASSKEY_OUTPUT_ID;
 
   setItems(
     did
@@ -175,7 +175,7 @@ if (atprotoPasskeyEl) {
           `
           : html`
             <p class="caption">
-              Track URIs and settings can optionally be encrypted so that passwords and other sensitive details are kept private.
+              Track URIs and settings can be optionally encrypted so that passwords and other sensitive details are kept private.
             </p>
 
             ${passkeyError
@@ -184,10 +184,10 @@ if (atprotoPasskeyEl) {
 
             <div class="button-row">
               <button ?disabled="${passkeyWorking}" @click="${handlePasskeySetup}">
-                ${passkeyWorking ? "Setting up …" : "Set up passkey encryption"}
+                ${passkeyWorking ? "Setting up …" : "Set up new key"}
               </button>
               <button ?disabled="${passkeyWorking}" @click="${handlePasskeyAdopt}">
-                ${passkeyWorking ? "Authenticating …" : "Use existing passkey"}
+                ${passkeyWorking ? "Authenticating …" : "Use existing key"}
               </button>
             </div>
           `}
@@ -212,7 +212,7 @@ async function connect() {
   const handle = handleInput.value?.trim();
   if (!handle) return;
 
-  await outputOrchestrator.select(ATPROTO_OUTPUT_ID);
+  await outputOrchestrator.select(ATPROTO_PASSKEY_OUTPUT_ID);
   await atprotoEl?.login(handle);
 }
 

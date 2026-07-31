@@ -80,13 +80,19 @@ label {
 
 h1 {
   font-size: var(--fs-2xl);
-  font-size: min(14cqi, var(--fs-2xl));
+  font-size: min(12cqi, var(--fs-2xl));
   font-weight: 700;
   letter-spacing: -0.02em;
   line-height: 1.2;
   margin: 0 0 var(--space-sm);
   overflow: hidden;
+  text-overflow: ellipsis;
   white-space: nowrap;
+  /*width: fit-content;*/
+}
+
+.h1-container {
+
 }
 
 .facet__left p {

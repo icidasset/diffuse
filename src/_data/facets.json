@@ -71,10 +71,10 @@
     "desc": "A listing of some of the options available to use as an audio source, or as a user-data storage method."
   },
   {
-    "url": "facets/connect/atproto/index.html",
-    "title": "Connect / Atmosphere",
+    "url": "facets/connect/atproto-passkey/index.html",
+    "title": "Connect / Atmosphere (Public)",
     "category": "Data",
-    "desc": "Use your AT Protocol identity for user-data storage."
+    "desc": "Use your AT Protocol account for user-data storage. Your data will be stored as public records, but sensitive data can be encrypted using a passkey."
   },
   {
     "url": "facets/connect/dropbox/index.html",

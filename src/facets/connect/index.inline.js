@@ -10,7 +10,7 @@ const loaderHref = (path) => `l/?path=${encodeURIComponent(path)}`;
 
 /** @type {Record<string, string>} */
 const icons = {
-  "facets/connect/atproto/index.html": "at",
+  "facets/connect/atproto-passkey/index.html": "at",
   "facets/connect/dropbox/index.html": "cloud",
   "facets/connect/https/index.html": "globe",
   "facets/connect/https-json/index.html": "list-bullets",
@@ -22,7 +22,7 @@ const icons = {
 };
 
 const recommended = new Set([
-  "facets/connect/atproto/index.html",
+  "facets/connect/atproto-passkey/index.html",
   "facets/connect/dropbox/index.html",
   "facets/connect/local/index.html",
   "facets/connect/s3/index.html",

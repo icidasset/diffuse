@@ -28,10 +28,10 @@ export { OAuthUserAgent, TokenRefreshError };
  * @import {Session} from "@atcute/oauth-browser-client"
  */
 
-const STORAGE_KEY = "diffuse/output/raw/atproto/did";
+const STORAGE_KEY = "diffuse/output/raw/atproto-passkey/did";
 const SCOPE = metadata.scope;
-const STORAGE_NAME = "diffuse/output/raw/atproto/atcute/oauth";
-const CLIENT_KEY = "diffuse/output/raw/atproto";
+const STORAGE_NAME = "diffuse/output/raw/atproto-passkey/atcute/oauth";
+const CLIENT_KEY = "diffuse/output/raw/atproto-passkey";
 
 // CONFIGURE
 // =========
@@ -49,7 +49,7 @@ const client_id = isLocalDev
     encodeURIComponent(SCOPE)
   }`
   : /** @type {any} */ (import.meta).env?.ATPROTO_CLIENT_ID ??
-    "https://elements.diffuse.sh/latest/components/output/raw/atproto/oauth-client-metadata.json";
+    "https://elements.diffuse.sh/latest/components/output/raw/atproto-passkey/oauth-client-metadata.json";
 
 const OAUTH_CONFIG = {
   metadata: {

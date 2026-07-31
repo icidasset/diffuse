@@ -18,7 +18,7 @@ import {
 
 /**
  * @import {OutputManager} from "@specs/components/output/types.d.ts"
- * @import {ATProtoOutputElement} from "@specs/components/output/raw/atproto/types.d.ts"
+ * @import {ATProtoPasskeyOutputElement} from "@specs/components/output/raw/atproto-passkey/types.d.ts"
  * @import {MessageOf} from "@atcute/firehose"
  * @typedef {import("@atcute/atproto").ComAtprotoRepoApplyWrites.$input['writes'][number]} WriteOp
  */
@@ -36,10 +36,10 @@ const WATCHED_COLLECTIONS = new Set([
 ////////////////////////////////////////////
 
 /**
- * @implements {ATProtoOutputElement}
+ * @implements {ATProtoPasskeyOutputElement}
  */
-class ATProtoOutput extends BroadcastedOutputElement {
-  static NAME = "diffuse/output/raw/atproto";
+class ATProtoPasskeyOutput extends BroadcastedOutputElement {
+  static NAME = "diffuse/output/raw/atproto-passkey";
 
   #manager;
 
@@ -750,13 +750,13 @@ class ATProtoOutput extends BroadcastedOutputElement {
 
 }
 
-export default ATProtoOutput;
+export default ATProtoPasskeyOutput;
 
 ////////////////////////////////////////////
 // REGISTER
 ////////////////////////////////////////////
 
-export const CLASS = ATProtoOutput;
-export const NAME = "dor-atproto";
+export const CLASS = ATProtoPasskeyOutput;
+export const NAME = "dor-atproto-passkey";
 
-defineElement(NAME, ATProtoOutput);
+defineElement(NAME, ATProtoPasskeyOutput);

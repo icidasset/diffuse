@@ -258,7 +258,7 @@ export default {
         "Store output data on AWS S3 or compatible services such as Cloudflare R2.",
     },
     {
-      url: "components/output/raw/atproto/element.js",
+      url: "components/output/raw/atproto-passkey/element.js",
       title: "Raw / AT Protocol",
       desc:
         "Store your user data on the storage associated with your ATProtocol identity. Data is lexicon shaped by default so this element takes in that data directly without any transformations.",

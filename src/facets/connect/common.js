@@ -57,7 +57,9 @@ export function setup(
             </svg>
           </a>
         </div>
-        <h1>${title}</h1>
+        <div class="h1-container">
+          <h1>${title}</h1>
+        </div>
         ${description}
       </div>
       <div class="facet__right">

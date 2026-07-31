@@ -1,7 +1,7 @@
 import foundation from "~/common/foundation.js";
 import { effect } from "~/common/signal.js";
 
-import { NAME as ATPROTO_OUTPUT_NAME } from "~/components/output/raw/atproto/element.js";
+import { NAME as ATPROTO_OUTPUT_NAME } from "~/components/output/raw/atproto-passkey/element.js";
 import { NAME as ATPROTO_SYNC_NAME } from "~/components/transformer/output/raw/atproto-sync/element.js";
 import { NAME as ATPROTO_PASSKEY_NAME } from "~/components/transformer/output/refiner/passkey-encryption/element.js";
 
@@ -24,7 +24,7 @@ effect(() => {
   const output = foundation.signals.orchestrator.output();
   if (!output) return;
 
-  atproto(output);
+  atprotoPasskey(output);
   s3(output);
   dropbox(output);
 
@@ -45,8 +45,8 @@ effect(() => {
 
   Array.from(newlyActicated).map((id) => {
     switch (id) {
-      case "do-output__dc-output__atproto":
-        return atprotoCustomElements();
+      case "do-output__dc-output__atproto-passkey":
+        return atprotoPasskeyCustomElements();
       case "do-output__dc-output__s3":
         return s3CustomElements();
       case "do-output__dc-output__dropbox":
@@ -65,22 +65,22 @@ effect(() => {
  *
  * @param {OutputOrchestrator} output
  */
-export function atproto(output) {
+export function atprotoPasskey(output) {
   const out = document.createElement(ATPROTO_OUTPUT_NAME);
   out.setAttribute("group", foundation.GROUP);
-  out.setAttribute("id", "do-output__dor-atproto");
+  out.setAttribute("id", "do-output__dor-atproto-passkey");
 
   const sync = document.createElement(ATPROTO_SYNC_NAME);
   sync.setAttribute("group", foundation.GROUP);
   sync.setAttribute("id", "do-output__dtor-atproto-sync");
-  sync.setAttribute("namespace", "atproto");
-  sync.setAttribute("output-selector", "#do-output__dor-atproto");
+  sync.setAttribute("namespace", "atproto-passkey");
+  sync.setAttribute("output-selector", "#do-output__dor-atproto-passkey");
 
   const passkey = document.createElement(ATPROTO_PASSKEY_NAME);
   passkey.setAttribute("group", foundation.GROUP);
-  passkey.setAttribute("id", "do-output__dc-output__atproto");
+  passkey.setAttribute("id", "do-output__dc-output__atproto-passkey");
   passkey.setAttribute("label", "AT Protocol");
-  passkey.setAttribute("namespace", "atproto");
+  passkey.setAttribute("namespace", "atproto-passkey");
   passkey.setAttribute(
     "output-selector",
     "#do-output__dtor-atproto-sync",
@@ -93,8 +93,8 @@ export function atproto(output) {
   output.outputConfigurator.append(passkey);
 }
 
-export function atprotoCustomElements() {
-  import("~/components/output/raw/atproto/element.js");
+export function atprotoPasskeyCustomElements() {
+  import("~/components/output/raw/atproto-passkey/element.js");
   import(
     "~/components/transformer/output/raw/atproto-sync/element.js"
   );

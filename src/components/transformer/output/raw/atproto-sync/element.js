@@ -10,7 +10,7 @@ import * as Output from "~/common/output.js";
 /**
  * @import { RenderArg } from "~/common/element.d.ts"
  * @import { OutputElement } from "@specs/components/output/types.d.ts"
- * @import { ATProtoOutputElement } from "@specs/components/output/raw/atproto/types.d.ts"
+ * @import { ATProtoPasskeyOutputElement } from "@specs/components/output/raw/atproto-passkey/types.d.ts"
  */
 
 const COLLECTIONS = /** @type {const} */ ([
@@ -173,7 +173,7 @@ class ATProtoOutputSyncTransformer extends OutputTransformer {
   #syncing = false;
 
   /**
-   * @returns {ATProtoOutputElement | undefined}
+   * @returns {ATProtoPasskeyOutputElement | undefined}
    */
   #atproto() {
     return /** @type {any} */ (this.output.signal());

@@ -37,7 +37,7 @@ import * as _OrchestratorScrobbleAudio from "./orchestrator/scrobble-audio/eleme
 import * as _OrchestratorSources from "./orchestrator/sources/element.js"
 import * as _OutputBytesS3 from "./output/bytes/s3/element.js"
 import * as _OutputPolymorphicIndexedDb from "./output/polymorphic/indexed-db/element.js"
-import * as _OutputRawAtproto from "./output/raw/atproto/element.js"
+import * as _OutputRawAtprotoPasskey from "./output/raw/atproto-passkey/element.js"
 import * as _SupplementLastFm from "./supplement/last.fm/element.js"
 import * as _SupplementListenbrainz from "./supplement/listenbrainz/element.js"
 import * as _SupplementRocksky from "./supplement/rocksky/element.js"
@@ -114,7 +114,7 @@ export const output = {
     indexedDb: _OutputPolymorphicIndexedDb,
   },
   raw: {
-    atproto: _OutputRawAtproto,
+    "atproto-passkey": _OutputRawAtprotoPasskey,
   },
 }
 
