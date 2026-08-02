@@ -16,9 +16,6 @@ import { computed, signal, untracked } from "~/common/signal.js";
 ////////////////////////////////////////////
 // CONSTANTS
 ////////////////////////////////////////////
-const SILENT_MP3 =
-  "data:audio/mp3;base64,SUQzBAAAAAAAI1RTU0UAAAAPAAADTGF2ZjU2LjM2LjEwMAAAAAAAAAAAAAAA//OEAAAAAAAAAAAAAAAAAAAAAAAASW5mbwAAAA8AAAAEAAABIADAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDV1dXV1dXV1dXV1dXV1dXV1dXV1dXV1dXV6urq6urq6urq6urq6urq6urq6urq6urq6v////////////////////////////////8AAAAATGF2YzU2LjQxAAAAAAAAAAAAAAAAJAAAAAAAAAAAASDs90hvAAAAAAAAAAAAAAAAAAAA//MUZAAAAAGkAAAAAAAAA0gAAAAATEFN//MUZAMAAAGkAAAAAAAAA0gAAAAARTMu//MUZAYAAAGkAAAAAAAAA0gAAAAAOTku//MUZAkAAAGkAAAAAAAAA0gAAAAANVVV";
-
 /**
  * Mobile Safari caps the number of live media elements and behaves poorly
  * when fresh <audio> nodes are created on every track change. On iOS we
@@ -226,6 +223,11 @@ class AudioEngine extends BroadcastableDiffuseElement {
           return;
         }
 
+        // Interrupted by a subsequent load() or pause() — benign. Crucially
+        // the isPlaying intent must survive so stall recovery (see
+        // `waitingEvent`) can resume playback on the next canplay.
+        if (e?.name === "AbortError") return;
+
         const err =
           "Couldn't play audio automatically. Please resume playback manually.";
         console.error(err, e);
@@ -314,11 +316,18 @@ class AudioEngine extends BroadcastableDiffuseElement {
 
     /** @type {AudioUrl[]} Remove `stream` field, replace it with `url` */
     const resolvedAudio = args.audio.map((a) => {
-      const url = "stream" in a ? this.#mediaSourceUrls.get(a.id) : a.url;
+      let url = "stream" in a ? this.#mediaSourceUrls.get(a.id) : a.url;
 
-      if (!url) {
+      if (!url && "stream" in a && this.#streams.has(a.id)) {
+        // #resolveStream creates the media source URL synchronously,
+        // so this should be unreachable.
         throw new Error("Stream did not produce a media source url");
       }
+
+      // A stream rejected by #resolveStream (e.g. MediaSource unsupported
+      // on this browser) renders without a source; #resolveStream flags
+      // the error on the item's state instead.
+      url = url ?? "";
 
       return {
         id: a.id,
@@ -366,6 +375,11 @@ class AudioEngine extends BroadcastableDiffuseElement {
       for (const a of resolvedAudio) {
         if (existingMap.has(a.id) && existingMap.get(a.id)?.url !== a.url) {
           this.#withAudioNode(a.id, (audio) => {
+            // Clear any `src` attribute left behind by a previously
+            // stream-backed track (#resolveStream sets it imperatively):
+            // it takes precedence over the <source> element and may point
+            // at a revoked object URL.
+            audio.removeAttribute("src");
             if (audio.readyState === 0 || audio.error) audio.load();
           });
         }
@@ -382,7 +396,12 @@ class AudioEngine extends BroadcastableDiffuseElement {
       );
       for (const a of resolvedAudio) {
         if (a.isPreload || streamIds.has(a.id)) continue;
-        this.#withAudioNode(a.id, (audio) => audio.load());
+        this.#withAudioNode(a.id, (audio) => {
+          // Clear a stale `src` attribute from a previously stream-backed
+          // track — see note above.
+          audio.removeAttribute("src");
+          audio.load();
+        });
       }
     }
 
@@ -399,7 +418,33 @@ class AudioEngine extends BroadcastableDiffuseElement {
    * @param {number | undefined} duration
    */
   async #resolveStream(id, stream, mimeType, seekFn, duration) {
-    const mediaSource = new MediaSource();
+    // MediaSource is unavailable on iPhone before iOS 17.1, so bail out
+    // early when MSE (or its managed variant) is missing, or when the mime
+    // type is unsupported — otherwise the item would hang in a loading
+    // state forever with an unhandled rejection.
+    const win = /** @type {any} */ (globalThis);
+    const MediaSourceCtor = /** @type {typeof MediaSource | undefined} */ (
+      win.MediaSource ?? win.ManagedMediaSource
+    );
+
+    if (
+      !MediaSourceCtor || !mimeType ||
+      !MediaSourceCtor.isTypeSupported(mimeType)
+    ) {
+      // Delete synchronously so `supply()` treats the stream as resolved
+      // (it renders the item without a source), then flag the error on the
+      // item's state once its element exists.
+      this.#streams.delete(id);
+      stream.cancel().catch(() => {});
+      Promise.resolve().then(() => {
+        this.#itemElement(id)?.$state.loadingState.set({
+          error: { code: 4 }, // MEDIA_ERR_SRC_NOT_SUPPORTED
+        });
+      });
+      return;
+    }
+
+    const mediaSource = new MediaSourceCtor();
     const objectUrl = URL.createObjectURL(mediaSource);
 
     this.#mediaSourceUrls.set(id, objectUrl);
@@ -430,10 +475,6 @@ class AudioEngine extends BroadcastableDiffuseElement {
       mediaSource.addEventListener("sourceopen", resolve, { once: true });
     });
 
-    if (duration !== undefined) mediaSource.duration = duration;
-
-    const sourceBuffer = mediaSource.addSourceBuffer(mimeType);
-
     // 'reader' is always the current active reader; the seeking handler
     // closes over this variable so it always cancels the right one.
     let reader = stream.getReader();
@@ -462,6 +503,10 @@ class AudioEngine extends BroadcastableDiffuseElement {
     itemEl.audio.addEventListener("seeking", onSeeking);
 
     try {
+      if (duration !== undefined) mediaSource.duration = duration;
+
+      const sourceBuffer = mediaSource.addSourceBuffer(mimeType);
+
       while (true) {
         if (!this.#mediaSourceUrls.has(id)) {
           await reader.cancel();
@@ -482,15 +527,12 @@ class AudioEngine extends BroadcastableDiffuseElement {
           seekPending = false;
 
           // Clear all buffered data before feeding from the new position.
-          if (sourceBuffer.updating) {
-            await new Promise((r) =>
-              sourceBuffer.addEventListener("updateend", r, { once: true })
-            );
+          if (sourceBuffer.updating) await waitForUpdateEnd(sourceBuffer);
+          const removal = waitForUpdateEnd(sourceBuffer);
+          sourceBuffer.remove(0, Infinity);
+          if (!(await removal)) {
+            throw new Error("SourceBuffer remove failed");
           }
-          await new Promise((r) => {
-            sourceBuffer.addEventListener("updateend", r, { once: true });
-            sourceBuffer.remove(0, Infinity);
-          });
 
           if (!seekFn) throw new Error("seekFn is undefined");
           reader = (await seekFn(seekTarget)).getReader();
@@ -503,20 +545,23 @@ class AudioEngine extends BroadcastableDiffuseElement {
           break;
         }
 
-        if (sourceBuffer.updating) {
-          await new Promise((r) =>
-            sourceBuffer.addEventListener("updateend", r, { once: true })
-          );
-        }
+        if (sourceBuffer.updating) await waitForUpdateEnd(sourceBuffer);
 
+        const appending = waitForUpdateEnd(sourceBuffer);
         sourceBuffer.appendBuffer(value);
-        await new Promise((r) =>
-          sourceBuffer.addEventListener("updateend", r, { once: true })
-        );
+        if (!(await appending)) {
+          throw new Error("SourceBuffer append failed");
+        }
       }
     } catch (err) {
       console.error("[audio engine] Stream error:", err);
       if (mediaSource.readyState === "open") mediaSource.endOfStream("decode");
+
+      // Only surface the error if this stream is still the item's source —
+      // on iOS the node may already have been reused for another track.
+      if (this.#mediaSourceUrls.get(id) === objectUrl) {
+        itemEl.$state.loadingState.set({ error: { code: 3 } });
+      }
     } finally {
       itemEl.audio.removeEventListener("seeking", onSeeking);
     }
@@ -542,8 +587,22 @@ class AudioEngine extends BroadcastableDiffuseElement {
     this.querySelectorAll("de-audio-item").forEach((element) => {
       if (ids.includes(element.id)) return;
 
-      const source = element.querySelector("source");
-      if (source) source.src = SILENT_MP3;
+      // On iOS a single node is reused for the next active track (keyed on
+      // a stable value below), so it's only stale once no active track
+      // remains at all.
+      if (IS_IOS && items.length > 0) return;
+
+      // Detached media elements can keep playing (notorious on iOS, but
+      // possible elsewhere too). Updating <source src> alone doesn't stop
+      // that — resource selection only re-runs on load() — so fully unload
+      // the node before lit-html drops it.
+      const audio = element.querySelector("audio");
+      if (!audio) return;
+
+      audio.pause();
+      audio.removeAttribute("src");
+      audio.querySelectorAll("source").forEach((s) => s.removeAttribute("src"));
+      audio.load();
     });
 
     const group = this.group;
@@ -1024,6 +1083,34 @@ function initiateLoading(event) {
     if (item?.hasAttribute("preload")) return;
     item?.$state.loadingState.set("loading");
   }
+}
+
+/**
+ * Resolves once the SourceBuffer finishes its current append/remove
+ * operation. `true` on `updateend`, `false` on `updateerror` (which
+ * WebKit's MSE may fire without a following `updateend`).
+ *
+ * @param {SourceBuffer} sourceBuffer
+ * @returns {Promise<boolean>}
+ */
+function waitForUpdateEnd(sourceBuffer) {
+  return new Promise((resolve) => {
+    const onEnd = () => {
+      cleanup();
+      resolve(true);
+    };
+    const onError = () => {
+      cleanup();
+      resolve(false);
+    };
+    const cleanup = () => {
+      sourceBuffer.removeEventListener("updateend", onEnd);
+      sourceBuffer.removeEventListener("updateerror", onError);
+    };
+
+    sourceBuffer.addEventListener("updateend", onEnd);
+    sourceBuffer.addEventListener("updateerror", onError);
+  });
 }
 
 ////////////////////////////////////////////
