@@ -564,4 +564,56 @@ describe("components/engine/audio", () => {
 
     expect(result).toBe(false);
   });
+
+  it("playing event sets isPlaying to true", async () => {
+    const result = await testWeb(async () => {
+      const mod = await import("~/components/engine/audio/element.js");
+      const { trackA } = await import("~/testing/sample/tracks.js");
+      const engine = new mod.CLASS();
+      document.body.append(engine);
+
+      engine.supply({
+        audio: [{
+          id: "audio-a",
+          url: "/testing/sample/audio.mp3",
+          isPreload: false,
+          track: trackA,
+        }],
+      });
+
+      const audioEl = engine.querySelector(
+        'de-audio-item[id="audio-a"]:not([preload]) audio',
+      ) as HTMLAudioElement;
+
+      await new Promise<void>((resolve, reject) => {
+        const st = engine.state("audio-a");
+        if (st?.loadingState() === "loaded") { resolve(); return; }
+        const timer = setTimeout(() => reject(new Error("timeout")), 10000);
+        const done = () => { clearTimeout(timer); resolve(); };
+        audioEl.addEventListener("canplay", done, { once: true });
+        audioEl.addEventListener("suspend", done, { once: true });
+        audioEl.addEventListener(
+          "error",
+          () => { clearTimeout(timer); reject(new Error("audio load error")); },
+          { once: true },
+        );
+      });
+
+      // Pause first so isPlaying is false, then dispatch `playing` to verify
+      // that playingEvent sets isPlaying to true on its own.
+      engine.play({ audioId: "audio-a", volume: 0.5 });
+      engine.pause({ audioId: "audio-a" });
+
+      await new Promise<void>((resolve) => setTimeout(resolve, 50));
+      const isPlayingBefore = engine.state("audio-a")?.isPlaying();
+
+      audioEl.dispatchEvent(new Event("playing"));
+      const isPlayingAfter = engine.state("audio-a")?.isPlaying();
+
+      return { isPlayingBefore, isPlayingAfter };
+    });
+
+    expect(result.isPlayingBefore).toBe(false);
+    expect(result.isPlayingAfter).toBe(true);
+  });
 });

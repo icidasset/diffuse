@@ -19,6 +19,15 @@ import { computed, signal, untracked } from "~/common/signal.js";
 const SILENT_MP3 =
   "data:audio/mp3;base64,SUQzBAAAAAAAI1RTU0UAAAAPAAADTGF2ZjU2LjM2LjEwMAAAAAAAAAAAAAAA//OEAAAAAAAAAAAAAAAAAAAAAAAASW5mbwAAAA8AAAAEAAABIADAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDV1dXV1dXV1dXV1dXV1dXV1dXV1dXV1dXV6urq6urq6urq6urq6urq6urq6urq6urq6v////////////////////////////////8AAAAATGF2YzU2LjQxAAAAAAAAAAAAAAAAJAAAAAAAAAAAASDs90hvAAAAAAAAAAAAAAAAAAAA//MUZAAAAAGkAAAAAAAAA0gAAAAATEFN//MUZAMAAAGkAAAAAAAAA0gAAAAARTMu//MUZAYAAAGkAAAAAAAAA0gAAAAAOTku//MUZAkAAAGkAAAAAAAAA0gAAAAANVVV";
 
+/**
+ * Mobile Safari caps the number of live media elements and behaves poorly
+ * when fresh <audio> nodes are created on every track change. On iOS we
+ * therefore render a single <audio> element and reuse its DOM node across
+ * track switches instead of keying one per item id.
+ */
+const IS_IOS = /iPhone|iPad|iPod/.test(navigator.userAgent) ||
+  (navigator.platform === "MacIntel" && navigator.maxTouchPoints > 1);
+
 ////////////////////////////////////////////
 // ELEMENT
 ////////////////////////////////////////////
@@ -34,15 +43,6 @@ class AudioEngine extends BroadcastableDiffuseElement {
 
     this.state = this.state.bind(this);
   }
-
-  /**
-   * Mobile Safari caps the number of live media elements and behaves poorly
-   * when fresh <audio> nodes are created on every track change. On iOS we
-   * therefore render a single <audio> element and reuse its DOM node across
-   * track switches instead of keying one per item id.
-   */
-  #isIOS = /iPhone|iPad|iPod/.test(navigator.userAgent) ||
-    (navigator.platform === "MacIntel" && navigator.maxTouchPoints > 1);
 
   /** @type {Map<string, string>} MediaSource object URLs created from streams, keyed by item ID */
   #mediaSourceUrls = new Map();
@@ -344,7 +344,7 @@ class AudioEngine extends BroadcastableDiffuseElement {
     // the reused node's state and force a reload of its <source>.
     const oldActive = this.#items.value.find((a) => !a.isPreload);
     const newActive = resolvedAudio.find((a) => !a.isPreload);
-    const activeReplaced = this.#isIOS && oldActive && newActive &&
+    const activeReplaced = IS_IOS && oldActive && newActive &&
       (oldActive.id !== newActive.id || oldActive.url !== newActive.url);
 
     if (hasNewIds || hasPreloadChanges || hasUrlChanges) {
@@ -533,7 +533,7 @@ class AudioEngine extends BroadcastableDiffuseElement {
     // On iOS, only the active (non-preload) track gets an <audio> element —
     // preloading via extra media elements is unreliable on mobile Safari and
     // eats into its media-element cap.
-    const items = this.#isIOS
+    const items = IS_IOS
       ? allItems.filter((i) => !i.isPreload)
       : allItems;
 
@@ -555,10 +555,10 @@ class AudioEngine extends BroadcastableDiffuseElement {
       return keyed(
         // On iOS, reuse a single <de-audio-item>/<audio> DOM node across
         // track changes by keying on a stable value rather than the audio id.
-        this.#isIOS ? "active" : audio.id,
+        IS_IOS ? "active" : audio.id,
         html`
           <de-audio-item
-            group="${this.broadcasted ? `${group}/${this.#isIOS ? "active" : audio.id}` : nothing}"
+            group="${this.broadcasted ? `${group}/${IS_IOS ? "active" : audio.id}` : nothing}"
             id="${audio.id}"
             initial-progress="${ip}"
             mime-type="${audio.mimeType ? audio.mimeType : nothing}"
@@ -567,7 +567,6 @@ class AudioEngine extends BroadcastableDiffuseElement {
           >
             <audio
               crossorigin="anonymous"
-              muted="true"
               preload="auto"
             >
               ${audio.url
@@ -929,6 +928,11 @@ class AudioEngineItem extends BroadcastableDiffuseElement {
    * @param {Event} event
    */
   playingEvent(event) {
+    const audio = /** @type {HTMLAudioElement} */ (event.target);
+    const item = engineItem(audio);
+
+    item?.$state.isPlaying.set(true);
+
     finishedLoading(event);
   }
 
