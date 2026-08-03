@@ -304,5 +304,12 @@
     "title": "Winamp / Browser",
     "category": "Browsing",
     "desc": "Collection browser and search."
+  },
+  {
+    "url": "facets/data/userdata/index.html",
+    "title": "Your data",
+    "category": "Data",
+    "incomplete": true,
+    "desc": "Manage where your user-data is stored. See which storage method is active, switch between methods, and migrate data between them."
   }
 ]
