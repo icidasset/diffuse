@@ -88,9 +88,25 @@ class QueueAudioOrchestrator extends BroadcastableDiffuseElement {
 
     const isPlaying = untracked(audio.isPlaying);
 
+    // Fast path: the active track may already be resolved & supplied
+    // (e.g. the preload prelude resolved the next track ahead of time).
+    // Reusing that URL avoids an async resolve roundtrip between the
+    // `ended` event and the play() call — on iOS that gap deactivates the
+    // background audio session, and the next track then silently fails to
+    // start until the page is refocused. Blob URLs are excluded: they're
+    // bound to the context that created them, so they always need a fresh
+    // resolve (e.g. after a tab leadership handoff).
+    const supplied = activeTrack
+      ? untracked(() => audio.items()).find(
+        (i) => i.id === activeTrack.id && i.url && !i.url.startsWith("blob:"),
+      )
+      : undefined;
+
     // Resolve active URI
     const resolvedUri = activeTrack
-      ? await input.resolve({ method: "GET", uri: activeTrack.uri })
+      ? (supplied
+        ? { url: supplied.url, mimeType: supplied.mimeType }
+        : await input.resolve({ method: "GET", uri: activeTrack.uri }))
       : undefined;
 
     // Check if we still need to render

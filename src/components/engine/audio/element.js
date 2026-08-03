@@ -131,6 +131,42 @@ class AudioEngine extends BroadcastableDiffuseElement {
       localStorage.setItem(VOLUME_KEY, this.#volume.value.toString());
     });
 
+    // iOS: resume playback that silently failed to start while the page was
+    // hidden (mobile Safari suspends media loading & the audio session in
+    // the background). If playback was requested but the element is paused,
+    // replay it now that the page is visible — reloading first if nothing
+    // was buffered yet.
+    if (IS_IOS) {
+      const onVisible = () => {
+        if (document.hidden) return;
+
+        this.items().forEach((item) => {
+          if (item.isPreload) return;
+
+          const el = this.#itemElement(item.id);
+          if (!el?.intendsToPlay) return;
+
+          const audio = el.audio;
+          if (!audio.paused) return;
+
+          if (audio.readyState >= 2) {
+            this.play({ audioId: item.id });
+          } else {
+            audio.load();
+            audio.addEventListener("canplay", () => {
+              if (el.intendsToPlay) this.play({ audioId: item.id });
+            }, { once: true });
+          }
+        });
+      };
+
+      this.effect(() => {
+        document.addEventListener("visibilitychange", onVisible);
+        return () =>
+          document.removeEventListener("visibilitychange", onVisible);
+      });
+    }
+
     // Only broadcasting stuff from here on out
     if (!this.broadcasted) return;
 
@@ -189,6 +225,7 @@ class AudioEngine extends BroadcastableDiffuseElement {
   pause({ audioId }) {
     this.#withAudioNode(audioId, (audio, item) => {
       audio.pause();
+      item.intendsToPlay = false;
       // Set `isPlaying` to false optimistically, mirroring `play()`. The
       // `pause` event would normally do this via `pauseEvent`, but when
       // `play()` was called before the audio had buffered enough to start
@@ -215,7 +252,18 @@ class AudioEngine extends BroadcastableDiffuseElement {
       if (!audio.isConnected) return;
 
       const promise = audio.play() || Promise.resolve();
-      item.$state.isPlaying.set(true);
+      item.intendsToPlay = true;
+
+      // On iOS a backgrounded play() can resolve without playback ever
+      // starting — mobile Safari suspends the load (and the audio session)
+      // until the page is visible again. Don't claim it's playing in that
+      // case: `playEvent`/`playingEvent` set the state if playback truly
+      // starts, and the media session won't show a phantom progress. The
+      // visibilitychange handler (see connectedCallback) resumes playback
+      // on refocus using `intendsToPlay`.
+      if (!(IS_IOS && document.hidden)) {
+        item.$state.isPlaying.set(true);
+      }
 
       promise.catch((e) => {
         if (!audio.isConnected) {
@@ -231,6 +279,7 @@ class AudioEngine extends BroadcastableDiffuseElement {
         const err =
           "Couldn't play audio automatically. Please resume playback manually.";
         console.error(err, e);
+        item.intendsToPlay = false;
         item.$state.isPlaying.set(false);
       });
     });
@@ -719,6 +768,15 @@ class AudioEngineItem extends BroadcastableDiffuseElement {
     // const ip = this.getAttribute("initial-progress");
 
     /**
+     * Playback was requested but hasn't (visibly) started yet. Unlike
+     * `$state.isPlaying` this is never claimed optimistically on iOS while
+     * hidden, so it survives the "play() resolved but nothing plays" case
+     * and lets the engine resume on refocus. Cleared once playback truly
+     * starts, on explicit pause, or when playback fails in the foreground.
+     */
+    this.intendsToPlay = false;
+
+    /**
      * @type {AudioState}
      */
     this.$state = {
@@ -946,7 +1004,9 @@ class AudioEngineItem extends BroadcastableDiffuseElement {
     const audio = /** @type {HTMLAudioElement} */ (event.target);
     audio.currentTime = 0;
 
-    engineItem(audio)?.$state.hasEnded.set(true);
+    const item = engineItem(audio);
+    if (item) item.intendsToPlay = false;
+    item?.$state.hasEnded.set(true);
   }
 
   /**
@@ -990,6 +1050,8 @@ class AudioEngineItem extends BroadcastableDiffuseElement {
     const audio = /** @type {HTMLAudioElement} */ (event.target);
     const item = engineItem(audio);
 
+    // Playback truly started, intent fulfilled.
+    if (item) item.intendsToPlay = false;
     item?.$state.isPlaying.set(true);
 
     finishedLoading(event);
@@ -1043,7 +1105,7 @@ class AudioEngineItem extends BroadcastableDiffuseElement {
     audio.load();
 
     audio.addEventListener("canplay", () => {
-      if (item.$state.isPlaying.get()) {
+      if (item.$state.isPlaying.get() || item.intendsToPlay) {
         item.engine?.play({ audioId: item.id });
       }
     }, { once: true });
