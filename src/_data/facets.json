@@ -259,6 +259,14 @@
     "desc": "An overview of all audio inputs. Disable a source to hide its tracks without removing them."
   },
   {
+    "url": "facets/data/spectrogram/index.html",
+    "title": "Spectrogram Analysis",
+    "kind": "prelude",
+    "category": "Data",
+    "featured": true,
+    "desc": "Analyse the spectrogram of tracks as they play and store the data on their stats. Only runs for tracks that don't already have spectral stats."
+  },
+  {
     "url": "facets/misc/split-view/index.html",
     "title": "Split View",
     "category": "Miscellaneous",

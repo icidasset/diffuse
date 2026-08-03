@@ -86,6 +86,9 @@ const signals = {
     sources: signal(
       /** @type {import("~/components/orchestrator/sources/element.js").CLASS | null} */ (null),
     ),
+    spectrogramAudio: signal(
+      /** @type {import("~/components/orchestrator/spectrogram-audio/element.js").CLASS | null} */ (null),
+    ),
   },
 };
 
@@ -125,6 +128,7 @@ export const config = {
     scopedTracks,
     scrobbleAudio,
     sources,
+    spectrogramAudio,
   },
 
   /**
@@ -160,6 +164,7 @@ export const config = {
       scopedTracks: signals.orchestrator.scopedTracks.get,
       scrobbleAudio: signals.orchestrator.scrobbleAudio.get,
       sources: signals.orchestrator.sources.get,
+      spectrogramAudio: signals.orchestrator.spectrogramAudio.get,
     },
   },
 
@@ -507,6 +512,40 @@ async function scrobbleAudio() {
   sao.setAttribute("scrobble-selector", sc.selector);
 
   return findExistingOrAdd(sao, signals.orchestrator.scrobbleAudio);
+}
+
+async function spectrogramAudio() {
+  const [
+    { CLASS: SpectrogramAudioOrchestrator },
+    { CLASS: SpectrogramMetadata },
+    a,
+    i,
+    o,
+  ] = await Promise.all([
+    import("~/components/orchestrator/spectrogram-audio/element.js"),
+    import("~/components/metadata/spectrogram/element.js"),
+    audio(),
+    input(),
+    output(),
+  ]);
+
+  // A standalone spectrogram metadata element the orchestrator can call
+  // directly. It's given the input configurator so its worker can fetch audio.
+  const sm = new SpectrogramMetadata();
+  sm.setAttribute("group", GROUP);
+  sm.setAttribute("input-selector", i.selector);
+
+  if (!document.body.querySelector(sm.selector)) {
+    document.body.append(sm);
+  }
+
+  const sao = new SpectrogramAudioOrchestrator();
+  sao.setAttribute("group", GROUP);
+  sao.setAttribute("audio-engine-selector", a.selector);
+  sao.setAttribute("spectrogram-selector", sm.selector);
+  sao.setAttribute("output-selector", o.selector);
+
+  return findExistingOrAdd(sao, signals.orchestrator.spectrogramAudio);
 }
 
 async function pathCollections() {

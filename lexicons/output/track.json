@@ -51,6 +51,11 @@
         "lossless": { "type": "boolean", "description": "Is track lossless" },
         "numberOfChannels": { "type": "integer", "description": "Number of audio channels" },
         "sampleRate": { "type": "integer", "description": "Samples per second" },
+        "spectralCentroid": { "type": "integer", "description": "Average spectral centroid in Hz, the perceptual brightness of the track derived from its spectrogram" },
+        "spectralFlatness": { "type": "integer", "description": "Average spectral flatness on a 0-1000 scale (0 = fully tonal, 1000 = fully noisy), derived from the track's spectrogram" },
+        "spectralFlux": { "type": "integer", "description": "Average spectral flux scaled by 1000, measuring how quickly the spectrum changes over time in the track's spectrogram" },
+        "spectralRolloff": { "type": "integer", "description": "Average spectral rolloff in Hz, the frequency below which 85% of the spectral energy is contained, derived from the track's spectrogram" },
+        "spectralSpread": { "type": "integer", "description": "Average spectral spread in Hz, the standard deviation of the spectrum around its centroid, derived from the track's spectrogram" },
         "trackGain": { "type": "integer", "description": "Track gain in dB" }
       }
     },

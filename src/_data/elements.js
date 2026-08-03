@@ -163,6 +163,12 @@ export default {
       desc:
         "Extracts tags and audio stats from audio files using the music-metadata library.",
     },
+    {
+      url: "components/metadata/spectrogram/element.js",
+      title: "Spectrogram",
+      desc:
+        "Decodes a track's audio, computes a spectrogram and stores the derived spectral descriptors (centroid, rolloff, spread, flatness, flux) on the track's stats.",
+    },
   ],
 
   orchestrators: [
@@ -241,6 +247,12 @@ export default {
       title: "Sources",
       desc:
         "Monitor tracks from the given output to form a list of sources based on the input's sources return value.",
+    },
+    {
+      url: "components/orchestrator/spectrogram-audio/element.js",
+      title: "Spectrogram ⭤ Audio",
+      desc:
+        "When a track starts playing and is missing spectrogram-derived stats, analyses it via the spectrogram metadata element and persists the result to the output. Only the leader tab performs the analysis.",
     },
   ],
 
