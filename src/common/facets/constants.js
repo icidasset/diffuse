@@ -27,10 +27,10 @@ export const STARTING_SET_URIS = [
   "facets/data/input-bundle/index.html",
   "facets/data/output-bundle/index.html",
   "facets/data/upload-bundle/index.html",
+  "facets/playback/preload/prelude/index.html",
 
   // PRELUDES
   "facets/data/process-tracks/prelude/index.html",
   "facets/misc/scrobble/index.html",
   "facets/playback/auto-queue/prelude/index.html",
-  "facets/playback/preload/prelude/index.html",
 ];
