@@ -16,9 +16,9 @@ export type Actions = {
     },
   ) => void;
   move: (args: { key: string; to: number }) => void;
-  shift: () => void;
+  shift: (args?: { by?: number }) => void;
   supply: (args: { trackIds: string[] }) => void;
-  unshift: () => void;
+  unshift: (args?: { by?: number }) => void;
 };
 
 export type Item = {

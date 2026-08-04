@@ -371,9 +371,9 @@ const playAtQueueIndex = (idx) => {
     return;
   }
   if (idx < pastLen) {
-    for (let i = 0; i < pastLen - idx; i++) q.unshift();
+    q.unshift({ by: pastLen - idx });
   } else {
-    for (let i = 0; i < idx - pastLen; i++) q.shift();
+    q.shift({ by: idx - pastLen });
   }
 };
 

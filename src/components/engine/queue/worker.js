@@ -359,9 +359,59 @@ export function move({ key, to }) {
 
 /**
  * @type {Actions['shift']}
+ *
+ * Advances the queue by one position (default) or by `by` positions.
+ *
+ * When `by` is greater than 1 the queue advances in a single signal
+ * update, so only one `now` announcement reaches the main thread. This
+ * prevents intermediate tracks — e.g. a preloaded track sitting at
+ * `future[0]` — from briefly becoming `now` and starting playback when
+ * the user jumps to a track further ahead in the queue.
+ *
+ * @example Advances by 2 positions, moving intermediate items to past
+ * ```js
+ * import { shift, $future, $now, $past } from "~/components/engine/queue/worker.js";
+ *
+ * $past.value = [];
+ * $now.value = { id: "a", key: "1", manualEntry: false };
+ * $future.value = [
+ *   { id: "b", key: "2", manualEntry: false },
+ *   { id: "c", key: "3", manualEntry: false },
+ *   { id: "d", key: "4", manualEntry: false },
+ * ];
+ *
+ * shift({ by: 2 });
+ *
+ * if ($now.value?.id !== "c") throw new Error("expected 'c' as now");
+ * if ($past.value.map((i) => i.id).join(",") !== "a,b") throw new Error("expected 'a,b' in past");
+ * if ($future.value.map((i) => i.id).join(",") !== "d") throw new Error("expected 'd' in future");
+ * ```
+ *
+ * @example Caps at available future items
+ * ```js
+ * import { shift, $now, $future } from "~/components/engine/queue/worker.js";
+ *
+ * $now.value = { id: "a", key: "1", manualEntry: false };
+ * $future.value = [{ id: "b", key: "2", manualEntry: false }];
+ *
+ * shift({ by: 5 });
+ *
+ * if ($now.value?.id !== "b") throw new Error("expected 'b' as now");
+ * if ($future.value.length !== 0) throw new Error("expected empty future");
+ * ```
  */
-export function shift() {
-  return _shift();
+export function shift(args) {
+  const by = args?.by;
+  if (!by || by <= 1) return _shift();
+
+  const n = $now.value;
+  const f = $future.value;
+  const items = f.slice(0, by);
+  if (items.length === 0) return;
+
+  $now.value = items[items.length - 1];
+  if (n) $past.value = [...$past.value, n, ...items.slice(0, -1)];
+  $future.value = f.slice(items.length);
 }
 
 /**
@@ -409,6 +459,11 @@ export function supply({ trackIds }) {
 /**
  * @type {Actions['unshift']}
  *
+ * Rewinds the queue by one position (default) or by `by` positions.
+ *
+ * Like `shift({ by })`, this updates the signals exactly once so only
+ * one `now` announcement reaches the main thread.
+ *
  * @example Moves the last past item back to now, pushing now to the front of future
  * ```js
  * import { unshift, $future, $now, $past } from "~/components/engine/queue/worker.js";
@@ -435,17 +490,50 @@ export function supply({ trackIds }) {
  *
  * if ($now.value?.id !== "current") throw new Error("now should remain unchanged");
  * ```
+ *
+ * @example Rewinds by 2 positions, pushing intermediate items to future
+ * ```js
+ * import { unshift, $future, $now, $past } from "~/components/engine/queue/worker.js";
+ *
+ * $past.value = [
+ *   { id: "a", key: "1", manualEntry: false },
+ *   { id: "b", key: "2", manualEntry: false },
+ * ];
+ * $now.value = { id: "c", key: "3", manualEntry: false };
+ * $future.value = [{ id: "d", key: "4", manualEntry: false }];
+ *
+ * unshift({ by: 2 });
+ *
+ * if ($now.value?.id !== "a") throw new Error("expected 'a' as now");
+ * if ($past.value.length !== 0) throw new Error("expected empty past");
+ * if ($future.value.map((i) => i.id).join(",") !== "b,c,d") throw new Error("expected 'b,c,d' in future");
+ * ```
+ *
+ * @example Caps at available past items
+ * ```js
+ * import { unshift, $now, $past } from "~/components/engine/queue/worker.js";
+ *
+ * $past.value = [{ id: "a", key: "1", manualEntry: false }];
+ * $now.value = { id: "b", key: "2", manualEntry: false };
+ *
+ * unshift({ by: 5 });
+ *
+ * if ($now.value?.id !== "a") throw new Error("expected 'a' as now");
+ * if ($past.value.length !== 0) throw new Error("expected empty past");
+ * ```
  */
-export function unshift() {
+export function unshift(args) {
+  const by = args?.by ?? 1;
   const p = $past.value;
   if (p.length === 0) return;
 
   const n = $now.value;
-  const last = p[p.length - 1];
+  const items = p.slice(p.length - by);
 
-  $past.value = p.slice(0, p.length - 1);
-  $now.value = last ?? null;
-  if (n) $future.value = [n, ...$future.value];
+  $past.value = p.slice(0, p.length - items.length);
+  $now.value = items[0] ?? null;
+  if (n) $future.value = [...items.slice(1), n, ...$future.value];
+  else $future.value = [...items.slice(1), ...$future.value];
 }
 
 ////////////////////////////////////////////

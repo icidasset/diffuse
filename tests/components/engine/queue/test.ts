@@ -267,4 +267,56 @@ describe("components/engine/queue", () => {
 
     expect(item?.id).toBe(tracks[0].id);
   });
+
+  it("shift with by advances multiple positions in one call", async () => {
+    const result = await testWeb(async () => {
+      const QueueEngine = await import("~/components/engine/queue/element.js");
+      const engine = new QueueEngine.CLASS();
+
+      document.body.append(engine);
+
+      const { tracks } = await import("~/testing/sample/tracks.js");
+
+      await engine.add({ trackIds: tracks.map((t) => t.id) });
+      await engine.shift(); // now = tracks[0]
+      await engine.shift({ by: 2 }); // skip tracks[1], now = tracks[2]
+
+      return {
+        now: engine.now()?.id,
+        past: engine.past().map((i) => i.id),
+        future: engine.future().map((i) => i.id),
+      };
+    });
+
+    expect(result.now).toBe(tracks[2].id);
+    expect(result.past).toEqual([tracks[0].id, tracks[1].id]);
+    expect(result.future).toEqual([]);
+  });
+
+  it("unshift with by rewinds multiple positions in one call", async () => {
+    const result = await testWeb(async () => {
+      const QueueEngine = await import("~/components/engine/queue/element.js");
+      const engine = new QueueEngine.CLASS();
+
+      document.body.append(engine);
+
+      const { tracks } = await import("~/testing/sample/tracks.js");
+
+      await engine.add({ trackIds: tracks.map((t) => t.id) });
+      await engine.shift(); // now = tracks[0]
+      await engine.shift(); // now = tracks[1]
+      await engine.shift(); // now = tracks[2]
+      await engine.unshift({ by: 2 }); // rewind to tracks[0]
+
+      return {
+        now: engine.now()?.id,
+        past: engine.past().map((i) => i.id),
+        future: engine.future().map((i) => i.id),
+      };
+    });
+
+    expect(result.now).toBe(tracks[0].id);
+    expect(result.past).toEqual([]);
+    expect(result.future).toEqual([tracks[1].id, tracks[2].id]);
+  });
 });

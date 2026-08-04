@@ -1935,12 +1935,10 @@ class WinampElement extends DiffuseElement {
     const pastLen = past.length;
     if (idx === pastLen) return;
     if (idx < pastLen) {
-      const stepsBack = pastLen - idx;
-      for (let i = 0; i < stepsBack; i++) queue.unshift();
+      queue.unshift({ by: pastLen - idx });
       return;
     }
-    const stepsForward = idx - pastLen;
-    for (let i = 0; i < stepsForward; i++) queue.shift();
+    queue.shift({ by: idx - pastLen });
   };
 
   // RENDER
