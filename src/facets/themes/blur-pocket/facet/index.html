@@ -1,0 +1,89 @@
+<link rel="stylesheet" href="styles/base.css" />
+<link rel="stylesheet" href="facets/themes/blur/font-faces.css" />
+<link rel="stylesheet" href="facets/themes/blur-pocket/variables.css" />
+<link rel="stylesheet" href="facets/themes/blur-pocket/facet/index.css" />
+<link rel="stylesheet" href="vendor/@phosphor-icons/web/bold/style.css" />
+<link rel="stylesheet" href="vendor/@phosphor-icons/web/fill/style.css" />
+
+<style>
+  html {
+    font-size: 17px;
+  }
+
+  main,
+  db-artwork-controller,
+  db-browser,
+  .mini-player {
+    font-family: "Source Sans 3", ui-sans-serif, system-ui, sans-serif;
+    font-feature-settings: normal;
+    font-optical-sizing: auto;
+  }
+</style>
+
+<main>
+  <header class="top-bar">
+    <svg class="top-bar__logo" viewBox="0 0 902 134" role="img" aria-label="Diffuse">
+      <title>Diffuse</title>
+      <use href="images/diffuse-current.svg#diffuse"></use>
+    </svg>
+    <div class="top-bar__actions">
+      <a
+        class="top-bar__btn"
+        href="l/?path=facets%2Fdata%2Fsources%2Findex.html"
+        target="_blank"
+        title="Sources (Audio Input)"
+      >
+        <i class="ph-bold ph-eject"></i>
+      </a>
+      <button class="top-bar__btn" id="btn-new-deck" title="Open a new deck">
+        <i class="ph-bold ph-circles-three-plus"></i>
+      </button>
+    </div>
+  </header>
+
+  <db-browser
+    output-selector="do-output"
+    tracks-selector="do-scoped-tracks"
+    queue-engine-selector="de-queue"
+    scope-engine-selector="de-scope"
+    favourites-orchestrator-selector="do-favourites"
+    artwork-selector="do-artwork"
+    cover-groups-orchestrator-selector="do-cover-groups"
+    input-selector="dc-input"
+  ></db-browser>
+
+  <!-- Mini-player: visible on mobile when a track is active, hidden on wide screens -->
+  <div class="mini-player" id="mini-player" hidden>
+    <button class="mini-player__info" id="mini-expand" title="Open now playing">
+      <span class="mini-player__art" id="mini-art">
+        <i class="ph-fill ph-music-notes"></i>
+      </span>
+      <span class="mini-player__text">
+        <strong id="mini-title">Diffuse</strong>
+        <span id="mini-artist">Waiting on queue …</span>
+      </span>
+    </button>
+    <button class="mini-player__btn" id="mini-play-pause" title="Play / Pause">
+      <i class="ph-fill ph-play" id="mini-play-icon"></i>
+    </button>
+    <button class="mini-player__btn" id="mini-next" title="Next track">
+      <i class="ph-fill ph-fast-forward"></i>
+    </button>
+  </div>
+
+  <!-- Now Playing: reuses the blur artwork-controller.
+       On mobile this is a slide-up sheet; on wide screens it is a static
+       side panel inside the grid. -->
+  <div class="now-playing" id="now-playing">
+    <div class="now-playing__grab" id="np-grab" title="Swipe down to close"></div>
+    <db-artwork-controller
+      artwork-selector="do-artwork"
+      controller-orchestrator-selector="do-controller"
+      input-selector="dc-input"
+      favourites-orchestrator-selector="do-favourites"
+      repeat-shuffle-engine-selector="de-repeat-shuffle"
+    ></db-artwork-controller>
+  </div>
+</main>
+
+<script type="module" src="facets/themes/blur-pocket/facet/index.inline.js"></script>

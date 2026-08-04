@@ -40,7 +40,15 @@
     "category": "Themes",
     "featured": true,
     "author": "A theme by [@tokono.ma](https://bsky.app/profile/tokono.ma)",
-    "desc": "A recreation of the Diffuse v3 theme with the browser of the new Blur theme."
+    "desc": "A recreation of the Diffuse v3 theme with the browser of the newer Blur theme."
+  },
+  {
+    "url": "facets/themes/blur-pocket/facet/index.html",
+    "title": "Blur Pocket",
+    "category": "Themes",
+    "featured": true,
+    "author": "A theme by [@tokono.ma](https://bsky.app/profile/tokono.ma)",
+    "desc": "A mobile-optimised and minimalised version of the Blur theme. Does not include the background images and has a slightly different color palette."
   },
   {
     "url": "facets/data/cache-tracks/index.html",
