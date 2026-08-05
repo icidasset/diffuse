@@ -175,6 +175,12 @@ class ArtworkController extends DiffuseElement {
 
     if (!track) {
       if (currArtwork.current) {
+        // The `current` URL is promoted to `previous`; the old `previous`
+        // becomes orphaned, so revoke its blob URL.
+        if (currArtwork.previous?.url) {
+          URL.revokeObjectURL(currArtwork.previous.url);
+        }
+
         this.#artwork.value = { current: null, previous: currArtwork.current };
       }
 
@@ -191,6 +197,13 @@ class ArtworkController extends DiffuseElement {
     const currTrack = this.currentTrack();
 
     if (track.id === currTrack?.id) {
+      // The old `previous` (two tracks back) is about to be dropped in favor of
+      // promoting `current` to `previous`. Revoke its blob URL so unrevoked
+      // artwork bytes don't accumulate and crash the tab on memory-tight iOS.
+      if (currArtwork.previous?.url) {
+        URL.revokeObjectURL(currArtwork.previous.url);
+      }
+
       this.#artwork.set({
         previous: currArtwork.current
           ? { ...currArtwork.current, loaded: false }

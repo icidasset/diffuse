@@ -53,6 +53,8 @@ class Player extends DiffuseElement {
   #audioError = signal(false);
   #isLoading = signal(false);
   #lastArtKey = /** @type {string | undefined} */ (undefined);
+  /** @type {string | undefined} */
+  #prevArtUrl = undefined;
   #volumeOpen = signal(false);
   #lastNonZeroVolume = signal(0.75);
   /** @type {ReturnType<typeof setTimeout> | undefined} */
@@ -116,6 +118,7 @@ class Player extends DiffuseElement {
         : "";
 
       if (!track || !artKey) {
+        this.#revokeArt();
         this.#artUrl.value = undefined;
         this.#lastArtKey = undefined;
         return;
@@ -128,6 +131,7 @@ class Player extends DiffuseElement {
       this.$artwork.value?.get(track).then((bytes) => {
         if (this.#lastArtKey !== artKey) return;
         if (!bytes) {
+          this.#revokeArt();
           this.#artUrl.value = null;
           return;
         }
@@ -135,6 +139,8 @@ class Player extends DiffuseElement {
         const url = URL.createObjectURL(
           new Blob([/** @type {BlobPart} */ (bytes)], { type: mime }),
         );
+        this.#revokeArt();
+        this.#prevArtUrl = url;
         this.#artUrl.value = url;
       });
     });
@@ -174,6 +180,7 @@ class Player extends DiffuseElement {
    */
   disconnectedCallback() {
     super.disconnectedCallback();
+    this.#revokeArt();
     if (this.#isLoadingTimeout) {
       clearTimeout(this.#isLoadingTimeout);
       this.#isLoadingTimeout = undefined;
@@ -181,6 +188,14 @@ class Player extends DiffuseElement {
     if (this.#volumeCloseTimeout) {
       clearTimeout(this.#volumeCloseTimeout);
       this.#volumeCloseTimeout = undefined;
+    }
+  }
+
+  /** Revoke the current artwork blob URL, if any. */
+  #revokeArt() {
+    if (this.#prevArtUrl) {
+      URL.revokeObjectURL(this.#prevArtUrl);
+      this.#prevArtUrl = undefined;
     }
   }
 

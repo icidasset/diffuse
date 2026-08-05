@@ -257,6 +257,30 @@ const artQueue = [];
 let artActive = 0;
 const MAX_ART_CONCURRENT = 4;
 
+/** Max number of album-art blob URLs kept cached. Beyond this the oldest
+ *  entries are evicted (revoking their blob URLs) so the cache doesn't grow
+ *  without bound and accumulate memory until iOS Safari crashes. */
+const MAX_ART_CACHE = 64;
+
+/**
+ * Store an artwork-cache entry, evicting the oldest when the cache overflows
+ * and revoking evicted blob URLs.
+ * @param {string} key
+ * @param {string | null} value
+ */
+function cacheArt(key, value) {
+  if (artCache.has(key)) artCache.delete(key); // refresh LRU position
+  artCache.set(key, value);
+
+  while (artCache.size > MAX_ART_CACHE) {
+    const oldest = artCache.keys().next().value;
+    if (oldest === undefined) break;
+    const evicted = artCache.get(oldest);
+    artCache.delete(oldest);
+    if (typeof evicted === "string") URL.revokeObjectURL(evicted);
+  }
+}
+
 /**
  * Fetch artwork for a given key (album or artist key) using a representative track.
  * Results are cached as blob URLs (or null if no art found).
@@ -293,9 +317,9 @@ async function doFetchArt(key, track) {
     if (bytes) {
       const mime = detectMime(bytes);
       const url = URL.createObjectURL(new Blob([bytes], { type: mime }));
-      artCache.set(key, url);
+      cacheArt(key, url);
     } else {
-      artCache.set(key, null);
+      cacheArt(key, null);
     }
   } catch {
     // don't cache on error — allow retry

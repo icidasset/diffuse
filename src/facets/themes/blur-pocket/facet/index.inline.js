@@ -117,6 +117,7 @@ const miniPlayPause = document.querySelector("#mini-play-pause");
 const miniNext = document.querySelector("#mini-next");
 
 let miniArtUrl = "";
+let miniArtObjectUrl = "";
 
 // Reactively update the mini-player from the controller orchestrator signals.
 effect(() => {
@@ -156,6 +157,14 @@ effect(() => {
         new Blob([/** @type {ArrayBuffer} */ (bytes.buffer)], { type: mime }),
       );
 
+      // Revoke the previous artwork blob URL before replacing it so its bytes
+      // are released. Otherwise each track leaks one blob URL, growing memory
+      // until iOS Safari crashes after playing tracks for a while.
+      if (miniArtObjectUrl) {
+        URL.revokeObjectURL(miniArtObjectUrl);
+      }
+      miniArtObjectUrl = url;
+
       if (miniArt) {
         miniArt.innerHTML = "";
         const img = document.createElement("img");
@@ -166,6 +175,10 @@ effect(() => {
     }).catch(() => {});
   } else {
     miniArtUrl = "";
+    if (miniArtObjectUrl) {
+      URL.revokeObjectURL(miniArtObjectUrl);
+      miniArtObjectUrl = "";
+    }
     if (miniArt) {
       miniArt.innerHTML = `<i class="ph-fill ph-music-notes"></i>`;
     }
