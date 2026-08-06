@@ -166,7 +166,7 @@ db-browser {
   cursor: grab;
   display: flex;
   flex-shrink: 0;
-  height: var(--space-sm);
+  height: var(--space-lg);
   justify-content: center;
   touch-action: none;
 }

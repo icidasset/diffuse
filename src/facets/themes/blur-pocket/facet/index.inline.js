@@ -146,7 +146,12 @@ effect(() => {
   if (track) {
     const art = foundation.signals.orchestrator.artwork();
     art?.get(track).then((bytes) => {
-      if (!bytes) return;
+      // No cover for this track — fall back to the placeholder icon and hide
+      // any <img> that was shown for the previous one.
+      if (!bytes) {
+        showNoArtwork();
+        return;
+      }
       // Avoid recreating the same blob URL on every reactive run.
       const key = `${track.id}:${bytes.byteLength}`;
       if (key === miniArtUrl) return;
@@ -168,20 +173,15 @@ effect(() => {
       if (miniArt) {
         miniArt.innerHTML = "";
         const img = document.createElement("img");
-        img.src = url;
+        // If the image fails to load, drop it and show the placeholder icon.
+        img.addEventListener("error", showNoArtwork);
         img.alt = "";
+        img.src = url;
         miniArt.append(img);
       }
-    }).catch(() => {});
+    }).catch(showNoArtwork);
   } else {
-    miniArtUrl = "";
-    if (miniArtObjectUrl) {
-      URL.revokeObjectURL(miniArtObjectUrl);
-      miniArtObjectUrl = "";
-    }
-    if (miniArt) {
-      miniArt.innerHTML = `<i class="ph-fill ph-music-notes"></i>`;
-    }
+    showNoArtwork();
   }
 
   // Play / pause icon
@@ -243,6 +243,21 @@ foundation.ready();
 ////////////////////////////////////////////
 // 🛠️ HELPERS
 ////////////////////////////////////////////
+
+/**
+ * Reset the minimized now-playing artwork back to the placeholder icon,
+ * hiding any <img> that may be (or failed to be) displayed.
+ */
+function showNoArtwork() {
+  miniArtUrl = "";
+  if (miniArtObjectUrl) {
+    URL.revokeObjectURL(miniArtObjectUrl);
+    miniArtObjectUrl = "";
+  }
+  if (miniArt) {
+    miniArt.innerHTML = `<i class="ph-fill ph-music-notes"></i>`;
+  }
+}
 
 /**
  * @param {Uint8Array} bytes

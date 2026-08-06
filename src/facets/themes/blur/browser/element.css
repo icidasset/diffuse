@@ -494,8 +494,16 @@
 .cover-grid {
   display: grid;
   gap: var(--space-sm);
-  grid-template-columns: repeat(auto-fill, minmax(9rem, 1fr));
+  grid-template-columns: repeat(auto-fill, minmax(4.5rem, 1fr));
   padding: var(--space-2xs) var(--space-sm) var(--space-sm);
+
+  @media (min-width: 42rem) {
+    grid-template-columns: repeat(auto-fill, minmax(7.5rem, 1fr));
+  }
+
+  @media (min-width: 91rem) {
+    grid-template-columns: repeat(auto-fill, minmax(9rem, 1fr));
+  }
 }
 
 .cover-card {
