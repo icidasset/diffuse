@@ -47,6 +47,9 @@ class AudioEngine extends BroadcastableDiffuseElement {
   /** @type {Map<string, ReadableStream>} Streams pending MediaSource setup */
   #streams = new Map();
 
+  /** Aborts in-flight MediaSource setup when the element is disconnected. */
+  #streamAbort = new AbortController();
+
   // SIGNALS
 
   #items = signal(/** @type {AudioUrl[]} */ ([]));
@@ -74,6 +77,9 @@ class AudioEngine extends BroadcastableDiffuseElement {
    * @override
    */
   connectedCallback() {
+    // Reset teardown signal in case the element is reconnected (moved in DOM).
+    this.#streamAbort = new AbortController();
+
     // Setup broadcasting if part of group
     if (this.hasAttribute("group")) {
       const actions = this.broadcast(
@@ -202,6 +208,49 @@ class AudioEngine extends BroadcastableDiffuseElement {
         });
       });
     });
+  }
+
+  /**
+   * @override
+   */
+  disconnectedCallback() {
+    // Abort in-flight MediaSource setup so #resolveStream can wind down even
+    // while it's awaiting `sourceopen` (which may otherwise never fire once
+    // the object URL is revoked / the element is detached).
+    this.#streamAbort.abort();
+
+    // Revoke every MediaSource object URL. WebKit refcounts these and only
+    // frees the buffered data on revokeObjectURL — dropping the map without
+    // revoking leaks the decoded track bytes until the tab's process dies.
+    for (const objectUrl of this.#mediaSourceUrls.values()) {
+      URL.revokeObjectURL(objectUrl);
+    }
+    this.#mediaSourceUrls.clear();
+
+    // Cancel pending (not-yet-resolved) streams so their underlying sources
+    // (e.g. fetches) release immediately instead of draining forever.
+    for (const stream of this.#streams.values()) {
+      stream.cancel().catch(() => {});
+    }
+    this.#streams.clear();
+
+    // Stop and unload any live audio nodes before they're dropped so detached
+    // media doesn't keep playing / holding the audio session.
+    this.querySelectorAll("de-audio-item").forEach((node) => {
+      const item = /** @type {AudioEngineItem} */ (node);
+      let audio;
+      try {
+        audio = item.audio; // throws when there's no child <audio>
+      } catch {
+        return;
+      }
+      audio.pause();
+      audio.removeAttribute("src");
+      item.querySelectorAll("source").forEach((s) => s.removeAttribute("src"));
+      audio.load();
+    });
+
+    super.disconnectedCallback();
   }
 
   // ACTIONS
@@ -345,6 +394,7 @@ class AudioEngine extends BroadcastableDiffuseElement {
           item.mimeType ?? "",
           item.seek,
           item.duration,
+          this.#streamAbort.signal,
         );
       }
     }
@@ -466,7 +516,7 @@ class AudioEngine extends BroadcastableDiffuseElement {
    * @param {((timeSeconds: number) => Promise<ReadableStream>) | undefined} seekFn
    * @param {number | undefined} duration
    */
-  async #resolveStream(id, stream, mimeType, seekFn, duration) {
+  async #resolveStream(id, stream, mimeType, seekFn, duration, signal) {
     // MediaSource is unavailable on iPhone before iOS 17.1, so bail out
     // early when MSE (or its managed variant) is missing, or when the mime
     // type is unsupported — otherwise the item would hang in a loading
@@ -520,9 +570,34 @@ class AudioEngine extends BroadcastableDiffuseElement {
     // <source> elements do not trigger sourceopen.
     itemEl.audio.src = objectUrl;
 
+    // Wait for `sourceopen`, but bail out if the element is torn down while
+    // we're still waiting (sourceopen may never fire then).
     await new Promise((resolve) => {
-      mediaSource.addEventListener("sourceopen", resolve, { once: true });
+      const onOpen = () => {
+        cleanup();
+        resolve();
+      };
+      const onAbort = () => {
+        cleanup();
+        resolve();
+      };
+      const cleanup = () => {
+        mediaSource.removeEventListener("sourceopen", onOpen);
+        signal?.removeEventListener("abort", onAbort);
+      };
+
+      mediaSource.addEventListener("sourceopen", onOpen, { once: true });
+      signal?.addEventListener("abort", onAbort, { once: true });
     });
+
+    if (!this.#mediaSourceUrls.has(id)) {
+      // The item was removed — or the engine torn down — while awaiting
+      // `sourceopen`. Nothing to buffer; release the URL if it wasn't already
+      // revoked (e.g. by supply()).
+      URL.revokeObjectURL(objectUrl);
+      this.#mediaSourceUrls.delete(id);
+      return;
+    }
 
     // 'reader' is always the current active reader; the seeking handler
     // closes over this variable so it always cancels the right one.
