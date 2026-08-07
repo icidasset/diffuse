@@ -49,9 +49,12 @@ describe("components/transformer/output/refiner/initial-contents", () => {
       await output.facets.save([]);
 
       // Wait for the IDB flag check in the constructor to resolve
-      await new Promise((r) => setTimeout(r, 50));
-
-      const col = t.facets.collection();
+      const deadline = Date.now() + 2000;
+      let col = t.facets.collection();
+      while (Date.now() < deadline && col.state !== "loaded") {
+        await new Promise((r) => setTimeout(r, 20));
+        col = t.facets.collection();
+      }
       if (col.state !== "loaded") return null;
       return (col.data as unknown[]).length > 0;
     });
@@ -78,12 +81,16 @@ describe("components/transformer/output/refiner/initial-contents", () => {
       document.body.append(t);
 
       // Wait for the IDB flag check to resolve
-      await new Promise((r) => setTimeout(r, 50));
+      const deadline = Date.now() + 2000;
+      let col = t.facets.collection();
+      while (Date.now() < deadline && col.state !== "loaded") {
+        await new Promise((r) => setTimeout(r, 20));
+        col = t.facets.collection();
+      }
 
       // Explicit save marks as initialized (even with empty array)
       await t.facets.save([]);
 
-      const col = t.facets.collection();
       if (col.state !== "loaded") return null;
       return (col.data as unknown[]).length;
     });
@@ -108,8 +115,6 @@ describe("components/transformer/output/refiner/initial-contents", () => {
       t.setAttribute("output-selector", "#test-idb-data");
       document.body.append(t);
 
-      await new Promise((r) => setTimeout(r, 50));
-
       await t.facets.save([
         {
           $type: "sh.diffuse.output.facet",
@@ -118,7 +123,13 @@ describe("components/transformer/output/refiner/initial-contents", () => {
         },
       ]);
 
-      const col = t.facets.collection();
+      // Wait for the save to propagate and the collection to reach "loaded"
+      const deadline = Date.now() + 2000;
+      let col = t.facets.collection();
+      while (Date.now() < deadline && col.state !== "loaded") {
+        await new Promise((r) => setTimeout(r, 20));
+        col = t.facets.collection();
+      }
       if (col.state !== "loaded") return null;
       return (col.data as Array<{ id: string }>).map((f) => f.id);
     });

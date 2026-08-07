@@ -515,6 +515,7 @@ class AudioEngine extends BroadcastableDiffuseElement {
    * @param {string} mimeType
    * @param {((timeSeconds: number) => Promise<ReadableStream>) | undefined} seekFn
    * @param {number | undefined} duration
+   * @param {AbortSignal} [signal]
    */
   async #resolveStream(id, stream, mimeType, seekFn, duration, signal) {
     // MediaSource is unavailable on iPhone before iOS 17.1, so bail out
@@ -575,11 +576,11 @@ class AudioEngine extends BroadcastableDiffuseElement {
     await new Promise((resolve) => {
       const onOpen = () => {
         cleanup();
-        resolve();
+        resolve(undefined);
       };
       const onAbort = () => {
         cleanup();
-        resolve();
+        resolve(undefined);
       };
       const cleanup = () => {
         mediaSource.removeEventListener("sourceopen", onOpen);
