@@ -18,7 +18,7 @@ export const STARTING_SET_URIS = [
   "facets/data/sources/index.html",
   "facets/data/file-manager/index.html",
   "facets/themes/blur/artwork-controller/facet/index.html",
-  "facets/themes/blur-pocket/facet/index.html",
+  "facets/themes/blur/facet/index.html",
   "facets/themes/winamp/facet/index.html",
 
   // PRELUDES (BASE)

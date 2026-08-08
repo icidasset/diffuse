@@ -46,8 +46,8 @@
     "url": "facets/themes/blur-pocket/facet/index.html",
     "title": "Blur Pocket",
     "category": "Themes",
-    "featured": true,
     "author": "A theme by [@tokono.ma](https://bsky.app/profile/tokono.ma)",
+    "incomplete": true,
     "desc": "A mobile-optimised and minimalised version of the Blur theme. Does not include the background images and has a slightly different color palette."
   },
   {
