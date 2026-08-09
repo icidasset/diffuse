@@ -118,22 +118,30 @@ const miniNext = document.querySelector("#mini-next");
 
 let miniArtUrl = "";
 let miniArtObjectUrl = "";
+// Monotonic generation token. Incremented on every effect run so that an async
+// `art.get()` resolution can tell whether it is still the latest run. Stale
+// resolutions (superseded by a newer run before the artwork bytes arrived) bail
+// out without creating or revoking object URLs, preventing blob URLs from
+// accumulating when the mini-player updates rapidly (e.g. per progress tick or
+// across track switches).
+let miniArtGen = 0;
 
-// Reactively update the mini-player from the controller orchestrator signals.
+// Split the mini-player into focused effects, each reacting only to the signals
+// it reads. Nothing here needs per-tick progress, so — unlike a single blanket
+// effect — these do not re-run on every playback tick.
+
+// Visibility + track metadata (title / artist). Runs only when the current
+// track changes, not on playback progress.
 effect(() => {
   const controller = foundation.signals.orchestrator.controller();
   const track = controller?.currentTrack();
-  const playing = controller?.isPlaying() ?? false;
-  const audio = controller?.audio();
 
-  // Show / hide the mini-player
   if (track) {
     miniPlayer?.removeAttribute("hidden");
   } else {
     miniPlayer?.setAttribute("hidden", "");
   }
 
-  // Title / artist
   if (miniTitle) {
     miniTitle.textContent = track?.tags?.title ?? "Diffuse";
   }
@@ -141,58 +149,76 @@ effect(() => {
     miniArtist.textContent = track?.tags?.artist ??
       (track ? "" : "Waiting on queue …");
   }
+});
 
-  // Artwork thumbnail — pull from the artwork orchestrator
-  if (track) {
-    const art = foundation.signals.orchestrator.artwork();
-    art?.get(track).then((bytes) => {
-      // No cover for this track — fall back to the placeholder icon and hide
-      // any <img> that was shown for the previous one.
-      if (!bytes) {
-        showNoArtwork();
-        return;
-      }
-      // Avoid recreating the same blob URL on every reactive run.
-      const key = `${track.id}:${bytes.byteLength}`;
-      if (key === miniArtUrl) return;
-      miniArtUrl = key;
+// Play / pause icon. Reacts only to the play state signal.
+effect(() => {
+  const controller = foundation.signals.orchestrator.controller();
+  const playing = controller?.isPlaying() ?? false;
 
-      const mime = detectMime(bytes);
-      const url = URL.createObjectURL(
-        new Blob([/** @type {ArrayBuffer} */ (bytes.buffer)], { type: mime }),
-      );
-
-      // Revoke the previous artwork blob URL before replacing it so its bytes
-      // are released. Otherwise each track leaks one blob URL, growing memory
-      // until iOS Safari crashes after playing tracks for a while.
-      if (miniArtObjectUrl) {
-        URL.revokeObjectURL(miniArtObjectUrl);
-      }
-      miniArtObjectUrl = url;
-
-      if (miniArt) {
-        miniArt.innerHTML = "";
-        const img = document.createElement("img");
-        // If the image fails to load, drop it and show the placeholder icon.
-        img.addEventListener("error", showNoArtwork);
-        img.alt = "";
-        img.src = url;
-        miniArt.append(img);
-      }
-    }).catch(showNoArtwork);
-  } else {
-    showNoArtwork();
-  }
-
-  // Play / pause icon
   if (miniPlayIcon) {
     miniPlayIcon.className = playing
       ? "ph-fill ph-pause"
       : "ph-fill ph-play";
   }
+});
 
-  // Touch the audio + progress signals so the effect re-runs on playback updates
-  void audio?.progress();
+// Artwork thumbnail — pull from the artwork orchestrator. Bump the generation
+// before firing an async fetch; if a newer run supersedes this one before the
+// bytes resolve, the stale callback will be ignored entirely.
+effect(() => {
+  const controller = foundation.signals.orchestrator.controller();
+  const track = controller?.currentTrack();
+  const gen = ++miniArtGen;
+
+  if (!track) {
+    showNoArtwork();
+    return;
+  }
+
+  const art = foundation.signals.orchestrator.artwork();
+  art?.get(track).then((bytes) => {
+    // A newer effect run has taken over — drop this result without creating
+    // or revoking any object URL.
+    if (gen !== miniArtGen) return;
+
+    // No cover for this track — fall back to the placeholder icon and hide
+    // any <img> that was shown for the previous one.
+    if (!bytes) {
+      showNoArtwork();
+      return;
+    }
+    // Avoid recreating the same blob URL on every reactive run.
+    const key = `${track.id}:${bytes.byteLength}`;
+    if (key === miniArtUrl) return;
+    miniArtUrl = key;
+
+    const mime = detectMime(bytes);
+    const url = URL.createObjectURL(
+      new Blob([/** @type {ArrayBuffer} */ (bytes.buffer)], { type: mime }),
+    );
+
+    // Revoke the previous artwork blob URL before replacing it so its bytes
+    // are released. Otherwise each stale resolution leaks one blob URL,
+    // growing memory until iOS Safari crashes after playing tracks for a
+    // while.
+    if (miniArtObjectUrl) {
+      URL.revokeObjectURL(miniArtObjectUrl);
+    }
+    miniArtObjectUrl = url;
+
+    if (miniArt) {
+      miniArt.innerHTML = "";
+      const img = document.createElement("img");
+      // If the image fails to load, drop it and show the placeholder icon.
+      img.addEventListener("error", showNoArtwork);
+      img.alt = "";
+      img.src = url;
+      miniArt.append(img);
+    }
+  }).catch(() => {
+    if (gen === miniArtGen) showNoArtwork();
+  });
 });
 
 /** @type {ArtworkController | null} */
