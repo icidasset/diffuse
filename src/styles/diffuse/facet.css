@@ -89,14 +89,11 @@ h1 {
   letter-spacing: -0.02em;
   line-height: 1.2;
   margin: 0 0 var(--space-sm);
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-  /*width: fit-content;*/
-}
 
-.h1-container {
-
+  @supports (text-fit: shrink) {
+    text-fit: shrink;
+    white-space: nowrap;
+  }
 }
 
 .facet__left p {
