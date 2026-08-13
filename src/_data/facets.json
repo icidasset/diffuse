@@ -91,13 +91,6 @@
     "desc": "Add Dropbox as an audio source or use it as user-data storage."
   },
   {
-    "url": "facets/data/file-manager/index.html",
-    "title": "File Manager",
-    "category": "Data",
-    "featured": true,
-    "desc": "Upload audio files to play them and optionally sync them with your cloud storage. These are automatically added as inputs (aka. sources)."
-  },
-  {
     "url": "facets/connect/https/index.html",
     "title": "Connect / HTTPS",
     "category": "Data",
@@ -184,6 +177,13 @@
     "title": "Export & Import",
     "category": "Data",
     "desc": "Export all data as a JSON snapshot, or restore from a previously exported file."
+  },
+  {
+    "url": "facets/data/file-manager/index.html",
+    "title": "File Manager",
+    "category": "Data",
+    "featured": true,
+    "desc": "Upload audio files to play them and optionally sync them with your cloud storage. These are automatically added as inputs (aka. sources)."
   },
   {
     "url": "facets/themes/ipod/facet/index.html",
