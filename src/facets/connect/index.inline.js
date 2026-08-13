@@ -22,7 +22,6 @@ const icons = {
 };
 
 const recommended = new Set([
-  "facets/connect/atproto-passkey/index.html",
   "facets/connect/dropbox/index.html",
   "facets/connect/local/index.html",
   "facets/connect/s3/index.html",
