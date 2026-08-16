@@ -5,6 +5,14 @@ import { create as createCid } from "./common/cid.js";
 /** @type {Record<string, string>} */
 const FILE_TREE = JSON.parse("__FILE_TREE__");
 
+/**
+ * Identifier for the current build, injected at build time. Used to version
+ * the offline caches so a new deploy never reads cache entries written by a
+ * previous build (which may hold stale or poisoned bodies, e.g. a cached 404
+ * for a file that only recently started existing).
+ */
+const BUILD_ID = "__BUILD_ID__";
+
 /** Media content types to ignore */
 const MEDIA_CONTENT_TYPE = /^(audio|video)\//;
 
@@ -13,6 +21,12 @@ const RAW_CODEC = 0x55;
 
 const { searchParams } = new URL(location.href);
 const CACHE_NAME = searchParams.get("cache-name") ?? "diffuse-offline";
+
+/**
+ * All caches created by this worker are prefixed with this value plus the
+ * build id, so each build gets its own isolated set of caches.
+ */
+const CACHE_PREFIX = `${CACHE_NAME}@${BUILD_ID}`;
 
 const thyself =
   /** @type {ServiceWorkerGlobalScope & typeof globalThis} */ (/** @type {unknown} */ (self));
@@ -31,18 +45,37 @@ self.addEventListener("install", (_event) => {
 ////////////////////////////////////////////
 
 self.addEventListener("activate", (event) => {
+  // Delete caches belonging to previous builds so stale content is never
+  // served after a deploy. Caches from the current build share `CACHE_PREFIX`
+  // and are kept; anything else this worker created (older builds, or the
+  // unversioned `diffuse-offline:*` caches from before versioning existed)
+  // is removed.
+  const dropStaleCaches = caches.keys().then((keys) =>
+    Promise.all(
+      keys
+        .filter((key) =>
+          key === CACHE_NAME || key.startsWith(`${CACHE_NAME}:`) ||
+          key.startsWith(`${CACHE_NAME}@`)
+        )
+        .filter((key) => !key.startsWith(CACHE_PREFIX))
+        .map((key) => caches.delete(key)),
+    ),
+  );
+
   // Claim clients, then signal each window to reload so no old code stays
   // active after the new SW takes over. Signalling via postMessage (rather
   // than client.navigate) lets the page debounce the reload and break the
   // loop that would otherwise occur when the SW script itself changes between
   // reloads (e.g. esbuild chunk-hash churn during development).
   /** @type {ExtendableEvent} */ (event).waitUntil(
-    thyself.clients.claim().then(() =>
-      thyself.clients.matchAll({ type: "window" }).then((clients) => {
-        for (const client of clients) {
-          client.postMessage({ type: "sw-activated" });
-        }
-      })
+    dropStaleCaches.then(() =>
+      thyself.clients.claim().then(() =>
+        thyself.clients.matchAll({ type: "window" }).then((clients) => {
+          for (const client of clients) {
+            client.postMessage({ type: "sw-activated" });
+          }
+        }),
+      )
     ),
   );
 });
@@ -132,13 +165,13 @@ function cidUrl(cid) {
 /**
  * Opens the two caches used for content-addressed storage.
  *
- * - `<name>:index`   maps original request URL → CID string (text/plain)
- * - `<name>:content` maps `https://diffuse.offline.worker/<cid>` → full response (deduplicated)
+ * - `<prefix>:index`   maps original request URL → CID string (text/plain)
+ * - `<prefix>:content` maps `https://diffuse.offline.worker/<cid>` → full response (deduplicated)
  */
 async function openCaches() {
   const [index, content] = await Promise.all([
-    caches.open(CACHE_NAME + ":index"),
-    caches.open(CACHE_NAME + ":content"),
+    caches.open(CACHE_PREFIX + ":index"),
+    caches.open(CACHE_PREFIX + ":content"),
   ]);
   return { index, content };
 }

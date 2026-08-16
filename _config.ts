@@ -431,11 +431,13 @@ async function writeFileTree() {
   // patterns are replaced with the actual object literal so that `FILE_TREE`
   // is always an object in the running SW, never a string.
   const treeJson = JSON.stringify(sorted);
+  const buildId = crypto.randomUUID();
   const swSource = Deno.readTextFileSync(swDist)
     .replace(/\n\/\/ @build \S+\n$/, "")
     .replace('JSON.parse("__FILE_TREE__")', () => treeJson)
-    .replace('"__FILE_TREE__"', () => treeJson);
-  const swStamped = `${swSource}\n// @build ${crypto.randomUUID()}\n`;
+    .replace('"__FILE_TREE__"', () => treeJson)
+    .replace('"__BUILD_ID__"', () => JSON.stringify(buildId));
+  const swStamped = `${swSource}\n// @build ${buildId}\n`;
   Deno.writeTextFileSync(swDist, swStamped);
 }
 
