@@ -1,6 +1,9 @@
 import { BroadcastableDiffuseElement, defineElement } from "~/common/element.js";
 import { batch, computed, signal } from "~/common/signal.js";
 
+import { PRELUDE_BASE } from "~/common/facets/constants.js";
+import { buildFacets } from "~/common/facets/utils.js";
+
 /**
  * @import {DiffuseElement} from "~/common/element.js"
  * @import {Facet, PlaylistItem, Setting, Track} from "~/definitions/types.d.ts"
@@ -36,7 +39,24 @@ class OutputConfigurator extends BroadcastableDiffuseElement {
           if (out) return out.facets.collection();
 
           const def = this.#defaultOutput.value;
-          if (def) return def.facets.collection();
+          if (def) {
+            const col = def.facets.collection();
+
+            // Recover from the bootstrap deadlock: a non-default output is
+            // selected (but its elements aren't created yet, hence `out` is
+            // null) and the local bucket has no prelude facets to inject the
+            // output-bundle prelude from. Seed the base infrastructure
+            // preludes so the page can bootstrap the selected output.
+            if (col.state === "loaded" && this.#needsPreludeRecovery(col.data)) {
+              return {
+                state: "loaded",
+                data: [...col.data, ...buildFacets(PRELUDE_BASE)],
+              };
+            }
+
+            return col;
+          }
+
           if (this.hasDefault()) return { state: "loading" };
 
           return this.#setupFinished.value
@@ -331,6 +351,24 @@ class OutputConfigurator extends BroadcastableDiffuseElement {
     }
 
     return /** @type {Output} */ (/** @type {unknown} */ (el));
+  }
+
+  /**
+   * Whether the local bucket needs the base infrastructure preludes seeded
+   * into the fallback.
+   *
+   * @param {Facet[]} localFacets
+   * @returns {boolean}
+   */
+  #needsPreludeRecovery(localFacets) {
+    const selectedId = this.#selectedOutputId();
+    const defaultId = this.getAttribute("default");
+
+    // Only a non-default selection depends on the prelude to be created.
+    if (!selectedId || selectedId === defaultId) return false;
+
+    // If the local bucket already has preludes, the normal path works.
+    return !localFacets.some((f) => f.kind === "prelude");
   }
 
   /**

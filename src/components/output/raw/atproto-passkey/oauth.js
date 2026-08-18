@@ -124,9 +124,12 @@ export function restoreOrFinalize() {
       params.has("code") &&
       localStorage.getItem("oauth/pending-client") === CLIENT_KEY
     ) {
-      localStorage.removeItem("oauth/pending-client");
-
+      // Finalize first; only clear the pending marker once it succeeds. If the
+      // page reloads mid-exchange (e.g. a prelude change), the marker survives
+      // so the reloaded page can retry instead of silently dropping the login.
       const result = await finalizeAuthorization(params);
+
+      localStorage.removeItem("oauth/pending-client");
 
       // Clean up URL (remove fragment containing OAuth params)
       history.replaceState(null, "", loc.pathname + loc.search);

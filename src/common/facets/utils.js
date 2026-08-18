@@ -1,11 +1,51 @@
 import * as TID from "@atcute/tid";
+import { xxh32r } from "xxh32/dist/raw.js";
 
 import { loadURI } from "../loader.js";
 import * as CID from "../cid.js";
 
+import { STARTING_SET_DISABLED, TYPE } from "./constants.js";
+
+import facetsData from "~/_data/facets.json" with { type: "json" };
+
 /**
  * @import {Facet} from "~/definitions/types.d.ts"
  */
+
+/**
+ * Builds facet objects from the bundled catalogue for the given URIs.
+ * Available offline — no output needs to be reachable.
+ *
+ * @param {readonly string[]} uris
+ * @returns {Facet[]}
+ *
+ * @example Builds a facet for each known URI, skipping unknown ones
+ * ```js
+ * import { buildFacets } from "~/common/facets/utils.js";
+ * import { PRELUDE_BASE } from "~/common/facets/constants.js";
+ *
+ * const facets = buildFacets([...PRELUDE_BASE, "facets/does/not/exist.html"]);
+ * if (facets.length !== PRELUDE_BASE.length) throw new Error("should skip unknown URIs");
+ * if (!facets.every((f) => f.kind === "prelude")) throw new Error("base preludes should be preludes");
+ * if (facets.some((f) => !f.id)) throw new Error("every facet needs an id");
+ * ```
+ */
+export function buildFacets(uris) {
+  return facetsData.flatMap((facet) => {
+    if (!uris.includes(facet.url)) return [];
+
+    return [{
+      $type: TYPE,
+      id: uriToRkey("diffuse://" + facet.url),
+      description: facet.desc,
+      enabled: STARTING_SET_DISABLED.includes(facet.url) ? false : true,
+      kind: facet.kind === "prelude" ? "prelude" : "interactive",
+      name: facet.title,
+      tags: facet.tags?.length ? facet.tags : undefined,
+      uri: "diffuse://" + facet.url,
+    }];
+  });
+}
 
 /**
  * @param {{ description?: string; kind: string | undefined; name: string; tags?: string[]; uri: string }} _args
@@ -81,4 +121,9 @@ export async function facetFromURI(
   };
 
   return facet;
+}
+
+/** @param {string} uri */
+function uriToRkey(uri) {
+  return xxh32r(new TextEncoder().encode(uri)).toString(16).padStart(8, "0");
 }

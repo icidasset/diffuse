@@ -33,6 +33,12 @@ const preludeKey = computed(() => {
 let initialPreludeKey = /** @type {string | null} */ (null);
 
 effect(() => {
+  // Never reload mid-OAuth-callback: a prelude change (e.g. synthesized
+  // recovery preludes being replaced by the real synced set) would otherwise
+  // abort the in-flight `finalizeAuthorization` token exchange.
+  const params = new URLSearchParams(window.location.hash.slice(1));
+  if (params.has("code") || params.has("state")) return;
+
   const key = preludeKey();
   if (key === null) return;
   if (initialPreludeKey === null) { initialPreludeKey = key; return; }

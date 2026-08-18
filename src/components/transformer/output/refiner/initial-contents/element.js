@@ -1,18 +1,13 @@
 import * as IDB from "idb-keyval";
-import { xxh32r } from "xxh32/dist/raw.js";
 
 import { batch, computed, signal, untracked } from "~/common/signal.js";
 import { OutputTransformer } from "../../base.js";
 import { defineElement } from "~/common/element.js";
 
 import {
-  STARTING_SET_DISABLED,
   STARTING_SET_URIS,
-  TYPE,
 } from "~/common/facets/constants.js";
-import facets from "~/_data/facets.json" with {
-  type: "json",
-};
+import { buildFacets } from "~/common/facets/utils.js";
 
 /**
  * @import {OutputManagerDeputy} from "@specs/components/output/types.d.ts"
@@ -78,28 +73,7 @@ class InitialContentsTransformer extends OutputTransformer {
           }
 
           // Determine starting set
-          const data = facets.flatMap((facet) => {
-            if (STARTING_SET_URIS.includes(facet.url)) {
-              return [{
-                $type: TYPE,
-                id: uriToRkey("diffuse://" + facet.url),
-                description: facet.desc,
-                enabled: STARTING_SET_DISABLED.includes(facet.url)
-                  ? false
-                  : true,
-                kind: facet.kind === "prelude"
-                  ? /** @type {const} */ ("prelude")
-                  : /** @type {const} */ ("interactive"),
-                name: facet.title,
-                tags: facet.tags?.length ? facet.tags : undefined,
-                uri: "diffuse://" + facet.url,
-              }];
-            }
-
-            return [];
-          });
-
-          return { state: "loaded", data };
+          return { state: "loaded", data: buildFacets(STARTING_SET_URIS) };
         }),
 
         save: async (newFacets) => {
@@ -129,11 +103,6 @@ class InitialContentsTransformer extends OutputTransformer {
 }
 
 export default InitialContentsTransformer;
-
-/** @param {string} uri */
-function uriToRkey(uri) {
-  return xxh32r(new TextEncoder().encode(uri)).toString(16).padStart(8, "0");
-}
 
 ////////////////////////////////////////////
 // REGISTER
