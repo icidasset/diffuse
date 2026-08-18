@@ -23,7 +23,14 @@ const outputOrchestrator = await foundation.orchestrator.output();
 await customElements.whenDefined(outputOrchestrator.localName);
 await customElements.whenDefined(ATPROTO_PASSKEY_NAME);
 
-const atprotoOption = await outputOrchestrator.waitForOption("AT Protocol");
+const atprotoOption = (await outputOrchestrator.options()).find(
+  (o) => o.label === "AT Protocol",
+);
+
+if (!atprotoOption) {
+  throw new Error("AT Protocol output was not enabled!");
+}
+
 const ATPROTO_PASSKEY_OUTPUT_ID = atprotoOption.id;
 
 const atprotoEl = /** @type {ATProtoPasskeyOutputElement | undefined} */ (

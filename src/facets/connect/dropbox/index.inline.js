@@ -8,7 +8,7 @@ import {
   parseURI,
 } from "~/components/input/dropbox/common.js";
 import { NAME as DROPBOX_OUTPUT_NAME } from "~/components/output/bytes/dropbox/element.js";
-import { effect, signal } from "~/common/signal.js";
+import { effect } from "~/common/signal.js";
 import foundation from "~/common/foundation.js";
 
 import { setup } from "~/facets/connect/common.js";
@@ -36,47 +36,21 @@ await Promise.all([
   customElements.whenDefined(sourcesOrchestrator.localName),
 ]);
 
-// The Dropbox output option is registered by the output-bundle prelude,
-// a separate async module that may not have executed yet when this facet
-// runs. It's resolved in the background (below) so a missing or stale
-// prelude (e.g. an old service worker serving an outdated bundle) can't
-// block the facet — and the "Loading your software" loader — forever.
-// The signal lets the reactive list update once the option is available.
-const dropboxOutputId = signal(/** @type {string | undefined} */ (undefined));
+const dropboxOption = (await outputOrchestrator.options()).find(
+  (o) => o.label === "Dropbox",
+);
 
-outputOrchestrator
-  .waitForOption("Dropbox")
-  .then((opt) => { dropboxOutputId.value = opt.id; })
-  .catch(() => {});
+if (!dropboxOption) {
+  throw new Error("Dropbox output was not enabled!");
+}
+
+const OUTPUT_DROPBOX_ID = dropboxOption.id;
 
 /** Look up the Dropbox output element, which may not exist yet. */
 function dropboxOutputEl() {
   return /** @type {DropboxOutputElement | undefined} */ (
     outputOrchestrator.root().querySelector(DROPBOX_OUTPUT_NAME)
   );
-}
-
-/**
- * Resolves with the Dropbox output option id once the output-bundle
- * prelude has registered it, or `undefined` if it doesn't appear in time.
- *
- * @param {number} [timeout]
- * @returns {Promise<string | undefined>}
- */
-function whenDropboxOutputId(timeout = 10_000) {
-  return new Promise((resolve) => {
-    if (dropboxOutputId.value) return resolve(dropboxOutputId.value);
-
-    const stop = effect(() => {
-      const id = dropboxOutputId.value;
-      if (id) {
-        stop();
-        resolve(id);
-      }
-    });
-
-    setTimeout(() => { stop(); resolve(undefined); }, timeout);
-  });
 }
 
 ////////////////////////////////////////////
@@ -169,13 +143,11 @@ if (authError) {
 
 effect(() => {
   const inputSources = sourcesOrchestrator.sources()[SCHEME] ?? [];
-  // Track the signal so the list re-renders once the Dropbox output
-  // option is registered by the prelude. Re-query the element each run
-  // so we pick it up when it's appended.
-  const outputId = dropboxOutputId.value;
+  // Re-query the element each run so we pick it up when it's appended.
   const el = dropboxOutputEl();
   const outputToken = el?.refreshToken();
-  const isSelectedOutput = outputOrchestrator.selected()?.id === outputId;
+  const isSelectedOutput =
+    outputOrchestrator.selected()?.id === OUTPUT_DROPBOX_ID;
 
   // Hide the "Use as userdata storage" button when the output is
   // already selected. When authorized but not selected, the button
@@ -227,19 +199,11 @@ document.querySelector("#dropbox-auth-btn")?.addEventListener("click", () => {
 document.querySelector("#dropbox-output-btn")?.addEventListener(
   "click",
   async () => {
-    const outputId = dropboxOutputId.value;
-    if (!outputId) {
-      setError(
-        "Dropbox output isn't available yet. Refresh the page to load the latest bundle.",
-      );
-      return;
-    }
-
     const el = dropboxOutputEl();
     const existingToken = el?.refreshToken();
     if (existingToken) {
       // Already authorized — just select the output.
-      await outputOrchestrator.select(outputId);
+      await outputOrchestrator.select(OUTPUT_DROPBOX_ID);
     } else {
       // Not yet authorized — start the OAuth flow.
       el?.authorize();
@@ -319,23 +283,15 @@ async function removeOutput() {
 // HANDLE OUTPUT OAUTH RETURN
 ////////////////////////////////////////////
 
-// Done after the UI is ready so a slow/missing prelude can't keep the
-// loader spinning. When returning from the Dropbox output OAuth flow the
-// prelude (new build) should register the option shortly.
+// When returning from the Dropbox output OAuth flow, store the token and
+// select the output.
 if (outputToken) {
   setError(null);
-  const outputId = await whenDropboxOutputId();
-  if (!outputId) {
-    setError(
-      "Dropbox output isn't available yet. Refresh the page to load the latest bundle.",
-    );
-  } else {
-    try {
-      await dropboxOutputEl()?.setRefreshToken(outputToken);
-      await outputOrchestrator.select(outputId);
-    } catch (err) {
-      setError(err instanceof Error ? err.message : "Failed to connect Dropbox");
-    }
+  try {
+    await dropboxOutputEl()?.setRefreshToken(outputToken);
+    await outputOrchestrator.select(OUTPUT_DROPBOX_ID);
+  } catch (err) {
+    setError(err instanceof Error ? err.message : "Failed to connect Dropbox");
   }
 }
 
