@@ -447,22 +447,7 @@ class AudioEngine extends BroadcastableDiffuseElement {
       (a) => existingMap.get(a.id)?.url !== a.url,
     );
 
-    // On iOS a single <audio> DOM node is reused across track changes. Detect
-    // whether the active (non-preload) track is being replaced so we can reset
-    // the reused node's state and force a reload of its <source>.
-    const oldActive = this.#items.value.find((a) => !a.isPreload);
-    const newActive = resolvedAudio.find((a) => !a.isPreload);
-    const activeReplaced = IS_IOS && oldActive && newActive &&
-      (oldActive.id !== newActive.id || oldActive.url !== newActive.url);
-
     if (hasNewIds || hasPreloadChanges || hasUrlChanges) {
-      // Reset the reused node's state before render swaps its attributes to
-      // the new track, so stale duration/time from the previous track don't
-      // leak through until the new source loads.
-      if (activeReplaced) {
-        this.#itemElement(oldActive.id)?.resetState();
-      }
-
       this.#items.value = resolvedAudio;
     }
 
@@ -482,25 +467,6 @@ class AudioEngine extends BroadcastableDiffuseElement {
             if (audio.readyState === 0 || audio.error) audio.load();
           });
         }
-      }
-    }
-
-    // On iOS, lit-html updated the reused <audio>'s <source src> to the new
-    // track but the browser won't reload on its own. Stream-backed items are
-    // handled by #resolveStream (which sets audio.src directly), so only force
-    // a reload for plain-URL items.
-    if (activeReplaced) {
-      const streamIds = new Set(
-        args.audio.filter((a) => "stream" in a).map((a) => a.id),
-      );
-      for (const a of resolvedAudio) {
-        if (a.isPreload || streamIds.has(a.id)) continue;
-        this.#withAudioNode(a.id, (audio) => {
-          // Clear a stale `src` attribute from a previously stream-backed
-          // track — see note above.
-          audio.removeAttribute("src");
-          audio.load();
-        });
       }
     }
 
@@ -700,22 +666,16 @@ class AudioEngine extends BroadcastableDiffuseElement {
   render({ html }) {
     const allItems = this.items();
 
-    // On iOS, only the active (non-preload) track gets an <audio> element —
-    // preloading via extra media elements is unreliable on mobile Safari and
-    // eats into its media-element cap.
-    const items = IS_IOS
-      ? allItems.filter((i) => !i.isPreload)
-      : allItems;
+    // Render every item, including the preloaded next track. On iOS this is
+    // what lets the next track's bytes buffer while the current one plays, so
+    // the locked-screen handoff only needs play() — no background load() that
+    // would tear down the audio session and leave playback silent.
+    const items = allItems;
 
     const ids = allItems.map((i) => i.id);
 
     this.querySelectorAll("de-audio-item").forEach((element) => {
       if (ids.includes(element.id)) return;
-
-      // On iOS a single node is reused for the next active track (keyed on
-      // a stable value below), so it's only stale once no active track
-      // remains at all.
-      if (IS_IOS && items.length > 0) return;
 
       // Detached media elements can keep playing (notorious on iOS, but
       // possible elsewhere too). Updating <source src> alone doesn't stop
@@ -737,12 +697,10 @@ class AudioEngine extends BroadcastableDiffuseElement {
         : JSON.stringify(audio.progress);
 
       return keyed(
-        // On iOS, reuse a single <de-audio-item>/<audio> DOM node across
-        // track changes by keying on a stable value rather than the audio id.
-        IS_IOS ? "active" : audio.id,
+        audio.id,
         html`
           <de-audio-item
-            group="${this.broadcasted ? `${group}/${IS_IOS ? "active" : audio.id}` : nothing}"
+            group="${this.broadcasted ? `${group}/${audio.id}` : nothing}"
             id="${audio.id}"
             initial-progress="${ip}"
             mime-type="${audio.mimeType ? audio.mimeType : nothing}"
@@ -1004,19 +962,6 @@ class AudioEngineItem extends BroadcastableDiffuseElement {
 
       progress: this.$state.progress,
     };
-  }
-
-  /**
-   * Reset playback state. Used when a single <audio> DOM node is reused for
-   * a new track (mobile Safari) so stale values from the previous track
-   * don't leak through until the new source loads.
-   */
-  resetState() {
-    this.$state.currentTime.set(0);
-    this.$state.duration.set(0);
-    this.$state.hasEnded.set(false);
-    this.$state.isPlaying.set(false);
-    this.$state.loadingState.set("loading");
   }
 
   // RELATED ELEMENTS
