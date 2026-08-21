@@ -337,6 +337,7 @@ p,
   padding: 0;
   position: fixed;
   position-area: bottom span-left;
+  position-try-fallbacks: flip-block, flip-inline;
   text-align: left;
 
   @media (prefers-color-scheme: dark) {
