@@ -57,9 +57,10 @@ class DaslBytesSyncOutputTransformer extends OutputTransformer {
       );
 
       const isReady = signal(false);
-      const merging = signal({ isBusy: false, lastCID: "" }, {
-        compare: diff,
-      });
+      const merging = signal(
+        { isBusy: false, lastCID: "", lastRemoteCID: "" },
+        { compare: diff },
+      );
 
       this.effect(() => {
         if (!isReady.value) return;
@@ -101,17 +102,41 @@ class DaslBytesSyncOutputTransformer extends OutputTransformer {
         } else if (
           rs === "loaded" && this.hasDiverged({ local: l, remote: r })
         ) {
+          // If we've already reconciled this exact (local, remote) pair and it
+          // made no progress (e.g. the remote write failed, or the merge
+          // resolved to the container we already hold), don't re-enter the
+          // merge. Re-merging here only toggles `merging`'s busy flag, which
+          // re-runs this effect and spins the reactive sync loop, freezing the
+          // page. Wait until local or remote actually changes before trying
+          // again.
+          const prev = merging.value;
+          if (prev.lastCID === (l.cid ?? "") &&
+              prev.lastRemoteCID === (r.cid ?? "")) {
+            return;
+          }
+
           // Async merge
           this.isLeader().then((isLeader) => {
             if (!isLeader) return;
 
-            merging.value = { isBusy: true, lastCID: merging.value.lastCID };
+            merging.value = {
+              isBusy: true,
+              lastCID: prev.lastCID,
+              lastRemoteCID: prev.lastRemoteCID,
+            };
 
             this.merge(l, r).then(async (c) => {
+              /**
+               * Remote cid after the (possible) push. Stays at the pre-merge
+               * remote cid when there's nothing to push or the push fails, so
+               * the effect-level guard above knows this reconcile was already
+               * attempted and won't retry it in a loop.
+               */
+              let resolvedRemoteCID = r.cid ?? "";
+              let reconciledCID = c.cid ?? "";
+
               try {
                 container.value = c;
-
-                if (c.cid === merging.value.lastCID) return;
 
                 const bytes = this.save(c);
 
@@ -121,13 +146,28 @@ class DaslBytesSyncOutputTransformer extends OutputTransformer {
 
                 if (remote.ready() && rs === "loaded" && c.cid !== r.cid) {
                   await saveRemote(bytes);
+                  resolvedRemoteCID = c.cid ?? "";
                 }
+              } catch (err) {
+                console.error("Merge failed:", err);
               } finally {
-                merging.value = { isBusy: false, lastCID: c.cid ?? "" };
+                merging.value = {
+                  isBusy: false,
+                  lastCID: reconciledCID,
+                  lastRemoteCID: resolvedRemoteCID,
+                };
               }
             }).catch((err) => {
+              // Merge() itself rejected (before producing a reconciled
+              // container). Reset the busy flag so the effect isn't stuck, and
+              // record the exact (local, remote) pair we attempted so a
+              // persistent failure is skipped rather than spinning forever.
               console.error("Merge failed:", err);
-              merging.value = { isBusy: false, lastCID: merging.value.lastCID };
+              merging.value = {
+                isBusy: false,
+                lastCID: l.cid ?? "",
+                lastRemoteCID: r.cid ?? "",
+              };
             });
           });
         } else {
@@ -358,7 +398,18 @@ class DaslBytesSyncOutputTransformer extends OutputTransformer {
           continue;
         }
 
-        const isANewerThanB = itemA.updatedAt && itemB.updatedAt
+        const hasAUpdatedAt = Boolean(itemA.updatedAt);
+        const hasBUpdatedAt = Boolean(itemB.updatedAt);
+
+        // The side that carries an `updatedAt` is the one that was edited, so
+        // it should win over a pristine copy that never recorded a change (e.g.
+        // a legacy seeded/starting-set facet persisted before it gained a
+        // timestamp). Only when both carry one do we compare clocks.
+        const isANewerThanB = (hasAUpdatedAt && !hasBUpdatedAt)
+          ? true
+          : (!hasAUpdatedAt && hasBUpdatedAt)
+          ? false
+          : hasAUpdatedAt && hasBUpdatedAt
           ? compareTimestamps(itemA.updatedAt, itemB.updatedAt) > 0
           : false;
 

@@ -48,7 +48,7 @@ const client_id = isLocalDev
   ? `http://localhost/?redirect_uri=${encodeURIComponent(redirect_uri)}&scope=${
     encodeURIComponent(SCOPE)
   }`
-  : /** @type {any} */ (import.meta).env?.ATPROTO_CLIENT_ID ??
+  : /** @type {any} */ (import.meta).env?.ATPROTO_PUBLIC_CLIENT_ID ??
     "https://elements.diffuse.sh/latest/components/output/raw/atproto-passkey/oauth-client-metadata.json";
 
 const OAUTH_CONFIG = {

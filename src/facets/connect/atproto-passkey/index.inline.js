@@ -5,7 +5,7 @@ import { NAME as PASSKEY_NAME } from "~/components/transformer/output/refiner/pa
 import { effect, signal } from "~/common/signal.js";
 import foundation from "~/common/foundation.js";
 
-import { setup } from "~/facets/connect/common.js";
+import { setup, waitForOutputOption } from "~/facets/connect/common.js";
 
 foundation.setup({ title: "Connect Atmosphere | Diffuse" });
 
@@ -23,14 +23,7 @@ const outputOrchestrator = await foundation.orchestrator.output();
 await customElements.whenDefined(outputOrchestrator.localName);
 await customElements.whenDefined(ATPROTO_PASSKEY_NAME);
 
-const atprotoOption = (await outputOrchestrator.options()).find(
-  (o) => o.label === "AT Protocol",
-);
-
-if (!atprotoOption) {
-  throw new Error("AT Protocol output was not enabled!");
-}
-
+const atprotoOption = await waitForOutputOption(outputOrchestrator, "AT Protocol");
 const ATPROTO_PASSKEY_OUTPUT_ID = atprotoOption.id;
 
 const atprotoEl = /** @type {ATProtoPasskeyOutputElement | undefined} */ (

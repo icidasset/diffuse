@@ -1,6 +1,4 @@
-import * as IDB from "idb-keyval";
-
-import { batch, computed, signal, untracked } from "~/common/signal.js";
+import { computed } from "~/common/signal.js";
 import { OutputTransformer } from "../../base.js";
 import { defineElement } from "~/common/element.js";
 
@@ -11,9 +9,16 @@ import { buildFacets } from "~/common/facets/utils.js";
 
 /**
  * @import {OutputManagerDeputy} from "@specs/components/output/types.d.ts"
+ * @import {OutputConfiguratorElement} from "@specs/components/configurator/output/types.d.ts"
  */
 
-const IDB_KEY =
+// Per-output "initialized" flag. Stored in localStorage keyed by the output id
+// so it is scoped per bucket/output, but deliberately kept OUT of the output's
+// own data: writing into a syncing output's collections (e.g. Dropbox via
+// dtob-dasl-sync) flows through its merge/sync pipeline, which is reactive
+// feedback that loops and freezes the page. localStorage is local-only control
+// state, so it's safe.
+const STORAGE_KEY =
   "diffuse/transformer/output/refiner/initial-contents/initialized";
 
 ////////////////////////////////////////////
@@ -26,21 +31,17 @@ const IDB_KEY =
 class InitialContentsTransformer extends OutputTransformer {
   static NAME = "diffuse/transformer/output/refiner/initial-contents";
 
-  #flagLoaded = signal(false);
-  #initialized = signal(false);
-
   constructor() {
     super();
 
     const base = this.base();
 
-    // Load flag from IDB; gate collection() until resolved to prevent
-    // a flash of defaults for a user who has previously cleared their collection.
-    IDB.get(IDB_KEY).then((v) => {
-      batch(() => {
-        this.#initialized.value = !!v;
-        this.#flagLoaded.value = true;
-      });
+    // Mark initialized the first time real (non-empty) data is observed,
+    // covering data arriving from another device via sync.
+    this.effect(() => {
+      const col = base.facets.collection();
+      if (col.state !== "loaded" || col.data.length === 0) return;
+      this.#markInitialized();
     });
 
     /** @type {OutputManagerDeputy} */
@@ -48,27 +49,14 @@ class InitialContentsTransformer extends OutputTransformer {
       facets: {
         ...base.facets,
         collection: computed(() => {
-          if (!this.#flagLoaded.get()) return { state: "loading" };
-
           const col = base.facets.collection();
           if (col.state !== "loaded") return col;
 
           if (col.data.length > 0) {
-            // Set the flag the first time we observe non-empty data.
-            // Covers data arriving from another device via sync.
-            // untracked read avoids a circular dependency; the write still
-            // notifies subscribers and queues a re-evaluation.
-            if (!untracked(() => this.#initialized.value)) {
-              this.#initialized.value = true;
-              IDB.set(IDB_KEY, true); // fire-and-forget
-            }
-
             return { state: "loaded", data: col.data };
           }
 
-          // Tracked read: keeps the computed subscribed to #initialized
-          // so it re-runs if save() sets it to true with an empty array.
-          if (this.#initialized.get()) {
+          if (this.#isInitialized()) {
             return { state: "loaded", data: col.data };
           }
 
@@ -77,14 +65,11 @@ class InitialContentsTransformer extends OutputTransformer {
         }),
 
         save: async (newFacets) => {
-          // Set the flag on any explicit save (covers the case where the
-          // user's first action is removing a default from the list).
-          if (!this.#initialized.value) {
-            this.#initialized.value = true;
-            IDB.set(IDB_KEY, true); // fire-and-forget
-          }
-
+          // Persist the facets first so the resulting (non-empty) data is
+          // visible before the initialized flag flips, avoiding a flash of
+          // the empty collection while a fresh output pops its starting set.
           await base.facets.save(newFacets);
+          this.#markInitialized();
         },
       },
 
@@ -99,6 +84,53 @@ class InitialContentsTransformer extends OutputTransformer {
     this.settings = manager.settings;
     this.tracks = manager.tracks;
     this.ready = manager.ready;
+  }
+
+  // METHODS
+
+  /**
+   * The id of the currently selected output, or "local" when no custom
+   * output is selected (data lives in the default/local storage).
+   */
+  #selectedId() {
+    const output = /** @type {OutputConfiguratorElement | undefined} */ (
+      this.output.signal()
+    );
+    return output?.selected()?.id ?? "local";
+  }
+
+  /**
+   * Whether the current output is initialized.
+   * @returns {boolean}
+   */
+  #isInitialized() {
+    const id = this.#selectedId();
+    try {
+      const map = /** @type {Record<string, boolean>} */ (
+        JSON.parse(localStorage.getItem(STORAGE_KEY) ?? "{}")
+      );
+      return !!map?.[id];
+    } catch {
+      return false;
+    }
+  }
+
+  /**
+   * Mark the current output as initialized by updating its flag in the
+   * in-memory map and persisting to localStorage.
+   */
+  #markInitialized() {
+    const id = this.#selectedId();
+    let map = /** @type {Record<string, boolean>} */ ({});
+    try {
+      map = /** @type {Record<string, boolean>} */ (
+        JSON.parse(localStorage.getItem(STORAGE_KEY) ?? "{}")
+      ) ?? {};
+    } catch {}
+    if (map[id]) return;
+
+    map[id] = true;
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(map));
   }
 }
 

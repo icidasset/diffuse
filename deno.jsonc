@@ -58,6 +58,10 @@
     "butterchurn": "npm:butterchurn@3.0.0-beta.5",
     "butterchurn-presets": "npm:butterchurn-presets@3.0.0-beta.4",
 
+    // @atproto spaces alpha
+    "@atproto/api": "npm:@atproto/api@0.0.0-spaces-alpha-20260818163953",
+    "@atproto/oauth-client-browser": "npm:@atproto/oauth-client-browser@0.0.0-spaces-alpha-20260818163953",
+
     // music-metadata
     "@tokenizer/http": "npm:@tokenizer/http@^0.9.2",
     "@tokenizer/range": "npm:@tokenizer/range@^0.13.1",
@@ -186,6 +190,7 @@
     "./components/output/polymorphic/indexed-db/element.js": "./src/components/output/polymorphic/indexed-db/element.js",
     "./components/output/polymorphic/indexed-db/worker.js": "./src/components/output/polymorphic/indexed-db/worker.js",
     "./components/output/raw/atproto-passkey/element.js": "./src/components/output/raw/atproto-passkey/element.js",
+    "./components/output/raw/atproto-space/element.js": "./src/components/output/raw/atproto-space/element.js",
     "./components/supplement/last.fm/element.js": "./src/components/supplement/last.fm/element.js",
     "./components/supplement/listenbrainz/element.js": "./src/components/supplement/listenbrainz/element.js",
     "./components/supplement/rocksky/element.js": "./src/components/supplement/rocksky/element.js",
@@ -198,6 +203,7 @@
     "./components/transformer/output/bytes/dasl-sync/element.js": "./src/components/transformer/output/bytes/dasl-sync/element.js",
     "./components/transformer/output/bytes/json/element.js": "./src/components/transformer/output/bytes/json/element.js",
     "./components/transformer/output/raw/atproto-sync/element.js": "./src/components/transformer/output/raw/atproto-sync/element.js",
+    "./components/transformer/output/raw/atproto-space-sync/element.js": "./src/components/transformer/output/raw/atproto-space-sync/element.js",
     "./components/transformer/output/refiner/default/element.js": "./src/components/transformer/output/refiner/default/element.js",
     "./components/transformer/output/refiner/initial-contents/element.js": "./src/components/transformer/output/refiner/initial-contents/element.js",
     "./components/transformer/output/refiner/passkey-encryption/element.js": "./src/components/transformer/output/refiner/passkey-encryption/element.js",
@@ -234,6 +240,7 @@
     "./components/output/bytes/dropbox/types.d.ts": "./specs/components/output/bytes/dropbox/types.d.ts",
     "./components/output/polymorphic/indexed-db/types.d.ts": "./specs/components/output/polymorphic/indexed-db/types.d.ts",
     "./components/output/raw/atproto-passkey/types.d.ts": "./specs/components/output/raw/atproto-passkey/types.d.ts",
+    "./components/output/raw/atproto-space/types.d.ts": "./specs/components/output/raw/atproto-space/types.d.ts",
     "./components/output/types.d.ts": "./specs/components/output/types.d.ts",
     "./components/supplement/types.d.ts": "./specs/components/supplement/types.d.ts",
     "./components/transformer/output/bytes/automerge/types.d.ts": "./specs/components/transformer/output/bytes/automerge/types.d.ts",

@@ -329,6 +329,37 @@ describe("components/transformer/output/bytes/dasl-sync", () => {
       expect(result).toBe("New");
     });
 
+    it("prefers the edited side over a timestamp-less pristine copy", async () => {
+      // Regression: a facet that was just edited gets an `updatedAt`, but a
+      // pristine seeded/starting-set copy may carry none. Previously the merge
+      // treated the timestamp-less side as "newest" and re-applied the stale
+      // value, silently reverting dashboard toggles for starting-set items.
+      const result = await testWeb(async () => {
+        const { CLASS } = await import(
+          "~/components/transformer/output/bytes/dasl-sync/element.js"
+        );
+        const el = new CLASS();
+        const edited = { id: "a", enabled: false, updatedAt: "2024-06-01T00:00:00.000Z", name: "Edited" };
+        const pristine = { id: "a", enabled: true, name: "Pristine" };
+        const containerA = {
+          cid: "cid-a",
+          data: [edited],
+          inventory: { current: { a: "cid-edited" }, removed: [] },
+        } as never;
+        const containerB = {
+          cid: "cid-b",
+          data: [pristine],
+          inventory: { current: { a: "cid-pristine" }, removed: [] },
+        } as never;
+        const merged = await el.merge(containerA, containerB);
+        const first = merged.data[0] as unknown as { enabled: boolean } | undefined;
+        return { enabled: first?.enabled };
+      });
+
+      // The side carrying `updatedAt` (the edit) should win.
+      expect(result.enabled).toBe(false);
+    });
+
     it("keeps identical items without recomputing their CIDs", async () => {
       const result = await testWeb(async () => {
         const { CLASS } = await import(

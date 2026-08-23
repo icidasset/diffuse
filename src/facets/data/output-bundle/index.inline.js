@@ -5,6 +5,9 @@ import { NAME as ATPROTO_OUTPUT_NAME } from "~/components/output/raw/atproto-pas
 import { NAME as ATPROTO_SYNC_NAME } from "~/components/transformer/output/raw/atproto-sync/element.js";
 import { NAME as ATPROTO_PASSKEY_NAME } from "~/components/transformer/output/refiner/passkey-encryption/element.js";
 
+import { NAME as ATPROTO_SPACE_OUTPUT_NAME } from "~/components/output/raw/atproto-space/element.js";
+import { NAME as ATPROTO_SPACE_SYNC_NAME } from "~/components/transformer/output/raw/atproto-space-sync/element.js";
+
 import { NAME as S3_OUTPUT_NAME } from "~/components/output/bytes/s3/element.js";
 import { NAME as DROPBOX_OUTPUT_NAME } from "~/components/output/bytes/dropbox/element.js";
 import { NAME as S3_SYNC_NAME } from "~/components/transformer/output/bytes/dasl-sync/element.js";
@@ -25,6 +28,7 @@ effect(() => {
   if (!output) return;
 
   atprotoPasskey(output);
+  atprotoSpace(output);
   s3(output);
   dropbox(output);
 
@@ -47,6 +51,8 @@ effect(() => {
     switch (id) {
       case "do-output__dc-output__atproto-passkey":
         return atprotoPasskeyCustomElements();
+      case "do-output__dc-output__atproto-space":
+        return atprotoSpaceCustomElements();
       case "do-output__dc-output__s3":
         return s3CustomElements();
       case "do-output__dc-output__dropbox":
@@ -100,6 +106,43 @@ export function atprotoPasskeyCustomElements() {
   );
   import(
     "~/components/transformer/output/refiner/passkey-encryption/element.js"
+  );
+}
+
+////////////////////////////////////////////
+// AT PROTOCOL (SPACES)
+////////////////////////////////////////////
+
+/**
+ * Exposes the AT Protocol space output as a user-data storage option.
+ *
+ * Unlike the public AT Protocol output there is no firehose-based sync or
+ * passkey encryption. The raw space output is wrapped with a local-first sync
+ * transformer (IndexedDB cache + union merge) so data — including the default
+ * facets — is persisted and synced with the space.
+ *
+ * @param {OutputOrchestrator} output
+ */
+export function atprotoSpace(output) {
+  const out = document.createElement(ATPROTO_SPACE_OUTPUT_NAME);
+  out.setAttribute("group", foundation.GROUP);
+  out.setAttribute("id", "do-output__dor-atproto-space");
+
+  const sync = document.createElement(ATPROTO_SPACE_SYNC_NAME);
+  sync.setAttribute("group", foundation.GROUP);
+  sync.setAttribute("id", "do-output__dc-output__atproto-space");
+  sync.setAttribute("label", "AT Protocol Space");
+  sync.setAttribute("namespace", "atproto-space");
+  sync.setAttribute("output-selector", "#do-output__dor-atproto-space");
+
+  output.append(out);
+  output.outputConfigurator.append(sync);
+}
+
+export function atprotoSpaceCustomElements() {
+  import("~/components/output/raw/atproto-space/element.js");
+  import(
+    "~/components/transformer/output/raw/atproto-space-sync/element.js"
   );
 }
 

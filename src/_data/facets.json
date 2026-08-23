@@ -85,6 +85,13 @@
     "desc": "Use your AT Protocol account for user-data storage. Your data will be stored as public records, but sensitive data can be encrypted using a passkey."
   },
   {
+    "url": "facets/connect/atproto-space/index.html",
+    "title": "Connect / Atmosphere (Space)",
+    "category": "Data",
+    "incomplete": true,
+    "desc": "Use your AT Protocol account for user-data storage. Your data is stored in your own repo and is not broadcast publicly."
+  },
+  {
     "url": "facets/connect/dropbox/index.html",
     "title": "Connect / Dropbox",
     "category": "Data",

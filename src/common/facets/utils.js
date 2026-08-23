@@ -8,6 +8,14 @@ import { STARTING_SET_DISABLED, TYPE } from "./constants.js";
 
 import facetsData from "~/_data/facets.json" with { type: "json" };
 
+// A single, fixed creation timestamp (today's date) shared by all starting
+// set / base facets. It's a constant string (not computed at runtime), so
+// seeded facets keep an identical timestamp across calls, devices and days
+// — if it changed, the dasl-sync merge would see a perpetually-newer copy and
+// never converge. Using UTC midnight keeps the value timezone-independent. Any
+// real edit writes a strictly-newer `updatedAt`, so it always wins.
+const SEED_TIMESTAMP = "2026-08-23T00:00:00.000Z";
+
 /**
  * @import {Facet} from "~/definitions/types.d.ts"
  */
@@ -30,6 +38,7 @@ import facetsData from "~/_data/facets.json" with { type: "json" };
  * if (facets.some((f) => !f.id)) throw new Error("every facet needs an id");
  * ```
  */
+
 export function buildFacets(uris) {
   return facetsData.flatMap((facet) => {
     if (!uris.includes(facet.url)) return [];
@@ -37,11 +46,13 @@ export function buildFacets(uris) {
     return [{
       $type: TYPE,
       id: uriToRkey("diffuse://" + facet.url),
+      createdAt: SEED_TIMESTAMP,
       description: facet.desc,
       enabled: STARTING_SET_DISABLED.includes(facet.url) ? false : true,
       kind: facet.kind === "prelude" ? "prelude" : "interactive",
       name: facet.title,
       tags: facet.tags?.length ? facet.tags : undefined,
+      updatedAt: SEED_TIMESTAMP,
       uri: "diffuse://" + facet.url,
     }];
   });

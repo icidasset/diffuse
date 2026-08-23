@@ -9,7 +9,7 @@ import { bucketId, buildURI, parseURI } from "~/components/input/s3/common.js";
 import { effect } from "~/common/signal.js";
 import foundation from "~/common/foundation.js";
 
-import { setup } from "~/facets/connect/common.js";
+import { setup, waitForOutputOption } from "~/facets/connect/common.js";
 
 foundation.setup({ title: "Connect S3 | Diffuse" });
 
@@ -35,19 +35,12 @@ await Promise.all([
   customElements.whenDefined(sourcesOrchestrator.localName),
 ]);
 
-const s3Option = (await outputOrchestrator.options()).find(
-  (o) => o.label === "S3",
-);
-
 const s3El = /** @type {S3OutputElement | undefined} */ (
   outputOrchestrator.root().querySelector(S3_NAME)
 );
 
-if (!s3Option) {
-  throw new Error("S3 output was not enabled!");
-}
-
-const OUTPUT_S3_ID = s3Option?.id;
+const s3Option = await waitForOutputOption(outputOrchestrator, "S3");
+const OUTPUT_S3_ID = s3Option.id;
 
 ////////////////////////////////////////////
 // CAMERA SCAN

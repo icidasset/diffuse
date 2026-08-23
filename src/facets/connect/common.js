@@ -10,6 +10,44 @@ import { html, nothing, render as litRender } from "lit-html";
  */
 
 /**
+ * @param {string} label
+ */
+function outputErrorMessage(label) {
+  return `${label} output was not enabled!`;
+}
+
+/**
+ * Wait for an output option to be registered, failing after a timeout
+ * instead of waiting indefinitely. The option is added by the output-bundle
+ * prelude once it is loaded, so it may not exist yet when a connect page
+ * first asks for it.
+ *
+ * @param {{ waitForOption: (label: string) => Promise<{ id: string }> }} outputOrchestrator
+ * @param {string} label
+ * @param {number} [timeoutMs=30_000]
+ * @returns {Promise<{ id: string }>}
+ */
+export async function waitForOutputOption(
+  outputOrchestrator,
+  label,
+  timeoutMs = 30_000,
+) {
+  let timer;
+  const timeout = new Promise((_, reject) => {
+    timer = setTimeout(
+      () => reject(new Error(outputErrorMessage(label))),
+      timeoutMs,
+    );
+  });
+
+  try {
+    return await Promise.race([outputOrchestrator.waitForOption(label), timeout]);
+  } finally {
+    clearTimeout(timer);
+  }
+}
+
+/**
  * Sets up a connect facet UI: a card with "Add audio input" and
  * "Use as userdata storage" buttons, a dialog with a form, and a
  * reactive list of configured items below a divider.

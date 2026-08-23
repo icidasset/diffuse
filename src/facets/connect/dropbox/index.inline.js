@@ -11,7 +11,7 @@ import { NAME as DROPBOX_OUTPUT_NAME } from "~/components/output/bytes/dropbox/e
 import { effect } from "~/common/signal.js";
 import foundation from "~/common/foundation.js";
 
-import { setup } from "~/facets/connect/common.js";
+import { setup, waitForOutputOption } from "~/facets/connect/common.js";
 
 foundation.setup({ title: "Connect Dropbox | Diffuse" });
 
@@ -36,14 +36,7 @@ await Promise.all([
   customElements.whenDefined(sourcesOrchestrator.localName),
 ]);
 
-const dropboxOption = (await outputOrchestrator.options()).find(
-  (o) => o.label === "Dropbox",
-);
-
-if (!dropboxOption) {
-  throw new Error("Dropbox output was not enabled!");
-}
-
+const dropboxOption = await waitForOutputOption(outputOrchestrator, "Dropbox");
 const OUTPUT_DROPBOX_ID = dropboxOption.id;
 
 /** Look up the Dropbox output element, which may not exist yet. */
