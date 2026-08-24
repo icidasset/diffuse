@@ -1,16 +1,16 @@
 import foundation from "~/common/foundation.js";
 import { effect } from "~/common/signal.js";
 
-import { NAME as ATPROTO_OUTPUT_NAME } from "~/components/output/raw/atproto-passkey/element.js";
-import { NAME as ATPROTO_SYNC_NAME } from "~/components/transformer/output/raw/atproto-sync/element.js";
-import { NAME as ATPROTO_PASSKEY_NAME } from "~/components/transformer/output/refiner/passkey-encryption/element.js";
+const ATPROTO_OUTPUT_NAME = "dor-atproto-passkey";
+const ATPROTO_PASSKEY_NAME = "dtor-passkey-encryption";
+const ATPROTO_SYNC_NAME = "dtor-atproto-sync";
 
-import { NAME as ATPROTO_SPACE_OUTPUT_NAME } from "~/components/output/raw/atproto-space/element.js";
-import { NAME as ATPROTO_SPACE_SYNC_NAME } from "~/components/transformer/output/raw/atproto-space-sync/element.js";
+const ATPROTO_SPACE_OUTPUT_NAME = "dor-atproto-space";
+const ATPROTO_SPACE_SYNC_NAME = "dtor-atproto-space-sync";
 
-import { NAME as S3_OUTPUT_NAME } from "~/components/output/bytes/s3/element.js";
-import { NAME as DROPBOX_OUTPUT_NAME } from "~/components/output/bytes/dropbox/element.js";
-import { NAME as S3_SYNC_NAME } from "~/components/transformer/output/bytes/dasl-sync/element.js";
+const DASL_SYNC_NAME = "dtob-dasl-sync";
+const DROPBOX_OUTPUT_NAME = "dob-dropbox";
+const S3_OUTPUT_NAME = "dob-s3";
 
 
 /**
@@ -162,7 +162,7 @@ export function s3(output) {
   out.setAttribute("group", foundation.GROUP);
   out.setAttribute("id", "do-output__dob-s3");
 
-  const sync = document.createElement(S3_SYNC_NAME);
+  const sync = document.createElement(DASL_SYNC_NAME);
   sync.setAttribute("group", foundation.GROUP);
   sync.setAttribute("id", "do-output__dc-output__s3");
   sync.setAttribute("label", "S3");
@@ -198,7 +198,7 @@ export function dropbox(output) {
   out.setAttribute("group", foundation.GROUP);
   out.setAttribute("id", "do-output__dob-dropbox");
 
-  const sync = document.createElement(S3_SYNC_NAME);
+  const sync = document.createElement(DASL_SYNC_NAME);
   sync.setAttribute("group", foundation.GROUP);
   sync.setAttribute("id", "do-output__dc-output__dropbox");
   sync.setAttribute("label", "Dropbox");
