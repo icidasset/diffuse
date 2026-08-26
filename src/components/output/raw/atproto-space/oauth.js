@@ -5,7 +5,7 @@ import metadata from "./oauth-client-metadata.json" with {
 };
 
 /**
- * @import {OAuthSession} from "@atproto/oauth-client"
+ * @import {OAuthSession} from "@atproto/oauth-client-browser"
  */
 
 const SCOPE = metadata.scope;

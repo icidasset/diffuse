@@ -11,7 +11,7 @@ import { login, logout, restoreOrFinalize } from "./oauth.js";
 /**
  * @import {OutputManager} from "@specs/components/output/types.d.ts"
  * @import {ATProtoSpaceOutputElement} from "@specs/components/output/raw/atproto-space/types.d.ts"
- * @import {OAuthSession} from "@atproto/oauth-client"
+ * @import {OAuthSession} from "@atproto/oauth-client-browser"
  */
 
 const SPACE_TYPE = "sh.diffuse.atproto.space";
