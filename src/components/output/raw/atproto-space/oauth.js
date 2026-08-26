@@ -58,6 +58,15 @@ function client() {
  * @returns {Promise<OAuthSession>}
  */
 export function login(handle) {
+  // Store the return path so the shared `/oauth/callback` page can send the
+  // user back here (with the OAuth response fragment) once the authorization
+  // server redirects. Without this the callback falls back to `/`, which
+  // resolves to the latest version instead of the facet the user launched from.
+  localStorage.setItem(
+    "oauth/callback/redirect_path",
+    location.pathname + location.search,
+  );
+
   return client().then((c) => c.signIn(handle, { scope: SCOPE }));
 }
 
