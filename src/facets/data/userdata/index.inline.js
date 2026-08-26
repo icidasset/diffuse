@@ -37,14 +37,14 @@ if (outputOrchestrator.hasSelected() && !outputOrchestrator.selected()) {
 /** @type {Record<string, string>} */
 const ICONS = {
   "Local": "database",
-  "AT Protocol": "at",
+  "AT Protocol (Public)": "at",
   "S3": "hard-drives",
   "Dropbox": "cloud",
 };
 
 /** @type {Record<string, string>} */
 const CONNECT_URLS = {
-  "AT Protocol": "facets/connect/atproto-passkey/index.html",
+  "AT Protocol (Public)": "facets/connect/atproto-passkey/index.html",
   "S3": "facets/connect/s3/index.html",
   "Dropbox": "facets/connect/dropbox/index.html",
 };

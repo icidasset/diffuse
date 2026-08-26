@@ -21,7 +21,7 @@ const outputOrchestrator = await foundation.orchestrator.output();
 await customElements.whenDefined(outputOrchestrator.localName);
 await customElements.whenDefined(ATPROTO_SPACE_NAME);
 
-const atprotoOption = await waitForOutputOption(outputOrchestrator, "AT Protocol Space");
+const atprotoOption = await waitForOutputOption(outputOrchestrator, "AT Protocol (Space)");
 const ATPROTO_SPACE_OUTPUT_ID = atprotoOption.id;
 
 const atprotoEl = /** @type {ATProtoSpaceOutputElement | undefined} */ (

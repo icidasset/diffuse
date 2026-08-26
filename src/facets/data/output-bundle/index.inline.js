@@ -85,7 +85,7 @@ export function atprotoPasskey(output) {
   const passkey = document.createElement(ATPROTO_PASSKEY_NAME);
   passkey.setAttribute("group", foundation.GROUP);
   passkey.setAttribute("id", "do-output__dc-output__atproto-passkey");
-  passkey.setAttribute("label", "AT Protocol");
+  passkey.setAttribute("label", "AT Protocol (Public)");
   passkey.setAttribute("namespace", "atproto-passkey");
   passkey.setAttribute(
     "output-selector",
@@ -131,7 +131,7 @@ export function atprotoSpace(output) {
   const sync = document.createElement(ATPROTO_SPACE_SYNC_NAME);
   sync.setAttribute("group", foundation.GROUP);
   sync.setAttribute("id", "do-output__dc-output__atproto-space");
-  sync.setAttribute("label", "AT Protocol Space");
+  sync.setAttribute("label", "AT Protocol (Space)");
   sync.setAttribute("namespace", "atproto-space");
   sync.setAttribute("output-selector", "#do-output__dor-atproto-space");
 

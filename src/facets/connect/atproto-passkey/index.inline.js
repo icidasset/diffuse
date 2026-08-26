@@ -23,7 +23,7 @@ const outputOrchestrator = await foundation.orchestrator.output();
 await customElements.whenDefined(outputOrchestrator.localName);
 await customElements.whenDefined(ATPROTO_PASSKEY_NAME);
 
-const atprotoOption = await waitForOutputOption(outputOrchestrator, "AT Protocol");
+const atprotoOption = await waitForOutputOption(outputOrchestrator, "AT Protocol (Public)");
 const ATPROTO_PASSKEY_OUTPUT_ID = atprotoOption.id;
 
 const atprotoEl = /** @type {ATProtoPasskeyOutputElement | undefined} */ (
@@ -124,7 +124,7 @@ effect(() => {
       ? [
         {
           name: did,
-          detail: "AT Protocol",
+          detail: "AT Protocol (Public)",
           isInput: false,
           isOutput: true,
           isSelectedOutput,
