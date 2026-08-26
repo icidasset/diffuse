@@ -64,9 +64,11 @@ base: "./"
   <body>
     {{ content }}
 
-    <script src="default-layout.js" type="module"></script>
-
     <!-- Scripts -->
+    {{ if serviceWorker !== false }}
+      <script src="service-worker-loader.js" type="module"></script>
+    {{ /if }}
+
     {{ for url of scripts }}
       <script src="{{ url }}" type="module"></script>
     {{ /for }}
