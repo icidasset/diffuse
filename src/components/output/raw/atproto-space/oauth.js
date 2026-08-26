@@ -79,7 +79,24 @@ export function login(handle) {
  * @returns {Promise<OAuthSession | null>}
  */
 export async function restoreOrFinalize() {
-  const result = await (await client()).init();
+  const c = await client();
+
+  // In production the PDS redirects back to the registered
+  // `/oauth/callback` URI, and the shared callback page then forwards us here
+  // (the facet loader) with the OAuth response preserved in the URL hash. That
+  // forwarding changes `location.pathname`, so `init()`'s internal
+  // `findRedirectUrl()` no longer matches the registered redirect URI and it
+  // silently skips the callback. Detect the response ourselves and finalize it
+  // directly; `initCallback` falls back to `clientMetadata.redirect_uris[0]`
+  // for the token exchange, which is the same URI `authorize` used.
+  const params = c.readCallbackParams();
+  if (params) {
+    const result = await c.initCallback(params);
+    return result.session ?? null;
+  }
+
+  // No OAuth response in the URL: restore any previously stored session.
+  const result = await c.init();
   return result?.session ?? null;
 }
 
