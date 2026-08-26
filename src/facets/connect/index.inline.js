@@ -32,7 +32,8 @@ const facets = facetsData
   .filter(
     (f) =>
       f.url.startsWith("facets/connect/") &&
-      f.url !== "facets/connect/index.html",
+      f.url !== "facets/connect/index.html" &&
+      !f.incomplete,
   )
   .map((f) => ({
     name: f.title.replace(/^Connect \/ /, ""),
