@@ -29,8 +29,8 @@ effect(() => {
 
   atprotoPasskey(output);
   atprotoSpace(output);
-  s3(output);
   dropbox(output);
+  s3(output);
 
   output.loadSelected();
 });
@@ -88,6 +88,10 @@ export function atprotoPasskey(output) {
   passkey.setAttribute("label", "AT Protocol (Public)");
   passkey.setAttribute("namespace", "atproto-passkey");
   passkey.setAttribute(
+    "connect",
+    "facets/connect/atproto-passkey/index.html",
+  );
+  passkey.setAttribute(
     "output-selector",
     "#do-output__dtor-atproto-sync",
   );
@@ -133,6 +137,10 @@ export function atprotoSpace(output) {
   sync.setAttribute("id", "do-output__dc-output__atproto-space");
   sync.setAttribute("label", "AT Protocol (Space)");
   sync.setAttribute("namespace", "atproto-space");
+  sync.setAttribute(
+    "connect",
+    "facets/connect/atproto-space/index.html",
+  );
   sync.setAttribute("output-selector", "#do-output__dor-atproto-space");
 
   output.append(out);
@@ -143,42 +151,6 @@ export function atprotoSpaceCustomElements() {
   import("~/components/output/raw/atproto-space/element.js");
   import(
     "~/components/transformer/output/raw/atproto-space-sync/element.js"
-  );
-}
-
-////////////////////////////////////////////
-// S3
-////////////////////////////////////////////
-
-/**
- * Wraps user data in a custom CBOR encode data structure
- * which tracks what identifiers are removed.
- * The transformer used here allows for merging of data.
- *
- * @param {OutputOrchestrator} output
- */
-export function s3(output) {
-  const out = document.createElement(S3_OUTPUT_NAME);
-  out.setAttribute("group", foundation.GROUP);
-  out.setAttribute("id", "do-output__dob-s3");
-
-  const sync = document.createElement(DASL_SYNC_NAME);
-  sync.setAttribute("group", foundation.GROUP);
-  sync.setAttribute("id", "do-output__dc-output__s3");
-  sync.setAttribute("label", "S3");
-  sync.setAttribute("namespace", "s3");
-  sync.setAttribute("output-selector", "#do-output__dob-s3");
-
-  // Add elements to DOM, make sure the transformer
-  // is added to the configurator so the user can select it.
-  output.append(out);
-  output.outputConfigurator.append(sync);
-}
-
-export function s3CustomElements() {
-  import("~/components/output/bytes/s3/element.js");
-  import(
-    "~/components/transformer/output/bytes/dasl-sync/element.js"
   );
 }
 
@@ -203,6 +175,10 @@ export function dropbox(output) {
   sync.setAttribute("id", "do-output__dc-output__dropbox");
   sync.setAttribute("label", "Dropbox");
   sync.setAttribute("namespace", "dropbox");
+  sync.setAttribute(
+    "connect",
+    "facets/connect/dropbox/index.html",
+  );
   sync.setAttribute("output-selector", "#do-output__dob-dropbox");
 
   // Add elements to DOM, make sure the transformer
@@ -213,6 +189,46 @@ export function dropbox(output) {
 
 export function dropboxCustomElements() {
   import("~/components/output/bytes/dropbox/element.js");
+  import(
+    "~/components/transformer/output/bytes/dasl-sync/element.js"
+  );
+}
+
+////////////////////////////////////////////
+// S3
+////////////////////////////////////////////
+
+/**
+ * Wraps user data in a custom CBOR encode data structure
+ * which tracks what identifiers are removed.
+ * The transformer used here allows for merging of data.
+ *
+ * @param {OutputOrchestrator} output
+ */
+export function s3(output) {
+  const out = document.createElement(S3_OUTPUT_NAME);
+  out.setAttribute("group", foundation.GROUP);
+  out.setAttribute("id", "do-output__dob-s3");
+
+  const sync = document.createElement(DASL_SYNC_NAME);
+  sync.setAttribute("group", foundation.GROUP);
+  sync.setAttribute("id", "do-output__dc-output__s3");
+  sync.setAttribute("label", "S3");
+  sync.setAttribute("namespace", "s3");
+  sync.setAttribute(
+    "connect",
+    "facets/connect/s3/index.html",
+  );
+  sync.setAttribute("output-selector", "#do-output__dob-s3");
+
+  // Add elements to DOM, make sure the transformer
+  // is added to the configurator so the user can select it.
+  output.append(out);
+  output.outputConfigurator.append(sync);
+}
+
+export function s3CustomElements() {
+  import("~/components/output/bytes/s3/element.js");
   import(
     "~/components/transformer/output/bytes/dasl-sync/element.js"
   );

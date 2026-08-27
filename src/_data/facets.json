@@ -47,7 +47,7 @@
     "title": "Blur Pocket",
     "category": "Themes",
     "author": "A theme by [@tokono.ma](https://bsky.app/profile/tokono.ma)",
-    "incomplete": true,
+    "featured": true,
     "desc": "A mobile-optimised and minimalised version of the Blur theme. Does not include the background images and has a slightly different color palette."
   },
   {
@@ -197,7 +197,6 @@
     "title": "iPod",
     "category": "Themes",
     "author": "A theme by [@tokono.ma](https://bsky.app/profile/tokono.ma)",
-    "featured": true,
     "desc": "A recreation of the click-wheel iPod UI. Spin the wheel to scroll, tap the ring for menu / prev / next / play, and press the centre button to select. Alternatively, use your keyboard arrow keys."
   },
   {
@@ -279,7 +278,7 @@
     "kind": "prelude",
     "category": "Data",
     "featured": true,
-    "desc": "Analyse the spectrogram of tracks as they play and store the data on their stats. Only runs for tracks that don't already have spectral stats."
+    "desc": "Analyse the spectrogram of tracks as they play and store the data on their stats. Only runs for tracks that don't already have these stats."
   },
   {
     "url": "facets/misc/split-view/index.html",
@@ -332,7 +331,7 @@
     "url": "facets/data/userdata/index.html",
     "title": "Your data",
     "category": "Data",
-    "incomplete": true,
+    "featured": true,
     "desc": "Manage where your user-data is stored. See which storage method is active, switch between methods, and migrate data between them."
   }
 ]

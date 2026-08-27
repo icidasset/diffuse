@@ -3,6 +3,7 @@ import { html, nothing, render as litRender } from "lit-html";
 import * as Output from "~/common/output.js";
 import foundation from "~/common/foundation.js";
 import { effect, signal } from "~/common/signal.js";
+import { data as facetsData } from "~/facets/index.js";
 
 /**
  * @typedef {{ id: string, label: string, element: import("@specs/components/output/types.d.ts").OutputElement }} OutputOption
@@ -36,18 +37,25 @@ if (outputOrchestrator.hasSelected() && !outputOrchestrator.selected()) {
 
 /** @type {Record<string, string>} */
 const ICONS = {
-  "Local": "database",
+  "Local": "devices",
   "AT Protocol (Public)": "at",
-  "S3": "hard-drives",
-  "Dropbox": "cloud",
+  "AT Protocol (Space)": "at",
+  "S3": "amazon-logo",
+  "Dropbox": "dropbox-logo",
 };
 
-/** @type {Record<string, string>} */
-const CONNECT_URLS = {
-  "AT Protocol (Public)": "facets/connect/atproto-passkey/index.html",
-  "S3": "facets/connect/s3/index.html",
-  "Dropbox": "facets/connect/dropbox/index.html",
-};
+/**
+ * Connect facet URLs flagged `incomplete` in `_data/facets.json`. These
+ * methods are hidden from the list unless they're the active one, so an
+ * incomplete method stays visible (with its active badge) while in use.
+ *
+ * @type {Set<string>}
+ */
+const INCOMPLETE_CONNECT = new Set(
+  facetsData
+    .filter((f) => f.url.startsWith("facets/connect/") && f.incomplete)
+    .map((f) => f.url),
+);
 
 ////////////////////////////////////////////
 // STATE
@@ -167,13 +175,23 @@ effect(() => {
 
   const activeId = selected?.id ?? defaultId;
 
+  // Don't list methods whose connect facet is `incomplete`, unless that
+  // method is the active one (so the user can still see and switch away
+  // from it).
+  const visibleOpts = opts.filter((opt) => {
+    if (opt.id === activeId) return true;
+    const url = opt.element?.getAttribute("connect");
+    return url ? !INCOMPLETE_CONNECT.has(url) : true;
+  });
+
   litRender(
     html`
-      ${opts.map((opt) => {
+      ${visibleOpts.map((opt) => {
         const isActive = opt.id === activeId;
         const isActivated = activatedSet.has(opt.id);
         const trackCount = getTrackCount(opt, activatedSet);
         const icon = ICONS[opt.label] ?? "database";
+        const connectUrl = opt.element?.getAttribute("connect");
 
         /** @type {string | typeof nothing} */
         let detail;
@@ -214,12 +232,12 @@ effect(() => {
                   Select
                 </button>
               `
-              : CONNECT_URLS[opt.label]
+              : connectUrl
               ? html`
                 <a
                   class="button button--outlined button--small"
                   title="Configure this method"
-                  href="./l/?path=${CONNECT_URLS[opt.label]}"
+                  href="./l/?path=${connectUrl}"
                 >
                   <i class="ph-fill ph-gear"></i>
                   Configure
