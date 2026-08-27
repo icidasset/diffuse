@@ -48,7 +48,7 @@ Finally, note that the loader page configures a `<base>` element, every relative
 
 ## Foundation
 
-This is a default configuration of the Diffuse elements. It is used throughout the default set of facets. It configures the elements to be part of the `facets` group, though this can be overriden using the `group` url query parameter.
+This is a default configuration of the Diffuse elements. It is used throughout the default set of facets. It configures the elements to be part of the `facets` group, though this can be overridden using the `group` url query parameter.
 
 A lot of the elements are written so that when the `group` attribute is set, it will create a broadcast channel to communicate within the group and/or create a shared worker.
 
