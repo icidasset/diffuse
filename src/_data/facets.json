@@ -314,6 +314,13 @@
     "desc": "Import data from Diffuse v3."
   },
   {
+    "url": "facets/misc/webmcp/index.html",
+    "title": "WebMCP",
+    "category": "Miscellaneous",
+    "incomplete": true,
+    "desc": "WebMCP experiment to interact with facets (create, edit, etc)."
+  },
+  {
     "url": "facets/themes/winamp/facet/index.html",
     "title": "Winamp",
     "category": "Themes",

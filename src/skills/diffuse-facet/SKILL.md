@@ -143,4 +143,12 @@ queue.unshift(); // previous track
 
 ## Step 4 — Deliver
 
-Output the complete facet HTML in a code block. Tell the user to open the `create/` page in Diffuse, paste it in, and load it.
+Output the complete facet HTML in a code block.
+
+If the page currently running in the browser exposes WebMCP tools, call the
+`create-facet` tool with this HTML (plus the name, kind and description) instead
+of asking the user to paste it in — the tool saves it directly to the user's
+collection.
+
+Otherwise, tell the user to open the `create/` page in Diffuse, paste it in, and
+load it.

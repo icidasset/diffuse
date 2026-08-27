@@ -1,0 +1,131 @@
+<main>
+  <div class="facet__left">
+    <div>
+      <a href="./dashboard/" class="diffuse-logo-container">
+        <svg viewBox="0 0 902 134" width="160">
+          <title>Diffuse</title>
+          <use
+            xlink:href="images/diffuse-current.svg#diffuse"
+            href="images/diffuse-current.svg#diffuse"
+          ></use>
+        </svg>
+      </a>
+    </div>
+    <h1>WebMCP</h1>
+    <p>
+      Exposes Diffuse's facet tools to your browser's built-in AI agent. While
+      this facet is open, the agent can list, read, create and update your
+      facets.
+    </p>
+  </div>
+
+  <div class="facet__right">
+    <p id="webmcp-status" class="webmcp-status">Checking WebMCP support…</p>
+
+    <ul class="tool-list">
+      <li class="tool-item">
+        <i class="ph-fill ph-list"></i>
+        <span class="tool-item__info">
+          <code class="tool-item__name">list-facets</code>
+          <span class="tool-item__desc">Enumerate your facets.</span>
+        </span>
+      </li>
+      <li class="tool-item">
+        <i class="ph-fill ph-code-block"></i>
+        <span class="tool-item__info">
+          <code class="tool-item__name">get-facet</code>
+          <span class="tool-item__desc">Read one facet, including its HTML source.</span>
+        </span>
+      </li>
+      <li class="tool-item">
+        <i class="ph-fill ph-plus-circle"></i>
+        <span class="tool-item__info">
+          <code class="tool-item__name">create-facet</code>
+          <span class="tool-item__desc">Save a new facet.</span>
+        </span>
+      </li>
+      <li class="tool-item">
+        <i class="ph-fill ph-pencil-simple"></i>
+        <span class="tool-item__info">
+          <code class="tool-item__name">update-facet</code>
+          <span class="tool-item__desc">Edit an existing facet's code or metadata.</span>
+        </span>
+      </li>
+    </ul>
+  </div>
+</main>
+
+<style>
+  @import "./styles/base.css";
+  @import "./styles/diffuse/facet.css";
+  @import "./vendor/@phosphor-icons/web/fill/style.css";
+
+  @layer base, diffuse;
+
+  .webmcp-status {
+    border: 1px solid var(--border-color);
+    border-radius: var(--radius-md);
+    font-size: var(--fs-sm);
+    margin: 0 0 var(--space-md);
+    padding: var(--space-2xs) var(--space-xs);
+  }
+
+  .webmcp-status.is-ok {
+    background: oklch(from var(--accent) l c h / 0.12);
+    border-color: oklch(from var(--accent) l c h / 0.3);
+    color: var(--accent);
+  }
+
+  .webmcp-status.is-error {
+    background: oklch(from var(--accent-twist-4) l c h / 0.12);
+    border-color: oklch(from var(--accent-twist-4) l c h / 0.3);
+    color: var(--accent-twist-4);
+  }
+
+  .tool-list {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-xs);
+    list-style: none;
+    margin: 0;
+    padding: 0;
+  }
+
+  .tool-item {
+    align-items: flex-start;
+    background: var(--form-color);
+    border: 1px solid var(--border-color);
+    border-radius: var(--radius-md);
+    display: flex;
+    gap: var(--space-xs);
+    padding: var(--space-xs) var(--space-sm);
+  }
+
+  .tool-item > i {
+    color: var(--accent);
+    flex-shrink: 0;
+    font-size: var(--fs-md);
+    line-height: var(--leading-tight);
+  }
+
+  .tool-item__info {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-3xs);
+    min-width: 0;
+  }
+
+  .tool-item__name {
+    font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+    font-size: var(--fs-sm);
+    font-weight: 600;
+  }
+
+  .tool-item__desc {
+    color: oklch(from var(--text-color) l c h / 0.6);
+    font-size: var(--fs-xs);
+    line-height: var(--leading-relaxed);
+  }
+</style>
+
+<script type="module" src="facets/misc/webmcp/index.inline.js"></script>
