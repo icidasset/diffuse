@@ -7,15 +7,15 @@ _Diffuse is a few things:_
 - A default configuration of the custom elements that's called "the foundation". This is used throughout the default set of facets. This foundation is configured so that the facets can communicate across tabs/frames; this is done by setting the element's `group` attribute.
 - A collection of data schemas in the form of atproto [lexicons](https://atproto.com/specs/lexicon). These live in the `lexicons` directory.
 
-Putting all of this together to make cooperative and [malleable](https://www.inkandswitch.com/essay/malleable-software/) software. More information on the [website](https://elements.diffuse.sh/).
+Putting all of this together to make cooperative and [malleable](https://www.inkandswitch.com/essay/malleable-software/) software. More information on the [website](https://diffuse.sh/).
 
 
 ## Developer usage
 
-You can either consume the Diffuse library via the [deployed instance](https://elements.diffuse.sh/elements/) (the listed elements link to Javascript files) or the [Javascript package](https://jsr.io/@toko/diffuse). From there you can use the custom elements as with any other custom DOM element, by writing HTML or creating a `Class` instance.
+You can either consume the Diffuse library via the [deployed instance](https://diffuse.sh/elements/) (the listed elements link to Javascript files) or the [Javascript package](https://jsr.io/@toko/diffuse). From there you can use the custom elements as with any other custom DOM element, by writing HTML or creating a `Class` instance.
 
 ```html
-<script src="https://elements.diffuse.sh/latest/components/engine/queue/element.js"></script>
+<script src="https://diffuse.sh/latest/components/engine/queue/element.js"></script>
 
 <de-queue></de-queue>
 ```

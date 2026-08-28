@@ -1,8 +1,8 @@
 {
-  "client_id": "https://elements.diffuse.sh/latest/components/supplement/rocksky/oauth-client-metadata.json",
+  "client_id": "https://diffuse.sh/latest/components/supplement/rocksky/oauth-client-metadata.json",
   "client_name": "Rocksky | Diffuse",
-  "client_uri": "https://elements.diffuse.sh",
-  "redirect_uris": ["https://elements.diffuse.sh/oauth/callback"],
+  "client_uri": "https://diffuse.sh",
+  "redirect_uris": ["https://diffuse.sh/oauth/callback"],
   "scope": "atproto repo?collection=app.rocksky.scrobble",
   "grant_types": ["authorization_code", "refresh_token"],
   "response_types": ["code"],

@@ -47,7 +47,7 @@ const client_id = isLocalDev
     encodeURIComponent(SCOPE)
   }`
   : /** @type {any} */ (import.meta).env?.ROCKSKY_ATPROTO_CLIENT_ID ??
-    "https://elements.diffuse.sh/latest/components/supplement/rocksky/oauth-client-metadata.json";
+    "https://diffuse.sh/latest/components/supplement/rocksky/oauth-client-metadata.json";
 
 const OAUTH_CONFIG = {
   metadata: { client_id, redirect_uri },

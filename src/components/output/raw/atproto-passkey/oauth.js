@@ -49,7 +49,7 @@ const client_id = isLocalDev
     encodeURIComponent(SCOPE)
   }`
   : /** @type {any} */ (import.meta).env?.ATPROTO_PUBLIC_CLIENT_ID ??
-    "https://elements.diffuse.sh/latest/components/output/raw/atproto-passkey/oauth-client-metadata.json";
+    "https://diffuse.sh/latest/components/output/raw/atproto-passkey/oauth-client-metadata.json";
 
 const OAUTH_CONFIG = {
   metadata: {
