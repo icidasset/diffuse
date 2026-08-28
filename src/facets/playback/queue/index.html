@@ -1,0 +1,144 @@
+<style>
+  @import "./styles/base.css";
+  @import "./styles/diffuse/facet.css";
+  @import "./vendor/@phosphor-icons/web/fill/style.css";
+  @import "./vendor/@phosphor-icons/web/bold/style.css";
+
+  @layer base, diffuse;
+
+  .queue-section {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-xs);
+  }
+
+  .queue-section + .queue-section {
+    margin-top: var(--space-lg);
+  }
+
+  .queue-section__heading {
+    font-size: var(--fs-2xs);
+    font-weight: 600;
+    letter-spacing: var(--tracking-wider);
+    opacity: 0.4;
+    text-transform: uppercase;
+  }
+
+  .queue-list {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-2xs);
+    list-style: none;
+    margin: 0;
+    padding: 0;
+  }
+
+  .queue-item {
+    align-items: center;
+    display: flex;
+    gap: var(--space-xs);
+  }
+
+  .queue-item--past {
+    opacity: 0.35;
+  }
+
+  .queue-item__info {
+    display: flex;
+    flex-direction: column;
+    flex: 1;
+    gap: var(--space-3xs);
+    min-width: 0;
+  }
+
+  .queue-item__title {
+    font-weight: 600;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  .queue-item__title--now {
+    color: var(--accent);
+  }
+
+  .queue-item__detail {
+    color: oklch(from var(--text-color) l c h / 0.6);
+    font-size: var(--fs-xs);
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  .queue-item__badge {
+    background: oklch(from var(--accent) l c h / 0.15);
+    border-radius: var(--radius-sm);
+    color: var(--accent);
+    flex-shrink: 0;
+    font-size: var(--fs-2xs);
+    font-weight: 600;
+    letter-spacing: var(--tracking-wider);
+    padding: 2px var(--space-2xs);
+    text-transform: uppercase;
+  }
+
+  .queue-item__reorder {
+    display: flex;
+    flex-direction: row;
+    flex-shrink: 0;
+    gap: 0;
+
+    button {
+      font-size: 75%;
+    }
+  }
+</style>
+
+<main>
+  <div class="facet__left">
+    <div>
+      <a href="./dashboard/" class="diffuse-logo-container">
+        <svg viewBox="0 0 902 134" width="160">
+          <title>Diffuse</title>
+          <use
+            xlink:href="images/diffuse-current.svg#diffuse"
+            href="images/diffuse-current.svg#diffuse"
+          ></use>
+        </svg>
+      </a>
+    </div>
+    <h1>Queue</h1>
+    <p>
+      Manage your playback queue. Reorder upcoming tracks or clear the queue. Tracks marked
+      <strong>M</strong> were manually added and survive an auto-clear.
+    </p>
+    <p class="button-row" style="margin-top: var(--space-md)">
+      <button id="clear-all-btn">
+        <i class="ph-fill ph-trash"></i>
+        Clear all
+      </button>
+      <button id="clear-auto-btn">
+        <i class="ph-fill ph-robot"></i>
+        Clear auto
+      </button>
+    </p>
+  </div>
+
+  <div class="facet__right">
+    <div id="now-section" class="queue-section" hidden>
+      <span class="queue-section__heading">Now Playing</span>
+      <ul id="now-list" class="queue-list"></ul>
+    </div>
+    <div id="future-section" class="queue-section" hidden>
+      <span class="queue-section__heading">Up Next</span>
+      <ul id="future-list" class="queue-list"></ul>
+    </div>
+    <div id="past-section" class="queue-section" hidden>
+      <span class="queue-section__heading">History</span>
+      <ul id="past-list" class="queue-list"></ul>
+    </div>
+    <p id="queue-empty" class="caption">The queue is empty.</p>
+  </div>
+</main>
+
+<script type="module" src="facets/playback/queue/index.inline.js"></script>

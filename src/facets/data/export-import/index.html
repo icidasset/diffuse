@@ -1,0 +1,109 @@
+<style>
+  @import "./styles/base.css";
+  @import "./vendor/@phosphor-icons/web/bold/style.css";
+  @import "./styles/diffuse/facet.css";
+
+  @layer base, diffuse;
+
+  input[type="file"] {
+    background: none;
+    border: none;
+    padding: 0;
+    width: auto;
+  }
+
+  .checkbox-row {
+    align-items: center;
+    flex-direction: row;
+    gap: var(--space-2xs);
+    margin-top: var(--space-2xs);
+
+    input {
+      width: auto;
+    }
+  }
+
+  .status {
+    font-size: var(--fs-xs);
+  }
+
+  .status--success {
+    color: var(--accent);
+  }
+
+  .status--error {
+    color: var(--accent-twist-5);
+  }
+</style>
+
+<main>
+  <div class="facet__left">
+    <div>
+      <a href="./dashboard/" class="diffuse-logo-container">
+        <svg viewBox="0 0 902 134" width="160">
+          <title>Diffuse</title>
+          <use
+            xlink:href="images/diffuse-current.svg#diffuse"
+            href="images/diffuse-current.svg#diffuse"
+          ></use>
+        </svg>
+      </a>
+    </div>
+    <h1>Export &amp; Import</h1>
+    <p>
+      Export all Diffuse data to a JSON snapshot, or restore from a previously exported file.
+      Importing replaces all data in that category by default; uncheck the option to merge instead.
+    </p>
+  </div>
+
+  <div class="facet__right">
+    <div class="button-row">
+      <button id="export" disabled>
+        <i class="ph-bold ph-download-simple"></i>
+        <span>Export all data</span>
+      </button>
+    </div>
+
+    <hr />
+
+    <div>
+      <input id="file" type="file" accept=".json,application/json" />
+    </div>
+
+    <label class="checkbox-row">
+      <input id="replace" type="checkbox" checked />
+      <span>Replace existing data</span>
+    </label>
+
+    <hr />
+
+    <p class="button-row">
+      <button id="import-tracks" disabled>
+        <i class="ph-bold ph-music-note"></i>
+        <span>Import tracks</span>
+      </button>
+    </p>
+    <p class="button-row">
+      <button id="import-playlist-items" disabled>
+        <i class="ph-bold ph-playlist"></i>
+        <span>Import playlist items</span>
+      </button>
+    </p>
+    <p class="button-row">
+      <button id="import-facets" disabled>
+        <i class="ph-bold ph-squares-four"></i>
+        <span>Import facets</span>
+      </button>
+    </p>
+    <p class="button-row">
+      <button id="import-settings" disabled>
+        <i class="ph-bold ph-gear"></i>
+        <span>Import settings</span>
+      </button>
+    </p>
+
+    <div id="status" class="status" hidden></div>
+  </div>
+</main>
+
+<script type="module" src="facets/data/export-import/index.inline.js"></script>

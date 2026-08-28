@@ -1,79 +1,49 @@
-<img src="https://diffuse.sh/images/diffuse-dark.svg" alt="Diffuse" width="158" />
+# Diffuse
 
-_A music player that connects to your cloud/distributed storage,
-in the form of a static, serverless, web application._
+_Diffuse is a few things:_
 
-📍 Available at [diffuse.sh](https://diffuse.sh/) and for [download](https://github.com/icidasset/diffuse/releases).
+- A collection of custom DOM elements (aka. framework-agnostic web components) that allow you to build an audio player, do audio metadata processing and browsing, list audio files and streams from various sources/APIs/servers, define how to save or sync user-data, etc.
+- A HTML loader that loads "interfaces" from the local user-data cache, the default set from Diffuse, HTTP(S) URLs, or [AT Protocol](https://atproto.com) URIs. When you load an interface, it's supplied with optional "features" which are also pieces of HTML. These pieces are called "facets" and are loaded from the local user-data cache as well.
+- A default configuration of the custom elements that's called "the foundation". This is used throughout the default set of facets. This foundation is configured so that the facets can communicate across tabs/frames; this is done by setting the element's `group` attribute.
+- A collection of data schemas in the form of atproto [lexicons](https://atproto.com/specs/lexicon). These live in the `lexicons` directory.
 
-<br />
-<img src="https://icidasset-public.s3.amazonaws.com/diffuse-v3.jpg" />
-
-
-
-### Integrations
-
-Music layer for music storage.
-User layer for user-data storage.
-
-#### Music layer
-
-- [Amazon S3](https://aws.amazon.com/s3/)
-- [Azure Blob Storage](https://azure.microsoft.com/en-us/services/storage/blobs/)
-- [Azure File Storage](https://azure.microsoft.com/en-us/services/storage/files/)
-- [Dropbox](https://dropbox.com/)
-- [IPFS](https://ipfs.io/)
-- [WebDAV](https://en.wikipedia.org/wiki/WebDAV)
-
-#### User layer
-
-- [Dropbox](https://www.dropbox.com/)
-- [IPFS](https://ipfs.io/) <small>(using MFS)</small>
-- [RemoteStorage](https://remotestorage.io/)
+Putting all of this together to make cooperative and [malleable](https://www.inkandswitch.com/essay/malleable-software/) software. More information on the [website](https://diffuse.sh/).
 
 
+## Developer usage
 
----
+You can either consume the Diffuse library via the [deployed instance](https://diffuse.sh/elements/) (the listed elements link to Javascript files) or the [Javascript package](https://jsr.io/@toko/diffuse). From there you can use the custom elements as with any other custom DOM element, by writing HTML or creating a `Class` instance.
 
+```html
+<script src="https://diffuse.sh/latest/components/engine/queue/element.js"></script>
 
+<de-queue></de-queue>
+```
 
-### Hosting on your own server
+```js
+import QueueEngine from "@toko/diffuse/components/engine/queue/element.js"
 
-Diffuse is a static web application, which means it's just HTML, CSS, and Javascript. No REST API, database, or anything backend-related involved. The app uses a hash (aka. fragment-based) routing system, so you don't need any special server rules for routing. You can download a pre-build web-only version of Diffuse on the [releases](https://github.com/icidasset/diffuse/releases) page. Diffuse uses service workers, so you may need HTTPS for it to work smoothly in certain browsers.
+const queue = new QueueEngine()
+queue.setAttribute("group", "facets")
 
-I should also note that some source services use OAuth, so you'll need to use your own application credentials (eg. Dropbox). That said, if you're working locally, you can use `http://localhost:8000` or `http://127.0.0.1:44999` to use the default ones, that's what the old Electron app was using.
-
-In short:
-- Diffuse is a static, serverless web application
-- Routing is done using hashes/fragments (eg. `diffuse.sh/#/sources`)
-- Download a web build on the [releases](https://github.com/icidasset/diffuse/releases) page
-- Uses service workers (use HTTPS if possible)
-- May need own OAuth application credentials for some source services
-
-
-
----
+document.body.append(queue)
+````
 
 
+## Build it yourself
 
-### Building it yourself
-
-This project can be built with [Node.js](https://nodejs.org/).
+Install [Deno](https://docs.deno.com/runtime/getting_started/installation/).
 
 ```shell
-# 🍱
-
-# 1. Install dependencies
-npm install
-
-# 2. Build
-npx just build
-
-# 3. Start static-file server
-npx just server
-
-# 4. Watch for changes (requires [watchexec](https://github.com/watchexec/watchexec/) to be installed)
-npx just watch
-
-# Alternatively, to build, serve & watch:
-npx just
+deno run gen:defs:types
+deno run build # or deno run serve
 ```
+
+Diffuse is built with:
+- [Deno](https://deno.com)
+- Web components (custom elements)
+- Web workers (also: shared + service workers)
+- Signals (currently [alien-signals](https://github.com/stackblitz/alien-signals), but hopefully [TC39](https://github.com/tc39/proposal-signals) in the future)
+- [`lit-html`](https://lit.dev/docs/libraries/standalone-templates/)
+- [`music-metadata`](https://github.com/Borewit/music-metadata)
+- [Lume](https://lume.land) & [ESBuild](https://esbuild.github.io)

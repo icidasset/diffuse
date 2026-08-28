@@ -1,0 +1,30 @@
+body {
+  /* background: #3a6ea5; */
+  margin: 0;
+}
+
+#container {
+  align-items: center;
+  display: flex;
+  height: 100dvh;
+  justify-content: center;
+}
+
+.title-bar {
+  app-region: drag;
+}
+
+.window {
+  box-sizing: border-box;
+  display: flex;
+  flex-direction: column;
+
+  &:not([role="tabpanel"]) {
+    height: 100%;
+  }
+}
+
+.window-body {
+  flex: 1;
+  overflow: hidden;
+}

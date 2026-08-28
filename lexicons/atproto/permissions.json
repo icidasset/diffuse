@@ -1,0 +1,28 @@
+{
+  "lexicon": 1,
+  "id": "sh.diffuse.atproto.permissions",
+  "defs": {
+    "main": {
+      "type": "permission-set",
+      "title": "Diffuse",
+      "detail": "Store and sync your Diffuse library in a private space",
+      "permissions": [
+        {
+          "type": "permission",
+          "resource": "space",
+          "spaceType": "sh.diffuse.atproto.space",
+          "authority": "self",
+          "skey": "self",
+          "collection": [
+            "sh.diffuse.output.facet",
+            "sh.diffuse.output.playlistItemBundle",
+            "sh.diffuse.output.setting",
+            "sh.diffuse.output.trackBundle"
+          ],
+          "action": ["read", "create", "update", "delete"],
+          "manage": ["create", "update", "delete"]
+        }
+      ]
+    }
+  }
+}

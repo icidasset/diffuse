@@ -1,0 +1,96 @@
+import { defineElement, DiffuseElement } from "~/common/element.js";
+import { DEFAULT_APP_KEY, PKCE_VERIFIER_KEY, SCHEME } from "./constants.js";
+import { accountsFromTracks, buildURI, generatePKCEPair } from "./common.js";
+
+/**
+ * @import {InputActions, InputSchemeProvider} from "@specs/components/input/types.d.ts"
+ * @import {ProxiedActions} from "~/common/worker.d.ts"
+ * @import {Track} from "~/definitions/types.d.ts"
+ */
+
+////////////////////////////////////////////
+// ELEMENT
+////////////////////////////////////////////
+
+/**
+ * @implements {ProxiedActions<InputActions>}
+ * @implements {InputSchemeProvider}
+ */
+class DropboxInput extends DiffuseElement {
+  static NAME = "diffuse/input/dropbox";
+  static WORKER_URL = "components/input/dropbox/worker.js";
+
+  SCHEME = SCHEME;
+
+  /** @type {string} */
+  appKey = DEFAULT_APP_KEY;
+
+  static observedAttributes = ["app-key"];
+
+  /**
+   * @override
+   * @param {string} name
+   * @param {string} old
+   * @param {string} next
+   */
+  attributeChangedCallback(name, old, next) {
+    super.attributeChangedCallback(name, old, next);
+    if (name === "app-key" && next !== null) this.appKey = next;
+  }
+
+  constructor() {
+    super();
+
+    /** @type {ProxiedActions<InputActions>} */
+    this.proxy = this.workerProxy();
+
+    this.artwork = this.proxy.artwork;
+    this.consult = this.proxy.consult;
+    this.detach = this.proxy.detach;
+    this.groupConsult = this.proxy.groupConsult;
+    this.list = this.proxy.list;
+    this.resolve = this.proxy.resolve;
+  }
+
+  // 🛠️
+
+  async authorize() {
+    localStorage.setItem("oauth/callback/redirect_path", location.pathname + location.search);
+
+    // Use the authorization-code flow with PKCE so we receive a
+    // long-lived refresh token that can automatically renew the
+    // short-lived access token (4 h) without user interaction.
+    const { verifier, challenge } = await generatePKCEPair();
+    localStorage.setItem(PKCE_VERIFIER_KEY, verifier);
+
+    const params = new URLSearchParams({
+      response_type: "code",
+      client_id: this.appKey,
+      redirect_uri: location.origin + "/oauth/callback/",
+      token_access_type: "offline",
+      code_challenge: challenge,
+      code_challenge_method: "S256",
+    });
+
+    location.assign(`https://www.dropbox.com/oauth2/authorize?${params}`);
+  }
+
+  /** @param {Track[]} tracks */
+  sources(tracks) {
+    return Object.values(accountsFromTracks(tracks)).map((account) => ({
+      label: `Dropbox (${account.directoryPath})`,
+      uri: buildURI(account),
+    }));
+  }
+}
+
+export default DropboxInput;
+
+////////////////////////////////////////////
+// REGISTER
+////////////////////////////////////////////
+
+export const CLASS = DropboxInput;
+export const NAME = "di-dropbox";
+
+defineElement(NAME, CLASS);

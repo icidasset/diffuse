@@ -1,0 +1,140 @@
+---
+layout: layouts/diffuse.vto
+
+styles:
+  - styles/base.css
+  - styles/diffuse/page.css
+  - vendor/@phosphor-icons/web/bold/style.css
+  - vendor/@phosphor-icons/web/fill/style.css
+---
+
+<style>
+  .dither-mask {
+    position: relative;
+  }
+
+  .features {
+    color: var(--accent-twist-1);
+    font-size: var(--fs-lg);
+    font-weight: 700;
+    line-height: var(--leading-snug);
+    margin: var(--space-md);
+    opacity: 0.6;
+    text-transform: capitalize;
+
+    @media (min-width: 63rem) {
+      /*inset: 0;*/
+      margin: var(--space-lg);
+      /*position: absolute;*/
+    }
+
+    @media (min-width: 84rem) {
+      margin: var(--space-xl);
+    }
+  }
+
+  h3 {
+    opacity: 0.6;
+  }
+</style>
+
+<header>
+  <div>
+    <h1 hidden>Diffuse</h1>
+    <div class="diffuse-logo-container">
+      {{ await comp.diffuse.logo() }}
+      {{ await comp.diffuse.status() }}
+    </div>
+    <p class="construct dither-mask" style="color: var(--accent)">
+      Your audio<br />your data<br />your rules
+    </p>
+    <p>
+      Diffuse is cooperative and malleable software that makes it possible to listen to audio from various sources on your devices and the web, and to create the ideal digital audio listening experience for you.
+    </p>
+    <p style="align-items: center; display: flex; gap: var(--space-2xs); opacity: 0.55;">
+      <i class="ph-fill ph-crane"></i>
+      <strong style="font-weight: 700;">WORK IN PROGRESS</strong>
+    </p>
+    <p style="margin-top: var(--space-lg)">
+      <a class="button button--bg-accent" href="dashboard/">
+        Open Diffuse
+      </a>
+    </p>
+    <p>
+      <a class="button button--subtle" href="guide/">
+        I'm new here, guide me
+      </a>
+    </p>
+    <p style="margin-top: var(--space-lg)">
+      <small style="line-height: var(--leading-relaxed)">
+        Like using Diffuse? <a href="https://ko-fi.com/toko">Support with a donation!</a><br />
+        Built with <a href="elements/">Diffuse elements</a><br />
+        Created by <a href="https://bsky.app/profile/tokono.ma">tokono.ma</a>
+      </small>
+    </p>
+    <footer>
+      <nav>
+        <a href="https://ko-fi.com/toko" title="Support with a donation"><i class="ph-fill ph-tip-jar"></i></a>
+        <a href="https://github.com/icidasset/diffuse" title="Source code (GitHub)"><i class="ph-fill ph-github-logo"></i></a>
+        <a href="https://tangled.org/tokono.ma/diffuse" title="Source code (Tangled)"><i class="ph-fill ph-barn"></i></a>
+        <a href="https://discord.gg/KUnhstJV" title="U&amp;A Discord #diffuse channel"><i class="ph-fill ph-discord-logo"></i></a>
+        <a href="https://bsky.app/profile/diffuse.sh" title="Follow updates on Bluesky"><i class="ph-fill ph-butterfly"></i></a>
+      </nav>
+    </footer>
+  </div>
+  <div class="dither-mask filler filler--bg-accent" style="border-radius: var(--radius-lg); overflow: hidden"></div>
+</header>
+
+<main>
+  <div class="dither-mask filler filler--bg-accent" style="border-radius: var(--radius-lg); overflow: hidden">
+    <section class="features">
+      <span>Infinite variety of interfaces</span>
+      <span style="opacity: 0.4">Choose what your audio player looks like</span>
+      <span>Endless optional features</span>
+      <span style="opacity: 0.4">Adjust the software to your needs</span>
+      <span>Bring audio from all kinds of sources</span>
+      <span style="opacity: 0.4">Audio files and streams</span>
+      <span>Multiple data syncing options</span>
+      <span style="opacity: 0.4">Export &amp; Import</span>
+    </section>
+  </div>
+
+  <section class="columns">
+    <div class="flex">
+      <h3>How does it work?</h3>
+
+      <p>
+        The main idea is that you upload your audio files to your browser or cloud storage, and then consume those files through Diffuse.
+      </p>
+
+      <p>
+        It provides a malleable and cooperative platform along with a set of building blocks that allow you to shape your own audio-listening software. There's a bunch of prebuilt software to choose from so you can see what's possible right from the start, and when you're ready you can dive deeper.
+      </p>
+
+      <p>
+        The default setup is focused on playing your audio from wherever it may be stored, browsing your collection through multiple diverse user interfaces, making playlists, adding items as favourites, etc. Besides the defaults, you can build and share your own interfaces and features.
+      </p>
+
+      <p>
+        It provides all this using a web application that lives solely in your browser. If you're looking at this on the official <a href="https://diffuse.sh">diffuse.sh</a> domain, you can pick the version of said web application. There's also the option to self-host. The code for both <a href="https://tangled.org/tokono.ma/diffuse">Diffuse</a> itself and the <a href="https://tangled.org/tokono.ma/diffuse-artifacts">version picker setup</a> is open-source.
+      </p>
+
+      <p>
+        More information can be found in the <a href="guide/">guide</a>.
+      </p>
+    </div>
+
+    <div class="flex">
+      <h3>Why does this exist?</h3>
+
+      <p>
+        Diffuse exists because I (<a href="https://tokono.ma">@tokono.ma</a>) wanted a way to listen to purchased digital music on multiple devices and add it to playlists that are not tied to a particular platform. Later, I also wanted tools to manipulate, manage and inspect those playlists and other data; along with the ability to shape what your music player looks like.
+      </p>
+    </div>
+  </section>
+</main>
+
+<script type="module">
+  import { versionUpgrade } from "./common/pages/version-upgrade.js";
+  versionUpgrade();
+</script>

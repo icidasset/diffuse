@@ -1,0 +1,51 @@
+<link rel="stylesheet" href="styles/base.css" />
+<link rel="stylesheet" href="facets/themes/catalogue-one/variables.css" />
+<link rel="stylesheet" href="facets/themes/catalogue-one/facet/index.css" />
+<link rel="stylesheet" href="vendor/@phosphor-icons/web/bold/style.css" />
+<link rel="stylesheet" href="vendor/@phosphor-icons/web/fill/style.css" />
+
+<main>
+  <header class="cat-header">
+    <div class="cat-scope">
+      <div class="cat-search-wrap">
+        <i class="ph-bold ph-magnifying-glass cat-search-icon"></i>
+        <input
+          type="search"
+          id="search"
+          class="cat-search"
+          placeholder="Search your collection…"
+          autocomplete="off"
+        />
+      </div>
+      <select id="playlist-select" class="cat-playlist-select"></select>
+    </div>
+
+    <nav class="cat-tabs">
+      <button class="cat-tab" data-view="albums" data-active="t">
+        <i class="ph-bold ph-squares-four"></i>
+        <span>Albums</span>
+      </button>
+      <button class="cat-tab" data-view="artists">
+        <i class="ph-bold ph-user"></i>
+        <span>Artists</span>
+      </button>
+      <button class="cat-tab" data-view="songs">
+        <i class="ph-bold ph-music-notes"></i>
+        <span>Songs</span>
+      </button>
+    </nav>
+  </header>
+
+  <div class="cat-body">
+    <section class="cat-content" id="content"></section>
+    <aside class="cat-queue" id="queue-panel" hidden></aside>
+  </div>
+
+  <footer class="cat-player" id="player-bar"></footer>
+</main>
+
+<button class="cat-queue-toggle" id="queue-toggle" title="Queue">
+  <i class="ph-bold ph-list-numbers"></i>
+</button>
+
+<script type="module" src="facets/themes/catalogue-one/facet/index.inline.js"></script>

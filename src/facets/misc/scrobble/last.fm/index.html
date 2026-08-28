@@ -1,0 +1,69 @@
+<style>
+  @import "./styles/base.css";
+  @import "./vendor/@phosphor-icons/web/bold/style.css";
+  @import "./styles/diffuse/facet.css";
+
+  @layer base, diffuse;
+
+  .facet__right {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-sm);
+    width: 24rem;
+  }
+</style>
+
+<main>
+  <div class="facet__left">
+    <div>
+      <a href="./dashboard/" class="diffuse-logo-container">
+        <svg viewBox="0 0 902 134" width="160">
+          <title>Diffuse</title>
+          <use
+            xlink:href="images/diffuse-current.svg#diffuse"
+            href="images/diffuse-current.svg#diffuse"
+          ></use>
+        </svg>
+      </a>
+    </div>
+    <h1>Last.fm</h1>
+    <p>Connect your Last.fm account to scrobble tracks.</p>
+  </div>
+
+  <div class="facet__right">
+    <div id="state-connect">
+      <div class="button-row">
+        <button id="sign-in-btn" class="button--brand">
+          <i class="ph-bold ph-plugs"></i>
+          Connect
+        </button>
+      </div>
+    </div>
+
+    <div id="state-connected" hidden>
+      <p id="handle-paragraph" hidden>Connected as <strong id="handle-text"></strong>.</p>
+      <div class="button-row">
+        <button id="sign-out-btn" hidden>
+          <i class="ph-bold ph-plugs-connected"></i>
+          Disconnect
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <dialog id="credentials-dialog">
+    <div class="dialog-header">
+      <strong>API Credentials</strong>
+    </div>
+    <div class="dialog-body">
+      <label>API Key <input id="api-key-input" placeholder="Default"></label>
+      <label>API Secret <input id="api-secret-input" type="password" placeholder="Default"></label>
+    </div>
+    <div class="dialog-footer">
+      <button id="save-creds-btn" class="button--brand">Save</button>
+      <button id="reset-creds-btn">Reset to defaults</button>
+    </div>
+  </dialog>
+</main>
+
+<script type="module" src="facets/misc/scrobble/last.fm/index.inline.js"></script>

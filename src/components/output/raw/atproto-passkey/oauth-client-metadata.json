@@ -1,0 +1,12 @@
+{
+  "client_id": "https://diffuse.sh/latest/components/output/raw/atproto-passkey/oauth-client-metadata.json",
+  "client_name": "Diffuse",
+  "client_uri": "https://diffuse.sh",
+  "redirect_uris": ["https://diffuse.sh/oauth/callback"],
+  "scope": "atproto blob:application/octet-stream repo?collection=sh.diffuse.output.facet&collection=sh.diffuse.output.playlistItem&collection=sh.diffuse.output.playlistItemBundle&collection=sh.diffuse.output.setting&collection=sh.diffuse.output.track&collection=sh.diffuse.output.trackBundle",
+  "grant_types": ["authorization_code", "refresh_token"],
+  "response_types": ["code"],
+  "token_endpoint_auth_method": "none",
+  "application_type": "web",
+  "dpop_bound_access_tokens": true
+}

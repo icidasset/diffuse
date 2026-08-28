@@ -1,0 +1,171 @@
+<link rel="stylesheet" href="facets/themes/winamp/fonts.css" />
+<link rel="stylesheet" href="facets/themes/winamp/index.css" />
+
+<style>
+  /*body {
+    background: #3a6ea5 url("https://wallpapercave.com/wp/wp2808001.jpg") no-repeat;
+    background-size: cover;
+  }*/
+</style>
+
+<main>
+  <!-- 🪟 -->
+  <section class="windows">
+    <style>
+      dtw-window-manager > * {
+        left: 12px;
+        position: absolute;
+        top: 12px;
+        z-index: 999;
+
+        /* Waiting on https://developer.mozilla.org/en-US/docs/Web/CSS/sibling-index#browser_compatibility */
+        &:nth-child(1) {
+          left: 24px;
+          top: 24px;
+        }
+
+        &:nth-child(2) {
+          left: 36px;
+          top: 36px;
+        }
+
+        &:nth-child(3) {
+          left: 48px;
+          top: 48px;
+        }
+
+        &:nth-child(4) {
+          left: 60px;
+          top: 60px;
+        }
+
+        &:nth-child(5) {
+          left: 72px;
+          top: 72px;
+        }
+
+        &:nth-child(6) {
+          left: 84px;
+          top: 84px;
+        }
+
+        &:nth-child(7) {
+          left: 96px;
+          top: 96px;
+        }
+
+        &:nth-child(8) {
+          left: 108px;
+          top: 108px;
+        }
+
+        &:nth-child(9) {
+          left: 120px;
+          top: 120px;
+        }
+      }
+    </style>
+
+    <dtw-window-manager>
+      <!-- BROWSER -->
+      <dtw-window id="browser-window" window-style="height: 380px; width: 560px;">
+        <span slot="title-icon"
+          ><img src="images/icons/windows_98/directory_explorer-4.png" height="14"
+        /></span>
+        <span slot="title">Browse collection</span>
+
+        <dtw-browser
+          output-selector="do-output"
+          queue-engine-selector="de-queue"
+          scope-engine-selector="de-scope"
+          tracks-selector="do-scoped-tracks"
+          input-selector="dc-input"
+          favourites-orchestrator-selector="do-favourites"
+        ></dtw-browser>
+      </dtw-window>
+
+      <!-- 🖼️ -->
+      <dtw-window id="artwork-window" window-style="min-width: 0; width: 275px; height: 275px;">
+        <span slot="title-icon"
+          ><img src="images/icons/windows_98/imagwmf-1.png" height="14"
+        /></span>
+        <span slot="title">Artwork</span>
+
+        <dtw-winamp-artwork
+          artwork-selector="do-artwork"
+          controller-orchestrator-selector="do-controller"
+        ></dtw-winamp-artwork>
+      </dtw-window>
+
+      <!-- 🎵 -->
+      <dtw-window id="track-details-window" window-style="width: 260px;">
+        <span slot="title-icon"
+          ><img src="images/icons/windows_98/msg_information-0.png" height="14"
+        /></span>
+        <span slot="title">Track details</span>
+
+        <dtw-winamp-track-details
+          controller-orchestrator-selector="do-controller"
+          favourites-orchestrator-selector="do-favourites"
+        ></dtw-winamp-track-details>
+      </dtw-window>
+
+      <!-- ⚡️ -->
+      <dtw-winamp
+        controller-orchestrator-selector="do-controller"
+        repeat-shuffle-engine-selector="de-repeat-shuffle"
+      ></dtw-winamp>
+    </dtw-window-manager>
+  </section>
+
+  <!-- 🛋️ -->
+  <section class="desktop">
+    <!-- WINAMP -->
+    <a class="button desktop__item" id="desktop-winamp">
+      <img src="images/icons/windows_98/winamp2-32x32.png" height="32" />
+      <label>Winamp</label>
+    </a>
+
+    <!-- INPUT -->
+    <a
+      class="button desktop__item"
+      href="l/?path=facets%2Fdata%2Fsources%2Findex.html"
+      target="_blank"
+    >
+      <img src="images/icons/windows_98/cd_audio_cd_a-4.png" height="32" />
+      <label for="input-window">Manage audio inputs</label>
+    </a>
+
+    <!-- OUTPUT -->
+    <a class="button desktop__item" href="l/?path=facets%2Fconnect%2Findex.html" target="_blank">
+      <img src="images/icons/windows_98/computer_user_pencil-0.png" height="32" />
+      <label for="output-window">Manage user data</label>
+    </a>
+
+    <!-- BROWSE -->
+    <a class="button desktop__item">
+      <img src="images/icons/windows_98/directory_explorer-5.png" height="32" />
+      <label for="browser-window">Browse collection</label>
+    </a>
+
+    <!-- ARTWORK -->
+    <a class="button desktop__item">
+      <img src="images/icons/windows_98/imagwmf-1.png" height="32" />
+      <label for="artwork-window">Artwork</label>
+    </a>
+
+    <!-- TRACK DETAILS -->
+    <a class="button desktop__item">
+      <img src="images/icons/windows_98/msg_information-0.png" height="32" />
+      <label for="track-details-window">Track details</label>
+    </a>
+
+    <!-- INSERT -->
+    <a class="button desktop__item" id="desktop-batch">
+      <img src="images/icons/windows_98/multimedia-4.png" height="32" />
+      <label>Add shuffled batch</label>
+    </a>
+  </section>
+</main>
+
+<script type="module" src="facets/themes/winamp/facet/index.inline.js"></script>

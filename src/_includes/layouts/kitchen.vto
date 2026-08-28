@@ -1,0 +1,40 @@
+---
+layout: layouts/diffuse.vto
+base: ../
+title: Diffuse
+
+styles:
+  - styles/base.css
+  - styles/diffuse/page.css
+  - styles/diffuse/code-editor.css
+  - vendor/@phosphor-icons/web/bold/style.css
+  - vendor/@phosphor-icons/web/fill/style.css
+
+scripts:
+  - common/pages/ppr.js
+---
+
+<header>
+  <div class="header__nav">
+    <div style="flex-shrink: 0;">
+      <div class="diffuse-logo-container diffuse-logo-container--condensed">
+        <a href="./" style="display: inline-block;">
+          {{ await comp.diffuse.logo() }}
+        </a>
+        <span style="direction: rtl">
+          {{ await comp.diffuse.status() }}
+        </span>
+      </div>
+    </div>
+    {{ await comp.nav({ url, facets }) }}
+  </div>
+</header>
+
+<main>
+  {{ content }}
+</main>
+
+<script type="module">
+  import { versionUpgrade } from "./common/pages/version-upgrade.js";
+  versionUpgrade();
+</script>

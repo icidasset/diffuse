@@ -1,0 +1,90 @@
+<main>
+  <div class="panel">
+    <div class="row">
+      <button id="repeat" title="Toggle repeat">
+        <span class="with-icon"><i class="ph-bold ph-repeat"></i> Repeat</span>
+      </button>
+      <button id="shuffle" title="Toggle shuffle">
+        <span class="with-icon"><i class="ph-bold ph-shuffle"></i> Shuffle</span>
+      </button>
+    </div>
+    <hr />
+    <div class="row">
+      <label class="with-icon" for="playlist">
+        <i class="ph-bold ph-playlist"></i>
+        <select id="playlist">
+          <option value="">All tracks</option>
+        </select>
+      </label>
+    </div>
+    <div class="row">
+      <label class="with-icon" for="search">
+        <i class="ph-bold ph-magnifying-glass"></i>
+        <input id="search" type="search" placeholder="Search" />
+      </label>
+    </div>
+    <div class="row">
+      <label class="with-icon" for="sort-by" style="width: min(80vw, var(--container-xs))">
+        <i class="ph-bold ph-arrows-down-up"></i>
+        <select id="sort-by">
+          <option value="[]">Default order</option>
+          <option value='["createdAt"]'>Added to collection</option>
+          <option value='["tags.title"]'>Title</option>
+          <option value='["tags.album","tags.disc.no","tags.track.no"]'>Album</option>
+          <option value='["tags.artist","tags.album","tags.disc.no","tags.track.no"]'>
+            Artist
+          </option>
+          <option value='["tags.year"]'>Year</option>
+          <option value='["tags.date"]'>Date</option>
+        </select>
+        <button id="sort-direction" style="flex: none">DESC</button>
+      </label>
+    </div>
+    <div class="row">
+      <label class="with-icon" for="group-by">
+        <i class="ph-bold ph-stack"></i>
+        <select id="group-by">
+          <option value="">Disable grouping</option>
+          <option value="firstLetter">First letter</option>
+          <option value="directory">Path</option>
+          <option value="createdAt">Added date</option>
+          <option value="tags.year">Year</option>
+        </select>
+      </label>
+    </div>
+  </div>
+</main>
+
+<style>
+  @import "./styles/base.css";
+  @import "./styles/wireframe/ui.css";
+  @import "./vendor/@phosphor-icons/web/bold/style.css";
+
+  body {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    height: 100dvh;
+  }
+
+  main {
+    padding: var(--space-md);
+  }
+
+  label {
+    flex: 1;
+    letter-spacing: var(--leading-relaxed);
+    text-transform: uppercase;
+  }
+
+  label input,
+  label select {
+    flex: 1;
+  }
+
+  .row button {
+    flex: 1;
+  }
+</style>
+
+<script type="module" src="facets/playback/auto-queue/index.inline.js"></script>

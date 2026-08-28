@@ -1,0 +1,20 @@
+{
+  "lexicon": 1,
+  "id": "sh.diffuse.output.setting",
+  "defs": {
+    "main": {
+      "type": "record",
+      "record": {
+        "type": "object",
+        "required": ["id", "key", "value"],
+        "properties": {
+          "id": { "type": "string" },
+          "createdAt": { "type": "string", "format": "datetime" },
+          "updatedAt": { "type": "string", "format": "datetime" },
+          "key": { "type": "string" },
+          "value": { "type": "string" }
+        }
+      }
+    }
+  }
+}

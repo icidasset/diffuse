@@ -1,0 +1,9 @@
+:root {
+  /* Classic monochrome click-wheel iPod LCD palette */
+  --ipod-lcd: #aeb7c2;
+  --ipod-ink: #1c2530;
+
+  /* Chicago is the original iPod typeface; falls back to clean sans serifs */
+  --ipod-font: "Chicago", "Charcoal", "Geneva", "Verdana", "Tahoma",
+    "Trebuchet MS", system-ui, sans-serif;
+}

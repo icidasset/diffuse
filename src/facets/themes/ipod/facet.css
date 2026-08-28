@@ -1,0 +1,397 @@
+@import "../../../styles/base.css";
+@import "./variables.css";
+
+/***********************************
+ * Layout
+ ***********************************/
+
+body {
+  background: radial-gradient(ellipse at 50% 35%, #4a4f57 0%, #1f2227 70%);
+  margin: 0;
+}
+
+#container {
+  align-items: center;
+  display: flex;
+  height: 100dvh;
+  justify-content: center;
+}
+
+main {
+  align-items: center;
+  display: flex;
+  justify-content: center;
+  width: 100%;
+}
+
+/***********************************
+ * Device body
+ ***********************************/
+
+.ipod {
+  background: linear-gradient(160deg, #fbfbfb 0%, #ececec 55%, #d8d8d8 100%);
+  border-radius: 28px;
+  box-shadow:
+    0 2px 4px rgba(255, 255, 255, 0.7) inset,
+    0 -2px 6px rgba(0, 0, 0, 0.18) inset,
+    0 30px 60px rgba(0, 0, 0, 0.55),
+    0 8px 20px rgba(0, 0, 0, 0.4);
+  box-sizing: border-box;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 26px;
+  padding: 26px 22px 30px;
+  position: relative;
+  touch-action: none;
+  user-select: none;
+  width: 312px;
+}
+
+/* faint reflections on the body */
+.ipod::before {
+  background: linear-gradient(
+    105deg,
+    transparent 40%,
+    rgba(255, 255, 255, 0.5) 48%,
+    transparent 56%
+  );
+  border-radius: inherit;
+  content: "";
+  inset: 0;
+  pointer-events: none;
+  position: absolute;
+}
+
+/***********************************
+ * Screen
+ ***********************************/
+
+.ipod__screen {
+  background: var(--ipod-lcd);
+  border-radius: 4px;
+  box-shadow:
+    0 0 0 2px #c9c9c9,
+    0 0 0 6px #ededed,
+    0 0 0 7px #c2c2c2,
+    0 2px 10px rgba(0, 0, 0, 0.3) inset;
+  box-sizing: border-box;
+  color: var(--ipod-ink);
+  font-family: var(--ipod-font);
+  font-size: 13px;
+  height: 196px;
+  overflow: hidden;
+  position: relative;
+  width: 100%;
+  z-index: 1;
+}
+
+/* subtle LCD scanline / sheen */
+.ipod__screen::after {
+  background: linear-gradient(transparent 50%, rgba(0, 0, 0, 0.035) 50%);
+  background-size: 100% 3px;
+  content: "";
+  inset: 0;
+  pointer-events: none;
+  position: absolute;
+}
+
+.ipod__titlebar {
+  align-items: center;
+  border-bottom: 1px solid var(--ipod-ink);
+  display: flex;
+  font-weight: 700;
+  height: 26px;
+  justify-content: space-between;
+  letter-spacing: 0.3px;
+  padding: 0 7px;
+}
+
+.ipod__title {
+  flex: 1;
+  font-size: 13px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.ipod__status {
+  align-items: center;
+  display: flex;
+  font-size: 11px;
+  gap: 6px;
+}
+
+.ipod__viewport {
+  height: calc(100% - 26px);
+  overflow: hidden;
+  position: relative;
+}
+
+/***********************************
+ * Now Playing view
+ ***********************************/
+
+.ipod__view--now {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  height: 100%;
+  padding: 14px 10px 8px;
+}
+
+.now__title {
+  font-size: 15px;
+  font-weight: 700;
+  line-height: 1.15;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.now__artist {
+  color: oklch(from var(--ipod-ink) l c h / 0.78);
+  font-size: 12px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.now__progress {
+  cursor: pointer;
+  margin: auto 0 2px;
+  padding: 8px 0;
+  position: relative;
+  width: 100%;
+}
+
+.now__progress::before {
+  background: var(--ipod-ink);
+  content: "";
+  height: 3px;
+  left: 0;
+  position: absolute;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 100%;
+}
+
+.now__progress-fill {
+  background: oklch(from var(--ipod-ink) calc(l + 0.12) c h);
+  height: 3px;
+  left: 0;
+  position: absolute;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 0;
+}
+
+.now__progress-knob {
+  background: var(--ipod-ink);
+  border-radius: 50%;
+  height: 9px;
+  position: absolute;
+  top: 50%;
+  transform: translate(-50%, -50%);
+  transition:
+    height 0.12s ease,
+    width 0.12s ease;
+  width: 9px;
+}
+
+/* Enlarge into a "diamond" while scrubbing, like the iPod scrubber */
+.now__progress-knob.is-scrubbing {
+  height: 14px;
+  width: 14px;
+}
+
+.now__times {
+  display: flex;
+  font-size: 11px;
+  justify-content: space-between;
+  letter-spacing: 0.3px;
+}
+
+/***********************************
+ * List view (Music / Songs)
+ ***********************************/
+
+.ipod__view--list {
+  height: 100%;
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  position: absolute;
+  width: 100%;
+}
+
+.ipod__list-item {
+  align-items: center;
+  display: flex;
+  gap: 6px;
+  height: 22px;
+  left: 0;
+  overflow: hidden;
+  padding: 0 7px;
+  position: absolute;
+  white-space: nowrap;
+  width: 100%;
+}
+
+.ipod__list-item--selected {
+  background: var(--ipod-ink);
+  color: var(--ipod-lcd);
+}
+
+.ipod__list-item--separator::after {
+  background: currentColor;
+  bottom: 0;
+  content: "";
+  height: 1px;
+  left: 7px;
+  opacity: 0.25;
+  position: absolute;
+  right: 7px;
+}
+
+.ipod__list-item__marker {
+  flex-shrink: 0;
+  font-size: 10px;
+  width: 9px;
+}
+
+.ipod__list-item__label {
+  flex: 1;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.ipod__list-item__value {
+  color: inherit;
+  flex-shrink: 0;
+  font-size: 11px;
+  opacity: 0.75;
+}
+
+/* right-edge iPod-style scrollbar */
+.ipod__scrollbar {
+  background: var(--ipod-ink);
+  border-radius: 1px;
+  opacity: 0.55;
+  position: absolute;
+  right: 3px;
+  top: 0;
+  width: 3px;
+  z-index: 2;
+}
+
+/***********************************
+ * Click wheel
+ ***********************************/
+
+.ipod__wheel {
+  background: radial-gradient(circle at 50% 42%, #f4f4f4 0%, #e2e2e2 60%, #cfcfcf 100%);
+  border-radius: 50%;
+  box-shadow:
+    0 2px 4px rgba(255, 255, 255, 0.8) inset,
+    0 -3px 8px rgba(0, 0, 0, 0.12) inset,
+    0 6px 14px rgba(0, 0, 0, 0.25);
+  cursor: pointer;
+  height: 224px;
+  position: relative;
+  width: 224px;
+  z-index: 1;
+}
+
+.wheel__label {
+  align-items: center;
+  color: #6a6a6a;
+  display: flex;
+  font-family: var(--ipod-font);
+  font-size: 15px;
+  font-weight: 700;
+  pointer-events: none;
+  position: absolute;
+  text-shadow: 0 1px 0 rgba(255, 255, 255, 0.7);
+  z-index: 2;
+}
+
+.wheel__label--menu {
+  font-size: 13px;
+  left: 50%;
+  top: 9px;
+  transform: translateX(-50%);
+}
+
+/* Phosphor icon sizing */
+.wheel__label i,
+.ipod__status i,
+.ipod__list-item__marker i {
+  display: block;
+}
+
+.wheel__label i {
+  font-size: 15px;
+}
+
+/* play-pause is a wider two-glyph icon; scale it up so its visual
+   height matches the single-glyph skip icons */
+.wheel__label--play i {
+  font-size: 20px;
+}
+
+.ipod__status i {
+  font-size: 12px;
+}
+
+.ipod__list-item__marker i {
+  font-size: 10px;
+}
+
+.wheel__label--prev {
+  left: 14px;
+  top: 50%;
+  transform: translateY(-50%);
+}
+
+.wheel__label--next {
+  right: 14px;
+  top: 50%;
+  transform: translateY(-50%);
+}
+
+.wheel__label--play {
+  bottom: 9px;
+  left: 50%;
+  transform: translateX(-50%);
+}
+
+.wheel__center {
+  align-items: center;
+  background: linear-gradient(160deg, #ffffff 0%, #ececec 55%, #d4d4d4 100%);
+  border: 0;
+  border-radius: 50%;
+  box-shadow:
+    0 1px 2px rgba(255, 255, 255, 0.9) inset,
+    0 -2px 5px rgba(0, 0, 0, 0.12) inset,
+    0 3px 8px rgba(0, 0, 0, 0.22);
+  cursor: pointer;
+  display: flex;
+  height: 78px;
+  justify-content: center;
+  left: 50%;
+  padding: 0;
+  position: absolute;
+  top: 50%;
+  transform: translate(-50%, -50%);
+  width: 78px;
+  z-index: 3;
+}
+
+.wheel__center:active,
+.ipod__wheel.is-pressing .wheel__center {
+  box-shadow:
+    0 1px 2px rgba(255, 255, 255, 0.9) inset,
+    0 -2px 5px rgba(0, 0, 0, 0.18) inset,
+    0 1px 3px rgba(0, 0, 0, 0.2);
+}

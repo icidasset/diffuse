@@ -1,0 +1,218 @@
+import * as URI from "fast-uri";
+import QS from "query-string";
+
+import { SCHEME } from "./constants.js";
+import { cachedConsult } from "~/components/input/common.js";
+import { safeDecodeURIComponent } from "~/common/utils.js";
+import { SubsonicAPIWithoutFetch } from "./class.js";
+
+/**
+ * @import {Child} from "subsonic-api"
+ * @import {Track} from "~/definitions/types.d.ts";
+ * @import {Server} from "@specs/components/input/opensubsonic/types.d.ts";
+ */
+
+/**
+ * @param {Child["type"]} type
+ * @returns {Track["kind"]}
+ */
+export function autoTypeToTrackKind(type) {
+  switch (type?.toLowerCase()) {
+    case "audiobook":
+      return "audiobook";
+
+    case "music":
+      return "music";
+
+    case "podcast":
+      return "podcast";
+
+    default:
+      return "miscellaneous";
+  }
+}
+
+/**
+ * @param {Server} server
+ * @param {{ songId: string; path?: string }} [args]
+ */
+export function buildURI(server, args) {
+  return URI.serialize({
+    scheme: SCHEME,
+    userinfo: server.apiKey
+      ? encodeURIComponent(server.apiKey)
+      : `${encodeURIComponent(server.username || "")}:${
+        encodeURIComponent(server.password || "")
+      }`,
+    host: server.host.replace(/^https?:\/\//, ""),
+    path: args?.path,
+    query: QS.stringify({
+      songId: args?.songId,
+      tls: server.tls ? "t" : "f",
+    }),
+  });
+}
+
+/**
+ * @param {Server} server
+ * @returns {Promise<import("@specs/components/input/types.d.ts").ConsultResult>}
+ */
+export async function consultServer(server) {
+  const client = createClient(server);
+  let resp;
+  try {
+    resp = await client.ping();
+  } catch {
+    // Transport error (network blip, timeout): inconclusive — don't
+    // cache a sticky "no" for the full consult TTL.
+    return "unsure";
+  }
+  return resp?.status?.toLowerCase() === "ok" ? "yes" : "no";
+}
+
+export const consultServerCached = cachedConsult(consultServer, serverId);
+
+/**
+ * @param {Server} server
+ */
+export function createClient(server) {
+  return new SubsonicAPIWithoutFetch({
+    url: `http${server.tls ? "s" : ""}://${server.host}`,
+    auth: server.apiKey ? { apiKey: safeDecodeURIComponent(server.apiKey) } : {
+      username: safeDecodeURIComponent(server.username || ""),
+      password: safeDecodeURIComponent(server.password || ""),
+    },
+  });
+}
+
+/**
+ * @param {Track[]} tracks
+ */
+export function groupTracksByServer(tracks) {
+  /** @type {Record<string, { server: Server; tracks: Track[] }>} */
+  const acc = {};
+
+  tracks.forEach((track) => {
+    const parsed = parseURI(track.uri);
+    if (!parsed) return;
+
+    const id = serverId(parsed.server);
+
+    if (acc[id]) {
+      acc[id].tracks.push(track);
+    } else {
+      acc[id] = { server: parsed.server, tracks: [track] };
+    }
+  });
+
+  return acc;
+}
+
+/**
+ * @param {string[]} uris
+ */
+export function groupUrisByServer(uris) {
+  /** @type {Record<string, { server: Server; uris: string[] }>} */
+  const acc = {};
+
+  uris.forEach((uri) => {
+    const parsed = parseURI(uri);
+    if (!parsed) return;
+
+    const id = serverId(parsed.server);
+
+    if (acc[id]) {
+      acc[id].uris.push(uri);
+    } else {
+      acc[id] = { server: parsed.server, uris: [uri] };
+    }
+  });
+
+  return acc;
+}
+
+/**
+ * Parse an opensubsonic URI.
+ *
+ * ```
+ * opensubsonic://username:password@server-host:port/path?tls=f
+ * ```
+ *
+ * @param {string} uriString
+ * @returns {{ path: string | undefined; server: Server; songId: string | undefined } | undefined}
+ */
+export function parseURI(uriString) {
+  const uri = URI.parse(uriString);
+  if (uri.scheme !== SCHEME) return undefined;
+  if (!uri.host) return undefined;
+
+  let apiKey = undefined;
+  let username = undefined;
+  let password = undefined;
+
+  if (uri.userinfo?.includes(":")) {
+    // Username + Password
+    const [u, p] = uri.userinfo.split(":");
+    username = u;
+    password = p;
+    if (!username || !password) return undefined;
+  } else {
+    // API key
+    apiKey = uri.userinfo;
+    if (!apiKey) return undefined;
+  }
+
+  const qs = QS.parse(uri.query || "");
+
+  const server = {
+    apiKey,
+    host: uri.port ? `${uri.host}:${uri.port}` : uri.host,
+    password,
+    tls: qs.tls === "f" ? false : true,
+    username,
+  };
+
+  const path = uri.path;
+  const songId = typeof qs.songId === "string" ? qs.songId : undefined;
+
+  return { path, server, songId };
+}
+
+/**
+ * @param {Track[]} tracks
+ */
+export function serversFromTracks(tracks) {
+  /** @type {Record<string, Server>} */
+  const acc = {};
+
+  tracks.forEach((track) => {
+    const parsed = parseURI(track.uri);
+    if (!parsed) return;
+
+    const id = serverId(parsed.server);
+    if (acc[id]) return;
+
+    acc[id] = parsed.server;
+  });
+
+  return acc;
+}
+
+/**
+ * @param {Server} server
+ */
+export function serverId(server) {
+  const parts = {
+    host: server.host,
+    query: `tls=${server.tls ? "t" : "f"}`,
+  };
+
+  const uri = server.apiKey
+    ? URI.serialize({ ...parts, userinfo: server.apiKey })
+    : URI.serialize({
+      ...parts,
+      userinfo: `${server.username}:${server.password}`,
+    });
+
+  return btoa(uri);
+}

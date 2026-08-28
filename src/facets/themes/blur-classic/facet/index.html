@@ -1,0 +1,92 @@
+<link rel="stylesheet" href="styles/base.css" />
+<link rel="stylesheet" href="facets/themes/blur/font-faces.css" />
+<link rel="stylesheet" href="facets/themes/blur/variables.css" />
+<link rel="stylesheet" href="facets/themes/blur-classic/facet/index.css" />
+<link rel="stylesheet" href="vendor/@phosphor-icons/web/bold/style.css" />
+<link rel="stylesheet" href="vendor/@phosphor-icons/web/fill/style.css" />
+
+<style>
+  html {
+    font-size: 18px;
+  }
+
+  main,
+  db-blur-classic-controller,
+  db-browser {
+    font-family: "Source Sans 3", ui-sans-serif, system-ui, sans-serif;
+    font-feature-settings: normal;
+    font-optical-sizing: auto;
+  }
+</style>
+
+<div id="bg-overlay"></div>
+
+<main>
+  <div id="text-menu">
+    <button id="btn-new-deck">New Deck</button>
+    <a href="l/?path=facets%2Fdata%2Fsources%2Findex.html" target="_blank">Sources</a>
+    <button id="btn-settings">Settings</button>
+  </div>
+
+  <db-browser
+    output-selector="do-output"
+    tracks-selector="do-scoped-tracks"
+    queue-engine-selector="de-queue"
+    scope-engine-selector="de-scope"
+    favourites-orchestrator-selector="do-favourites"
+    artwork-selector="do-artwork"
+    cover-groups-orchestrator-selector="do-cover-groups"
+    input-selector="dc-input"
+  ></db-browser>
+
+  <db-blur-classic-controller
+    controller-orchestrator-selector="do-controller"
+    repeat-shuffle-engine-selector="de-repeat-shuffle"
+  ></db-blur-classic-controller>
+</main>
+
+<div id="settings-backdrop"></div>
+<div id="settings-panel">
+  <button id="settings-close" title="Close settings">
+    <i class="ph-bold ph-x"></i>
+  </button>
+  <div class="settings-scroll">
+    <section class="settings-section">
+      <h2>Background Image</h2>
+      <div class="bg-images" id="bg-images"></div>
+      <div class="bg-special-options">
+        <button class="bg-special-btn" id="bg-none-btn" title="No background image">
+          <i class="ph-bold ph-x"></i>
+          <span>None</span>
+        </button>
+        <button class="bg-special-btn" id="bg-custom-btn" title="Custom image URL">
+          <i class="ph-bold ph-link"></i>
+          <span>URL</span>
+        </button>
+      </div>
+      <div class="bg-url-row" id="bg-url-row" hidden>
+        <input type="url" id="bg-url-input" placeholder="https://..." />
+        <button id="bg-url-apply"><i class="ph-bold ph-arrow-right"></i></button>
+      </div>
+      <button class="bg-mix-btn" id="bg-mix-btn">
+        <i class="ph-bold ph-intersect"></i>
+        Mix image with background color
+      </button>
+    </section>
+
+    <section class="settings-section">
+      <h2>Background Color</h2>
+      <div class="bg-color-row">
+        <label class="bg-color-swatch" id="bg-color-label" title="Pick a color">
+          <input type="color" id="bg-color-picker" value="#000000" />
+        </label>
+        <button class="bg-special-btn" id="bg-color-clear-btn" title="Remove color">
+          <i class="ph-bold ph-x"></i>
+          <span>None</span>
+        </button>
+      </div>
+    </section>
+  </div>
+</div>
+
+<script type="module" src="facets/themes/blur-classic/facet/index.inline.js"></script>

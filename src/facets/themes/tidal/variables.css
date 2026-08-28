@@ -1,0 +1,12 @@
+:root,
+:host {
+  --td-bg: #000;
+  --td-sidebar: #242328;
+  --td-surface: #1d1d1f;
+  --td-surface-hover: #2a2a2d;
+  --td-text: #f9f9f9;
+  --td-text-dim: #a0a0a5;
+  --td-text-faint: #707075;
+  --td-accent: #a5fcf3;
+  --td-border: #1d1d1f;
+}

@@ -1,0 +1,47 @@
+<link rel="stylesheet" href="facets/themes/ipod/facet.css" />
+
+<style>
+  @import "./vendor/@phosphor-icons/web/fill/style.css";
+</style>
+
+<main>
+  <div class="ipod" id="ipod">
+    <!-- Screen -->
+    <div class="ipod__screen" id="screen">
+      <div class="ipod__titlebar">
+        <span class="ipod__title" id="screen-title">Now Playing</span>
+        <span class="ipod__status" id="screen-status" aria-hidden="true"></span>
+      </div>
+      <div class="ipod__viewport" id="viewport">
+        <div class="ipod__scrollbar" id="scrollbar" hidden></div>
+        <!-- Now Playing -->
+        <div class="ipod__view ipod__view--now" id="view-now">
+          <div class="now__title" id="now-title">Nothing Playing</div>
+          <div class="now__artist" id="now-artist"></div>
+          <div class="now__progress" id="progress">
+            <div class="now__progress-fill" id="progress-fill"></div>
+            <div class="now__progress-knob" id="progress-knob"></div>
+          </div>
+          <div class="now__times">
+            <span id="time-elapsed">0:00</span>
+            <span id="time-remaining">-0:00</span>
+          </div>
+        </div>
+
+        <!-- List view (Music menu, Queue, browser) -->
+        <ol class="ipod__view ipod__view--list" id="view-list"></ol>
+      </div>
+    </div>
+
+    <!-- Click wheel -->
+    <div class="ipod__wheel" id="wheel">
+      <span class="wheel__label wheel__label--menu">MENU</span>
+      <span class="wheel__label wheel__label--prev"><i class="ph-fill ph-skip-back"></i></span>
+      <span class="wheel__label wheel__label--next"><i class="ph-fill ph-skip-forward"></i></span>
+      <span class="wheel__label wheel__label--play"><i class="ph-fill ph-play-pause"></i></span>
+      <button class="wheel__center" id="select" aria-label="Select"></button>
+    </div>
+  </div>
+</main>
+
+<script type="module" src="facets/themes/ipod/facet/index.inline.js"></script>

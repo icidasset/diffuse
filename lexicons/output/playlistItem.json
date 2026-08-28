@@ -1,0 +1,50 @@
+{
+  "lexicon": 1,
+  "id": "sh.diffuse.output.playlistItem",
+  "defs": {
+    "main": {
+      "type": "record",
+      "record": {
+        "type": "object",
+        "required": ["id", "criteria", "playlist"],
+        "properties": {
+          "id": { "type": "string" },
+          "createdAt": { "type": "string", "format": "datetime" },
+          "criteria": {
+            "type": "array",
+            "description": "Criteria for matching this item against a set of tracks",
+            "items": { "type": "ref", "ref": "#criterion" }
+          },
+          "ephemeral": { "type": "boolean" },
+          "playlist": { "type": "string", "description": "The name of the playlist" },
+          "positionedAfter": {
+            "type": "string",
+            "description": "Id of the item that this item should be positioned after"
+          },
+          "updatedAt": { "type": "string", "format": "datetime" }
+        }
+      }
+    },
+    "criterion": {
+      "type": "object",
+      "required": ["field", "value"],
+      "properties": {
+        "amount": { "type": "integer", "minimum": 0 },
+        "field": { "type": "string" },
+        "mode": { "type": "string", "knownValues": ["include", "exclude"], "default": "include" },
+        "transformations": {
+          "type": "array",
+          "items": { "type": "ref", "ref": "#transformation" }
+        },
+        "value": {
+          "type": "unknown",
+          "description": "Value that should be matched belonging to the given field"
+        }
+      }
+    },
+    "transformation": {
+      "type": "string",
+      "description": "Transformation to apply to the field value before comparison. This transformation is method to call on the value. For example, `toString`"
+    }
+  }
+}

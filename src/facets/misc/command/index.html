@@ -1,0 +1,163 @@
+<main>
+  <div id="command-menu" class="panel">
+    <div id="breadcrumbs" aria-label="Navigation path" role="navigation"></div>
+    <label for="search" id="search-wrapper">
+      <input
+        id="search"
+        type="text"
+        placeholder="Type a command…"
+        autocomplete="off"
+        spellcheck="false"
+        role="combobox"
+        aria-autocomplete="list"
+        aria-controls="kmenu-listbox"
+        aria-expanded="true"
+      />
+    </label>
+    <ul id="kmenu-listbox" role="listbox" aria-label="Commands"></ul>
+  </div>
+</main>
+
+<style>
+  @import "./styles/base.css";
+  @import "./styles/wireframe/ui.css";
+  @import "./vendor/@phosphor-icons/web/bold/style.css";
+
+  body {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    height: 100dvh;
+  }
+
+  main {
+    width: min(var(--container-lg), 90vw);
+  }
+
+  #command-menu {
+    padding: 0;
+    overflow: hidden;
+  }
+
+  #breadcrumbs {
+    display: flex;
+    align-items: center;
+    gap: var(--space-sm);
+    padding: var(--space-xs) var(--space-sm);
+    font-size: var(--fs-xs);
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: var(--tracking-wider);
+    color: oklch(from var(--text-color) l c h / 0.5);
+    border-bottom: 2px solid var(--form-color);
+  }
+
+  #breadcrumbs:empty {
+    display: none;
+  }
+
+  .crumb-home {
+    background: oklch(from var(--text-color) l c h / 0.075);
+    border: none;
+    border-radius: var(--radius-sm);
+    cursor: pointer;
+    padding: 0;
+    font-size: inherit;
+    font-weight: inherit;
+    line-height: 0.75;
+    padding: var(--space-2xs);
+    letter-spacing: inherit;
+    text-box: trim-both cap alphabetic;
+    text-transform: inherit;
+
+    &:hover {
+      text-decoration: underline;
+    }
+  }
+
+  #search-wrapper {
+    display: flex;
+    align-items: center;
+    gap: var(--space-xs);
+    padding: var(--space-sm);
+    border-bottom: 2px solid var(--form-color);
+  }
+
+  #search-wrapper i {
+    flex-shrink: 0;
+    color: oklch(from var(--text-color) l c h / 0.5);
+    pointer-events: none;
+  }
+
+  #search {
+    border: none;
+    padding: 0;
+    font-size: var(--fs-sm);
+    background: transparent;
+    flex: 1;
+    width: 100%;
+  }
+
+  #kmenu-listbox {
+    list-style: none;
+    margin: 0;
+    padding: var(--space-2xs) 0;
+    max-height: 340px;
+    overflow-y: auto;
+  }
+
+  .group-label {
+    color: oklch(from var(--text-color) l c h / 0.45);
+    font-size: var(--fs-2xs);
+    font-weight: 600;
+    letter-spacing: calc(var(--tracking-widest) * 2);
+    padding: var(--space-2xs) var(--space-sm);
+    pointer-events: none;
+    text-transform: uppercase;
+  }
+
+  .option {
+    display: flex;
+    align-items: center;
+    gap: var(--space-xs);
+    padding: var(--space-xs) var(--space-sm);
+    cursor: pointer;
+    user-select: none;
+    font-size: var(--fs-sm);
+  }
+
+  .option[aria-selected="true"] {
+    background-color: var(--accent);
+    color: var(--bg-color);
+  }
+
+  .option[aria-disabled="true"] {
+    opacity: 0.35;
+    cursor: not-allowed;
+    pointer-events: none;
+  }
+
+  .option-label {
+    flex: 1;
+  }
+
+  .option .option-chevron {
+    flex-shrink: 0;
+    font-size: var(--fs-xs);
+    opacity: 0.6;
+  }
+
+  .panel {
+    gap: 0;
+  }
+
+  .empty-message {
+    padding: var(--space-md);
+    text-align: center;
+    color: oklch(from var(--text-color) l c h / 0.45);
+    font-size: var(--fs-sm);
+    pointer-events: none;
+  }
+</style>
+
+<script type="module" src="facets/misc/command/index.inline.js"></script>

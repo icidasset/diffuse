@@ -1,0 +1,143 @@
+---
+layout: layouts/diffuse.vto
+base: ../
+title: Elements | Diffuse
+
+styles:
+  - styles/base.css
+  - styles/diffuse/page.css
+  - vendor/@phosphor-icons/web/bold/style.css
+  - vendor/@phosphor-icons/web/fill/style.css
+---
+
+<header>
+  <div>
+    <div class="diffuse-logo-container">
+      <a href="./" style="display: inline-block;">
+        {{ await comp.diffuse.logo() }}
+      </a>
+      {{ await comp.diffuse.status() }}
+    </div>
+    <p class="construct dither-mask">
+      Elements
+    </p>
+    <p>
+      Diffuse was built using these web components, consume these using the <a href="../create/">create tool</a>, the Javascript <a href="https://jsr.io/@toko/diffuse">package</a>, or the linked Javascript files down below.
+    </p>
+    <ul class="table-of-contents">
+      <li><a href="elements/#artwork">Artwork</a></li>
+      <li><a href="elements/#configurators">Configurators</a></li>
+      <li><a href="elements/#engines">Engines</a></li>
+      <li><a href="elements/#input">Input</a></li>
+      <li><a href="elements/#metadata">Metadata</a></li>
+      <li><a href="elements/#orchestrators">Orchestrators</a></li>
+      <li><a href="elements/#output">Output</a></li>
+      <li><a href="elements/#supplements">Supplements</a></li>
+      <li><a href="elements/#transformers">Transformers</a></li>
+      <li><a href="elements/#upload">Upload</a></li>
+      <!---->
+      <li style="margin-top: var(--space-xs);"><a href="#definitions">Definitions</a></li>
+    </ul>
+  </div>
+  <div class="dither-mask filler"></div>
+</header>
+<main>
+  <!-- ELEMENTS -->
+  <section>
+    <div class="columns">
+      {{ await comp.element({
+        title: "Artwork",
+        items: elements.artwork,
+        content: `
+          Elements that provide artwork for tracks.
+        `
+      }) }}
+
+      {{ await comp.element({
+        title: "Configurators",
+        items: elements.configurators,
+        content: `
+          Intermediates in order to make a particular kind of element configurable. In other words, these allow for an element to be swapped out with another that takes the same set of the actions and data output.
+        `
+      }) }}
+
+      {{ await comp.element({
+        title: "Engines",
+        items: elements.engines,
+        content: `
+          Elements with each a singular purpose. There are orchestrator elements that control these.
+        `
+      }) }}
+
+      {{ await comp.element({
+        title: "Input",
+        items: elements.input,
+        content: `
+        Inputs are sources of audio tracks. Each track is an entry in the list of possible items to play. These can be files or streams, static or dynamic.
+        `
+      }) }}
+
+      {{ await comp.element({
+        title: "Metadata",
+        items: elements.metadata,
+        content: `
+          Elements that provide metadata for tracks.
+        `
+      }) }}
+
+      {{ await comp.element({
+        title: "Orchestrators",
+        items: elements.orchestrators,
+        content: `
+        These are element compositions, logic only. Mostly exist in order to construct sensible defaults.
+        `
+      }) }}
+
+      {{ await comp.element({
+        title: "Output",
+        items: elements.output,
+        content: `
+        Output is application-derived data such as playlists. These elements can receive such data and keep it around. These are categorised by the type of data they ingest, or many types in the case of polymorphic. Optionally use transformers to convert output into the expected format.
+        `
+      }) }}
+
+      {{ await comp.element({
+        title: "Supplements",
+        items: elements.supplements,
+        content: `
+        Additional elements, such as scrobblers.
+        `
+      }) }}
+
+      {{ await comp.element({
+        title: "Transformers",
+        items: elements.transformers,
+        content: `
+        Transform data from one format or schema into another. See the definitions section below for more information. Just as configurators, these are intermediates and require to have the same set of actions as the element it targets.
+        `
+      }) }}
+
+      {{ await comp.element({
+        title: "Upload",
+        items: elements.upload,
+        content: `
+          These elements are paired with input elements, extending their functionality. The upload element uploads or removes audio files, and the input element then lists them.
+        `
+      }) }}
+    </div>
+  </section>
+
+  <!-- DEFINITIONS -->
+  <section>
+    <h2 id="definitions" style="color: var(--accent)">Definitions</h2>
+
+    <p>All of the elements here are built with these data definitions in mind. That said, you can mix elements that use different definitions; you just have to put a transformer between them in order to translate between them, if needed.</p>
+
+    {{ await comp.list({ items: elements.definitions }) }}
+  </section>
+</main>
+
+<script type="module">
+  import { versionUpgrade } from "./common/pages/version-upgrade.js";
+  versionUpgrade();
+</script>

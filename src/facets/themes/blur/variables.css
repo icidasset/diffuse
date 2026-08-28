@@ -1,0 +1,13 @@
+:root,
+:host {
+  --bg-color: oklch(100% 0 0);
+  --text-color: oklch(14% 0 0);
+}
+
+@media (prefers-color-scheme: dark) {
+  :root,
+  :host {
+    --bg-color: oklch(26.03% 0 0);
+    --text-color: oklch(86% 0 0);
+  }
+}

@@ -1,0 +1,76 @@
+---
+title: "Diffuse"
+
+base: "./"
+---
+
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+
+    <meta name="color-scheme" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+
+    <meta name="media-controllable" />
+    <meta name="mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-status-bar-style" content="default" />
+
+    <title>{{title}}</title>
+
+    <!-- Base -->
+    <base href="{{base}}" />
+
+    <!-- Favicons & Mobile -->
+    <link rel="apple-touch-icon" sizes="180x180" href="apple-touch-icon.png" />
+    <link rel="icon" type="image/png" sizes="32x32" href="favicon-32x32.png" />
+    <link rel="icon" type="image/png" sizes="16x16" href="favicon-16x16.png" />
+    <link rel="manifest" href="site.webmanifest" />
+
+    <!-- Preloads -->
+    {{ for url of (preloads ?? []) }}
+      <link rel="preload" href="{{ url.href }}" as="{{ url.as }}" type="{{ url.type }}" crossorigin />
+    {{ /for }}
+
+    <!-- Styles -->
+    {{ for url of styles }}
+      <link rel="stylesheet" href="{{ url }}" />
+    {{ /for }}
+
+    <!-- Import map -->
+    <script type="importmap">
+      {
+        "imports": {
+          "~/": "./",
+
+          "@awesome.me/webawesome/dist/": "./vendor/@awesome.me/webawesome/",
+          "@awesome.me/webawesome/dist-cdn/": "./vendor/@awesome.me/webawesome/",
+          "@phosphor-icons/web/": "./vendor/@phosphor-icons/web/",
+
+          "@paulmillr/qr": "./vendor/@paulmillr/qr/index.js",
+          "@paulmillr/qr/": "./vendor/@paulmillr/qr/",
+
+          "@atcute/cbor": "./vendor/@atcute/cbor/index.js",
+          "@atcute/oauth-browser-client": "./vendor/@atcute/oauth-browser-client/index.js",
+          "@atcute/tid": "./vendor/@atcute/tid/index.js",
+          "idb-keyval": "./vendor/idb-keyval/index.js",
+          "kmenu": "./vendor/kmenu-core/index.js",
+          "lit-html": "./vendor/lit-html/index.js",
+          "throttle-debounce": "./vendor/throttle-debounce/index.js"
+        }
+      }
+    </script>
+  </head>
+  <body>
+    {{ content }}
+
+    <!-- Scripts -->
+    {{ if serviceWorker !== false }}
+      <script src="service-worker-loader.js" type="module"></script>
+    {{ /if }}
+
+    {{ for url of scripts }}
+      <script src="{{ url }}" type="module"></script>
+    {{ /for }}
+  </body>
+</html>

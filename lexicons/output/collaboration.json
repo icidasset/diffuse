@@ -1,0 +1,48 @@
+{
+  "lexicon": 1,
+  "id": "sh.diffuse.output.collaboration",
+  "defs": {
+    "main": {
+      "type": "record",
+      "record": {
+        "type": "object",
+        "required": ["id", "collaborators", "subject"],
+        "properties": {
+          "id": { "type": "string" },
+          "collaborators": {
+            "type": "array",
+            "items": { "type": "ref", "ref": "#collaborator" }
+          },
+          "createdAt": { "type": "string", "format": "datetime" },
+          "subject": {
+            "type": "union",
+            "refs": ["#playlist"]
+          },
+          "updatedAt": { "type": "string", "format": "datetime" }
+        }
+      }
+    },
+    "collaborator": {
+      "type": "object",
+      "required": ["id", "hint"],
+      "properties": {
+        "id": { "type": "string" },
+        "hint": {
+          "type": "string",
+          "description": "Hint at where this collaborator resides and/or what the id represents."
+        }
+      }
+    },
+    "playlist": {
+      "type": "object",
+      "required": ["kind", "playlist"],
+      "properties": {
+        "kind": { "type": "string", "const": "playlist" },
+        "playlist": {
+          "type": "string",
+          "description": "The name of the playlist, matches the `playlist` property of a playlist item"
+        }
+      }
+    }
+  }
+}

@@ -1,0 +1,64 @@
+@import "../../../styles/variables.css";
+
+/***********************************
+ * 🪟
+ ***********************************/
+
+body {
+  background: #3a6ea5;
+  color: white;
+  font-family: "Pixelated MS Sans Serif", sans-serif;
+  font-size: 12px;
+  margin: 12px;
+  overflow: hidden;
+}
+
+main > section {
+  inset: 0;
+  position: absolute;
+}
+
+/***********************************
+ * Desktop
+ ***********************************/
+.desktop {
+  align-items: start;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  inset: 12px;
+}
+
+.desktop__item {
+  align-items: center;
+  background: transparent;
+  border: 0;
+  cursor: pointer;
+  color: inherit;
+  display: inline-flex;
+  flex-direction: column;
+  font-family: inherit;
+  text-decoration: none;
+  user-select: none;
+
+  &:visited,
+  &:active {
+    color: inherit;
+    text-decoration: none;
+  }
+
+  & > label {
+    cursor: inherit;
+    margin-top: 4px;
+  }
+
+  &:focus {
+    border: 0;
+    outline: 0;
+
+    & label {
+      outline: 1px dotted white;
+      outline-offset: 2px;
+    }
+  }
+}

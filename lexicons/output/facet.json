@@ -1,0 +1,52 @@
+{
+  "lexicon": 1,
+  "id": "sh.diffuse.output.facet",
+  "defs": {
+    "main": {
+      "type": "record",
+      "record": {
+        "type": "object",
+        "required": ["id", "name"],
+        "properties": {
+          "id": {
+            "type": "string",
+            "description": "A unique identifier"
+          },
+          "cid": {
+            "type": "string",
+            "description": "A DASL CID representing the UTF8 encoded HTML (raw 0x55 codec)"
+          },
+          "createdAt": { "type": "string", "format": "datetime" },
+          "description": { "type": "string" },
+          "enabled": {
+            "type": "boolean",
+            "default": true,
+            "description": "Whether the facet is enabled or not"
+          },
+          "favourite": {
+            "type": "boolean",
+            "default": false,
+            "description": "Whether the facet is favourited (shown at the top) or not. Some facets may be more important to the user than others."
+          },
+          "html": {
+            "type": "string",
+            "description": "The UTF8 HTML string that makes up the facet"
+          },
+          "kind": {
+            "type": "string",
+            "default": "interactive",
+            "enum": ["interactive", "prelude"],
+            "description": "A facet is by default interactive, but headless 'prelude' facets may also be created, these run before any main interactive facet is loaded."
+          },
+          "name": { "type": "string" },
+          "tags": { "type": "array", "items": { "type": "string" } },
+          "updatedAt": { "type": "string", "format": "datetime" },
+          "uri": {
+            "type": "string",
+            "description": "An optional URI that points at the facet; can be used to update this artifact"
+          }
+        }
+      }
+    }
+  }
+}

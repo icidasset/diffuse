@@ -1,0 +1,28 @@
+---
+url: /skills/diffuse-facet/docs/elements.txt
+layout: false
+---
+# Diffuse Elements
+
+{{ for group of [
+  { name: "Artwork", items: elements.artwork },
+  { name: "Configurators", items: elements.configurators },
+  { name: "Engines", items: elements.engines },
+  { name: "Input", items: elements.input },
+  { name: "Metadata", items: elements.metadata },
+  { name: "Orchestrators", items: elements.orchestrators },
+  { name: "Output", items: elements.output },
+  { name: "Supplements", items: elements.supplements },
+  { name: "Transformers", items: elements.transformers },
+  { name: "Upload", items: elements.upload },
+] }}
+## {{ group.name }}
+{{ for item of group.items }}{{ if item.url }}
+### {{ item.title }}
+
+{{ item.desc }}
+
+```js
+{{ elements.sources[item.url] }}```
+{{ /if }}{{ /for }}
+{{ /for }}

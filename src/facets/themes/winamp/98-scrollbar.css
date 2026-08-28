@@ -1,0 +1,7 @@
+/* 98.css enables all four scrollbar button slots, showing two at each end. Hide the redundant ones. */
+::-webkit-scrollbar-button:vertical:start:increment,
+::-webkit-scrollbar-button:vertical:end:decrement,
+::-webkit-scrollbar-button:horizontal:start:increment,
+::-webkit-scrollbar-button:horizontal:end:decrement {
+  display: none;
+}

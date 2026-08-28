@@ -1,0 +1,164 @@
+<style>
+  @import "./styles/base.css";
+  @import "./styles/diffuse/facet.css";
+  @import "./vendor/@phosphor-icons/web/fill/style.css";
+
+  @layer base, diffuse;
+
+  .userdata-list {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-xs);
+    list-style: none;
+    margin: 0;
+    padding: 0;
+  }
+
+  .userdata-item {
+    align-items: center;
+    border: 1px solid var(--border-color);
+    border-radius: var(--radius-md);
+    display: flex;
+    gap: var(--space-xs);
+    padding: var(--space-2xs) var(--space-xs);
+  }
+
+  .userdata-item--active {
+    border-color: var(--accent);
+  }
+
+  .userdata-item__icon {
+    flex-shrink: 0;
+    font-size: var(--fs-md);
+    opacity: 0.6;
+  }
+
+  .userdata-item__info {
+    display: flex;
+    flex-direction: column;
+    flex: 1;
+    gap: var(--space-3xs);
+    min-width: 0;
+  }
+
+  .userdata-item__name {
+    align-items: center;
+    display: flex;
+    font-weight: 600;
+    gap: var(--space-2xs);
+  }
+
+  .userdata-item__detail {
+    align-items: center;
+    color: oklch(from var(--text-color) l c h / 0.6);
+    display: flex;
+    font-size: var(--fs-xs);
+    gap: var(--space-3xs);
+  }
+
+  .userdata-item .button--small {
+    text-box: trim-both cap alphabetic;
+  }
+
+  .userdata-item__badge {
+    background: var(--accent);
+    border-radius: 9999px;
+    color: var(--bg-color);
+    font-size: var(--fs-3xs);
+    font-weight: 600;
+    letter-spacing: var(--tracking-wide);
+    line-height: 1;
+    padding: var(--space-3xs);
+    text-box: trim-both cap alphabetic;
+    text-transform: uppercase;
+  }
+
+  .migrate-heading {
+    font-size: var(--fs-2xs);
+    font-weight: 600;
+    letter-spacing: var(--tracking-wider);
+    margin: 0 0 var(--space-xs);
+    opacity: 0.4;
+    text-transform: uppercase;
+  }
+
+  .migrate-row {
+    align-items: flex-end;
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--space-2xs);
+  }
+
+  .migrate-arrow {
+    align-self: center;
+    opacity: 0.4;
+    padding-right: var(--space-2xs);
+  }
+
+  .migrate-row label {
+    font-size: var(--fs-xs);
+  }
+
+  .status {
+    font-size: var(--fs-xs);
+    margin-top: var(--space-2xs);
+  }
+
+  .status--success {
+    color: var(--accent);
+  }
+
+  .status--error {
+    color: var(--accent-twist-5);
+  }
+</style>
+
+<main>
+  <div class="facet__left">
+    <div>
+      <a href="./dashboard/" class="diffuse-logo-container">
+        <svg viewBox="0 0 902 134" width="160">
+          <title>Diffuse</title>
+          <use
+            xlink:href="images/diffuse-current.svg#diffuse"
+            href="images/diffuse-current.svg#diffuse"
+          ></use>
+        </svg>
+      </a>
+    </div>
+    <h1>Your data</h1>
+    <p>
+      Manage where your Diffuse user-data is stored. This includes your tracks,
+      playlists, settings and facets. A local offline copy will always be available to you.
+    </p>
+  </div>
+
+  <div class="facet__right">
+    <ul id="userdata-list" class="userdata-list" hidden></ul>
+    <p id="userdata-empty" class="caption">No storage methods available.</p>
+
+    <hr id="migrate-divider" hidden />
+
+    <div id="migrate-section" hidden>
+      <p class="migrate-heading">Migrate data</p>
+      <div class="migrate-row">
+        <label>
+          From
+          <select id="migrate-from" disabled></select>
+        </label>
+        <span class="migrate-arrow"><i class="ph-fill ph-arrow-right"></i></span>
+        <label>
+          To
+          <select id="migrate-to" disabled></select>
+        </label>
+        <button id="migrate-btn" disabled>
+          <i class="ph-fill ph-arrows-clockwise"></i>
+          <span>Migrate</span>
+        </button>
+      </div>
+      <div id="migrate-status" class="status" hidden></div>
+    </div>
+  </div>
+</main>
+
+<script type="module" src="facets/data/userdata/index.inline.js"></script>

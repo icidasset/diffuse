@@ -1,0 +1,47 @@
+@import "./variables.css" layer(base.variables);
+@import "./animations.css" layer(base.animations);
+
+@import "./diffuse/colors.css" layer(diffuse.colors);
+@import "./diffuse/font-faces.css" layer(diffuse.font-faces);
+@import "./diffuse/fonts.css" layer(diffuse.fonts);
+
+body {
+  background: var(--bg-color);
+  color: var(--text-color);
+}
+
+#container {
+  opacity: 0;
+  transition: opacity 750ms;
+
+  &.has-loaded {
+    opacity: 1;
+  }
+}
+
+@scope (.diffuse) {
+  :scope {
+    color: var(--text-color);
+    font-size: var(--fs-md);
+    left: 50%;
+    position: absolute;
+    top: 50%;
+    transform: translate(-50%, -50%);
+  }
+
+  .flex {
+    align-items: center;
+    display: flex;
+    gap: var(--space-2xs);
+    justify-content: center;
+  }
+
+  #diffuse-loader {
+    pointer-events: none;
+    transition: opacity 500ms ease;
+
+    &.loaded {
+      opacity: 0;
+    }
+  }
+}

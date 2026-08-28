@@ -1,0 +1,80 @@
+<style>
+  @import "./styles/base.css";
+  @import "./vendor/@phosphor-icons/web/bold/style.css";
+  @import "./vendor/@phosphor-icons/web/fill/style.css";
+  @import "./styles/diffuse/facet.css";
+
+  @layer base, diffuse;
+
+  input[type="file"] {
+    background: none;
+    border: none;
+    padding: 0;
+    width: auto;
+  }
+
+  .status {
+    font-size: var(--fs-xs);
+  }
+
+  .status--success {
+    color: var(--accent);
+
+    @media (prefers-color-scheme: dark) {
+      color: var(--accent-twist-4);
+    }
+  }
+
+  .status--error {
+    color: var(--accent-twist-5);
+
+    @media (prefers-color-scheme: dark) {
+      color: var(--accent-twist-3);
+    }
+  }
+</style>
+
+<main>
+  <div class="facet__left">
+    <div>
+      <a href="./dashboard/" class="diffuse-logo-container">
+        <svg viewBox="0 0 902 134" width="160">
+          <title>Diffuse</title>
+          <use
+            xlink:href="images/diffuse-current.svg#diffuse"
+            href="images/diffuse-current.svg#diffuse"
+          ></use>
+        </svg>
+      </a>
+    </div>
+    <h1>V3.x Import</h1>
+    <p>
+      Import data from the previous version of Diffuse. Upload the snapshot JSON file you exported.
+    </p>
+  </div>
+
+  <div class="facet__right">
+    <div>
+      <input id="file" type="file" accept=".json,application/json" />
+    </div>
+
+    <hr />
+
+    <p class="button-row">
+      <button id="import-favourites" disabled>
+        <i class="ph-fill ph-star"></i>
+        <span>Import favourites</span>
+      </button>
+    </p>
+    <p class="button-row">
+      <button id="import-playlist-items" disabled>
+        <i class="ph-bold ph-playlist"></i>
+        <span>Import playlist items</span>
+      </button>
+    </p>
+
+    <div id="status" class="status" hidden></div>
+  </div>
+</main>
+
+<script type="module" src="facets/data/v3-import/index.inline.js"></script>

@@ -1,0 +1,11 @@
+<div class="element">
+  {{ set slug = title.toLowerCase().replace(/\s+/g, '-') }}
+
+  <h3 id="{{slug}}">{{title}}</h3>
+
+  <p>
+    <em>{{content}}</em>
+  </p>
+
+  {{ await comp.list({ items }) }}
+</div>

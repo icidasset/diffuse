@@ -1,0 +1,121 @@
+{
+  "lexicon": 1,
+  "id": "sh.diffuse.output.track",
+  "defs": {
+    "main": {
+      "type": "record",
+      "record": {
+        "type": "object",
+        "required": ["id", "uri"],
+        "properties": {
+          "id": { "type": "string" },
+          "createdAt": { "type": "string", "format": "datetime" },
+          "ephemeral": { "type": "boolean" },
+          "kind": {
+            "type": "string",
+            "enum": ["audiobook", "miscellaneous", "music", "placeholder", "podcast", "stream"]
+          },
+          "stats": {
+            "type": "ref",
+            "ref": "#stats"
+          },
+          "tags": {
+            "type": "ref",
+            "ref": "#tags"
+          },
+          "updatedAt": { "type": "string", "format": "datetime" },
+          "uri": {
+            "type": "string",
+            "description": "This is a 'semi-permanent' URI. Tracks are typically cached so you can't, for example, use an URL that expires in several hours."
+          }
+        }
+      }
+    },
+    "count": {
+      "type": "object",
+      "required": ["no"],
+      "properties": {
+        "no": { "type": "integer" },
+        "of": { "type": "integer" }
+      }
+    },
+    "stats": {
+      "type": "object",
+      "properties": {
+        "albumGain": { "type": "integer", "description": "Album gain in dB" },
+        "bitrate": { "type": "integer", "description": "Bits per second" },
+        "bitsPerSample": { "type": "integer", "description": "Bit depth" },
+        "codec": { "type": "string", "description": "Compression algorithm" },
+        "container": { "type": "string", "description": "Encoding format" },
+        "duration": { "type": "integer", "description": "Duration in milliseconds" },
+        "lossless": { "type": "boolean", "description": "Is track lossless" },
+        "numberOfChannels": { "type": "integer", "description": "Number of audio channels" },
+        "sampleRate": { "type": "integer", "description": "Samples per second" },
+        "spectralCentroid": { "type": "integer", "description": "Average spectral centroid in Hz, the perceptual brightness of the track derived from its spectrogram" },
+        "spectralFlatness": { "type": "integer", "description": "Average spectral flatness on a 0-1000 scale (0 = fully tonal, 1000 = fully noisy), derived from the track's spectrogram" },
+        "spectralFlux": { "type": "integer", "description": "Average spectral flux scaled by 1000, measuring how quickly the spectrum changes over time in the track's spectrogram" },
+        "spectralRolloff": { "type": "integer", "description": "Average spectral rolloff in Hz, the frequency below which 85% of the spectral energy is contained, derived from the track's spectrogram" },
+        "spectralSpread": { "type": "integer", "description": "Average spectral spread in Hz, the standard deviation of the spectrum around its centroid, derived from the track's spectrogram" },
+        "trackGain": { "type": "integer", "description": "Track gain in dB" }
+      }
+    },
+    "tags": {
+      "type": "object",
+      "properties": {
+        "album": { "type": "string" },
+        "albumartist": { "type": "string" },
+        "albumartists": { "type": "array", "items": { "type": "string" } },
+        "albumartistsort": { "type": "string" },
+        "albumsort": { "type": "string" },
+        "arranger": { "type": "array", "items": { "type": "string" } },
+        "artist": { "type": "string" },
+        "artists": { "type": "array", "items": { "type": "string" } },
+        "artistsort": { "type": "string" },
+        "asin": { "type": "string" },
+        "averageLevel": { "type": "integer" },
+        "barcode": { "type": "string" },
+        "bpm": { "type": "integer" },
+        "catalognumbers": { "type": "array", "items": { "type": "string" } },
+        "compilation": { "type": "boolean" },
+        "composers": { "type": "array", "items": { "type": "string" } },
+        "composersort": { "type": "string" },
+        "conductors": { "type": "array", "items": { "type": "string" } },
+        "date": { "type": "string" },
+        "disc": {
+          "type": "ref",
+          "ref": "#count"
+        },
+        "djmixers": { "type": "array", "items": { "type": "string" } },
+        "engineers": { "type": "array", "items": { "type": "string" } },
+        "gapless": { "type": "boolean" },
+        "genres": { "type": "array", "items": { "type": "string" } },
+        "isrc": { "type": "array", "items": { "type": "string" } },
+        "labels": { "type": "array", "items": { "type": "string" } },
+        "lyricists": { "type": "array", "items": { "type": "string" } },
+        "media": { "type": "string" },
+        "mixers": { "type": "array", "items": { "type": "string" } },
+        "moods": { "type": "array", "items": { "type": "string" } },
+        "originaldate": { "type": "string" },
+        "originalyear": { "type": "integer" },
+        "peakLevel": { "type": "integer" },
+        "producers": { "type": "array", "items": { "type": "string" } },
+        "publishers": { "type": "array", "items": { "type": "string" } },
+        "releasecountry": { "type": "string" },
+        "releasedate": { "type": "string" },
+        "releasestatus": { "type": "string" },
+        "releasetypes": { "type": "array", "items": { "type": "string" } },
+        "remixers": { "type": "array", "items": { "type": "string" } },
+        "technicians": { "type": "array", "items": { "type": "string" } },
+        "title": { "type": "string" },
+        "titlesort": { "type": "string" },
+        "track": {
+          "type": "ref",
+          "ref": "#count"
+        },
+        "work": { "type": "string" },
+        "writers": { "type": "array", "items": { "type": "string" } },
+        "year": { "type": "integer" }
+      }
+    }
+  }
+}

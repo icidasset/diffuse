@@ -1,0 +1,11 @@
+---
+layout: layouts/kitchen.vto
+base: ../
+title: Featured | Diffuse
+---
+
+<h1 hidden>Featured</h1>
+
+<section>
+  {{ await comp.grid({ id: "featured", items: facets.filter(f => f.featured) }) }}
+</section>

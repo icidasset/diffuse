@@ -1,0 +1,82 @@
+:root {
+  --animate-spin: spin 1s linear infinite;
+  --animate-ping: ping 1s cubic-bezier(0, 0, 0.2, 1) infinite;
+  --animate-pulse: pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+  --animate-bounce: bounce 1s infinite;
+}
+
+/* Default: animate the element itself */
+.animate-spin {
+  animation: var(--animate-spin);
+  display: inline-block;
+}
+
+/* When animate-spin is directly on a Phosphor <i>, animate ::before instead */
+i[class^="ph-"].animate-spin {
+  animation: none;
+}
+
+i[class^="ph-"].animate-spin::before {
+  display: inline-block;
+  animation: var(--animate-spin);
+  line-height: 0;
+  transform-origin: center;
+}
+
+/* When animate-spin is on a parent of a Phosphor <i>,
+   don't rotate the parent — rotate the icon's ::before instead */
+.animate-spin:has(> i[class^="ph-"]) {
+  animation: none;
+}
+
+.animate-spin > i[class^="ph-"]::before {
+  display: inline-block;
+  animation: var(--animate-spin);
+  line-height: 0;
+  transform-origin: center;
+}
+
+
+.animate-ping {
+  animation: var(--animate-ping);
+}
+
+.animate-pulse {
+  animation: var(--animate-pulse);
+}
+
+.animate-bounce {
+  animation: var(--animate-bounce);
+}
+
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+@keyframes ping {
+  75%,
+  100% {
+    transform: scale(2);
+    opacity: 0;
+  }
+}
+
+@keyframes pulse {
+  50% {
+    opacity: 0.5;
+  }
+}
+
+@keyframes bounce {
+  0%,
+  100% {
+    transform: translateY(-25%);
+    animation-timing-function: cubic-bezier(0.8, 0, 1, 1);
+  }
+  50% {
+    transform: none;
+    animation-timing-function: cubic-bezier(0, 0, 0.2, 1);
+  }
+}

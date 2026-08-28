@@ -1,0 +1,134 @@
+<style>
+  @import "./vendor/@phosphor-icons/web/bold/style.css";
+  @import "./vendor/@phosphor-icons/web/fill/style.css";
+
+  @import "./styles/base.css";
+  @import "./styles/diffuse/facet.css";
+
+  @layer base, diffuse;
+
+  .playlists-list {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-xs);
+    list-style: none;
+    margin: 0;
+    padding: 0;
+  }
+
+  .playlists-item {
+    align-items: center;
+    display: flex;
+    gap: var(--space-xs);
+  }
+
+  .playlists-item__info {
+    display: flex;
+    flex-direction: column;
+    flex: 1;
+    gap: var(--space-3xs);
+    min-width: 0;
+  }
+
+  .playlists-item__name {
+    font-weight: 600;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  .playlists-item__detail {
+    color: oklch(from var(--text-color) l c h / 0.6);
+    font-size: var(--fs-xs);
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  .playlists-category {
+    font-size: var(--fs-xs);
+    font-weight: 600;
+    letter-spacing: var(--tracking-wider);
+    opacity: 0.4;
+    padding-block: var(--space-2xs);
+    text-transform: uppercase;
+  }
+
+  .playlists-category + .playlists-category,
+  .playlists-item + .playlists-category {
+    margin-top: var(--space-xs);
+  }
+
+  .tracks-section {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-2xs);
+  }
+
+  .tracks-section__heading {
+    font-size: var(--fs-xs);
+    font-weight: 600;
+    letter-spacing: var(--tracking-wider);
+    opacity: 0.4;
+    text-transform: uppercase;
+  }
+
+  .tracks-list {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-3xs);
+    list-style: none;
+    margin: 0;
+    padding: 0;
+  }
+
+  .tracks-list__name {
+    font-size: var(--fs-sm);
+    font-weight: 600;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  .tracks-list__artist {
+    color: oklch(from var(--text-color) l c h / 0.6);
+    font-size: var(--fs-xs);
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+</style>
+
+<dialog id="playlists-dialog"></dialog>
+<dialog id="create-playlist-dialog"></dialog>
+
+<main>
+  <div class="facet__left">
+    <div>
+      <a href="./dashboard/" class="diffuse-logo-container">
+        <svg viewBox="0 0 902 134" width="160">
+          <title>Diffuse</title>
+          <use
+            xlink:href="images/diffuse-current.svg#diffuse"
+            href="images/diffuse-current.svg#diffuse"
+          ></use>
+        </svg>
+      </a>
+    </div>
+    <h1>Playlists</h1>
+    <p>An overview of all playlists and their contents.</p>
+    <p class="button-row" style="margin-top: var(--space-md)">
+      <button id="create-playlist-btn" class="button button--accent">
+        <i class="ph-bold ph-plus"></i>
+        Create playlist
+      </button>
+    </p>
+  </div>
+
+  <div class="facet__right">
+    <ul id="playlists-list" class="playlists-list" hidden></ul>
+    <p id="playlists-empty" class="caption">No playlists yet.</p>
+  </div>
+</main>
+
+<script type="module" src="facets/data/playlists/index.inline.js"></script>

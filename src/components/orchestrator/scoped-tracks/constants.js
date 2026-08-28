@@ -1,0 +1,27 @@
+import { xxh32 } from "xxh32";
+
+export const EMPTY_FINGERPRINT = xxh32([].join("")).toString();
+
+/**
+ * Maps directly on the `Track` definition
+ * (ie. `definitions/output/tracks.json`)
+ */
+export const SCHEMA = {
+  id: /** @type {const} */ ("string"),
+  kind: /** @type {const} */ ("string"),
+  tags: {
+    album: /** @type {const} */ ("string"),
+    artist: /** @type {const} */ ("string"),
+    genre: /** @type {const} */ ("string"),
+    title: /** @type {const} */ ("string"),
+    year: /** @type {const} */ ("number"),
+
+    disc: {
+      no: /** @type {const} */ ("number"),
+    },
+    track: {
+      no: /** @type {const} */ ("number"),
+    },
+  },
+  embeddings: /** @type {const} */ ("vector[512]"),
+};

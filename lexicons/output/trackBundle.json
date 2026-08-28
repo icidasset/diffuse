@@ -1,0 +1,24 @@
+{
+  "lexicon": 1,
+  "id": "sh.diffuse.output.trackBundle",
+  "defs": {
+    "main": {
+      "type": "record",
+      "record": {
+        "type": "object",
+        "required": ["id", "data"],
+        "properties": {
+          "id": { "type": "string" },
+          "scheme": { "type": "string" },
+          "createdAt": { "type": "string", "format": "datetime" },
+          "data": {
+            "type": "blob",
+            "description": "CBOR-encoded tracks",
+            "accept": ["application/octet-stream"]
+          },
+          "updatedAt": { "type": "string", "format": "datetime" }
+        }
+      }
+    }
+  }
+}

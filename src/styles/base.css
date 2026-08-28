@@ -1,0 +1,11 @@
+@import "./reset.css" layer(base.reset);
+@import "./variables.css" layer(base.variables);
+@import "./animations.css" layer(base.animations);
+
+@import "./diffuse/colors.css" layer(diffuse.colors);
+@import "./diffuse/font-faces.css" layer(diffuse.font-faces);
+@import "./diffuse/fonts.css" layer(diffuse.fonts);
+
+:root {
+  color-scheme: light dark;
+}

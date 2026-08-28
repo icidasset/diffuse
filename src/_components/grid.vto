@@ -1,0 +1,38 @@
+{{ set completeItems = items.filter((i) => !i.incomplete) }}
+{{ set incompleteItems = items.filter((i) => i.incomplete) }}
+
+<div class="grid-filter">
+  <span class="grid-filter--label">Filter by</span>
+
+  <button class="button--border button--tiny button--transparent" data-filter="all">All</button>
+  <button class="button--border button--tiny button--bg-twist-4 button--tr-twist-4 button--transparent" data-filter="prelude">Features</button>
+  <button class="button--border button--tiny button--bg-twist-2 button--tr-twist-2 button--transparent" data-filter="interface">Interfaces</button>
+
+  <button class="button--border button--tiny button--transparent" title="Show the hidden essential features" data-filter="base">Base</button>
+
+  <div style="flex: 1"></div>
+
+  <span class="grid-filter--label">Category</span>
+  <div class="grid-filter--categories"></div>
+</div>
+
+<ul class="grid" style="margin-top: var(--space-xs);">
+  {{ for index, item of completeItems }}
+    {{ await comp["grid-item"]({ item, index }) }}
+  {{ /for }}
+</ul>
+
+{{ if incompleteItems.length > 0 }}
+  <hr class="hr--dashes" />
+
+  <p style="align-items: center; display: flex; font-weight: 600; gap: var(--space-3xs); justify-content: center; margin-bottom: var(--space-lg); max-width: 100%; opacity: 0.6;">
+    <i class="ph-fill ph-crane"></i>
+    <!-- Work in progress -->
+  </p>
+
+  <ul class="grid">
+    {{ for index, item of incompleteItems }}
+      {{ await comp["grid-item"]({ item, index: index + completeItems.length }) }}
+    {{ /for }}
+  </ul>
+{{ /if }}

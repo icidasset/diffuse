@@ -1,0 +1,128 @@
+import { defineElement, DiffuseElement } from "~/common/element.js";
+
+/**
+ * @import {RenderArg} from "~/common/element.d.ts"
+ */
+
+////////////////////////////////////////////
+// ELEMENT
+////////////////////////////////////////////
+
+class WindowElement extends DiffuseElement {
+  static observedAttributes = ["open"];
+
+  constructor() {
+    super();
+
+    this.id = this.id?.length ? this.id : crypto.randomUUID();
+    this.attachShadow({ mode: "open" });
+  }
+
+  // ACTIONS
+
+  activate() {
+    this.shadowRoot?.querySelector(".title-bar")?.classList.remove("inactive");
+  }
+
+  deactivate() {
+    this.shadowRoot?.querySelector(".title-bar")?.classList.add("inactive");
+  }
+
+  // RENDER
+
+  /**
+   * @param {RenderArg} _
+   */
+  render({ html }) {
+    return html`
+      <link rel="stylesheet" href="vendor/98.css" />
+      <link rel="stylesheet" href="facets/themes/winamp/98-scrollbar.css" />
+
+      <style>
+      dialog {
+        background: transparent;
+        border: 0;
+        outline: none;
+        padding: 0;
+      }
+
+      .window-body {
+        min-width: 350px;
+        overflow: hidden;
+        resize: both;
+      }
+
+      .title-bar {
+        justify-content: unset;
+        user-select: none;
+      }
+
+      .title-bar-icon {
+        margin-right: 4px;
+      }
+
+      .title-bar-text {
+        flex: 1;
+      }
+      </style>
+
+      <dialog ?open="${this.hasAttribute("open")}">
+        <div class="window">
+          <div
+            class="title-bar"
+            @mousedown="${this.titleBarMouseDown.bind(this)}"
+          >
+            <div class="title-bar-icon">
+              <slot name="title-icon"></slot>
+            </div>
+            <div class="title-bar-text" draggable="false">
+              <slot name="title"></slot>
+            </div>
+            <div class="title-bar-controls">
+              <!--<button aria-label="Minimize"></button>-->
+              <!--<button aria-label="Maximize"></button>-->
+              <button aria-label="Close" @click="${() =>
+                this.removeAttribute("open")}"></button>
+            </div>
+          </div>
+          <div class="window-body" style="${this.getAttribute(`window-style`) ??
+            ``}">
+            <slot></slot>
+          </div>
+        </div>
+      </dialog>
+    `;
+  }
+
+  // EVENTS
+
+  /**
+   * @param {MouseEvent} mouse
+   */
+  titleBarMouseDown(mouse) {
+    const event = new CustomEvent("dtw-window-start-move", {
+      bubbles: true,
+      composed: true,
+      detail: {
+        element: this,
+        x: mouse.x,
+        xElement: mouse.layerX,
+        y: mouse.y,
+        yElement: mouse.layerY,
+      },
+    });
+
+    this.dispatchEvent(event);
+  }
+}
+
+export default WindowElement;
+
+////////////////////////////////////////////
+// REGISTER
+////////////////////////////////////////////
+
+export const CLASS = WindowElement;
+export const NAME = "dtw-window";
+
+defineElement(NAME, WindowElement);

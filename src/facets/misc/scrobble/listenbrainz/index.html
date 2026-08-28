@@ -1,0 +1,65 @@
+<style>
+  @import "./styles/base.css";
+  @import "./vendor/@phosphor-icons/web/bold/style.css";
+  @import "./styles/diffuse/facet.css";
+
+  @layer base, diffuse;
+
+  .facet__right {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-sm);
+    width: 24rem;
+  }
+</style>
+
+<main>
+  <div class="facet__left">
+    <div>
+      <a href="./dashboard/" class="diffuse-logo-container">
+        <svg viewBox="0 0 902 134" width="160">
+          <title>Diffuse</title>
+          <use
+            xlink:href="images/diffuse-current.svg#diffuse"
+            href="images/diffuse-current.svg#diffuse"
+          ></use>
+        </svg>
+      </a>
+    </div>
+    <h1>ListenBrainz</h1>
+    <p>Connect your ListenBrainz account to scrobble tracks.</p>
+  </div>
+
+  <div class="facet__right">
+    <div id="state-connect">
+      <label>
+        User token
+        <input id="token-input" type="password" placeholder="Your user token" />
+        <span class="caption"
+          >Find your token at
+          <a href="https://listenbrainz.org/settings/" target="_blank"
+            >listenbrainz.org/settings</a
+          ></span
+        >
+      </label>
+      <p class="button-row">
+        <button id="sign-in-btn" class="button--brand">
+          <i class="ph-bold ph-plugs"></i>
+          Connect
+        </button>
+      </p>
+    </div>
+
+    <div id="state-connected" hidden>
+      <p id="handle-paragraph" hidden>Connected as <strong id="handle-text"></strong>.</p>
+      <p class="button-row">
+        <button id="sign-out-btn" hidden>
+          <i class="ph-bold ph-plugs-connected"></i>
+          Disconnect
+        </button>
+      </p>
+    </div>
+  </div>
+</main>
+
+<script type="module" src="facets/misc/scrobble/listenbrainz/index.inline.js"></script>

@@ -1,0 +1,30 @@
+<main>
+  <div class="window" style="height: auto; max-width: var(--container-lg)">
+    <div class="title-bar">
+      <div class="title-bar-icon">
+        <img src="images/icons/windows_98/gears-0.png" height="14" />
+      </div>
+      <div class="title-bar-text" draggable="false">Process tracks</div>
+      <div class="title-bar-controls">
+        <button aria-label="Close" onclick="window.close()"></button>
+      </div>
+    </div>
+    <div class="window-body">
+      <div id="placeholder"></div>
+    </div>
+  </div>
+</main>
+
+<style>
+  @import "./styles/variables.css";
+  @import "./facets/themes/winamp/fonts.css";
+  @import "./facets/themes/winamp/facet.css";
+
+  @import "./vendor/98.css";
+  @import "./facets/themes/winamp/98-scrollbar.css";
+  @import "./facets/themes/winamp/98-vars.css";
+  @import "./facets/themes/winamp/98-extra.css";
+
+</style>
+
+<script type="module" src="facets/data/process-tracks/index.inline.js"></script>

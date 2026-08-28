@@ -1,0 +1,18 @@
+{
+  "lexicon": 1,
+  "id": "sh.diffuse.atproto.space",
+  "defs": {
+    "main": {
+      "type": "space",
+      "key": "literal:self",
+      "name": "Diffuse Library",
+      "description": "The user's personal Diffuse library, stored in a permissioned AT Protocol space.",
+      "collections": [
+        "sh.diffuse.output.facet",
+        "sh.diffuse.output.playlistItemBundle",
+        "sh.diffuse.output.setting",
+        "sh.diffuse.output.trackBundle"
+      ]
+    }
+  }
+}

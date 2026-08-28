@@ -1,0 +1,169 @@
+import * as IDB from "idb-keyval";
+
+import { computed, signal } from "~/common/signal.js";
+import { BroadcastedOutputElement, outputManager } from "../../common.js";
+import { defineElement } from "~/common/element.js";
+
+const STORAGE_PREFIX = "diffuse/output/bytes/s3";
+
+/**
+ * @import {ProxiedActions} from "~/common/worker.d.ts"
+ * @import {OutputElement, OutputManager} from "@specs/components/output/types.d.ts"
+ * @import {Bucket} from "@specs/components/input/s3/types.d.ts"
+ * @import {S3OutputElement, S3OutputWorkerActions} from "@specs/components/output/bytes/s3/types.d.ts"
+ */
+
+////////////////////////////////////////////
+// ELEMENT
+////////////////////////////////////////////
+
+/**
+ * @implements {OutputElement<Uint8Array | undefined>}
+ * @implements {S3OutputElement}
+ */
+class S3Output extends BroadcastedOutputElement {
+  static NAME = "diffuse/output/bytes/s3";
+  static WORKER_URL = "components/output/bytes/s3/worker.js";
+
+  #manager;
+
+  constructor() {
+    super();
+
+    /** @type {ProxiedActions<S3OutputWorkerActions>} */
+    this.proxy = this.workerProxy();
+
+    /** @type {OutputManager<Uint8Array | undefined>} */
+    this.#manager = outputManager({
+      facets: {
+        empty: () => undefined,
+        get: () => this.#get("facets"),
+        put: (data) => this.#put("facets", data),
+      },
+      init: () => this.whenConnected(),
+      playlistItems: {
+        empty: () => undefined,
+        get: () => this.#get("playlistItems"),
+        put: (data) => this.#put("playlistItems", data),
+      },
+      settings: {
+        empty: () => undefined,
+        get: () => this.#get("settings"),
+        put: (data) => this.#put("settings", data),
+      },
+      tracks: {
+        empty: () => undefined,
+        get: () => this.#get("tracks"),
+        put: (data) => this.#put("tracks", data),
+      },
+    });
+
+    this.facets = this.#manager.facets;
+    this.playlistItems = this.#manager.playlistItems;
+    this.settings = this.#manager.settings;
+    this.tracks = this.#manager.tracks;
+  }
+
+  // SIGNALS
+
+  #isOnline = signal(navigator.onLine);
+
+  // STATE
+
+  ready = computed(() => {
+    return this.#bucket.value !== undefined && this.#isOnline.value;
+  });
+
+  // LIFECYCLE
+
+  /**
+   * @override
+   */
+  async connectedCallback() {
+    this.replicateSavedData(this.#manager);
+
+    super.connectedCallback();
+
+    /** @type {Bucket | undefined} */
+    const stored = await IDB.get(`${STORAGE_PREFIX}/bucket`);
+    if (stored) this.#bucket.value = stored;
+
+    globalThis.addEventListener("online", this.#online);
+    globalThis.addEventListener("offline", this.#offline);
+  }
+
+  /** @override */
+  disconnectedCallback() {
+    globalThis.removeEventListener("online", this.#online);
+    globalThis.removeEventListener("offline", this.#offline);
+  }
+
+  #offline = () => this.#isOnline.set(false);
+  #online = () => this.#isOnline.set(true);
+
+  // BUCKET
+
+  #bucket = signal(/** @type {Bucket | undefined} */ (undefined));
+
+  bucket = this.#bucket.get;
+
+  /** @returns {Promise<Bucket | undefined>} */
+  async getBucket() {
+    if (!this.#bucket.value) {
+      /** @type {Bucket | undefined} */
+      const stored = await IDB.get(`${STORAGE_PREFIX}/bucket`);
+      if (stored) this.#bucket.value = stored;
+      return stored;
+    }
+
+    return this.#bucket.value;
+  }
+
+  /**
+   * @param {Bucket} bucket
+   */
+  async setBucket(bucket) {
+    this.#bucket.value = bucket;
+    await IDB.set(`${STORAGE_PREFIX}/bucket`, bucket);
+  }
+
+  async unsetBucket() {
+    this.#bucket.value = undefined;
+    await IDB.del(`${STORAGE_PREFIX}/bucket`);
+  }
+
+  // GET & PUT
+
+  /** @param {string} name */
+  #get = async (name) => {
+    const bucket = await this.getBucket();
+    if (!bucket) return undefined;
+    return this.proxy.get({ bucket, name: this.#cat(name) });
+  };
+
+  /** @param {string} name; @param {any} data */
+  #put = async (name, data) => {
+    const bucket = await this.getBucket();
+    if (!bucket) return undefined;
+    return this.proxy.put({ bucket, data, name: this.#cat(name) });
+  };
+
+  // 🛠️
+
+  /** @param {string} name */
+  #cat(name) {
+    const ns = this.namespace;
+    return `${ns?.length ? ns + "/" : ""}${name}`;
+  }
+}
+
+export default S3Output;
+
+////////////////////////////////////////////
+// REGISTER
+////////////////////////////////////////////
+
+export const CLASS = S3Output;
+export const NAME = "dob-s3";
+
+defineElement(NAME, S3Output);

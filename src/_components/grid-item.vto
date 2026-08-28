@@ -1,0 +1,75 @@
+{{ set color = (() => {
+  switch (item.kind) {
+    case "prelude": return "var(--accent-twist-4)";
+    default: return "var(--accent-twist-2)";
+  }
+})() }}
+
+{{ set kind = (() => {
+  // return item.kind ?? "interactive"
+  switch (item.kind) {
+    case "prelude": return "feature";
+    default: return "interface";
+  }
+})() }}
+
+{{ set facetUri = item.url |> facetURI }}
+
+<li
+  class="grid-item"
+  style="--grid-item-color: {{color}}"
+  data-active-color="{{color}}"
+  data-description="{{item.desc.trim()}}"
+  data-name="{{item.title}}"
+  data-category="{{ item.category ?? `` }}"
+  data-kind="{{item.kind ?? `interface`}}"
+  data-tags="{{ item.tags?.join(',') ?? `` }}"
+  data-uri="{{ facetUri }}"
+>
+  <div class="grid-item__contents">
+    <div class="grid-item__title">
+      {{ if item.kind === "prelude" }}
+        <span style="color: {{ color }}; padding: var(--space-3xs) 0">
+          {{item.title}}
+        </span>
+      {{ else }}
+        <a href="{{ item.url |> facetLoaderURL }}" style="color: {{ color }}; padding: var(--space-3xs) 0">
+          {{item.title}}
+        </a>
+      {{ /if }}
+      <span style="flex: 1"></span>
+    </div>
+    <div class="list-description">
+      {{ item.desc |> md(true) }}
+    </div>
+    {{ if item.author }}
+      <div class="grid-item__author">
+        {{ item.author |> md(true) }}
+      </div>
+    {{ /if }}
+  </div>
+  <div class="grid-item__menu">
+    <button
+      class="button--transparent"
+      data-action="toggle"
+      style="opacity: 0"
+      title="{{ item.kind === `prelude` ? `Add` : `Bookmark` }}"
+    >
+      <i class="ph-bold {{ item.kind === `prelude` ? `ph-plus` : `ph-bookmark` }}"></i>
+    </button>
+    <hr />
+    <button
+      class="button--transparent"
+      title="More actions"
+      popovertarget="grid-item-menu-{{ index }}"
+    >
+      <i class="ph-bold ph-dots-three-vertical"></i>
+    </button>
+    <div id="grid-item-menu-{{ index }}" class="dropdown" popover>
+      <a class="with-icon" href="create/?uri={{ encodeURIComponent(facetUri) }}&name={{ encodeURIComponent(item.title) }}&kind={{ item.kind ?? `interface` }}&description={{ encodeURIComponent(item.desc.trim()) }}">
+        <i class="ph-fill ph-code-block"></i>
+        Open code in editor
+      </a>
+    </div>
+  </div>
+</li>
