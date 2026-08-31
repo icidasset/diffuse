@@ -1,6 +1,6 @@
 {
   "name": "@toko/diffuse",
-  "version": "4.0.0-alpha",
+  "version": "4.0.0-alpha.1",
   "vendor": true,
   "imports": {
     "98.css": "npm:98.css@^0.1.21",

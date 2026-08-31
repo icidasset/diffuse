@@ -485,3 +485,17 @@ function htmlWithInlineJs({ content, match, jsPath }: {
 
 site.use(brotli());
 site.use(sourceMaps());
+
+////////////////////////////////////////////
+// VERSION
+////////////////////////////////////////////
+
+// Expose the current package version (`deno.jsonc`) to the templates, so any
+// page can display which version of the app it is. On `diffuse.sh` the version
+// is also derived from the URL at runtime (see `version-upgrade.js`), which
+// overrides this value when they differ.
+const denoConfig = Deno.readTextFileSync("./deno.jsonc");
+site.data(
+  "appVersion",
+  /^\s*"version"\s*:\s*"([^"]+)"\s*,?\s*$/m.exec(denoConfig)?.[1],
+);

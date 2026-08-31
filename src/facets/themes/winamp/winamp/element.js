@@ -22,8 +22,10 @@ import { guard } from "lit-html/directives/guard.js";
 
 const UI_STATE_KEY = "facets/themes/winamp/winamp/ui";
 
-/** @returns {{ eqOpen: boolean, playlistOpen: boolean, milkdropOpen: boolean, eqOn: boolean, eqSliders: Record<string, number> | null, mainShade: boolean, eqShade: boolean, playlistShade: boolean, positions: Record<string, {x:number,y:number}> | null, sizes: Record<string, {width:number,height:number}> | null }} */
-function loadUiState() {
+/**
+ * @param {string} [key] The localStorage key to load the UI state from.
+ * @returns {{ eqOpen: boolean, playlistOpen: boolean, milkdropOpen: boolean, eqOn: boolean, eqSliders: Record<string, number> | null, mainShade: boolean, eqShade: boolean, playlistShade: boolean, positions: Record<string, {x:number,y:number}> | null, sizes: Record<string, {width:number,height:number}> | null }} */
+function loadUiState(key = UI_STATE_KEY) {
   try {
     return {
       eqOpen: true,
@@ -36,7 +38,7 @@ function loadUiState() {
       playlistShade: false,
       positions: null,
       sizes: null,
-      ...JSON.parse(localStorage.getItem(UI_STATE_KEY) ?? "{}"),
+      ...JSON.parse(localStorage.getItem(key) ?? "{}"),
     };
   } catch {
     return {
@@ -382,6 +384,19 @@ class WinampElement extends DiffuseElement {
   currentTrack = () => this.$controller.value?.currentTrack();
   isPlaying = () => this.$controller.value?.isPlaying();
 
+  // UI STATE
+
+  /**
+   * The localStorage key that stores this instance's UI state (window
+   * positions/sizes, EQ, toggles). Per-instance when a `namespace`
+   * attribute is set, so multiple Winamp player instances can keep
+   * independent layouts.
+   */
+  #uiStateKey() {
+    const ns = this.namespace;
+    return ns ? `${UI_STATE_KEY}/${ns}` : UI_STATE_KEY;
+  }
+
   // LIFECYCLE
 
   /**
@@ -493,7 +508,7 @@ class WinampElement extends DiffuseElement {
     });
 
     // UI State
-    const ui = loadUiState();
+    const ui = loadUiState(this.#uiStateKey());
     this.#eqOpen.value = ui.eqOpen;
     this.#eqOn.value = ui.eqOn;
     this.#mainShade.value = ui.mainShade;
@@ -1322,9 +1337,9 @@ class WinampElement extends DiffuseElement {
     bands.forEach((v, i) => {
       sliders[`band_${i}`] = v;
     });
-    const ui = loadUiState();
+    const ui = loadUiState(this.#uiStateKey());
     localStorage.setItem(
-      UI_STATE_KEY,
+      this.#uiStateKey(),
       JSON.stringify({ ...ui, eqOn: this.#eqOn.value, eqSliders: sliders }),
     );
   }
@@ -1574,9 +1589,9 @@ class WinampElement extends DiffuseElement {
   };
 
   #saveLayout = () => {
-    const ui = loadUiState();
+    const ui = loadUiState(this.#uiStateKey());
     localStorage.setItem(
-      UI_STATE_KEY,
+      this.#uiStateKey(),
       JSON.stringify({
         ...ui,
         positions: {
@@ -1595,9 +1610,9 @@ class WinampElement extends DiffuseElement {
 
   #toggleMilkdrop = () => {
     this.#milkdropOpen.value = !this.#milkdropOpen.value;
-    const ui = loadUiState();
+    const ui = loadUiState(this.#uiStateKey());
     localStorage.setItem(
-      UI_STATE_KEY,
+      this.#uiStateKey(),
       JSON.stringify({ ...ui, milkdropOpen: this.#milkdropOpen.value }),
     );
   };
@@ -1709,9 +1724,9 @@ class WinampElement extends DiffuseElement {
 
   #toggleEq = () => {
     this.#eqOpen.value = !this.#eqOpen.value;
-    const ui = loadUiState();
+    const ui = loadUiState(this.#uiStateKey());
     localStorage.setItem(
-      UI_STATE_KEY,
+      this.#uiStateKey(),
       JSON.stringify({ ...ui, eqOpen: this.#eqOpen.value }),
     );
   };
@@ -1722,18 +1737,18 @@ class WinampElement extends DiffuseElement {
 
   #toggleMainShade = () => {
     this.#mainShade.value = !this.#mainShade.value;
-    const ui = loadUiState();
+    const ui = loadUiState(this.#uiStateKey());
     localStorage.setItem(
-      UI_STATE_KEY,
+      this.#uiStateKey(),
       JSON.stringify({ ...ui, mainShade: this.#mainShade.value }),
     );
   };
 
   #toggleEqShade = () => {
     this.#eqShade.value = !this.#eqShade.value;
-    const ui = loadUiState();
+    const ui = loadUiState(this.#uiStateKey());
     localStorage.setItem(
-      UI_STATE_KEY,
+      this.#uiStateKey(),
       JSON.stringify({ ...ui, eqShade: this.#eqShade.value }),
     );
     if (!this.#eqShade.value) {
@@ -1743,18 +1758,18 @@ class WinampElement extends DiffuseElement {
 
   #togglePlaylistShade = () => {
     this.#playlistShade.value = !this.#playlistShade.value;
-    const ui = loadUiState();
+    const ui = loadUiState(this.#uiStateKey());
     localStorage.setItem(
-      UI_STATE_KEY,
+      this.#uiStateKey(),
       JSON.stringify({ ...ui, playlistShade: this.#playlistShade.value }),
     );
   };
 
   #togglePlaylist = () => {
     this.#playlistOpen.value = !this.#playlistOpen.value;
-    const ui = loadUiState();
+    const ui = loadUiState(this.#uiStateKey());
     localStorage.setItem(
-      UI_STATE_KEY,
+      this.#uiStateKey(),
       JSON.stringify({ ...ui, playlistOpen: this.#playlistOpen.value }),
     );
   };

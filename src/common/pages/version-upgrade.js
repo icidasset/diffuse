@@ -209,6 +209,84 @@ export function getLatestArtifact(
   );
 }
 
+/**
+ * Resolve the version label to display for the current URL segment.
+ *
+ * @param {string} versionOrCid - The first path segment of the current URL
+ * @param {Record<string, { version: string, cid: string }>} artifacts
+ * @returns {string | null} The version to display, or `null` to show nothing
+ *
+ * @example Empty URL segment (root) shows nothing
+ * ```js
+ * import { getVersionLabel } from "~/common/pages/version-upgrade.js";
+ *
+ * if (getVersionLabel("", {}) !== null) throw new Error("no version at root");
+ * ```
+ *
+ * @example Semver slugs are shown as-is
+ * ```js
+ * import { getVersionLabel } from "~/common/pages/version-upgrade.js";
+ *
+ * if (getVersionLabel("4.0.0", {}) !== "4.0.0") throw new Error("semver passes through");
+ * ```
+ *
+ * @example Non-semver slugs (e.g. nightlies) are shown as-is
+ * ```js
+ * import { getVersionLabel } from "~/common/pages/version-upgrade.js";
+ *
+ * if (getVersionLabel("4.x-nightly", {}) !== "4.x-nightly") throw new Error("slug passes through");
+ * ```
+ *
+ * @example `latest` resolves to the newest stable version
+ * ```js
+ * import { getVersionLabel } from "~/common/pages/version-upgrade.js";
+ *
+ * const artifacts = {
+ *   a: { version: "4.0.0", cid: "bafya" },
+ *   b: { version: "4.1.0", cid: "bafyb" },
+ * };
+ * if (getVersionLabel("latest", artifacts) !== "4.1.0") throw new Error("latest resolves");
+ * ```
+ *
+ * @example `latest` falls back to the literal segment when no artifacts are known
+ * ```js
+ * import { getVersionLabel } from "~/common/pages/version-upgrade.js";
+ *
+ * if (getVersionLabel("latest", {}) !== "latest") throw new Error("latest fallback");
+ * ```
+ *
+ * @example A CID resolves to its version when present in the artifacts
+ * ```js
+ * import { getVersionLabel } from "~/common/pages/version-upgrade.js";
+ *
+ * const artifacts = {
+ *   a: { version: "4.0.0", cid: "bafya" },
+ * };
+ * if (getVersionLabel("bafya", artifacts) !== "4.0.0") throw new Error("CID resolves");
+ * ```
+ *
+ * @example An unknown CID shows nothing
+ * ```js
+ * import { getVersionLabel } from "~/common/pages/version-upgrade.js";
+ *
+ * if (getVersionLabel("bafyunknown", {}) !== null) throw new Error("unknown CID hidden");
+ * ```
+ */
+export function getVersionLabel(versionOrCid, artifacts) {
+  if (!versionOrCid) return null;
+  if (versionOrCid === "latest") {
+    return getLatestArtifact(artifacts, { includePrerelease: false })?.version
+      ?? "latest";
+  }
+  if (versionOrCid.startsWith("bafy")) {
+    const artifact = Object.values(artifacts).find(
+      ({ cid }) => cid === versionOrCid,
+    );
+    return artifact?.version ?? null;
+  }
+  return versionOrCid;
+}
+
 /** @param {Element} status */
 function removeLoadingAnimation(status) {
   status.querySelectorAll(".ph-spinner").forEach((icon) => {
@@ -244,6 +322,10 @@ export async function versionUpgrade() {
       el.classList.add("hidden");
     });
 
+    document.querySelectorAll("#version").forEach((version) => {
+      version.textContent = `v${version.getAttribute("data-fallback")}`
+    });
+
     return;
   }
 
@@ -266,5 +348,10 @@ export async function versionUpgrade() {
   document.querySelectorAll("#status").forEach((status) => {
     removeLoadingAnimation(status);
     updateUpgradeLink(status, { usesCid, isLatest });
+  });
+
+  const versionLabel = getVersionLabel(versionOrCid, artifacts);
+  document.querySelectorAll("#version").forEach((version) => {
+    if (versionLabel) version.textContent = `v${versionLabel}`;
   });
 }

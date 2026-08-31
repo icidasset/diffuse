@@ -36,13 +36,36 @@ styles:
   h3 {
     opacity: 0.6;
   }
+
+  #version {
+    background-color: oklch(from var(--bg-color) calc(l - .5) c h);
+    border-radius: var(--radius-xs);
+    color: var(--bg-color);
+    display: block;
+    font-size: var(--fs-2xs);
+    font-weight: 600;
+    letter-spacing: var(--tracking-wide);
+    opacity: .4;
+    padding: var(--space-3xs);
+    text-box: trim-both cap alphabetic;
+    transition: opacity 250ms;
+    white-space: nowrap;
+  }
+
+  #version:empty {
+    opacity: 0;
+    pointer-events: none;
+  }
 </style>
 
 <header>
   <div>
     <h1 hidden>Diffuse</h1>
     <div class="diffuse-logo-container">
-      {{ await comp.diffuse.logo() }}
+      <div style="align-items: center; display: flex; gap: var(--space-sm);">
+        {{ await comp.diffuse.logo() }}
+        <span id="version" data-fallback="{{ appVersion }}"></span>
+      </div>
       {{ await comp.diffuse.status() }}
     </div>
     <p class="construct dither-mask" style="color: var(--accent)">
@@ -50,10 +73,6 @@ styles:
     </p>
     <p>
       Diffuse is cooperative and malleable software that makes it possible to listen to audio from various sources on your devices and the web, and to create the ideal digital audio listening experience for you.
-    </p>
-    <p style="align-items: center; display: flex; gap: var(--space-2xs); opacity: 0.55;">
-      <i class="ph-fill ph-crane"></i>
-      <strong style="font-weight: 700;">WORK IN PROGRESS</strong>
     </p>
     <p style="margin-top: var(--space-lg)">
       <a class="button button--bg-accent" href="dashboard/">

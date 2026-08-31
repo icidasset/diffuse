@@ -193,6 +193,14 @@
     "desc": "Upload audio files to play them and optionally sync them with your cloud storage. These are automatically added as inputs (aka. sources)."
   },
   {
+    "url": "facets/themes/grid/facet/index.html",
+    "title": "Grid",
+    "category": "Themes",
+    "author": "A theme by [@tokono.ma](https://bsky.app/profile/tokono.ma)",
+    "featured": true,
+    "desc": "A Figma-like canvas theme. Add components from across the Diffuse themes onto a grid, then move, resize and arrange them freely."
+  },
+  {
     "url": "facets/themes/ipod/facet/index.html",
     "title": "iPod",
     "category": "Themes",
