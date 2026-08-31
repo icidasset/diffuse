@@ -315,6 +315,12 @@ export class BroadcastableDiffuseElement extends DiffuseElement {
     this.broadcasted = true;
     this.channelName = channelName;
 
+    // A message sent on the channel is echoed back to its sender, which
+    // would execute a replicated/forwarded action twice (once via the local
+    // `ogFn`, once via the echo). Tag outgoing messages so each instance
+    // can ignore its own echoes.
+    const senderId = crypto.randomUUID();
+
     /** @type {RpcChannel<{}, Actions>} */
     const _rpc = rpc(
       msg.port2,
@@ -330,6 +336,7 @@ export class BroadcastableDiffuseElement extends DiffuseElement {
     channel.addEventListener(
       "message",
       async (event) => {
+        if (event.data?.__sender === senderId) return;
         if (event.data?.method?.startsWith("leader:")) {
           const status = await this.#status.promise;
           if (status.leader) {
@@ -346,17 +353,11 @@ export class BroadcastableDiffuseElement extends DiffuseElement {
 
     msg.port1.addEventListener(
       "message",
-      (event) => channel.postMessage(event.data),
+      (event) => channel.postMessage({ ...event.data, __sender: senderId }),
     );
 
     msg.port1.start();
     msg.port2.start();
-
-    async function anyoneWaiting() {
-      if (typeof navigator.locks?.query !== "function") return false;
-      const state = await navigator.locks.query();
-      return !!state.pending?.length;
-    }
 
     /** @type {RpcChannel<{}, Actions>} */
     const proxyChannel = new RpcChannel(msg.port2);
@@ -384,11 +385,15 @@ export class BroadcastableDiffuseElement extends DiffuseElement {
             break;
 
           case "replicate":
-            /** @param {Parameters<Actions[action]>} args */
-            wrapFn = async (...args) => {
-              anyoneWaiting().then((bool) => {
-                if (bool) proxy[action](...args);
-              });
+            // Replicated actions run locally through `ogFn` and are also
+            // forwarded so the other instances (including the leader, the
+            // only one that persists) run them too. The sender ignores its
+            // own echo, so the action isn't executed twice in this tab.
+            // Forwarding unconditionally, rather than only when some lock
+            // happens to be pending, is what keeps a follower's writes from
+            // being silently lost.
+            wrapFn = (...args) => {
+              proxy[action](...args).catch(() => {});
               return ogFn(...args);
             };
             break;

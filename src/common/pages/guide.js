@@ -29,10 +29,17 @@ async function addSampleContent() {
   );
 
   /** @type {import("~/components/input/s3/element.js").CLASS | null} */
-  const s3 = input.querySelector("di-s3");
+  let s3 = input.querySelector("di-s3");
 
   if (!s3) {
-    throw new Error("S3 input not found");
+    // The input-bundle prelude normally adds the S3 input, but it may not
+    // have been inserted in this tab (e.g. when there are no saved facets
+    // yet), so create it directly.
+    const { CLASS: S3Input } = await import(
+      "~/components/input/s3/element.js"
+    );
+    s3 = new S3Input();
+    input.append(s3);
   }
 
   addDemoBtn.innerHTML = `<span>
@@ -42,10 +49,9 @@ async function addSampleContent() {
 
   const demo = await s3.demo();
 
-  await output.tracks.save([
-    ...(await Output.data(output.tracks)),
-    demo.track,
-  ]);
+  await output.tracks.save(
+    Output.mergeById(await Output.data(output.tracks), [demo.track]),
+  );
 
   addDemoBtn.innerHTML = `<span>
     <i class="ph-fill ph-hourglass-medium"></i>
