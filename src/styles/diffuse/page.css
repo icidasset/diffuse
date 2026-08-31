@@ -889,13 +889,12 @@ ul li::marker {
 
   svg {
     fill: oklch(from var(--bg-color) calc(l - 0.5) c h);
-    opacity: 0.2;
+    opacity: 0.25;
     padding: var(--space-3xs) 0;
     width: 4.25em;
 
     @media (prefers-color-scheme: dark) {
       fill: var(--text-color);
-      opacity: 0.25;
     }
   }
 

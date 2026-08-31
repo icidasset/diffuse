@@ -45,11 +45,15 @@ styles:
     font-size: var(--fs-2xs);
     font-weight: 600;
     letter-spacing: var(--tracking-wide);
-    opacity: .4;
+    opacity: .25;
     padding: var(--space-3xs);
     text-box: trim-both cap alphabetic;
     transition: opacity 250ms;
     white-space: nowrap;
+
+    @media (prefers-color-scheme: dark) {
+      background-color: var(--text-color);
+    }
   }
 
   #version:empty {
