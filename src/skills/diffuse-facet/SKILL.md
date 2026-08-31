@@ -2,7 +2,7 @@
 name: diffuse-facet
 description: Create an interface or feature facet for Diffuse (diffuse.sh)
 user-invocable: true
-version: 0.2.1
+version: 0.3.0
 ---
 
 Create a [Diffuse](https://diffuse.sh) facet and produce the HTML ready to paste into the `create/` page.
