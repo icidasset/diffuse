@@ -91,6 +91,7 @@ describe("components/transformer/output/refiner/initial-contents", () => {
       // Explicit save marks as initialized (even with empty array)
       await t.facets.save([]);
 
+      col = t.facets.collection();
       if (col.state !== "loaded") return null;
       return (col.data as unknown[]).length;
     });
@@ -114,6 +115,13 @@ describe("components/transformer/output/refiner/initial-contents", () => {
       const t = new mod.CLASS();
       t.setAttribute("output-selector", "#test-idb-data");
       document.body.append(t);
+
+      // Settle the backing output's initial (empty) load before saving, so
+      // the asynchronous load can't overwrite the data saved below.
+      const settle = Date.now() + 2000;
+      while (Date.now() < settle && t.facets.collection().state !== "loaded") {
+        await new Promise((r) => setTimeout(r, 20));
+      }
 
       await t.facets.save([
         {

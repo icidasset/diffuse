@@ -392,6 +392,7 @@ export class BroadcastableDiffuseElement extends DiffuseElement {
             // Forwarding unconditionally, rather than only when some lock
             // happens to be pending, is what keeps a follower's writes from
             // being silently lost.
+            /** @param {Parameters<Actions[action]>} args */
             wrapFn = (...args) => {
               proxy[action](...args).catch(() => {});
               return ogFn(...args);

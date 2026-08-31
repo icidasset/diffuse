@@ -8,6 +8,8 @@ import * as Output from "~/common/output.js";
  */
 
 const FACET_TYPE = "sh.diffuse.output.facet";
+
+/** @param {string} text */
 const ok = (text) => ({ content: [{ type: "text", text }] });
 
 /** @param {string} html */
@@ -40,6 +42,14 @@ async function registerFacetTools() {
   const modelContext = /** @type {any} */ (document).modelContext;
   if (!modelContext?.registerTool) return;
 
+  /**
+   * @param {{
+   *   name: string,
+   *   description: string,
+   *   inputSchema: Record<string, any>,
+   *   execute: (args: Record<string, any>) => Promise<unknown>,
+   * }} tool
+   */
   const register = async (tool) => {
     try {
       await modelContext.registerTool(tool);

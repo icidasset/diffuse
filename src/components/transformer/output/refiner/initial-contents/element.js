@@ -40,7 +40,9 @@ class InitialContentsTransformer extends OutputTransformer {
     // covering data arriving from another device via sync.
     this.effect(() => {
       const col = base.facets.collection();
-      if (col.state !== "loaded" || col.data.length === 0) return;
+      if (col.state !== "loaded") return;
+      const data = Array.isArray(col.data) ? col.data : [];
+      if (data.length === 0) return;
       this.#markInitialized();
     });
 
@@ -52,12 +54,16 @@ class InitialContentsTransformer extends OutputTransformer {
           const col = base.facets.collection();
           if (col.state !== "loaded") return col;
 
-          if (col.data.length > 0) {
-            return { state: "loaded", data: col.data };
+          // An empty backing output reports "loaded" with no data yet
+          // (e.g. an indexed-db output returns undefined for a missing
+          // key). Treat that as an empty collection.
+          const data = Array.isArray(col.data) ? col.data : [];
+          if (data.length > 0) {
+            return { state: "loaded", data };
           }
 
           if (this.#isInitialized()) {
-            return { state: "loaded", data: col.data };
+            return { state: "loaded", data };
           }
 
           // Determine starting set
@@ -89,14 +95,19 @@ class InitialContentsTransformer extends OutputTransformer {
   // METHODS
 
   /**
-   * The id of the currently selected output, or "local" when no custom
-   * output is selected (data lives in the default/local storage).
+   * The id of the current output, used to scope the "initialized" flag per
+   * output. When connected to an output configurator this is the id of the
+   * selected sub-output; when connected directly to an output element it is
+   * that element's own id. Falls back to "local" (the default/local storage).
    */
   #selectedId() {
     const output = /** @type {OutputConfiguratorElement | undefined} */ (
       this.output.signal()
     );
-    return output?.selected()?.id ?? "local";
+    if (!output) return "local";
+    return typeof output.selected === "function"
+      ? output.selected()?.id ?? "local"
+      : output.id || "local";
   }
 
   /**
