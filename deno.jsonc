@@ -326,6 +326,7 @@
   "publish": {
     "exclude": ["!src/definitions/types"],
     "include": [
+      "README.md",
       "LICENSE",
       "src/common/**/*.js",
       "src/common/**/*.d.ts",
