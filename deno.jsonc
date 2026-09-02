@@ -1,6 +1,7 @@
 {
   "name": "@toko/diffuse",
   "version": "4.0.0-alpha.1",
+  "license": "FSL-1.1-MIT",
   "vendor": true,
   "imports": {
     "98.css": "npm:98.css@^0.1.21",
