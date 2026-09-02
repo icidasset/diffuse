@@ -99,7 +99,7 @@
     "./common/element.js": "./src/common/element.js",
     "./common/signal.js": "./src/common/signal.js",
     "./common/worker.js": "./src/common/worker.js",
-    "./common/worker/rpc.js": "./src/common/worker/rpc.js",
+    "./common/worker/rpc-channel.js": "./src/common/worker/rpc-channel.js",
     "./common/utils.js": "./src/common/utils.js",
     "./components/artwork/audio-metadata/element.js": "./src/components/artwork/audio-metadata/element.js",
     "./components/artwork/audio-metadata/worker.js": "./src/components/artwork/audio-metadata/worker.js",
@@ -188,7 +188,7 @@
     "./components/output/common.js": "./src/components/output/common.js",
     "./components/output/polymorphic/indexed-db/constants.js": "./src/components/output/polymorphic/indexed-db/constants.js",
     "./components/output/polymorphic/indexed-db/element.js": "./src/components/output/polymorphic/indexed-db/element.js",
-    "./components/output/polymorphic/indexed-db/worker.js": "./src/components/output/polymorphic/indexed-db/worker.js",
+
     "./components/output/raw/atproto-passkey/element.js": "./src/components/output/raw/atproto-passkey/element.js",
     "./components/output/raw/atproto-space/element.js": "./src/components/output/raw/atproto-space/element.js",
     "./components/supplement/last.fm/element.js": "./src/components/supplement/last.fm/element.js",
@@ -330,8 +330,9 @@
       "src/common/**/*.d.ts",
       "src/components/**/*.js",
       "specs/components/**/*.d.ts",
-      "src/definitions/**/*.json",
+      "src/**/*.json",
       "src/definitions/**/*.ts",
+      "src/oauth/**/*.js",
     ],
   },
   "permissions": {

@@ -1,4 +1,3 @@
-/// <reference lib="webworker" />
 import { getTransferables } from "@okikio/transferables";
 import { debounceMicrotask } from "@vicary/debounce-microtask";
 import { xxh32 } from "xxh32";
@@ -26,16 +25,27 @@ export { getTransferables } from "@okikio/transferables";
 // Previously we checked `globalThis.onmessage === null`, but Safari initialises
 // that property as `undefined` rather than `null`, causing the check to fail.
 
+/**
+ * Detects whether we're running inside a dedicated worker's global scope.
+ * Uses the constructor name rather than the `DedicatedWorkerGlobalScope`
+ * global, so this module doesn't need the `webworker` TS lib (JSR disallows
+ * `/// <reference lib="..." />` in published files).
+ *
+ * @param {unknown} context
+ * @returns {boolean}
+ */
+function isDedicatedWorkerScope(context) {
+  return /** @type {any} */ (context)?.constructor?.name ===
+    "DedicatedWorkerGlobalScope";
+}
+
 /** @type {MessageEvent[]} */
 const _earlyMessages = [];
 
 /** @type {null | (() => void)} */
 let _flushEarlyMessages = null;
 
-if (
-  typeof DedicatedWorkerGlobalScope !== "undefined" &&
-  globalThis instanceof DedicatedWorkerGlobalScope
-) {
+if (isDedicatedWorkerScope(globalThis)) {
   const handler = /** @type {EventListener} */ ((event) => {
     _earlyMessages.push(/** @type {MessageEvent} */ (event));
   });
@@ -63,10 +73,7 @@ export function ostiary(
   callback,
   context = /** @type {T} */ (/** @type {unknown} */ (globalThis)),
 ) {
-  if (
-    typeof DedicatedWorkerGlobalScope !== "undefined" &&
-    context instanceof DedicatedWorkerGlobalScope
-  ) {
+  if (isDedicatedWorkerScope(context)) {
     callback(context, true, crypto.randomUUID());
 
     // Replay any messages that arrived before the handler was registered.
@@ -211,7 +218,8 @@ export function announce(
 ) {
   const a = announcement(name, args);
   const transferables = getTransferables(a);
-  (context ?? globalThis).postMessage(a, { transfer: transferables });
+  /** @type {MessengerRealm} */ (/** @type {unknown} */ (context ?? globalThis))
+    .postMessage(a, { transfer: transferables });
 }
 
 /**
