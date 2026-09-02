@@ -262,7 +262,7 @@
     },
     "gen:defs:types": {
       "description": "Generate definition Typescript types",
-      "command": "deno run -A npm:@atcute/lex-cli generate -c ./lexicon.config.js && deno run -A ./tasks/replace-gen-import-extensions.ts",
+      "command": "deno run -A npm:@atcute/lex-cli generate -c ./lexicon.config.js && deno run -A ./tasks/replace-gen-import-extensions.ts && deno run -A ./tasks/strip-gen-ambient.ts",
     },
     "gen:manifest": {
       "description": "Generate the custom-elements.json manifest",
