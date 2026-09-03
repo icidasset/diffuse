@@ -1,8 +1,11 @@
 import * as TID from "@atcute/tid";
 import { ostiary, rpc } from "~/common/worker.js";
 import {
+  bytesFromUrl,
   detach as detachUtil,
   groupKey,
+  isImageFile,
+  pickCoverArt,
 } from "~/components/input/common.js";
 import {
   accountId,
@@ -12,6 +15,7 @@ import {
   getTemporaryLink,
   groupTracksByAccount,
   groupUrisByAccount,
+  listDirFiles,
   listFiles,
   parseURI,
 } from "./common.js";
@@ -29,8 +33,28 @@ import { SCHEME } from "./constants.js";
 /**
  * @type {Actions['artwork']}
  */
-export async function artwork(_uri) {
-  return null;
+export async function artwork(uri) {
+  try {
+    const parsed = parseURI(uri);
+    if (!parsed || parsed.path === "/") return null;
+
+    const parentDir = parsed.path.slice(0, parsed.path.lastIndexOf("/"));
+    if (!parentDir) return null;
+
+    const files = await listDirFiles(parsed.refreshToken, parentDir);
+    if (!files?.length) return null;
+
+    const images = files.filter((file) => isImageFile(file.name));
+    const imageFile = pickCoverArt(images, (file) => file.name);
+    if (!imageFile) return null;
+
+    const link = await getTemporaryLink(parsed.refreshToken, imageFile.path_lower);
+    if (!link) return null;
+
+    return await bytesFromUrl(link);
+  } catch {
+    return null;
+  }
 }
 
 /**

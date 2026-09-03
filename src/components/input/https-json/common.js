@@ -277,3 +277,37 @@ async function walkEntries(server, dir, entries, paths, exclude) {
     }
   }
 }
+
+/**
+ * List the names of the file entries in a single directory's JSON listing.
+ * Only the immediate directory is fetched (no recursion); subdirectories are
+ * ignored. Intended for locating sibling artwork next to an audio file.
+ *
+ * Returns the plain (raw) filenames of all `type === "file"` entries, or `null`
+ * if the directory listing could not be fetched or is not an array.
+ *
+ * @param {Server} server
+ * @param {string} dir
+ * @returns {Promise<string[] | null>}
+ */
+export async function listImageFilesInDir(server, dir) {
+  /** @type {string[]} */
+  const fileNames = [];
+
+  try {
+    const entries = await fetchDirEntries(server, dir);
+    for (const entry of entries) {
+      if (!entry || typeof /** @type {any} */ (entry).name !== "string" ||
+        /** @type {any} */ (entry).type !== "file") {
+        continue;
+      }
+      fileNames.push(/** @type {any} */ (entry).name);
+    }
+  } catch {
+    // Directory listing unavailable (network error, timeout, non-2xx, or
+    // non-JSON response) — treat as "no sibling artwork found".
+    return null;
+  }
+
+  return fileNames;
+}

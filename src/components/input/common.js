@@ -172,3 +172,79 @@ export function groupKey(scheme, groupId) {
 export function isAudioFile(filename) {
   return filename.match(/\.(flac|m4a|mp3|mp4|ogg|opus|wav|webm)$/);
 }
+
+/**
+ * @param {string} filename
+ * @returns {boolean}
+ *
+ * @example Returns truthy for image extensions and falsy for non-image ones
+ * ```js
+ * import { isImageFile } from "~/components/input/common.js";
+ *
+ * const images = ["cover.jpg", "folder.jpeg", "art.png", "scan.gif", "pic.webp", "Cover.JPG"];
+ * for (const f of images) {
+ *   if (!isImageFile(f)) throw new Error(`${f} should be recognised as an image`);
+ * }
+ *
+ * const nonImages = ["cover.txt", "audio.mp3", "cover", "folder"];
+ * for (const f of nonImages) {
+ *   if (isImageFile(f)) throw new Error(`${f} should not be recognised as an image`);
+ * }
+ * ```
+ */
+export function isImageFile(filename) {
+  return /\.(jpe?g|png|gif|webp)$/i.test(filename);
+}
+
+/**
+ * Fetch a URL and return its body bytes, or `null` if the request failed.
+ *
+ * @param {string} url
+ * @param {AbortSignal} [signal]
+ * @returns {Promise<Uint8Array | null>}
+ */
+export async function bytesFromUrl(url, signal) {
+  const response = await fetch(url, { signal });
+  if (!response.ok) return null;
+  return new Uint8Array(await response.arrayBuffer());
+}
+
+/**
+ * Pick the preferred artwork from a list of image candidates, in fallback order:
+ * first one whose name contains "cover" (case-insensitive), else one containing
+ * "front", else the first candidate.
+ *
+ * @template T
+ * @param {T[]} items
+ * @param {(item: T) => string} nameOf
+ * @returns {T | undefined}
+ *
+ * @example Prefers the cover-named image over the first one
+ * ```js
+ * import { pickCoverArt } from "~/components/input/common.js";
+ *
+ * const picked = pickCoverArt(["a.png", "cover.png", "b.png"], (n) => n);
+ * if (picked !== "cover.png") throw new Error("expected cover.png to win");
+ * ```
+ *
+ * @example Falls back to a front-named image when no cover is present
+ * ```js
+ * import { pickCoverArt } from "~/components/input/common.js";
+ *
+ * const picked = pickCoverArt(["a.png", "front.jpg", "b.png"], (n) => n);
+ * if (picked !== "front.jpg") throw new Error("expected front.jpg to beat non-cover images");
+ * ```
+ *
+ * @example Falls back to the first image when neither cover nor front is present
+ * ```js
+ * import { pickCoverArt } from "~/components/input/common.js";
+ *
+ * const picked = pickCoverArt(["a.png", "b.png"], (n) => n);
+ * if (picked !== "a.png") throw new Error("expected first image when no cover or front is present");
+ * ```
+ */
+export function pickCoverArt(items, nameOf) {
+  return items.find((item) => /cover/i.test(nameOf(item))) ??
+    items.find((item) => /front/i.test(nameOf(item))) ??
+    items[0];
+}

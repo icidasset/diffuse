@@ -1,9 +1,12 @@
 import * as TID from "@atcute/tid";
 import { ostiary, rpc } from "~/common/worker.js";
 import {
+  bytesFromUrl,
   detach as detachUtil,
   groupKey,
   isAudioFile,
+  isImageFile,
+  pickCoverArt,
 } from "~/components/input/common.js";
 import { safeDecodeURIComponent } from "~/common/utils.js";
 
@@ -13,6 +16,7 @@ import {
   groupTracksByServer,
   groupUrisByServer,
   listFiles,
+  listImageFilesInDir,
   parseURI,
   serverId,
   toHttpUrl,
@@ -31,8 +35,34 @@ import { SCHEME } from "./constants.js";
 /**
  * @type {Actions['artwork']}
  */
-export async function artwork(_uri) {
-  return null;
+export async function artwork(uri) {
+  try {
+    const parsed = parseURI(uri);
+    if (!parsed || !parsed.path) return null;
+
+    // Parent directory of the audio file, relative to server.dir.
+    const lastSlash = parsed.path.lastIndexOf("/");
+    const dirPath = parsed.server.dir +
+      (lastSlash > 0 ? parsed.path.slice(0, lastSlash + 1) : "");
+
+    const fileNames = await listImageFilesInDir(parsed.server, dirPath);
+    if (fileNames === null) return null;
+
+    const images = fileNames.filter((name) => isImageFile(name));
+    const imageName = pickCoverArt(images, (name) => name);
+    if (!imageName) return null;
+
+    // `dirPath` is already percent-encoded (it comes from `parsed.path`);
+    // encode just the image filename, mirroring how `walkEntries` builds paths.
+    const url = toHttpUrl(
+      parsed.server,
+      dirPath + encodeURIComponent(imageName),
+    );
+    return await bytesFromUrl(url);
+  } catch {
+    // No sibling artwork found / fetch failed — `null` means "none".
+    return null;
+  }
 }
 
 /**

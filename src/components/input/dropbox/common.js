@@ -334,6 +334,53 @@ export async function listFiles(refreshToken, directoryPath) {
 
 /**
  * @param {string} refreshToken
+ * @param {string} dirPath
+ * @returns {Promise<Array<{ name: string; path_lower: string }> | null>}
+ */
+export async function listDirFiles(refreshToken, dirPath) {
+  const accessToken = await getAccessToken(refreshToken);
+  if (!accessToken) return null;
+
+  const headers = {
+    "Authorization": `Bearer ${accessToken}`,
+    "Content-Type": "application/json",
+  };
+
+  /** @type {Array<{ name: string; path_lower: string }>} */
+  const entries = [];
+  let cursor = /** @type {string | null} */ (null);
+  let hasMore = true;
+
+  while (hasMore) {
+    const url = cursor
+      ? "https://api.dropboxapi.com/2/files/list_folder/continue"
+      : "https://api.dropboxapi.com/2/files/list_folder";
+
+    const body = cursor
+      ? JSON.stringify({ cursor })
+      : JSON.stringify({ path: dirPath, recursive: false, limit: 2000 });
+
+    const resp = await fetch(url, { method: "POST", headers, body });
+    if (!resp.ok) return null;
+
+    /** @type {{ entries: Array<{ ".tag": string; name: string; path_lower: string }>; has_more: boolean; cursor: string }} */
+    const data = await resp.json();
+
+    for (const entry of data.entries) {
+      if (entry[".tag"] === "file") {
+        entries.push({ name: entry.name, path_lower: entry.path_lower });
+      }
+    }
+
+    hasMore = data.has_more;
+    cursor = data.cursor;
+  }
+
+  return entries;
+}
+
+/**
+ * @param {string} refreshToken
  * @param {string} filePath
  * @returns {Promise<string | null>}
  */

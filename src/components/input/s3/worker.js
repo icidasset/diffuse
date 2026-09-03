@@ -1,9 +1,12 @@
 import * as TID from "@atcute/tid";
 import { ostiary, rpc } from "~/common/worker.js";
 import {
+  bytesFromUrl,
   detach as detachUtil,
   groupKey,
   isAudioFile,
+  isImageFile,
+  pickCoverArt,
 } from "~/components/input/common.js";
 import {
   bucketId,
@@ -29,8 +32,37 @@ import { SCHEME } from "./constants.js";
 /**
  * @type {Actions['artwork']}
  */
-export async function artwork(_uri) {
-  return null;
+export async function artwork(uri) {
+  try {
+    const parsed = parseURI(uri);
+    if (!parsed) return null;
+
+    // The audio object key is parsed.path. Its parent directory is
+    // everything before the last `/`, with a trailing `/`, or empty
+    // string if the audio sits at the bucket root.
+    const slash = parsed.path.lastIndexOf("/");
+    const directoryPrefix = slash === -1 ? "" : parsed.path.slice(0, slash + 1);
+
+    const client = createClient(parsed.bucket);
+    const list = await Array.fromAsync(
+      client.listObjects({ prefix: directoryPrefix }),
+    );
+
+    // Only images directly in this directory, not nested subdirectories.
+    const images = list.filter((object) => {
+      if (!isImageFile(object.key)) return false;
+      const remainder = object.key.slice(directoryPrefix.length);
+      return remainder !== "" && !remainder.includes("/");
+    });
+
+    const image = pickCoverArt(images, (object) => object.key);
+    if (!image) return null;
+
+    const url = await client.getPresignedUrl("GET", image.key);
+    return await bytesFromUrl(url);
+  } catch {
+    return null;
+  }
 }
 
 /**

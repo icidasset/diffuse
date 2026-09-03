@@ -1,9 +1,12 @@
 import * as TID from "@atcute/tid";
 import { ostiary, rpc } from "~/common/worker.js";
 import {
+  bytesFromUrl,
   detach as detachUtil,
   groupKey,
   isAudioFile,
+  isImageFile,
+  pickCoverArt,
 } from "~/components/input/common.js";
 import { safeDecodeURIComponent } from "~/common/utils.js";
 
@@ -14,6 +17,7 @@ import {
   groupTracksByServer,
   groupUrisByServer,
   listFiles,
+  listFilesInDir,
   parseURI,
   serverId,
 } from "./common.js";
@@ -31,8 +35,26 @@ import { SCHEME } from "./constants.js";
 /**
  * @type {Actions['artwork']}
  */
-export async function artwork(_uri) {
-  return null;
+export async function artwork(uri) {
+  try {
+    const parsed = parseURI(uri);
+    if (!parsed || !parsed.path) return null;
+
+    // Parent directory (raw, percent-encoded) of the audio file.
+    const lastSlash = parsed.path.lastIndexOf("/");
+    const dir = lastSlash > 0 ? parsed.path.slice(0, lastSlash) : "/";
+
+    const files = await listFilesInDir(parsed.server, dir);
+    const images = files.filter((path) => isImageFile(path));
+    const imagePath = pickCoverArt(images, (path) => path);
+    if (!imagePath) return null;
+
+    const url = buildTrackUrl(parsed.server, imagePath);
+    return await bytesFromUrl(url);
+  } catch {
+    // Never throw: `null` means no sibling artwork found.
+    return null;
+  }
 }
 
 /**

@@ -224,6 +224,101 @@ export async function listFiles(server) {
 }
 
 /**
+ * List the files directly inside a directory (NOT recursive).
+ * Issues a single Depth:1 PROPFIND on `dir` and returns raw
+ * (percent-encoded) paths of the file entries it contains, skipping
+ * the directory entry itself and any subdirectories.
+ *
+ * @param {Server} server
+ * @param {string} dir
+ * @returns {Promise<string[]>}
+ */
+export async function listFilesInDir(server, dir) {
+  const url = toHttpUrl(server, dir);
+
+  const response = await fetch(url, {
+    method: "PROPFIND",
+    headers: {
+      "Authorization": authHeader(server),
+      "Depth": "1",
+    },
+  });
+
+  if (response.status !== 207 && !response.ok) return [];
+
+  const xml = await response.text();
+  const files = /** @type {string[]} */ ([]);
+
+  const doc = parseXml(xml);
+  const multistatus = doc.root;
+  if (!multistatus) return [];
+
+  // Normalised target directory (leading slash, no trailing slash) so
+  // PROPFIND hrefs (which are percent-encoded) can be compared decoded.
+  const targetDir = ("/" + safeDecodeURIComponent(dir).replace(/^\//, "")).replace(
+    /\/$/,
+    "",
+  );
+
+  for (const node of multistatus.children ?? []) {
+    if (node.type !== "element" || node.name.local !== "response") continue;
+
+    let href = "";
+    let isCollection = false;
+
+    for (const child of node.children ?? []) {
+      if (child.type !== "element") continue;
+
+      if (child.name.local === "href") {
+        href = (child.children?.find((n) => n.type === "text")?.text ?? "")
+          .trim();
+      } else if (child.name.local === "propstat") {
+        if (propstatHasCollection(child)) isCollection = true;
+      }
+    }
+
+    if (!href) continue;
+
+    // Trailing slash is the most reliable collection indicator in WebDAV
+    isCollection = isCollection || href.endsWith("/");
+
+    // Keep the raw (percent-encoded) pathname so that buildTrackUrl
+    // produces a valid URL; decode only for directory comparison.
+    let rawPath;
+    try {
+      rawPath = new URL(href).pathname;
+    } catch {
+      rawPath = href;
+    }
+    const path = safeDecodeURIComponent(rawPath);
+
+    // Skip the directory entry itself.
+    // Normalise both sides to have a leading slash — server hrefs always
+    // do, but `dir` may not when the user omitted the leading slash in
+    // the form.
+    const normPath = path.replace(/\/$/, "");
+    const normDir = ("/" + safeDecodeURIComponent(dir).replace(/^\//, "")).replace(
+      /\/$/,
+      "",
+    );
+    if (normPath === normDir) continue;
+
+    if (isCollection) continue;
+
+    // Skip Synology extended-attribute metadata folders
+    if (path.split("/").includes("@eaDir")) continue;
+
+    // Only keep files that live directly in the target directory.
+    const parentDir = path.slice(0, path.lastIndexOf("/")) || "/";
+    if (parentDir.replace(/\/$/, "") !== targetDir) continue;
+
+    files.push(rawPath);
+  }
+
+  return files;
+}
+
+/**
  * @param {Server} server
  * @param {string} dir
  * @param {string[]} paths

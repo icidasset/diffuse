@@ -1,9 +1,11 @@
 import * as TID from "@atcute/tid";
 import { ostiary, rpc } from "~/common/worker.js";
-import { groupKey } from "~/components/input/common.js";
+import { groupKey, isImageFile, pickCoverArt } from "~/components/input/common.js";
 import {
   buildURI,
+  dirname,
   enumerateAudioFiles,
+  getDirectoryHandle,
   getHandleFile,
   groupTracksByTid,
   groupUrisByTid,
@@ -26,8 +28,37 @@ import { SCHEME } from "./constants.js";
 /**
  * @type {Actions['artwork']}
  */
-export async function artwork(_uri) {
-  return null;
+export async function artwork(uri) {
+  try {
+    const parsed = parseURI(uri);
+    if (!parsed) return null;
+
+    const directory = dirname(parsed.path);
+    if (!directory) return null;
+
+    const handles = await loadHandles();
+    const handle = handles[parsed.tid];
+    if (!handle) return null;
+
+    const dirHandle = await getDirectoryHandle(handle, directory);
+    if (!dirHandle) return null;
+
+    // Collect sibling image files, then prefer a cover-named one.
+    /** @type {{ name: string; file: File }[]} */
+    const images = [];
+    for await (const [name, entry] of dirHandle.entries()) {
+      if (entry.kind !== "file" || !isImageFile(name)) continue;
+      const file = await /** @type {FileSystemFileHandle} */ (entry).getFile();
+      images.push({ name, file });
+    }
+
+    const image = pickCoverArt(images, (i) => i.name);
+    if (!image) return null;
+
+    return new Uint8Array(await image.file.arrayBuffer());
+  } catch {
+    return null;
+  }
 }
 
 /**

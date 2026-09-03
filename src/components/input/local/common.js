@@ -71,6 +71,35 @@ export async function getHandleFile(handle, path) {
 }
 
 /**
+ * @param {FileSystemHandle} handle
+ * @param {string} path
+ * @returns {Promise<FileSystemDirectoryHandle | undefined>}
+ */
+export async function getDirectoryHandle(handle, path) {
+  if (handle.kind === "file") {
+    return undefined;
+  }
+
+  let current = /** @type {FileSystemDirectoryHandle} */ (handle);
+
+  for (const part of path.replace(/^\//, "").split("/").filter(Boolean)) {
+    current = await current.getDirectoryHandle(part);
+  }
+
+  return current;
+}
+
+/**
+ * @param {string} path
+ * @returns {string | undefined}
+ */
+export function dirname(path) {
+  const index = path.lastIndexOf("/");
+  if (index === -1) return undefined;
+  return path.slice(0, index + 1);
+}
+
+/**
  * @param {Track[]} tracks
  * @returns {Record<string, { tid: string; tracks: Track[] }>}
  */
