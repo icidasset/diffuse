@@ -59,7 +59,7 @@ function mimeTypeToPath(mimeType) {
 }
 
 /**
- * @param {{ includeArtwork?: boolean; filename?: string; mimeType?: string; stream?: ReadableStream; urls?: Urls; }} _
+ * @param {{ includeArtwork?: boolean; filename?: string; mimeType?: string; stream?: ReadableStream; urls?: Urls; signal?: AbortSignal; }} _
  * @returns {Promise<Extraction>}
  */
 export async function musicMetadataTags({
@@ -68,6 +68,7 @@ export async function musicMetadataTags({
   mimeType,
   stream,
   urls,
+  signal,
 }) {
   const uri = urls ? URI.parse(urls.get) : undefined;
   const pathParts = uri?.path?.split("/");
@@ -76,7 +77,7 @@ export async function musicMetadataTags({
   let meta;
 
   if (urls?.get.startsWith("blob:")) {
-    const blob = await fetch(urls.get).then((r) => r.blob());
+    const blob = await fetch(urls.get, { signal }).then((r) => r.blob());
     // Blob URLs carry no filename, so the URL path is just the blob's UUID.
     // Without a path or a recognised MIME-type music-metadata falls back to
     // content-sniffing, whose content-type matcher is broken in the browser
@@ -98,14 +99,28 @@ export async function musicMetadataTags({
     httpClient.resolvedUrl = urls.get;
     const getHeadInfo = httpClient.getHeadInfo;
 
-    // FUCKAROUND: Not sure of the downsides of this
+    // Link the caller's abort signal to the range-reading HttpClient so an
+    // artwork timeout can cancel the underlying HTTP request (instead of
+    // leaving it running and consuming server resources).
+    const onAbort = () => httpClient.abort();
+    signal?.addEventListener("abort", onAbort, { once: true });
+
+    // Preserve the real `acceptPartialRequests` from the server's HEAD response
+    // instead of forcing it true. `@tokenizer/http` already parses
+    // `Accept-Ranges`/`Content-Range` and reports partial support correctly;
+    // overriding it to `true` on a server that does NOT actually support ranges
+    // makes `@tokenizer/range` read the whole stream to locate metadata/artwork,
+    // which turns a one-millisecond tail read into a minutes-long full download
+    // (stalling cover art behind it). Keep only the Content-Length fallback so
+    // servers that don't return a length still resolve a (full-download) value.
     /** @type {any} */ (httpClient).getHeadInfo = async () => {
       try {
         const info = await getHeadInfo.call(httpClient);
-        return { ...info, acceptPartialRequests: true };
+        if (Number.isFinite(info?.size)) return info;
+        // No Content-Length — fall back to a full read without pretending
+        // range support.
+        return { size: undefined, acceptPartialRequests: false };
       } catch {
-        // Some servers (e.g. Dropbox temporary links) don't return Content-Length.
-        // Fall back to downloading the full file without range requests.
         return { size: undefined, acceptPartialRequests: false };
       }
     };
@@ -126,6 +141,7 @@ export async function musicMetadataTags({
       tokenizer.fileInfo = { ...tokenizer.fileInfo, path };
     }
     meta = await parseFromTokenizer(tokenizer, { skipCovers: !includeArtwork });
+    signal?.removeEventListener("abort", onAbort);
   } else if (stream) {
     meta = await parseWebStream(stream, { mimeType }, {
       skipCovers: !includeArtwork,

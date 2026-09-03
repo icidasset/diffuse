@@ -10,6 +10,13 @@ import { ostiary, rpc } from "~/common/worker.js";
 ////////////////////////////////////////////
 
 /**
+ * Time budget for this provider's own HTTP requests. Once exceeded, in-flight
+ * fetches are aborted so a slow/cancelled request doesn't keep occupying server
+ * resources (and hold up the caller).
+ */
+const PROVIDER_TIMEOUT_MS = 60_000;
+
+/**
  * @type {Actions['get']}
  */
 export async function get(track) {
@@ -21,7 +28,13 @@ export async function get(track) {
 
   const variousArtists = artist?.toUpperCase() === "VA";
 
-  return search(track, variousArtists);
+  const controller = new AbortController();
+  const timer = setTimeout(() => controller.abort(), PROVIDER_TIMEOUT_MS);
+  try {
+    return await search(track, variousArtists, controller.signal);
+  } finally {
+    clearTimeout(timer);
+  }
 }
 
 ////////////////////////////////////////////
@@ -72,9 +85,10 @@ function escapeLucene(str) {
 /**
  * @param {Track} track
  * @param {boolean} variousArtists
+ * @param {AbortSignal} signal
  * @returns {Promise<Uint8Array | null>}
  */
-async function search(track, variousArtists) {
+async function search(track, variousArtists, signal) {
   const artist = track.tags?.artist;
   const album = track.tags?.album;
 
@@ -82,27 +96,27 @@ async function search(track, variousArtists) {
     (variousArtists ? `` : ` AND artistname:"${escapeLucene(artist || "")}"`);
   const encodedQuery = encodeURIComponent(query);
 
-  return await fetch(
+  const r = await fetch(
     `https://musicbrainz.org/ws/2/release/?query=${encodedQuery}&fmt=json`,
-  )
-    .then((r) => r.json())
-    .then((r) => {
-      if (r.releases.length === 0 && !variousArtists) {
-        return search(track, true);
-      } else {
-        return findCover(r.releases, track, variousArtists);
-      }
-    })
-    .catch(() => null);
+    { signal },
+  ).then((r) => r.json()).catch(() => undefined);
+
+  if (!r) return null;
+  if (r.releases.length === 0 && !variousArtists) {
+    return search(track, true, signal);
+  } else {
+    return findCover(r.releases, track, variousArtists, signal);
+  }
 }
 
 /**
  * @param {any[]} remainingReleases
  * @param {Track} track
  * @param {boolean} variousArtists
+ * @param {AbortSignal} signal
  * @returns {Promise<Uint8Array | null>}
  */
-async function findCover(remainingReleases, track, variousArtists) {
+async function findCover(remainingReleases, track, variousArtists, signal) {
   const release = remainingReleases[0];
   if (!release) return null;
 
@@ -114,17 +128,17 @@ async function findCover(remainingReleases, track, variousArtists) {
 
   return await fetch(
     `https://coverartarchive.org/release/${release.id}/front-1200`,
+    { signal },
   )
     .then((r) => r.blob())
     .then(async (b) => {
       if (b.type.startsWith("image/")) {
         return new Uint8Array(await b.arrayBuffer());
       } else {
-        return findCover(remainingReleases.slice(1), track, variousArtists);
+        return findCover(remainingReleases.slice(1), track, variousArtists, signal);
       }
     })
-    .catch((err) => {
-      console.error(err);
-      return findCover(remainingReleases.slice(1), track, variousArtists);
-    });
+    .catch(() =>
+      findCover(remainingReleases.slice(1), track, variousArtists, signal)
+    );
 }

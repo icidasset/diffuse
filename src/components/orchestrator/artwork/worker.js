@@ -81,7 +81,13 @@ async function processRequest(track, ports) {
     return ports.artwork;
   });
 
-  const bytes = await configurator.get(track);
+  let bytes;
+
+  try {
+    bytes = await configurator.get(track);
+  } catch {
+    return null;
+  }
 
   if (bytes === null) {
     await IDB.set(`${IDB_ARTWORK_PREFIX}/track/${track.id}`, []);

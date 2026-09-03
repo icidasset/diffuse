@@ -257,28 +257,26 @@ const artQueue = [];
 let artActive = 0;
 const MAX_ART_CONCURRENT = 4;
 
-/** Max number of album-art blob URLs kept cached. Beyond this the oldest
- *  entries are evicted (revoking their blob URLs) so the cache doesn't grow
- *  without bound and accumulate memory until iOS Safari crashes. */
-const MAX_ART_CACHE = 64;
+/**
+ * Grid cards and queue items carry a `data-art-key` container whose cover is
+ * filled lazily; they do NOT render their own content inside the template so
+ * lit-html never tracks their internals. Detail header and player-bar art are
+ * rendered eagerly by their own templates instead, so they're excluded here.
+ */
+const ART_CONTAINER_SELECTOR =
+  ".cat-card__art[data-art-key], .cat-queue__item-art[data-art-key]";
 
 /**
- * Store an artwork-cache entry, evicting the oldest when the cache overflows
- * and revoking evicted blob URLs.
+ * Store an artwork-cache entry for `key`. The cache is unbounded: covers are
+ * small and their blob data is released by GC once the referencing `<img>`
+ * leaves the DOM (matching the `blur` theme, which keeps every cover URL with
+ * no eviction or `revokeObjectURL`).
  * @param {string} key
  * @param {string | null} value
  */
 function cacheArt(key, value) {
   if (artCache.has(key)) artCache.delete(key); // refresh LRU position
   artCache.set(key, value);
-
-  while (artCache.size > MAX_ART_CACHE) {
-    const oldest = artCache.keys().next().value;
-    if (oldest === undefined) break;
-    const evicted = artCache.get(oldest);
-    artCache.delete(oldest);
-    if (typeof evicted === "string") URL.revokeObjectURL(evicted);
-  }
 }
 
 /**
@@ -310,10 +308,10 @@ function drainArtQueue() {
  */
 async function doFetchArt(key, track) {
   try {
-    const timeout = new Promise((resolve) =>
-      setTimeout(() => resolve(null), 15_000)
-    );
-    const bytes = await Promise.race([artwork.get(track), timeout]);
+    // Bounded upstream (orchestrator drops a cover after 60s and clears its
+    // in-flight entry), so a hanging download can't wedge the queue: this
+    // promise always settles, and each slot is always released.
+    const bytes = await artwork.get(track);
     if (bytes) {
       const mime = detectMime(bytes);
       const url = URL.createObjectURL(new Blob([bytes], { type: mime }));
@@ -328,18 +326,98 @@ async function doFetchArt(key, track) {
     artActive--;
     drainArtQueue();
   }
-  scheduleArtRender();
+  if (artCache.get(key)) renderArtForKey(key);
 }
 
-/** Re-render to show newly loaded artwork. */
-let artRenderRaf = false;
-function scheduleArtRender() {
-  if (artRenderRaf) return;
-  artRenderRaf = true;
-  requestAnimationFrame(() => {
-    artRenderRaf = false;
-    renderContent();
-  });
+/**
+ * Swap a freshly fetched cover into every rendered grid card / queue item for
+ * `key` so the image appears in place without re-rendering the whole list
+ * (which would rebuild the DOM and could reset the scroll position). Detail
+ * header and player-bar art are rendered eagerly by their own templates.
+ * @param {string} key
+ */
+function renderArtForKey(key) {
+  const url = artCache.get(key);
+  if (!url) return;
+  // Match by attribute value, not by interpolating `key` into a CSS selector.
+  // Album/artist names contain arbitrary chars (' " \ ...) that would make
+  // `[data-art-key="${key}"]` an invalid selector and throw, silently
+  // breaking the cover swap for that item.
+  for (const node of document.querySelectorAll(ART_CONTAINER_SELECTOR)) {
+    if ((/** @type {HTMLElement} */ (node)).dataset.artKey !== key) continue;
+    renderArtForContainer(/** @type {HTMLElement} */ (node));
+  }
+}
+
+/**
+ * Observe artwork containers that are (near) visible so we only fetch artwork
+ * for items that are actually on screen. Elements are tagged with
+ * `data-art-key` and `data-art-track-id` at render time (without fetching);
+ * when one scrolls into view we fetch just that item's artwork. Rooted at the
+ * document viewport so both the scrolled `.cat-content` panel and the queue
+ * panel are covered (their own `overflow` clipping still correctly reports
+ * non-intersecting items). Only intersecting items enter the fetch queue, so
+ * we never load artwork for cards that aren't (about to be) visible.
+ */
+/** @type {IntersectionObserver | undefined} */
+let artObserver = undefined;
+
+/** Cards that have scrolled into view, pending a debounced batch fetch. */
+/** @type {Map<string, Track>} */
+const pendingVisibleArt = new Map();
+/** @type {ReturnType<typeof setTimeout> | undefined} */
+let artFetchDebounce = undefined;
+
+function armArtObserver() {
+  artObserver?.disconnect();
+  artObserver = undefined;
+  // Drop any pending batch from the previous view so we don't fetch artwork
+  // for cards that are no longer shown.
+  clearTimeout(artFetchDebounce);
+  artFetchDebounce = undefined;
+  pendingVisibleArt.clear();
+
+  artObserver = new IntersectionObserver(
+    (entries) => {
+      let hasNew = false;
+      for (const entry of entries) {
+        const target = /** @type {HTMLElement} */ (entry.target);
+        if (!entry.isIntersecting) continue;
+        const key = target.dataset.artKey;
+        if (!key || artCache.has(key) || pendingVisibleArt.has(key)) continue;
+        const trackId = target.dataset.artTrackId;
+        const track = trackId ? findTrack(trackId) : undefined;
+        // Do NOT unobserve here. If the fetch for this card later fails or is
+        // dropped (timeout, transient error, or a re-arm clearing the pending
+        // batch), leaving it observed lets the next scroll re-entry retry it.
+        // Otherwise a failed cover would be unobserved and never attempted
+        // again, which is why covers could stop appearing after a while.
+        if (key && track) {
+          pendingVisibleArt.set(key, track);
+          hasNew = true;
+        }
+      }
+      if (!hasNew) return;
+
+      // Batch fetches so a rapid scroll doesn't dispatch one fetch per card.
+      clearTimeout(artFetchDebounce);
+      artFetchDebounce = setTimeout(() => {
+        for (const [key, track] of pendingVisibleArt) {
+          fetchArt(key, track);
+        }
+        pendingVisibleArt.clear();
+      }, 150);
+    },
+    { rootMargin: "200px" },
+  );
+
+  for (const target of document.querySelectorAll(ART_CONTAINER_SELECTOR)) {
+    const elTarget = /** @type {HTMLElement} */ (target);
+    const key = elTarget.dataset.artKey;
+    if (!key) continue;
+    if (artCache.has(key) || pendingArt.has(key)) continue;
+    artObserver.observe(elTarget);
+  }
 }
 
 ////////////////////////////////////////////
@@ -524,17 +602,62 @@ const artPlaceholder = html`
   </div>
 `;
 
+const queueArtPlaceholder = html`
+  <div class="cat-queue__item-art-placeholder">
+    <i class="ph-fill ph-music-notes"></i>
+  </div>
+`;
+
 /**
  * @param {string} key
  * @param {Track} track
  */
 function artBlock(key, track) {
-  fetchArt(key, track);
+  // Artwork is not fetched here — the card is tagged so `armArtObserver` can
+  // request artwork lazily once it scrolls into view. The container is rendered
+  // empty (no lit-html content part) so its children can be inserted/replaced
+  // freely by `renderArtForContainer` without corrupting lit-html's committed
+  // part nodes.
+  return html`
+    <div
+      class="cat-card__art"
+      data-art-key="${key}"
+      data-art-track-id="${track.id}"
+    ></div>
+  `;
+}
+
+/**
+ * Render (or refresh) the art content of a single `data-art-key` container:
+ * the cached cover image if available, otherwise the placeholder. Rendered
+ * through lit-html so updates stay consistent with its internal bookkeeping,
+ * and the placeholder variant is chosen to match the container type (grid card
+ * vs queue item).
+ * @param {HTMLElement} container
+ */
+function renderArtForContainer(container) {
+  const key = container.dataset.artKey;
+  if (!key) return;
   const url = artCache.get(key);
   if (url) {
-    return html`<img src="${url}" alt="" loading="lazy" />`;
+    litRender(html`<img src="${url}" alt="" />`, container);
+    return;
   }
-  return artPlaceholder;
+  const placeholder = container.classList.contains("cat-queue__item-art")
+    ? queueArtPlaceholder
+    : artPlaceholder;
+  litRender(placeholder, container);
+}
+
+/**
+ * Ensure every rendered art container shows a placeholder when its cover isn't
+ * cached yet. Run after each render so fresh cards show the placeholder icon
+ * immediately.
+ */
+function renderArtPlaceholders() {
+  for (const node of document.querySelectorAll(ART_CONTAINER_SELECTOR)) {
+    renderArtForContainer(/** @type {HTMLElement} */ (node));
+  }
 }
 
 /**
@@ -686,7 +809,7 @@ function renderDetailView() {
       </button>
 
       <div class="cat-detail__header">
-        <div class="cat-detail__art">
+        <div class="cat-detail__art" data-art-key="${artKey}">
           ${detailArtBlock(artKey, firstTrack)}
         </div>
         <div class="cat-detail__meta">
@@ -776,12 +899,15 @@ function renderContent() {
 
   if (detail) {
     litRender(renderDetailView(), el.content);
+    armArtObserver();
     return;
   }
 
   if (mode === "albums") litRender(renderAlbumGrid(), el.content);
   else if (mode === "artists") litRender(renderArtistGrid(), el.content);
   else litRender(renderSongList(), el.content);
+  renderArtPlaceholders();
+  armArtObserver();
 }
 
 ////////////////////////////////////////////
@@ -810,22 +936,11 @@ function renderQueue() {
           : ""}"
         @click=${() => playAtQueueIndex(flatIndex)}
       >
-        <div class="cat-queue__item-art">
-          ${track
-            ? (() => {
-              const key = albumOf(track).toLowerCase();
-              fetchArt(key, track);
-              const url = artCache.get(key);
-              return url ? html`<img src="${url}" alt="" />` : html`
-                <div
-                  class="cat-queue__item-art-placeholder"><i class="ph-fill ph-music-notes"></i></div>
-              `;
-            })()
-            : html`
-              <div
-                class="cat-queue__item-art-placeholder"><i class="ph-fill ph-music-notes"></i></div>
-            `}
-        </div>
+        <div
+          class="cat-queue__item-art"
+          data-art-key="${track ? albumOf(track).toLowerCase() : ""}"
+          data-art-track-id="${track ? track.id : ""}"
+        ></div>
         <div class="cat-queue__item-info">
           <div class="cat-queue__item-title">${title}</div>
           <div class="cat-queue__item-artist">${artist}</div>
@@ -902,6 +1017,8 @@ function renderQueuePanel() {
   el.queueToggle.setAttribute("data-active", isOpen ? "t" : "f");
   if (!isOpen) return;
   litRender(renderQueue(), el.queuePanel);
+  renderArtPlaceholders();
+  armArtObserver();
 }
 
 ////////////////////////////////////////////
@@ -928,7 +1045,7 @@ function renderPlayer() {
 
   litRender(
     html`
-      <div class="cat-player__art">
+      <div class="cat-player__art" data-art-key="${track ? artKey : ""}">
         ${hasTrack && track
           ? (artUrl ? html`<img src="${artUrl}" alt="" />` : html`
             <div
