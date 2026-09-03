@@ -5,13 +5,23 @@ import { createLoader, renderError } from "~/common/loader.js";
 import { insertPreludes } from "~/common/facets/prelude.js";
 import { computed, effect } from "~/common/signal.js";
 
-// Output element
-const output = await foundation.orchestrator.output();
-
-// Contaienr
+// Container
 const container = /** @type {HTMLDivElement} */ (
   document.querySelector("#container")
 );
+
+// The loader relies on features that only work in a secure context.
+// Fail fast with a helpful message instead of letting those APIs throw cryptically.
+if (!window.isSecureContext) {
+  renderError(
+    container,
+    "Diffuse requires a secure context (HTTPS or localhost)",
+  );
+  throw new Error("Insecure context: Diffuse loader requires a secure context");
+}
+
+// Output element
+const output = await foundation.orchestrator.output();
 
 // Preludes
 const facets = await Output.data(output.facets);
