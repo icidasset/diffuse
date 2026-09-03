@@ -101,7 +101,7 @@ async function search(track, variousArtists, signal) {
     { signal },
   ).then((r) => r.json()).catch(() => undefined);
 
-  if (!r) return null;
+  if (!r?.releases) return null;
   if (r.releases.length === 0 && !variousArtists) {
     return search(track, true, signal);
   } else {
