@@ -314,7 +314,7 @@ async function doFetchArt(key, track) {
     const bytes = await artwork.get(track);
     if (bytes) {
       const mime = detectMime(bytes);
-      const url = URL.createObjectURL(new Blob([bytes], { type: mime }));
+      const url = URL.createObjectURL(new Blob([/** @type {BlobPart} */ (bytes)], { type: mime }));
       cacheArt(key, url);
     } else {
       cacheArt(key, null);
