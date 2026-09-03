@@ -69,6 +69,23 @@ export type AudioStateReadOnly = {
   progress: SignalReader<number>;
 };
 
+/**
+ * The shared Web Audio graph that every <audio> element is routed through.
+ *
+ *   source → input → destination
+ *
+ * `input` is the post-volume tap point that all `<audio>` sources feed into;
+ * it's connected straight to `destination` by default. A consumer applies
+ * processing (an equalizer, an analyser for visualizations, …) by disconnecting
+ * the `input`→`destination` edge and reconnecting it through its own chain.
+ */
+export type WebAudioGraph = {
+  context: AudioContext;
+  /** Post-volume tap point that every <audio> element feeds into (`gain` = master volume). */
+  input: GainNode;
+  destination: AudioDestinationNode;
+};
+
 export type LoadingState =
   | "initialisation"
   | "loading"

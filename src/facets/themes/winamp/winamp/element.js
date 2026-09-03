@@ -242,8 +242,6 @@ class WinampElement extends DiffuseElement {
   #eqNodes = [];
   /** @type {AnalyserNode | null} */
   #analyser = null;
-  /** @type {Map<string, MediaElementAudioSourceNode>} */
-  #srcNodes = new Map();
   /** @type {number | undefined} */
   #visRAF = undefined;
   /** @type {ReturnType<typeof setInterval> | undefined} */
@@ -445,10 +443,13 @@ class WinampElement extends DiffuseElement {
       });
 
       this.effect(() => {
-        const audioId = this.$controller.value?.$queue.value?.now()?.id;
+        const engine = this.#audioEngine();
         const playing = this.isPlaying();
         untracked(() => {
-          if (audioId) this.#connectToAnalyser(audioId);
+          // The engine already routes every <audio> through its Web Audio
+          // graph; we just need to splice our EQ/analyser chain into that
+          // post-volume tap point (a no-op once wired).
+          if (engine) this.#ensureAnalyser();
           if (playing) {
             this.#ensureAnalyser();
             this.#audioCtx?.resume();
@@ -563,10 +564,15 @@ class WinampElement extends DiffuseElement {
     }
 
     this.effect(() => {
+      const engineReady = !!this.#audioEngine();
       if (!this.#milkdropOpen.value) {
         untracked(() => this.#stopButterchurn());
         return;
       }
+      // Wait for the audio engine: `#ensureAnalyser` can only splice into the
+      // graph once the engine exists, so defer until it's ready (the effect
+      // re-runs because `#audioEngine()` reads the controller/audio signals).
+      if (!engineReady) return;
       untracked(() => {
         requestAnimationFrame(() => {
           const canvas = this.root().querySelector("#milkdrop-canvas");
@@ -725,6 +731,18 @@ class WinampElement extends DiffuseElement {
       this.#visRAF = undefined;
     }
     this.#stopButterchurn();
+
+    // Un-splice our eq/analyser chain from the engine's Web Audio tap point so
+    // a later reconnect doesn't double-wire into the same graph.
+    if (this.#preampNode) this.#preampNode.disconnect();
+    if (this.#analyser) this.#analyser.disconnect();
+
+    // Drop cached nodes so a subsequent connect re-splices into the engine's
+    // (possibly re-created) Web Audio graph from scratch.
+    this.#audioCtx = null;
+    this.#preampNode = null;
+    this.#eqNodes = [];
+    this.#analyser = null;
   }
 
   // WINDOW SNAPPING — ported from webamp/js/snapUtils.ts
@@ -1110,46 +1128,50 @@ class WinampElement extends DiffuseElement {
     "rgb(49,156,8)", // 15 — dim green (quiet)
   ];
 
+  /** The audio engine, from which we consume the shared Web Audio graph. */
+  #audioEngine() {
+    return this.$controller.value?.$audio.value ?? null;
+  }
+
   #ensureAnalyser() {
     if (this.#analyser) return;
-    this.#audioCtx = new AudioContext();
 
-    this.#preampNode = this.#audioCtx.createGain();
+    // The engine owns the AudioContext and routes every <audio> through it. We
+    // splice our EQ/analyser chain into the post-volume tap point, replacing
+    // the default pass-through: input → preamp → eq[0..9] → analyser → destination.
+    //
+    // The analyser is inline (it feeds the destination) so we can also read its
+    // data for the visualiser / butterchurn.
+    const engine = this.#audioEngine();
+    if (!engine) return;
+
+    const { context, input, destination } = engine.webAudio;
+    this.#audioCtx = context;
+
+    this.#preampNode = context.createGain();
     this.#eqNodes = EQ_BANDS.map((freq) => {
-      const f = /** @type {AudioContext} */ (this.#audioCtx)
-        .createBiquadFilter();
+      const f = context.createBiquadFilter();
       f.type = "peaking";
       f.frequency.value = freq;
       f.Q.value = 1.0;
       f.gain.value = 0;
       return f;
     });
-    this.#analyser = this.#audioCtx.createAnalyser();
+    this.#analyser = context.createAnalyser();
     this.#analyser.fftSize = 1024;
     this.#analyser.smoothingTimeConstant = 0;
 
-    // Chain: source → preamp → eq[0..9] → analyser → destination
+    // Chain: input → preamp → eq[0..9] → analyser → destination
+    input.disconnect(destination);
+    input.connect(this.#preampNode);
     this.#preampNode.connect(this.#eqNodes[0]);
     for (let i = 0; i < this.#eqNodes.length - 1; i++) {
       this.#eqNodes[i].connect(this.#eqNodes[i + 1]);
     }
     this.#eqNodes[this.#eqNodes.length - 1].connect(this.#analyser);
-    this.#analyser.connect(this.#audioCtx.destination);
+    this.#analyser.connect(destination);
 
     this.#applyEq();
-  }
-
-  /** @param {string} audioId */
-  #connectToAnalyser(audioId) {
-    if (this.#srcNodes.has(audioId)) return;
-    const audioEl = this.$controller.value?.$audio.value
-      ?.querySelector(`de-audio-item[id="${audioId}"]:not([preload]) audio`);
-    if (!(audioEl instanceof HTMLAudioElement)) return;
-    this.#ensureAnalyser();
-    const src = /** @type {AudioContext} */ (this.#audioCtx)
-      .createMediaElementSource(audioEl);
-    src.connect(/** @type {GainNode} */ (this.#preampNode));
-    this.#srcNodes.set(audioId, src);
   }
 
   #startVisualizer() {
@@ -1241,9 +1263,9 @@ class WinampElement extends DiffuseElement {
       const HEIGHT_SCALE = MAX_HEIGHT / FULL_HEIGHT;
       const PUSH_DOWN = H >= 16 ? 2 : 0;
 
-      // Lazy-connect current audio
-      const audioId = this.$controller.value?.$queue.value?.now()?.id;
-      if (audioId) this.#connectToAnalyser(audioId);
+      // The engine routes each <audio> through the graph automatically;
+      // make sure our EQ/analyser chain is spliced into that bus.
+      this.#ensureAnalyser();
 
       // Time-domain → FFT → spectral data
       analyser.getByteTimeDomainData(timeDomainBuf);

@@ -25,6 +25,17 @@ import { computed, signal, untracked } from "~/common/signal.js";
 const IS_IOS = /iPhone|iPad|iPod/.test(navigator.userAgent) ||
   (navigator.platform === "MacIntel" && navigator.maxTouchPoints > 1);
 
+/**
+ * Module-internal Web Audio routing hooks. Accessed only by {@link AudioEngine}
+ * and {@link AudioEngineItem} (both live in this file), so these stay out of
+ * the public surface — external consumers use `engine.webAudio` instead.
+ *
+ * @type {unique symbol}
+ */
+const ROUTE_AUDIO = Symbol("routeAudio");
+/** @type {unique symbol} */
+const UNROUTE_AUDIO = Symbol("unrouteAudio");
+
 ////////////////////////////////////////////
 // ELEMENT
 ////////////////////////////////////////////
@@ -49,6 +60,24 @@ class AudioEngine extends BroadcastableDiffuseElement {
 
   /** Aborts in-flight MediaSource setup when the element is disconnected. */
   #streamAbort = new AbortController();
+
+  // WEB AUDIO
+  //
+  // Every <audio> element is routed through a shared AudioContext so consumers
+  // (themes, equalizer / visualizer plugins, …) can tap into the signal. All
+  // sources land on a single post-volume `input` node that is connected to the
+  // destination by default; a consumer replaces that edge with its own chain
+  // (e.g. `input → biquadFilter → destination`) to apply DSP.
+  //
+  // Chain (unless a consumer splices its nodes in):
+  //   mediaElementSource -> input -> destination
+
+  /** @type {AudioContext | undefined} Lazily created, shared by all items. */
+  #audioContext = undefined;
+  /** @type {GainNode | undefined} Post-volume tap point that all sources feed. */
+  #input = undefined;
+  /** @type {Map<HTMLAudioElement, MediaElementAudioSourceNode>} */
+  #sourceNodes = new Map();
 
   // SIGNALS
 
@@ -125,12 +154,21 @@ class AudioEngine extends BroadcastableDiffuseElement {
 
     // Monitor volume signal
     this.effect(() => {
+      // Master volume is applied through the Web Audio graph's input gain node.
+      // When the graph hasn't been created yet (e.g. no AudioContext support) we
+      // fall back to setting the volume directly on each element.
+      if (this.#input) {
+        this.#input.gain.value = this.#volume.value;
+      }
+
       Array.from(this.querySelectorAll("de-audio-item")).forEach(
         (node) => {
           const item = /** @type {AudioEngineItem} */ (node);
           if (item.hasAttribute("preload")) return;
           const audio = item.querySelector("audio");
-          if (audio) audio.volume = this.#volume.value;
+          if (audio && !this.#sourceNodes.has(audio)) {
+            audio.volume = this.#volume.value;
+          }
         },
       );
 
@@ -250,6 +288,9 @@ class AudioEngine extends BroadcastableDiffuseElement {
       audio.load();
     });
 
+    // Detach the <audio> source nodes and close the shared AudioContext.
+    this.#teardownWebAudio();
+
     super.disconnectedCallback();
   }
 
@@ -290,8 +331,14 @@ class AudioEngine extends BroadcastableDiffuseElement {
    * @type {Actions["play"]}
    */
   play({ audioId, volume }) {
+    this.#resumeContext();
+
     this.#withAudioNode(audioId, (audio, item) => {
-      audio.volume = volume ?? this.volume();
+      // Routed elements get master volume from the graph's gain node, so keep
+      // their own volume at unity unless a per-item override is given. In the
+      // no-Web-Audio fallback the element's volume carries the master level.
+      const routed = this.#sourceNodes.has(audio);
+      audio.volume = volume ?? (routed ? 1 : this.volume());
       audio.muted = false;
 
       // TODO: Might need this for `data-initial-progress`
@@ -684,6 +731,11 @@ class AudioEngine extends BroadcastableDiffuseElement {
       const audio = element.querySelector("audio");
       if (!audio) return;
 
+      // Unhook it from the Web Audio graph (a `createMediaElementSource` node
+      // can only be made once per element, and the element is about to be
+      // dropped, so the source node must be released).
+      this[UNROUTE_AUDIO](audio);
+
       audio.pause();
       audio.removeAttribute("src");
       audio.querySelectorAll("source").forEach((s) => s.removeAttribute("src"));
@@ -782,6 +834,151 @@ class AudioEngine extends BroadcastableDiffuseElement {
   #withAudioNode(audioId, fn) {
     const item = this.#itemElement(audioId);
     if (item) fn(item.audio, item);
+  }
+
+  // WEB AUDIO
+
+  /**
+   * The shared Web Audio graph, exposed so consumers (equalizer / visualizer
+   * plugins, themes, …) can hook into the audio signal.
+   *
+   * Every <audio> element is routed into the `input` node (with master volume
+   * already applied). By default `input` is connected straight to the
+   * destination:
+   *
+   *   source -> input -> destination
+   *
+   * To insert processing, disconnect that pass-through edge and reconnect it
+   * through your own chain, ending at the destination. For example, wiring in
+   * a biquad filter chain and an analyser:
+   *
+   * ```ignore
+   * const { context, input, destination } = engine.webAudio;
+   * const eq = context.createBiquadFilter();
+   * const analyser = context.createAnalyser();
+   * input.disconnect(destination);  // remove the default pass-through
+   * input.connect(eq);              // re-route through your chain
+   * eq.connect(analyser);
+   * analyser.connect(destination);
+   * ```
+   *
+   * Use `context.resume()` to unlock the context on a user gesture (browsers
+   * start it suspended until interaction).
+   */
+  get webAudio() {
+    this.#ensureAudioGraph();
+
+    return {
+      context: /** @type {AudioContext} */ (this.#audioContext),
+      input: /** @type {GainNode} */ (this.#input),
+      destination: /** @type {AudioContext} */ (this.#audioContext).destination,
+    };
+  }
+
+  /** Lazily creates the shared AudioContext and the default (pass-through) graph. */
+  #ensureAudioGraph() {
+    if (this.#audioContext) return;
+
+    /** @type {typeof AudioContext | undefined} */
+    const Ctx = globalThis.AudioContext ?? /** @type {any} */ (globalThis)
+        .webkitAudioContext;
+    if (!Ctx) return;
+
+    const context = new Ctx();
+    const input = context.createGain();
+
+    // Pass-through; consumers disconnect this edge to insert their chain.
+    input.connect(context.destination);
+
+    this.#audioContext = context;
+    this.#input = input;
+
+    // Apply the (possibly persisted) master volume to the freshly created node.
+    input.gain.value = this.#volume.value;
+
+    // Unlock the context on the first user gesture so playback that was
+    // requested before any interaction (e.g. autoplay) can proceed.
+    if (context.state === "suspended") {
+      const unlock = () => {
+        context.resume().catch(() => {});
+        ["touchstart", "touchend", "mousedown", "keydown"].forEach((e) => {
+          document.body.removeEventListener(e, unlock);
+        });
+      };
+      ["touchstart", "touchend", "mousedown", "keydown"].forEach((e) => {
+        document.body.addEventListener(e, unlock);
+      });
+    }
+  }
+
+  /**
+   * Routes an <audio> element through the Web Audio graph. Safe to call more
+   * than once per element (eg. when a single node is reused on iOS).
+   *
+   * Module-internal; use `webAudio` to consume the graph.
+   *
+   * @param {HTMLAudioElement} audio
+   */
+  [ROUTE_AUDIO](audio) {
+    if (this.#sourceNodes.has(audio)) return;
+
+    this.#ensureAudioGraph();
+    if (!this.#audioContext || !this.#input) return;
+
+    let source;
+    try {
+      source = this.#audioContext.createMediaElementSource(audio);
+    } catch {
+      // A `createMediaElementSource` node can only be created once per element.
+      // Treat a reused element we don't hold a node for (e.g. after the engine
+      // was torn down and reconnected) as already routed and skip it — the
+      // element simply won't be part of the graph in that case.
+      this.#sourceNodes.set(audio, /** @type {any} */ (null));
+      return;
+    }
+    source.connect(this.#input);
+    this.#sourceNodes.set(audio, source);
+
+    // Volume is handled by the graph's input gain node; keep the element's own
+    // volume at unity so the two don't compound.
+    audio.volume = 1;
+  }
+
+  /**
+   * Removes an <audio> element's source node from the graph. Mostly useful
+   * when the element is dropped (no longer in `this.items()`).
+   *
+   * Module-internal; use `webAudio` to consume the graph.
+   *
+   * @param {HTMLAudioElement} audio
+   */
+  [UNROUTE_AUDIO](audio) {
+    const source = this.#sourceNodes.get(audio);
+    if (!source) return;
+
+    source.disconnect();
+    this.#sourceNodes.delete(audio);
+  }
+
+  /** Resumes the shared AudioContext if it is suspended (e.g. autoplay policy). */
+  #resumeContext() {
+    this.#audioContext?.resume().catch(() => {});
+  }
+
+  /** Tears down the graph and all per-element source nodes. */
+  #teardownWebAudio() {
+    for (const audio of this.#sourceNodes.keys()) {
+      this[UNROUTE_AUDIO](audio);
+    }
+
+    this.#sourceNodes.clear();
+
+    // Detach from the destination, then close the context to free resources.
+    if (this.#input) this.#input.disconnect();
+    this.#audioContext?.close().catch(() => {});
+
+    this.#audioContext = undefined;
+    this.#input = undefined;
   }
 }
 
@@ -940,6 +1137,28 @@ class AudioEngineItem extends BroadcastableDiffuseElement {
 
     // Super
     super.connectedCallback();
+
+    // Route this item's <audio> through the engine's shared Web Audio graph
+    // so volume flows through the gain node and consumers (equalizer,
+    // visualizer plugins, etc) can tap into the signal. Idempotent per element.
+    this.engine?.[ROUTE_AUDIO](this.audio);
+  }
+
+  /**
+   * @override
+   */
+  disconnectedCallback() {
+    // Unhook the source node so the engine can tear the graph down cleanly
+    // once the item is dropped. The engine also handles this in its render
+    // cleanup, so this is just a safety net.
+    let audio;
+    try {
+      audio = this.audio;
+    } catch {
+      return;
+    }
+    this.engine?.[UNROUTE_AUDIO](audio);
+    super.disconnectedCallback();
   }
 
   // STATE
