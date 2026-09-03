@@ -2,6 +2,7 @@ import { Agent } from "@atproto/api";
 import { decode, encode } from "@atcute/cbor";
 import { xxh32r } from "xxh32/dist/raw.js";
 
+import { decodeCollection, encodeCollection } from "~/common/lens.js";
 import { computed, signal } from "~/common/signal.js";
 import { BroadcastedOutputElement, outputManager } from "../../common.js";
 import { defineElement } from "~/common/element.js";
@@ -68,20 +69,25 @@ class ATProtoSpaceOutput extends BroadcastedOutputElement {
       },
       facets: this.#recordCollection("sh.diffuse.output.facet"),
       playlistItems: this.#blobCollection(
+        "playlistItems",
         "sh.diffuse.output.playlistItemBundle",
         { groupBy: "playlist" },
       ),
       settings: this.#recordCollection("sh.diffuse.output.setting"),
-      tracks: this.#blobCollection("sh.diffuse.output.trackBundle", {
-        groupBy: "scheme",
-        keyOf: (item) => {
-          const uri = String(
-            /** @type {Record<string, unknown>} */ (item)["uri"] ?? "",
-          );
-          const colon = uri.indexOf(":");
-          return colon > 0 ? uri.substring(0, colon) : undefined;
+      tracks: this.#blobCollection(
+        "tracks",
+        "sh.diffuse.output.trackBundle",
+        {
+          groupBy: "scheme",
+          keyOf: (item) => {
+            const uri = String(
+              /** @type {Record<string, unknown>} */ (item)["uri"] ?? "",
+            );
+            const colon = uri.indexOf(":");
+            return colon > 0 ? uri.substring(0, colon) : undefined;
+          },
         },
-      }),
+      ),
     });
 
     this.facets = this.#manager.facets;
@@ -301,7 +307,17 @@ class ATProtoSpaceOutput extends BroadcastedOutputElement {
    * @param {string} nsid
    * @param {{ groupBy: string, keyOf?: (item: unknown) => string | undefined }} options
    */
-  #blobCollection(nsid, { groupBy, keyOf } = /** @type {any} */ ({})) {
+  /**
+   * Returns `{ empty, get, put }` for a collection stored as CBOR blobs.
+   *
+   * The blob content is wrapped in a self-describing envelope so the stored
+   * array is interpretable on its own.
+   *
+   * @param {import("~/common/self-describing.js").CollectionName} name
+   * @param {string} nsid
+   * @param {{ groupBy: string, keyOf?: (item: unknown) => string | undefined }} options
+   */
+  #blobCollection(name, nsid, { groupBy, keyOf } = /** @type {any} */ ({})) {
     /** @type {Map<string, string>} */
     let lastHashes = new Map();
     /** @type {Map<string, unknown>} */
@@ -325,7 +341,7 @@ class ATProtoSpaceOutput extends BroadcastedOutputElement {
           if (typeof key !== "string") continue;
 
           const bytes = await this.#fetchBlob(bundle.data.ref.$link);
-          const groupItems = /** @type {unknown[]} */ (decode(bytes));
+          const groupItems = /** @type {unknown[]} */ (decodeBlob(bytes, name));
           if (!Array.isArray(groupItems)) continue;
 
           items.push(...groupItems);
@@ -363,7 +379,7 @@ class ATProtoSpaceOutput extends BroadcastedOutputElement {
         const upserts = [];
 
         for (const [key, groupItems] of groups) {
-          const bytes = encode(groupItems);
+          const bytes = encodeBlob(groupItems, name);
           const hash = xxh32r(bytes).toString(16);
 
           if (lastHashes.get(key) === hash && lastBlobs.has(key)) continue;
@@ -536,6 +552,30 @@ class ATProtoSpaceOutput extends BroadcastedOutputElement {
 }
 
 export default ATProtoSpaceOutput;
+
+/**
+ * Encode a group of records as a self-describing CBOR blob.
+ *
+ * @param {unknown[]} items
+ * @param {import("~/common/self-describing.js").CollectionName} name
+ * @returns {Uint8Array}
+ */
+function encodeBlob(items, name) {
+  return encode(encodeCollection(items, name));
+}
+
+/**
+ * Decode a self-describing CBOR blob into records, migrating a stale payload.
+ *
+ * Legacy bare-array blobs (not envelopes) are returned as-is.
+ *
+ * @param {Uint8Array} bytes
+ * @param {import("~/common/self-describing.js").CollectionName} name
+ * @returns {unknown[]}
+ */
+function decodeBlob(bytes, name) {
+  return /** @type {unknown[]} */ (decodeCollection(decode(bytes), name) ?? []);
+}
 
 ////////////////////////////////////////////
 // REGISTER

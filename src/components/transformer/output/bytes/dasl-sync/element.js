@@ -6,6 +6,7 @@ import "~/components/output/polymorphic/indexed-db/element.js";
 
 import * as CID from "~/common/cid.js";
 import { diff, strictEquality } from "~/common/compare.js";
+import { collectionSchema } from "~/common/self-describing.js";
 import { computed, signal } from "~/common/signal.js";
 import { compareTimestamps } from "~/common/temporal.js";
 import { OutputTransformer } from "../../base.js";
@@ -230,6 +231,7 @@ class DaslBytesSyncOutputTransformer extends OutputTransformer {
       remote.facets,
       remote.ready,
       facets,
+      "facets",
     );
 
     this.playlistItems = this.managerProp(
@@ -237,6 +239,7 @@ class DaslBytesSyncOutputTransformer extends OutputTransformer {
       remote.playlistItems,
       remote.ready,
       playlistItems,
+      "playlistItems",
     );
 
     this.settings = this.managerProp(
@@ -244,6 +247,7 @@ class DaslBytesSyncOutputTransformer extends OutputTransformer {
       remote.settings,
       remote.ready,
       settings,
+      "settings",
     );
 
     this.tracks = this.managerProp(
@@ -251,6 +255,7 @@ class DaslBytesSyncOutputTransformer extends OutputTransformer {
       remote.tracks,
       remote.ready,
       tracks,
+      "tracks",
     );
 
     this.ready = () => true;
@@ -288,11 +293,12 @@ class DaslBytesSyncOutputTransformer extends OutputTransformer {
 
   /**
    * @template {{ id: string; updatedAt: string }} T
-   * @param {{ previous: Container<T>, collection: T[] }} _
+   * @param {{ previous: Container<T>, collection: T[], name?: import("~/common/self-describing.js").CollectionName }} _
    * @returns {Promise<Container<T>>}
    */
-  async updateContainer({ previous, collection }) {
+  async updateContainer({ previous, collection, name }) {
     const inventory = previous.inventory;
+    const schema = name ? collectionSchema(name) : null;
 
     const collIds = collection.map(({ id }) => id);
 
@@ -331,11 +337,12 @@ class DaslBytesSyncOutputTransformer extends OutputTransformer {
       removed: Array.from(allRemoved),
     };
 
-    return {
+    const container = {
       cid: await CID.create(0x71, encode(newInventory)),
       data: collection,
       inventory: newInventory,
     };
+    return schema ? { ...container, $schema: schema } : container;
   }
 
   /**
@@ -447,6 +454,7 @@ class DaslBytesSyncOutputTransformer extends OutputTransformer {
       cid: await CID.create(0x71, encode(updatedInventory)),
       data,
       inventory: updatedInventory,
+      $schema: a.$schema,
     };
   }
 
@@ -467,9 +475,10 @@ class DaslBytesSyncOutputTransformer extends OutputTransformer {
    * @param {{ collection: SignalReader<{ state: "loading" } | { state: "loaded"; data: Uint8Array | undefined } | { state: "error" }>, reload: () => Promise<void>, save: (bytes: Uint8Array) => Promise<void> }} remote
    * @param {SignalReader<boolean>} remoteReady
    * @param {SignalReader<Container<T>>} container
+   * @param {import("~/common/self-describing.js").CollectionName} name
    * @returns {{ collection: SignalReader<{ state: "loading" } | { state: "loaded"; data: T[] } | { state: "error" }>, reload: () => Promise<void>, save: (items: T[]) => Promise<void> }}
    */
-  managerProp(local, remote, remoteReady, container) {
+  managerProp(local, remote, remoteReady, container, name) {
     return {
       collection: computed(() => {
         const c = container();
@@ -485,6 +494,7 @@ class DaslBytesSyncOutputTransformer extends OutputTransformer {
         const adjustedContainer = await this.updateContainer({
           collection: newItems,
           previous: container(),
+          name,
         });
 
         const bytes = this.save(adjustedContainer);

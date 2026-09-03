@@ -5,7 +5,16 @@ import type {
   Track,
 } from "~/definitions/types.d.ts";
 
-export type FacetsDocument = { collection: Facet[] };
-export type PlaylistItemsDocument = { collection: PlaylistItem[] };
-export type SettingsDocument = { collection: Setting[] };
-export type TracksDocument = { collection: Track[] };
+/**
+ * The schema identity stamped on an Automerge doc so the stored binary is
+ * self-describing.
+ */
+export type DocumentSchema = {
+  /** The lexicon NSID the records in `collection` conform to. */
+  $schema?: string;
+};
+
+export type FacetsDocument = { collection: Facet[] } & DocumentSchema;
+export type PlaylistItemsDocument = { collection: PlaylistItem[] } & DocumentSchema;
+export type SettingsDocument = { collection: Setting[] } & DocumentSchema;
+export type TracksDocument = { collection: Track[] } & DocumentSchema;

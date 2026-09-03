@@ -1,6 +1,6 @@
 {
   "name": "@toko/diffuse",
-  "version": "4.0.0-alpha.1",
+  "version": "4.0.0-alpha.2",
   "license": "FSL-1.1-MIT",
   "vendor": true,
   "imports": {
@@ -39,6 +39,7 @@
     "@std/semver": "jsr:@std/semver@^1.0.8",
     "@std/xml": "jsr:@std/xml@^0.1.2",
     "@vicary/debounce-microtask": "jsr:@vicary/debounce-microtask@^0.1.8",
+    "@panproto/core": "npm:@panproto/core@^0.72.0",
     "@paulmillr/qr": "jsr:@paulmillr/qr@^0.6.0",
     "@zip-js/zip-js": "jsr:@zip-js/zip-js@^2.8.26",
     "alien-signals": "npm:alien-signals@^3.2.1",

@@ -110,11 +110,20 @@ export function outputManager(
     { compare: strictEquality },
   );
 
+  // Revision counters so a racing load never overwrites a value that was just
+  // saved (or a newer load was started) while it was awaiting `get()`.
+  let cRev = 0;
+  let plRev = 0;
+  let sRev = 0;
+  let tRev = 0;
+
   async function loadFacets() {
     if (init && (await init()) === false) return;
+    const rev = cRev;
     cs.value = "loading";
     try {
-      c.value = await facets.get();
+      const data = await facets.get();
+      if (cRev === rev) c.value = data;
       cs.value = "loaded";
     } catch (err) {
       console.error("Failed to load facets:", err);
@@ -124,9 +133,11 @@ export function outputManager(
 
   async function loadPlaylistItems() {
     if (init && (await init()) === false) return;
+    const rev = plRev;
     pls.value = "loading";
     try {
-      pl.value = await playlistItems.get();
+      const data = await playlistItems.get();
+      if (plRev === rev) pl.value = data;
       pls.value = "loaded";
     } catch (err) {
       console.error("Failed to load playlist items:", err);
@@ -136,9 +147,11 @@ export function outputManager(
 
   async function loadSettings() {
     if (init && (await init()) === false) return;
+    const rev = sRev;
     ss.value = "loading";
     try {
-      s.value = await settings.get();
+      const data = await settings.get();
+      if (sRev === rev) s.value = data;
       ss.value = "loaded";
     } catch (err) {
       console.error("Failed to load settings:", err);
@@ -148,9 +161,11 @@ export function outputManager(
 
   async function loadTracks() {
     if (init && (await init()) === false) return;
+    const rev = tRev;
     ts.value = "loading";
     try {
-      t.value = await tracks.get();
+      const data = await tracks.get();
+      if (tRev === rev) t.value = data;
       ts.value = "loaded";
     } catch (err) {
       console.error("Failed to load tracks:", err);
@@ -171,6 +186,7 @@ export function outputManager(
       reload: loadFacets,
       save: async (newFacets) => {
         batch(() => {
+          cRev++;
           if (untracked(() => cs.value === "sleeping")) cs.value = "loaded";
           c.value = newFacets;
         });
@@ -189,6 +205,7 @@ export function outputManager(
       reload: loadPlaylistItems,
       save: async (newPlaylistItems) => {
         batch(() => {
+          plRev++;
           if (untracked(() => pls.value === "sleeping")) pls.value = "loaded";
           pl.value = newPlaylistItems;
         });
@@ -207,6 +224,7 @@ export function outputManager(
       reload: loadSettings,
       save: async (newSettings) => {
         batch(() => {
+          sRev++;
           if (untracked(() => ss.value === "sleeping")) ss.value = "loaded";
           s.value = newSettings;
         });
@@ -225,6 +243,7 @@ export function outputManager(
       reload: loadTracks,
       save: async (newTracks) => {
         batch(() => {
+          tRev++;
           if (untracked(() => ts.value === "sleeping")) ts.value = "loaded";
           t.value = newTracks;
         });

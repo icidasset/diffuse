@@ -39,6 +39,7 @@ site.use(esbuild({
   options: {
     alias: {
       "@automerge/automerge": "https://esm.sh/@automerge/automerge@^3.2.3",
+      "@panproto/core": "https://esm.sh/@panproto/core@0.72.0",
     },
     bundle: true,
     format: "esm",
@@ -156,6 +157,17 @@ site.remoteFile(
   "vendor/98.css",
   import.meta.resolve("./node_modules/98.css/dist/98.css"),
 );
+
+// panproto (`@panproto/core`) loads its WASM lazily at browser runtime during a
+// schema write-back. Serve the module's binary so the browser can fetch it
+// without loading it into the Deno/build context.
+site.remoteFile(
+  "panproto_wasm_bg.wasm",
+  import.meta.resolve(
+    "./node_modules/@panproto/core/dist/panproto_wasm_bg.wasm",
+  ),
+);
+site.add([".wasm"]);
 
 ////////////////////////////////////////////
 // BINARY ASSETS

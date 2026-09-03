@@ -1,9 +1,15 @@
 import { computed } from "~/common/signal.js";
 import { OutputTransformer } from "../../base.js";
+import {
+  decodeJsonCollection,
+  saveJsonCollection,
+} from "~/common/lens.js";
 import { defineElement } from "~/common/element.js";
 
 /**
  * @import { OutputManagerDeputy } from "@specs/components/output/types.d.ts"
+ * @import { Facet, PlaylistItem, Setting, Track } from "~/definitions/types.d.ts"
+ * @import { CollectionName } from "~/common/self-describing.js"
  */
 
 /**
@@ -22,14 +28,16 @@ class JsonStringOutputTransformer extends OutputTransformer {
         collection: computed(() => {
           const col = base.facets.collection();
           if (col.state !== "loaded") return col;
-          return {
-            state: "loaded",
-            data: typeof col.data === "string" ? parseArray(col.data) : [],
-          };
+          /** @type {Facet[]} */
+          const data = decodeJsonCollection(col.data, "facets");
+          return { state: "loaded", data };
         }),
         save: async (newFacets) => {
-          const json = JSON.stringify(newFacets);
-          await base.facets.save(json);
+          await base.facets.save(
+            /** @type {string} */ (
+              await saveJsonCollection(newFacets, "facets", null)
+            ),
+          );
         },
       },
       playlistItems: {
@@ -37,14 +45,16 @@ class JsonStringOutputTransformer extends OutputTransformer {
         collection: computed(() => {
           const col = base.playlistItems.collection();
           if (col.state !== "loaded") return col;
-          return {
-            state: "loaded",
-            data: typeof col.data === "string" ? parseArray(col.data) : [],
-          };
+          /** @type {PlaylistItem[]} */
+          const data = decodeJsonCollection(col.data, "playlistItems");
+          return { state: "loaded", data };
         }),
         save: async (newPlaylistItems) => {
-          const json = JSON.stringify(newPlaylistItems);
-          await base.playlistItems.save(json);
+          await base.playlistItems.save(
+            /** @type {string} */ (
+              await saveJsonCollection(newPlaylistItems, "playlistItems", null)
+            ),
+          );
         },
       },
       settings: {
@@ -52,14 +62,16 @@ class JsonStringOutputTransformer extends OutputTransformer {
         collection: computed(() => {
           const col = base.settings.collection();
           if (col.state !== "loaded") return col;
-          return {
-            state: "loaded",
-            data: typeof col.data === "string" ? parseArray(col.data) : [],
-          };
+          /** @type {Setting[]} */
+          const data = decodeJsonCollection(col.data, "settings");
+          return { state: "loaded", data };
         }),
         save: async (newSettings) => {
-          const json = JSON.stringify(newSettings);
-          await base.settings.save(json);
+          await base.settings.save(
+            /** @type {string} */ (
+              await saveJsonCollection(newSettings, "settings", null)
+            ),
+          );
         },
       },
       tracks: {
@@ -67,14 +79,16 @@ class JsonStringOutputTransformer extends OutputTransformer {
         collection: computed(() => {
           const col = base.tracks.collection();
           if (col.state !== "loaded") return col;
-          return {
-            state: "loaded",
-            data: typeof col.data === "string" ? parseArray(col.data) : [],
-          };
+          /** @type {Track[]} */
+          const data = decodeJsonCollection(col.data, "tracks");
+          return { state: "loaded", data };
         }),
         save: async (newTracks) => {
-          const json = JSON.stringify(newTracks);
-          await base.tracks.save(json);
+          await base.tracks.save(
+            /** @type {string} */ (
+              await saveJsonCollection(newTracks, "tracks", null)
+            ),
+          );
         },
       },
 
@@ -88,18 +102,6 @@ class JsonStringOutputTransformer extends OutputTransformer {
     this.settings = manager.settings;
     this.tracks = manager.tracks;
     this.ready = manager.ready;
-  }
-}
-
-/**
- * @param {string} json
- */
-function parseArray(json) {
-  try {
-    return JSON.parse(json);
-  } catch (err) {
-    console.error(err);
-    return [];
   }
 }
 

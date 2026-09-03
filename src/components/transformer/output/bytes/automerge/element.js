@@ -10,6 +10,7 @@ import {
   removeUndefinedValuesFromRecord,
 } from "~/common/utils.js";
 import { OutputTransformer } from "../../base.js";
+import { collectionSchema } from "~/common/self-describing.js";
 import { defineElement } from "~/common/element.js";
 import {
   INITIAL_FACETS_DOCUMENT,
@@ -124,24 +125,31 @@ class AutomergeBytesOutputTransformer extends OutputTransformer {
       {
         stripUndefined: true,
       },
+      "facets",
     );
 
     this.playlistItems = automergeEntry(
       computed(() => local()?.playlistItems),
       remote.playlistItems,
       computed(() => playlistItems().doc),
+      undefined,
+      "playlistItems",
     );
 
     this.settings = automergeEntry(
       computed(() => local()?.settings),
       remote.settings,
       computed(() => settings().doc),
+      undefined,
+      "settings",
     );
 
     this.tracks = automergeEntry(
       computed(() => local()?.tracks),
       remote.tracks,
       computed(() => tracks().doc),
+      undefined,
+      "tracks",
     );
 
     this.ready = () => true;
@@ -256,11 +264,12 @@ export function loadDocument(value) {
  * @template {Record<string, any>} T
  * @param {SignalReader<{ collection: SignalReader<{ state: "loading" } | { state: "loaded"; data: Uint8Array | undefined } | { state: "error" }>, reload: () => Promise<void>, save: (bytes: Uint8Array) => Promise<void> } | undefined>} local
  * @param {{ collection: SignalReader<{ state: "loading" } | { state: "loaded"; data: Uint8Array | undefined } | { state: "error" }>, reload: () => Promise<void>, save: (bytes: Uint8Array) => Promise<void> }} remote
- * @param {SignalReader<Automerge.Doc<{ collection: T[] }>>} document
+ * @param {SignalReader<import("@specs/components/transformer/output/bytes/automerge/types.d.ts").DocumentSchema & { collection: T[] }>} document
  * @param {{ stripUndefined?: boolean }} [opts]
+ * @param {import("~/common/self-describing.js").CollectionName} [name]
  * @returns {{ collection: SignalReader<{ state: "loading" } | { state: "loaded"; data: T[] } | { state: "error" }>, reload: () => Promise<void>, save: (items: T[]) => Promise<void> }}
  */
-export function automergeEntry(local, remote, document, opts) {
+export function automergeEntry(local, remote, document, opts, name) {
   return {
     collection: computed(() => {
       const col = local()?.collection();
@@ -271,6 +280,7 @@ export function automergeEntry(local, remote, document, opts) {
     }),
     reload: remote.reload,
     save: async (/** @type {T[]} */ newItems) => {
+      const schema = name ? collectionSchema(name) : null;
       const doc = Automerge.change(document(), (d) => {
         d.collection = newItems.map((item) => {
           const cloned = recursivelyCloneRecords(item);
@@ -278,6 +288,9 @@ export function automergeEntry(local, remote, document, opts) {
             ? removeUndefinedValuesFromRecord(cloned)
             : cloned;
         });
+        if (schema) {
+          d.$schema = schema;
+        }
       });
 
       const bytes = Automerge.save(doc);
