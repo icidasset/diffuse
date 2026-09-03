@@ -108,8 +108,19 @@ function tryCoerceVersion(version) {
 }
 
 /**
+ * Whether a coerced version string refers to a rolling nightly build rather
+ * than a tagged release. Nightlies are never candidates for the `latest` alias.
+ *
+ * @param {string} comparable - A coerced, parseable semver string
+ * @returns {boolean}
+ */
+function isNightly(comparable) {
+  return parseSemver(comparable).prerelease?.includes("nightly") ?? false;
+}
+
+/**
  * @param {Record<string, { version: string, cid: string }>} artifacts
- * @param {{ includePrerelease?: boolean }} [options]
+ * @param {{ includePrerelease?: boolean, excludeNightlies?: boolean }} [options]
  * @returns {{ version: string, cid: string } | null}
  *
  * @example Returns null for an empty artifact list
@@ -187,7 +198,7 @@ function tryCoerceVersion(version) {
 
 export function getLatestArtifact(
   artifacts,
-  { includePrerelease = true } = {},
+  { includePrerelease = true, excludeNightlies = false } = {},
 ) {
   return Object.values(artifacts).reduce(
     /** @param {{ version: string, cid: string } | null} max */
@@ -197,6 +208,7 @@ export function getLatestArtifact(
       if (
         !includePrerelease && parseSemver(comparable).prerelease?.length
       ) return max;
+      if (excludeNightlies && isNightly(comparable)) return max;
       if (!max) return artifact;
       return greaterThan(
           parseSemver(comparable),
@@ -237,7 +249,7 @@ export function getLatestArtifact(
  * if (getVersionLabel("4.x-nightly", {}) !== "4.x-nightly") throw new Error("slug passes through");
  * ```
  *
- * @example `latest` resolves to the newest stable version
+ * @example `latest` resolves to the newest released version (nightlies excluded)
  * ```js
  * import { getVersionLabel } from "~/common/pages/version-upgrade.js";
  *
@@ -246,6 +258,19 @@ export function getLatestArtifact(
  *   b: { version: "4.1.0", cid: "bafyb" },
  * };
  * if (getVersionLabel("latest", artifacts) !== "4.1.0") throw new Error("latest resolves");
+ * ```
+ *
+ * @example A prerelease release (alpha) beats a nightly build
+ * ```js
+ * import { getVersionLabel } from "~/common/pages/version-upgrade.js";
+ *
+ * const artifacts = {
+ *   a: { version: "4.0.0-alpha.1", cid: "bafya" },
+ *   b: { version: "4.x-nightly", cid: "bafyb" },
+ * };
+ * if (getVersionLabel("latest", artifacts) !== "4.0.0-alpha.1") {
+ *   throw new Error("latest should resolve to the most stable release, not a nightly");
+ * }
  * ```
  *
  * @example `latest` falls back to the literal segment when no artifacts are known
@@ -275,7 +300,9 @@ export function getLatestArtifact(
 export function getVersionLabel(versionOrCid, artifacts) {
   if (!versionOrCid) return null;
   if (versionOrCid === "latest") {
-    return getLatestArtifact(artifacts, { includePrerelease: false })?.version
+    // The `latest` alias points at the most stable released artifact: never a
+    // rolling nightly, but alpha/beta release candidates still qualify.
+    return getLatestArtifact(artifacts, { excludeNightlies: true })?.version
       ?? "latest";
   }
   if (versionOrCid.startsWith("bafy")) {
@@ -342,6 +369,10 @@ export async function versionUpgrade() {
     !parseSemver(versionOrCid).prerelease?.length;
   const lastArtifact = getLatestArtifact(artifacts, {
     includePrerelease: !currentIsStable,
+    // The `latest` alias points at the most stable released artifact, never a
+    // rolling nightly. Other non-semver slugs (e.g. `4.x-nightly`) keep
+    // considering nightlies.
+    excludeNightlies: versionOrCid === "latest",
   });
   const isLatest = checkIsLatest(versionOrCid, lastArtifact);
 
