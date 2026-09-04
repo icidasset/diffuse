@@ -166,11 +166,46 @@ if (atprotoPasskeyEl) {
               : nothing}
 
             <div class="button-row">
-              <button @click="${handlePasskeyRemove}">Remove passkey</button>
+              <button
+                class="button--icon"
+                aria-label="Passkey options"
+                popovertarget="atproto-passkey-menu"
+              >
+                <i class="ph-fill ph-dots-three-outline-vertical"></i>
+              </button>
+            </div>
+            <div id="atproto-passkey-menu" class="dropdown" popover>
+              <button
+                ?disabled="${passkeyWorking}"
+                @click="${(/** @type {MouseEvent} */ e) => {
+                  /** @type {HTMLElement | null} */ (/** @type {HTMLElement} */ (e.currentTarget).closest("[popover]"))?.hidePopover();
+                  handlePasskeyAdopt();
+                }}"
+              >
+                <i class="ph-fill ph-plugs-connected"></i>
+                Use other existing key
+              </button>
+              <button
+                ?disabled="${passkeyWorking}"
+                @click="${(/** @type {MouseEvent} */ e) => {
+                  /** @type {HTMLElement | null} */ (/** @type {HTMLElement} */ (e.currentTarget).closest("[popover]"))?.hidePopover();
+                  handlePasskeySetup();
+                }}"
+              >
+                <i class="ph-fill ph-plus"></i>
+                Set up new key
+              </button>
+              <button @click="${(/** @type {MouseEvent} */ e) => {
+                /** @type {HTMLElement | null} */ (/** @type {HTMLElement} */ (e.currentTarget).closest("[popover]"))?.hidePopover();
+                handlePasskeyRemove();
+              }}">
+                <i class="ph-fill ph-warning"></i>
+                Remove encryption
+              </button>
             </div>
 
             <p class="caption">
-              Removing the passkey will expose all the sensitive information that was previously encrypted.
+              Setting up a new key or using another key re-encrypts your data. Removing encryption will expose all the sensitive information that was previously encrypted.
             </p>
           `
           : html`
