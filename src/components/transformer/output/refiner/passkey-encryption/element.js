@@ -267,10 +267,11 @@ class PasskeyEncryptionTransformer extends OutputTransformer {
    * Replace the active cipher key with `newKey` and re-encrypt the existing
    * data under it.
    *
-   * The raw stored data (still encrypted with the OLD key) is read and
-   * decrypted with the old key to plaintext, then the key is switched to
-   * `newKey` and that plaintext is saved through the refiner, which re-encrypts
-   * it with the new key.
+   * Every item the current passkey can still decrypt is re-encrypted with
+   * `newKey`. Items that cannot be decrypted with the current passkey (i.e.
+   * already locked under a forgotten/foreign key) are preserved unchanged so
+   * they stay locked instead of either aborting the whole re-key or being
+   * double-encrypted/dropped.
    *
    * @param {string} namespace
    * @param {Uint8Array} newKey
@@ -279,39 +280,50 @@ class PasskeyEncryptionTransformer extends OutputTransformer {
     const oldKey = this.#encryptionKey.value;
     const base = this.base();
 
-    // Decrypt everything with the old key (still in memory) to plaintext.
     const rawSettings = await this.#whenLoaded(base.settings);
     const rawTracks = await this.#whenLoaded(base.tracks);
 
-    /** @type {Setting[]} */
-    const settingsData = rawSettings.map((item) => {
+    // Re-encrypt everything the current passkey can still decrypt, leaving
+    // anything it cannot decrypt as-is (still encrypted, so it stays locked).
+    const newSettings = rawSettings.map((item) => {
       const setting = /** @type {Setting} */ (item);
-      return {
-        ...setting,
-        value:
-          typeof setting.value === "string" &&
-            isEncryptedUri(setting.value) &&
-            oldKey
-          ? decryptUri(oldKey, setting.value)
-          : setting.value,
-      };
+      let value = setting.value;
+      if (typeof value === "string" && isEncryptedUri(value) && oldKey) {
+        try {
+          value = decryptUri(oldKey, value);
+        } catch {
+          return setting;
+        }
+      }
+      return { ...setting, value: encryptUri(newKey, value) };
     });
 
-    /** @type {Track[]} */
-    const tracksData = rawTracks.map((item) => {
+    const newTracks = rawTracks.map((item) => {
       const track = /** @type {Track} */ (item);
-      return isEncryptedUri(track.uri) && oldKey
-        ? { ...track, uri: decryptUri(oldKey, track.uri) }
-        : track;
+      let uri = track.uri;
+      if (isEncryptedUri(uri) && oldKey) {
+        try {
+          uri = decryptUri(oldKey, uri);
+        } catch {
+          return track;
+        }
+      }
+      return { ...track, uri: encryptUri(newKey, uri) };
     });
-
-    // Switch keys, then re-save the plaintext so it gets re-encrypted with the
-    // new key (the save also updates the in-memory collection and writes out).
     await storeCipherKey(namespace, newKey);
-    this.#encryptionKey.value = newKey;
 
-    await this.settings.save(settingsData);
-    await this.tracks.save(tracksData);
+    // Activate the new key and write the fully re-encrypted data through the
+    // raw (un-refined) base manager (the re-encryption is already done above,
+    // so the refiner must not encrypt it a second time). Both `save`s write
+    // into their local in-memory signals synchronously at the start, so doing
+    // them back-to-back — before any network await — means no consumer ever
+    // reads a (new key + old data) mix that would briefly surface everything
+    // as locked.
+    this.#encryptionKey.value = newKey;
+    const settingsWrite = base.settings.save(newSettings);
+    const tracksWrite = base.tracks.save(newTracks);
+
+    await Promise.all([settingsWrite, tracksWrite]);
   }
 
   /**
