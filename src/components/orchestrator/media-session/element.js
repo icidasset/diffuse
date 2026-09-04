@@ -146,10 +146,18 @@ class MediaSessionOrchestrator extends BroadcastableDiffuseElement {
   }
 
   #syncPlaybackState() {
-    if (!this.audio) return;
-    navigator.mediaSession.playbackState = this.audio.isPlaying()
-      ? "playing"
-      : "paused";
+    if (!this.audio || !this.queue) return;
+
+    // Reflect the real state: "none" when nothing is loaded, so the OS media
+    // controls don't linger with stale "paused" UI. Firefox keeps the media
+    // session surface alive as long as playbackState is "playing"/"paused",
+    // and its `setPositionState` throws while the state is "none" — so
+    // keeping this in sync matters on Firefox in particular.
+    const playing = this.audio.isPlaying();
+
+    navigator.mediaSession.playbackState = this.queue.now()
+      ? playing ? "playing" : "paused"
+      : "none";
   }
 
   #syncPositionState() {
@@ -166,6 +174,7 @@ class MediaSessionOrchestrator extends BroadcastableDiffuseElement {
 
     if (!duration || isNaN(duration) || duration === 0) return;
     if (navigator.mediaSession.playbackState === "none") return;
+    if (typeof navigator.mediaSession.setPositionState !== "function") return;
 
     try {
       navigator.mediaSession.setPositionState({
@@ -174,50 +183,64 @@ class MediaSessionOrchestrator extends BroadcastableDiffuseElement {
         playbackRate: 1,
       });
     } catch {
-      // setPositionState may throw if duration is not finite
+      // setPositionState may throw (e.g. on Firefox) when the position is
+      // not finite or the browser doesn't consider the session playable.
     }
   }
 
   #registerActionHandlers() {
-    navigator.mediaSession.setActionHandler("play", () => {
-      if (!this.audio || !this.queue) return;
-      if (!this.#isLeader.value) return;
-      const now = this.queue.now();
-      if (now) this.audio.play({ audioId: now.id });
-    });
+    // Register each handler defensively: `setActionHandler` throws for
+    // actions a browser doesn't support (Firefox is stricter than Chrome), so
+    // an unsupported action must never abort registration of the rest. An
+    // exception here would also escape `connectedCallback` and prevent the
+    // metadata / playback-state / position-state effects below from running,
+    // leaving the media session completely inert.
+    /** @type {Array<[MediaSessionAction, MediaSessionActionHandler]>} */
+    const handlers = [
+      ["play", () => {
+        if (!this.audio || !this.queue) return;
+        if (!this.#isLeader.value) return;
+        const now = this.queue.now();
+        if (now) this.audio.play({ audioId: now.id });
+      }],
+      ["pause", () => {
+        if (!this.audio || !this.queue) return;
+        if (!this.#isLeader.value) return;
+        const now = this.queue.now();
+        if (now) this.audio.pause({ audioId: now.id });
+      }],
+      ["previoustrack", () => {
+        if (!this.queue) return;
+        if (!this.#isLeader.value) return;
+        this.queue.unshift();
+      }],
+      ["nexttrack", () => {
+        if (!this.queue) return;
+        if (!this.#isLeader.value) return;
+        this.queue.shift();
+      }],
+      ["seekto", (details) => {
+        if (!this.audio || !this.queue) return;
+        if (!this.#isLeader.value) return;
+        const now = this.queue.now();
+        if (!now || details.seekTime == null) return;
+        const state = this.audio.state(now.id);
+        const duration = state?.duration();
+        if (!duration || duration === 0) return;
+        this.audio.seek({
+          audioId: now.id,
+          percentage: details.seekTime / duration,
+        });
+      }],
+    ];
 
-    navigator.mediaSession.setActionHandler("pause", () => {
-      if (!this.audio || !this.queue) return;
-      if (!this.#isLeader.value) return;
-      const now = this.queue.now();
-      if (now) this.audio.pause({ audioId: now.id });
-    });
-
-    navigator.mediaSession.setActionHandler("previoustrack", () => {
-      if (!this.queue) return;
-      if (!this.#isLeader.value) return;
-      this.queue.unshift();
-    });
-
-    navigator.mediaSession.setActionHandler("nexttrack", () => {
-      if (!this.queue) return;
-      if (!this.#isLeader.value) return;
-      this.queue.shift();
-    });
-
-    navigator.mediaSession.setActionHandler("seekto", (details) => {
-      if (!this.audio || !this.queue) return;
-      if (!this.#isLeader.value) return;
-      const now = this.queue.now();
-      if (!now || details.seekTime == null) return;
-      const state = this.audio.state(now.id);
-      const duration = state?.duration();
-      if (!duration || duration === 0) return;
-      this.audio.seek({
-        audioId: now.id,
-        percentage: details.seekTime / duration,
-      });
-    });
+    for (const [action, handler] of handlers) {
+      try {
+        navigator.mediaSession.setActionHandler(action, handler);
+      } catch {
+        // Action not supported on this browser/platform — skip it.
+      }
+    }
   }
 }
 
