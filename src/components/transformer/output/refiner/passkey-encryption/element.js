@@ -241,52 +241,77 @@ class PasskeyEncryptionTransformer extends OutputTransformer {
   // PASSKEY
 
   /**
-   * Replace the active cipher key with `newKey` and re-encrypt existing data
-   * under it. The stored settings/tracks must be read while the current key is
-   * still in memory so they decrypt to plaintext; once captured, the key is
-   * switched to `newKey` and that plaintext is saved, which re-encrypts it with
-   * the new key.
+   * Resolve with the raw `data` array of an output manager collection once it
+   * has finished loading. The effect is disposed on the first loaded run (deferred
+   * past its initialiser to avoid a TDZ error on `stop`).
    *
-   * Both collections are captured in the same reactive snapshot so a single
-   * save is consistent, matching how `removePasskey` reads before clearing.
+   * @param {{ collection: () => { state: string; data?: unknown[] } }} manager
+   * @returns {Promise<unknown[]>}
+   */
+  #whenLoaded(manager) {
+    return new Promise((resolve) => {
+      let resolved = false;
+      const stop = this.effect(() => {
+        const c = manager.collection();
+        if (resolved || c.state !== "loaded") return;
+        resolved = true;
+        queueMicrotask(() => {
+          stop();
+          resolve(c.data ?? []);
+        });
+      });
+    });
+  }
+
+  /**
+   * Replace the active cipher key with `newKey` and re-encrypt the existing
+   * data under it.
+   *
+   * The raw stored data (still encrypted with the OLD key) is read and
+   * decrypted with the old key to plaintext, then the key is switched to
+   * `newKey` and that plaintext is saved through the refiner, which re-encrypts
+   * it with the new key.
    *
    * @param {string} namespace
    * @param {Uint8Array} newKey
    */
   async #rekey(namespace, newKey) {
-    await storeCipherKey(namespace, newKey);
+    const oldKey = this.#encryptionKey.value;
+    const base = this.base();
 
-    /** @type {Setting[]} */ let settingsData = [];
-    /** @type {Track[]} */ let tracksData = [];
+    // Decrypt everything with the old key (still in memory) to plaintext.
+    const rawSettings = await this.#whenLoaded(base.settings);
+    const rawTracks = await this.#whenLoaded(base.tracks);
 
-    await new Promise((resolve) => {
-      let captured = false;
-
-      const stop = this.effect(() => {
-        const settingsCol = this.settings.collection();
-        const tracksCol = this.tracks.collection();
-
-        if (settingsCol.state !== "loaded" || tracksCol.state !== "loaded") return;
-        if (captured) return;
-
-        captured = true;
-        settingsData = settingsCol.data;
-        tracksData = tracksCol.data;
-
-        // The effect below runs synchronously on creation, before `stop` is
-        // assigned, so referencing `stop` here directly would be a TDZ error.
-        // Deferring past the initializer lets us dispose and re-key safely.
-        queueMicrotask(() => {
-          stop();
-          this.#encryptionKey.value = newKey;
-
-          void this.settings.save(settingsData);
-          void this.tracks.save(tracksData);
-
-          resolve(undefined);
-        });
-      });
+    /** @type {Setting[]} */
+    const settingsData = rawSettings.map((item) => {
+      const setting = /** @type {Setting} */ (item);
+      return {
+        ...setting,
+        value:
+          typeof setting.value === "string" &&
+            isEncryptedUri(setting.value) &&
+            oldKey
+          ? decryptUri(oldKey, setting.value)
+          : setting.value,
+      };
     });
+
+    /** @type {Track[]} */
+    const tracksData = rawTracks.map((item) => {
+      const track = /** @type {Track} */ (item);
+      return isEncryptedUri(track.uri) && oldKey
+        ? { ...track, uri: decryptUri(oldKey, track.uri) }
+        : track;
+    });
+
+    // Switch keys, then re-save the plaintext so it gets re-encrypted with the
+    // new key (the save also updates the in-memory collection and writes out).
+    await storeCipherKey(namespace, newKey);
+    this.#encryptionKey.value = newKey;
+
+    await this.settings.save(settingsData);
+    await this.tracks.save(tracksData);
   }
 
   /**
