@@ -273,14 +273,18 @@ class PasskeyEncryptionTransformer extends OutputTransformer {
         settingsData = settingsCol.data;
         tracksData = tracksCol.data;
 
-        stop();
+        // The effect below runs synchronously on creation, before `stop` is
+        // assigned, so referencing `stop` here directly would be a TDZ error.
+        // Deferring past the initializer lets us dispose and re-key safely.
+        queueMicrotask(() => {
+          stop();
+          this.#encryptionKey.value = newKey;
 
-        this.#encryptionKey.value = newKey;
+          void this.settings.save(settingsData);
+          void this.tracks.save(tracksData);
 
-        void this.settings.save(settingsData);
-        void this.tracks.save(tracksData);
-
-        resolve(undefined);
+          resolve(undefined);
+        });
       });
     });
   }
