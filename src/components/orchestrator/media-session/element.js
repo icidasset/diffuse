@@ -4,7 +4,6 @@ import {
   query,
   queryOptional,
 } from "~/common/element.js";
-import { signal } from "~/common/signal.js";
 
 /**
  * @import {OutputElement} from "@specs/components/output/types.d.ts"
@@ -29,8 +28,6 @@ class MediaSessionOrchestrator extends BroadcastableDiffuseElement {
 
   /** @type {string | null} */
   #artworkUrl = null;
-
-  #isLeader = signal(true);
 
   // LIFECYCLE
 
@@ -61,11 +58,6 @@ class MediaSessionOrchestrator extends BroadcastableDiffuseElement {
       this.output && customElements.whenDefined(this.output.localName),
       this.artwork && customElements.whenDefined(this.artwork.localName),
     ].filter(Boolean));
-
-    this.effect(() => {
-      const promise = this.isLeader();
-      promise?.then((b) => this.#isLeader.set(b));
-    });
 
     this.#registerActionHandlers();
 
@@ -173,9 +165,16 @@ class MediaSessionOrchestrator extends BroadcastableDiffuseElement {
     const progress = state.progress();
 
     if (!duration || isNaN(duration) || duration === 0) return;
-    if (navigator.mediaSession.playbackState === "none") return;
     if (typeof navigator.mediaSession.setPositionState !== "function") return;
 
+    // Don't gate on navigator.mediaSession.playbackState here: that read is
+    // set by a separate effect (#syncPlaybackState) from browser state, so it
+    // can still be "none" on the first run after a track loads — and on
+    // Firefox the position would then never be (re)declared because this
+    // effect doesn't re-run when playbackState flips. Firefox throws from
+    // setPositionState while the session is "none", which the catch below
+    // absorbs, so we only need to gate on whether there is actually a
+    // playable current track (checked above via `now`/`state`/`duration`).
     try {
       navigator.mediaSession.setPositionState({
         duration,
@@ -184,7 +183,7 @@ class MediaSessionOrchestrator extends BroadcastableDiffuseElement {
       });
     } catch {
       // setPositionState may throw (e.g. on Firefox) when the position is
-      // not finite or the browser doesn't consider the session playable.
+      // not finite or the browser doesn't consider the session playable yet.
     }
   }
 
@@ -199,29 +198,24 @@ class MediaSessionOrchestrator extends BroadcastableDiffuseElement {
     const handlers = [
       ["play", () => {
         if (!this.audio || !this.queue) return;
-        if (!this.#isLeader.value) return;
         const now = this.queue.now();
         if (now) this.audio.play({ audioId: now.id });
       }],
       ["pause", () => {
         if (!this.audio || !this.queue) return;
-        if (!this.#isLeader.value) return;
         const now = this.queue.now();
         if (now) this.audio.pause({ audioId: now.id });
       }],
       ["previoustrack", () => {
         if (!this.queue) return;
-        if (!this.#isLeader.value) return;
         this.queue.unshift();
       }],
       ["nexttrack", () => {
         if (!this.queue) return;
-        if (!this.#isLeader.value) return;
         this.queue.shift();
       }],
       ["seekto", (details) => {
         if (!this.audio || !this.queue) return;
-        if (!this.#isLeader.value) return;
         const now = this.queue.now();
         if (!now || details.seekTime == null) return;
         const state = this.audio.state(now.id);
@@ -234,6 +228,13 @@ class MediaSessionOrchestrator extends BroadcastableDiffuseElement {
       }],
     ];
 
+    // NOTE: These handlers deliberately do NOT gate on a local "leader" flag.
+    // The underlying engines already resolve cross-tab leadership — `play`/
+    // `pause`/`seek` are broadcast "leaderOnly" from the audio engine, and
+    // `shift`/`unshift` operate on the queue's shared worker state. Gating the
+    // media-session actions here would make every handler a silent no-op in a
+    // non-leading tab while metadata still updates (both effects run), which
+    // looks exactly like "controls show but do nothing" on Firefox.
     for (const [action, handler] of handlers) {
       try {
         navigator.mediaSession.setActionHandler(action, handler);
