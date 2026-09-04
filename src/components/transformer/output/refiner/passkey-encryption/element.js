@@ -241,6 +241,51 @@ class PasskeyEncryptionTransformer extends OutputTransformer {
   // PASSKEY
 
   /**
+   * Replace the active cipher key with `newKey` and re-encrypt existing data
+   * under it. The stored settings/tracks must be read while the current key is
+   * still in memory so they decrypt to plaintext; once captured, the key is
+   * switched to `newKey` and that plaintext is saved, which re-encrypts it with
+   * the new key.
+   *
+   * Both collections are captured in the same reactive snapshot so a single
+   * save is consistent, matching how `removePasskey` reads before clearing.
+   *
+   * @param {string} namespace
+   * @param {Uint8Array} newKey
+   */
+  async #rekey(namespace, newKey) {
+    await storeCipherKey(namespace, newKey);
+
+    /** @type {Setting[]} */ let settingsData = [];
+    /** @type {Track[]} */ let tracksData = [];
+
+    await new Promise((resolve) => {
+      let captured = false;
+
+      const stop = this.effect(() => {
+        const settingsCol = this.settings.collection();
+        const tracksCol = this.tracks.collection();
+
+        if (settingsCol.state !== "loaded" || tracksCol.state !== "loaded") return;
+        if (captured) return;
+
+        captured = true;
+        settingsData = settingsCol.data;
+        tracksData = tracksCol.data;
+
+        stop();
+
+        this.#encryptionKey.value = newKey;
+
+        void this.settings.save(settingsData);
+        void this.tracks.save(tracksData);
+
+        resolve(undefined);
+      });
+    });
+  }
+
+  /**
    * Register a new passkey for track URI encryption.
    * Throws if the authenticator does not support the PRF extension.
    */
@@ -252,28 +297,8 @@ class PasskeyEncryptionTransformer extends OutputTransformer {
       throw new Error(result.reason);
     }
 
-    const key = await deriveCipherKey(result.prfSecond);
-    await storeCipherKey(namespace, key);
-    this.#encryptionKey.value = key;
-
-    let savedSettings = false;
-    let savedTracks = false;
-
-    const stopSettings = this.effect(() => {
-      if (savedSettings) { stopSettings(); return; }
-      const col = this.settings.collection();
-      if (col.state !== "loaded") return;
-      savedSettings = true;
-      this.settings.save(col.data);
-    });
-
-    const stopTracks = this.effect(() => {
-      if (savedTracks) { stopTracks(); return; }
-      const col = this.tracks.collection();
-      if (col.state !== "loaded") return;
-      savedTracks = true;
-      this.tracks.save(col.data);
-    });
+    const newKey = await deriveCipherKey(result.prfSecond);
+    await this.#rekey(namespace, newKey);
   }
 
   /**
@@ -288,28 +313,8 @@ class PasskeyEncryptionTransformer extends OutputTransformer {
       throw new Error(result.reason);
     }
 
-    const key = await deriveCipherKey(result.prfSecond);
-    await storeCipherKey(namespace, key);
-    this.#encryptionKey.value = key;
-
-    let savedSettings = false;
-    let savedTracks = false;
-
-    const stopSettings = this.effect(() => {
-      if (savedSettings) { stopSettings(); return; }
-      const col = this.settings.collection();
-      if (col.state !== "loaded") return;
-      savedSettings = true;
-      this.settings.save(col.data);
-    });
-
-    const stopTracks = this.effect(() => {
-      if (savedTracks) { stopTracks(); return; }
-      const col = this.tracks.collection();
-      if (col.state !== "loaded") return;
-      savedTracks = true;
-      this.tracks.save(col.data);
-    });
+    const newKey = await deriveCipherKey(result.prfSecond);
+    await this.#rekey(namespace, newKey);
   }
 
   /**
