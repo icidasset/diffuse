@@ -140,19 +140,19 @@
     "desc": "Add a WebDAV server as an audio source."
   },
   {
+    "url": "facets/browsing/deduplicate-tracks/prelude/index.html",
+    "title": "Deduplicate Tracks",
+    "kind": "prelude",
+    "category": "Browsing",
+    "desc": "Hide duplicate tracks (same artist and same title) from the presented tracks. Your saved data is not affected."
+  },
+  {
     "url": "facets/data/artwork-bundle/index.html",
     "title": "Default Artwork Bundle",
     "kind": "prelude",
     "category": "Data",
     "tags": ["base"],
     "desc": "The default setup for track artwork retrieval. Adds support for: embedded audio metadata, Last.fm, and MusicBrainz."
-  },
-  {
-    "url": "facets/browsing/deduplicate-tracks/prelude/index.html",
-    "title": "Deduplicate Tracks",
-    "kind": "prelude",
-    "category": "Browsing",
-    "desc": "Hide duplicate tracks (same artist and same title) from the presented tracks. Your saved data is not affected."
   },
   {
     "url": "facets/data/input-bundle/index.html",
@@ -240,6 +240,14 @@
     "category": "Playback",
     "featured": true,
     "desc": "Manage your playback queue. Reorder upcoming tracks, clear the queue, and view playback history."
+  },
+  {
+    "url": "facets/playback/remember-progress/prelude/index.html",
+    "title": "Remember Playback Position",
+    "kind": "prelude",
+    "category": "Playback",
+    "incomplete": true,
+    "desc": "Remember the playback position of long tracks (at least 30 minutes) so you can resume where you left off."
   },
   {
     "url": "facets/misc/scrobble/index.html",
