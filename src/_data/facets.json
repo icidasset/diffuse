@@ -148,6 +148,13 @@
     "desc": "The default setup for track artwork retrieval. Adds support for: embedded audio metadata, Last.fm, and MusicBrainz."
   },
   {
+    "url": "facets/browsing/deduplicate-tracks/prelude/index.html",
+    "title": "Deduplicate Tracks",
+    "kind": "prelude",
+    "category": "Browsing",
+    "desc": "Hide duplicate tracks (same artist and same title) from the presented tracks. Your saved data is not affected."
+  },
+  {
     "url": "facets/data/input-bundle/index.html",
     "title": "Default Input Bundle",
     "kind": "prelude",
