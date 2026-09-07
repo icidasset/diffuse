@@ -12,9 +12,9 @@
             "type": "string",
             "description": "A unique identifier"
           },
-          "cid": {
-            "type": "string",
-            "description": "A DASL CID representing the UTF8 encoded HTML (raw 0x55 codec)"
+          "blocks": {
+            "type": "unknown",
+            "description": "A map of resource CID string to the (compressed) content bytes of that resource. Used together with `resources` when a facet ships its MASL content inline."
           },
           "createdAt": { "type": "string", "format": "datetime" },
           "description": { "type": "string" },
@@ -28,10 +28,6 @@
             "default": false,
             "description": "Whether the facet is favourited (shown at the top) or not. Some facets may be more important to the user than others."
           },
-          "html": {
-            "type": "string",
-            "description": "The UTF8 HTML string that makes up the facet"
-          },
           "kind": {
             "type": "string",
             "default": "interactive",
@@ -39,6 +35,10 @@
             "description": "A facet is by default interactive, but headless 'prelude' facets may also be created, these run before any main interactive facet is loaded."
           },
           "name": { "type": "string" },
+          "resources": {
+            "type": "unknown",
+            "description": "The MASL `resources` map of a tile, keyed by path. The facet record itself is the MASL manifest; the `/` resource holds the facet's HTML. Its `src` CID points at a block in `blocks` (inline) or in the CAR when loaded from a `.tile` file."
+          },
           "tags": { "type": "array", "items": { "type": "string" } },
           "updatedAt": { "type": "string", "format": "datetime" },
           "uri": {

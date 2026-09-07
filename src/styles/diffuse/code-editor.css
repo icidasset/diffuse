@@ -78,7 +78,8 @@
     color: oklch(from currentColor l c h / 0.6);
   }
 
-  .ͼg {
+  .ͼg,
+  .ͼl {
     color: var(--accent-twist-2);
   }
 

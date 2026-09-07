@@ -21,6 +21,7 @@ import {
   register,
   resolve,
 } from "~/common/lens-registry.js";
+import { resolveInlineTile } from "~/common/tiles.js";
 
 // Unit tests for the self-describing envelope + migration/write-back machinery.
 // These use distinct NSIDs per test so the module-level lens registry does not
@@ -71,6 +72,63 @@ describe("common/self-describing + lens", () => {
       const rec = (out.data as Array<{ id: string }>)[0];
       expect(rec.id).toBe("a");
       expect(out.envelope?.$schemaHistory).toHaveLength(0);
+    });
+
+    it("lifts a legacy html facet into a tile on read", async () => {
+      // A facet stored before the tile schema: a raw `html` string, no `resources`.
+      const stored = encodeJsonCollection([
+        { id: "f1", name: "Legacy", html: "<p>hello</p>", cid: "old-cid" },
+      ], "facets");
+
+      // The encoder read path (decodeJsonCollection -> migrateEnvelope) lifts it.
+      const out = decodeJsonCollection(stored, "facets") as Array<Record<string, unknown>>;
+      const rec = out[0];
+      expect(rec.id).toBe("f1");
+      expect(rec.name).toBe("Legacy");
+      expect(rec.html).toBeUndefined();
+      expect(rec.cid).toBeUndefined();
+      expect(typeof rec.resources).toBe("object");
+      expect(typeof rec.blocks).toBe("object");
+
+      // The lifted tile resolves back to the original HTML.
+      const root = await resolveInlineTile(
+        rec.resources as Record<string, { src: unknown; "content-type"?: string }>,
+        rec.blocks as Record<string, string>,
+      );
+      expect(root?.html).toBe("<p>hello</p>");
+    });
+
+    it("migrateEnvelope lifts legacy facets and keeps already-tile facets untouched", () => {
+      const envelope = wrap([
+        { id: "a", name: "x", html: "<p>hi</p>" },
+        { id: "b", name: "y", resources: { "/": { src: { $link: "bafk..." } } }, blocks: {} },
+      ], { schema: "sh.diffuse.output.facet" });
+      const out = migrateEnvelope(envelope, "facets", resolve);
+      const records = out.data as Array<Record<string, unknown>>;
+
+      const lifted = records.find((r) => r.id === "a")!;
+      expect(lifted.html).toBeUndefined();
+      expect(typeof lifted.resources).toBe("object");
+      expect(typeof lifted.blocks).toBe("object");
+
+      const alreadyTile = records.find((r) => r.id === "b")!;
+      expect(alreadyTile.resources).toBeDefined();
+      expect(alreadyTile.blocks).toBeDefined();
+    });
+
+    it("migrateEnvelope tolerates non-array facets data (no crash, passes through)", () => {
+      // A malformed/legacy stored facets value that is not an array must not
+      // throw (the lift would otherwise call .map on a non-function).
+      const envelope = {
+        $schema: "sh.diffuse.output.facet",
+        $schemaHistory: [],
+        data: { id: "a", name: "x", html: "<p>hi</p>" },
+      };
+      let out;
+      expect(() => {
+        out = migrateEnvelope(envelope as never, "facets", resolve);
+      }).not.toThrow();
+      expect(out).toBeDefined();
     });
   });
 

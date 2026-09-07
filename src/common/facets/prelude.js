@@ -2,7 +2,7 @@
  * @import {Facet} from "~/definitions/types.d.ts"
  */
 
-import { loadURI } from "../loader.js";
+import { linkTileResources, resolveFacetTile } from "../loader.js";
 
 /**
  * @param {Facet[]} facets
@@ -19,10 +19,16 @@ export async function insertPreludes(facets, container) {
     .sort((a, b) => a.name.localeCompare(b.name));
 
   for (const prelude of preludes) {
-    const html = prelude.html ??
-      (prelude.uri ? await loadURI(prelude.uri) : "");
-    if (!html) continue;
-    const preludeFragment = range.createContextualFragment(html);
-    container.append(preludeFragment);
+    const tile = await resolveFacetTile(prelude);
+    if (!tile?.html) continue;
+
+    const fragment = range.createContextualFragment(tile.html);
+    if (tile.resources && Object.keys(tile.resources).length) {
+      // Rewrite absolute `/…` resource URLs to Blob URLs on the detached
+      // fragment BEFORE inserting it, so the browser never requests the raw
+      // (un-rewritten) path from the build root.
+      linkTileResources(fragment, tile.resources, tile.blocks);
+    }
+    container.append(fragment);
   }
 }

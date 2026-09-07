@@ -1,7 +1,8 @@
 import foundation from "~/common/foundation.js";
-import * as CID from "~/common/cid.js";
 import * as TID from "@atcute/tid";
 import * as Output from "~/common/output.js";
+import { resolveFacetHTML } from "~/common/loader.js";
+import { htmlFacetTile } from "~/common/tiles.js";
 
 /**
  * @import {Facet} from "~/definitions/types.d.ts"
@@ -11,11 +12,6 @@ const FACET_TYPE = "sh.diffuse.output.facet";
 
 /** @param {string} text */
 const ok = (text) => ({ content: [{ type: "text", text }] });
-
-/** @param {string} html */
-async function htmlCID(html) {
-  return await CID.create(0x55, new TextEncoder().encode(html));
-}
 
 /** @returns {Promise<Facet[]>} */
 async function listFacets() {
@@ -98,7 +94,7 @@ async function registerFacetTools() {
         favourite: f.favourite ?? false,
         uri: f.uri,
         tags: f.tags,
-        hasHtml: typeof f.html === "string",
+        hasContent: typeof f.resources === "object",
       }));
 
       return ok(JSON.stringify(summary, null, 2));
@@ -124,12 +120,13 @@ async function registerFacetTools() {
       if (!facet) {
         return ok(`No facet with id "${id}" was found.`);
       }
-      if (!facet.html && facet.uri) {
+      const html = await resolveFacetHTML(facet);
+      if (!html && facet.uri) {
         return ok(
-          `Facet "${facet.name}" tracks a remote URI (${facet.uri}) and has no local HTML yet.`,
+          `Facet "${facet.name}" tracks a remote URI (${facet.uri}) and its content could not be resolved.`,
         );
       }
-      return ok(JSON.stringify(facet, null, 2));
+      return ok(JSON.stringify({ ...facet, html }, null, 2));
     },
   });
 
@@ -158,6 +155,7 @@ async function registerFacetTools() {
     },
     async execute({ name, kind, description, html, tags }) {
       const now = new Date().toISOString();
+      const tile = await htmlFacetTile(html);
       /** @type {Facet} */
       const facet = {
         $type: FACET_TYPE,
@@ -165,8 +163,8 @@ async function registerFacetTools() {
         name,
         kind: kind === "prelude" ? "prelude" : "interactive",
         description: description ?? undefined,
-        html,
-        cid: await htmlCID(html),
+        blocks: tile.blocks,
+        resources: tile.resources,
         tags: tags?.length ? tags : undefined,
         createdAt: now,
         updatedAt: now,
@@ -209,8 +207,9 @@ async function registerFacetTools() {
       if (enabled !== undefined) facet.enabled = enabled;
       if (tags !== undefined) facet.tags = tags.length ? tags : undefined;
       if (html !== undefined) {
-        facet.html = html;
-        facet.cid = await htmlCID(html);
+        const tile = await htmlFacetTile(html);
+        facet.blocks = tile.blocks;
+        facet.resources = tile.resources;
       }
 
       await saveFacet(facet); // saveFacet bumps updatedAt

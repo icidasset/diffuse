@@ -1,9 +1,6 @@
 import * as TID from "@atcute/tid";
 import { xxh32r } from "xxh32/dist/raw.js";
 
-import { loadURI } from "../loader.js";
-import * as CID from "../cid.js";
-
 import { STARTING_SET_DISABLED, TYPE } from "./constants.js";
 
 import facetsData from "~/_data/facets.json" with { type: "json" };
@@ -77,15 +74,16 @@ export function buildFacets(uris) {
  * if (new Date(facet.createdAt).toISOString() !== facet.createdAt) throw new Error("createdAt should be a valid ISO string");
  * ```
  *
- * @example fetchHTML false leaves html and cid undefined; kind is validated
+ * @example fetchHTML false leaves content fields undefined; kind is validated
  * ```js
  * import { facetFromURI } from "~/common/facets/utils.js";
  *
  * const base = { name: "Test", uri: "test.html", description: undefined };
  *
  * const noHtml = await facetFromURI({ ...base, kind: undefined }, { fetchHTML: false });
- * if (noHtml.html !== undefined) throw new Error("html should be undefined when fetchHTML is false");
- * if (noHtml.cid !== undefined) throw new Error("cid should be undefined when fetchHTML is false");
+ * if (noHtml.uri !== "test.html") throw new Error("uri should be preserved");
+ * if (noHtml.resources !== undefined) throw new Error("resources should be undefined when fetchHTML is false");
+ * if (noHtml.blocks !== undefined) throw new Error("blocks should be undefined when fetchHTML is false");
  *
  * const prelude = await facetFromURI({ ...base, kind: "prelude" }, { fetchHTML: false });
  * if (prelude.kind !== "prelude") throw new Error("prelude kind should be preserved");
@@ -110,10 +108,6 @@ export async function facetFromURI(
   { description, kind, name, tags, uri },
   { fetchHTML },
 ) {
-  const html = fetchHTML ? await loadURI(uri) : undefined;
-  const cid = html
-    ? await CID.create(0x55, new TextEncoder().encode(html))
-    : undefined;
   const timestamp = new Date().toISOString();
 
   /** @type {Facet} */
@@ -121,9 +115,7 @@ export async function facetFromURI(
     $type: "sh.diffuse.output.facet",
     createdAt: timestamp,
     id: TID.now(),
-    cid,
     description,
-    html,
     name,
     kind: kind === "interactive" || kind === "prelude" ? kind : undefined,
     tags: tags?.length ? tags : undefined,

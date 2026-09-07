@@ -248,7 +248,7 @@ function _renderList(output, listEl) {
                     : nothing}
                 </div>
                 <div style="opacity: 0.55">
-                  ${c.uri && !c.html
+                  ${c.uri && !c.resources
                     ? html`
                       <span class="with-icon">
                         <i class="ph-fill ph-binoculars"></i>

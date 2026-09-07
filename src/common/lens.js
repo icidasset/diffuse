@@ -20,6 +20,7 @@
 import { collectionSchema, unwrap, wrap } from "./self-describing.js";
 import { resolve } from "./lens-registry.js";
 import { put as panprotoPut, parseLexicon } from "./panproto.js";
+import { migrateLegacyFacet } from "./tiles.js";
 
 /**
  * Project a collection of records from one NSID's shape to another using a lens
@@ -182,6 +183,23 @@ export function migrate(stored, current, resolveLens) {
  * if (!("starred" in (out.data[0] as object))) throw new Error("expected migrated record");
  * if (!out.envelope || out.envelope.$schema !== "sh.diffuse.output.facet") throw new Error("expected migrated envelope NSID");
  * ```
+ *
+ * @example Lifts a legacy html facet to the tile shape on read
+ * ```ts
+ * import { wrap } from "~/common/self-describing.js";
+ * import { resolve } from "~/common/lens-registry.js";
+ * import { migrateEnvelope } from "~/common/lens.js";
+ *
+ * // A facet stored before the tile schema carries a plain `html` string and no `resources`.
+ * const envelope = wrap([{ id: "a", name: "x", html: "<p>hi</p>" }], { schema: "sh.diffuse.output.facet" });
+ * const out = migrateEnvelope(envelope, "facets", resolve);
+ * const rec = out.data[0] as Record<string, unknown>;
+ * if ("html" in rec) throw new Error("legacy html should be dropped");
+ * if (!rec.resources || !rec.blocks) throw new Error("should be lifted into a tile");
+ * if (!out.envelope) throw new Error("expected envelope");
+ * const envRec = out.envelope.data[0] as Record<string, unknown>;
+ * if (envRec.resources === undefined) throw new Error("envelope data should be lifted");
+ * ```
  */
 export function migrateEnvelope(value, name, resolveLens) {
   const current = collectionSchema(name);
@@ -191,19 +209,43 @@ export function migrateEnvelope(value, name, resolveLens) {
   const env = /** @type {any} */ (envelope);
 
   if (!env || env.$schema === current) {
-    return { data: /** @type {T} */ (data), envelope: env };
+    const dataLifted = (name === "facets" ? liftLegacyFacets(data) : data);
+    return {
+      data: /** @type {T} */ (dataLifted),
+      envelope: env
+        ? { ...env, data: /** @type {T} */ (dataLifted) }
+        : env,
+    };
   }
 
   const migrated = migrate({ data: /** @type {T} */ (data), envelope: env }, current, resolveLens);
+  const dataLifted = name === "facets" ? liftLegacyFacets(migrated.data) : migrated.data;
 
   /** @type {import("./self-describing.js").SelfDescribing<T, LensDocument | null>} */
   const migratedEnvelope = {
     ...env,
     $schema: current,
     $schemaHistory: migrated.history,
-    data: /** @type {T} */ (migrated.data),
+    data: /** @type {T} */ (dataLifted),
   };
-  return { data: /** @type {T} */ (migrated.data), envelope: migratedEnvelope };
+  return { data: /** @type {T} */ (dataLifted), envelope: migratedEnvelope };
+}
+
+/**
+ * Lifts any legacy `facets` records (raw `html`, pre-tile shape) to the current
+ * tile shape synchronously, leaving already-tile records untouched. Non-array
+ * stored data (a single non-collection value) is returned unchanged.
+ *
+ * @param {unknown} data
+ * @returns {unknown}
+ */
+function liftLegacyFacets(data) {
+  if (!Array.isArray(data)) return data;
+  return data.map((record) =>
+    record && typeof record === "object" && !Array.isArray(record)
+      ? migrateLegacyFacet(/** @type {Record<string, unknown>} */ (record))
+      : record,
+  );
 }
 
 /**

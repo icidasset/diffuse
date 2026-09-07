@@ -381,7 +381,7 @@ export default {
     {
       url: "definitions/output/facet.json",
       title: "Output / Facet",
-      desc: "Facet pointer or HTML snippet.",
+      desc: "A MASL manifest (`resources` + `blocks`), or a pointer (`uri`) to an `.html` file or `.tile` CAR.",
     },
     {
       url: "definitions/output/playlistItem.json",

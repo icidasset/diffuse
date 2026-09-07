@@ -152,7 +152,7 @@ export function insertToggleButtons() {
       const out = await output();
       const collection = await Output.data(out.facets);
       const isActive = collection.some((f) =>
-        f.uri === uri && f.html === undefined
+        f.uri === uri && f.resources === undefined
       );
 
       if (isActive) {
@@ -205,7 +205,7 @@ export async function monitorToggleButtonStates() {
       if (!menu || !button || !icon || !uri) continue;
 
       const item = colMap.get(uri);
-      const isActive = item && item.html === undefined;
+      const isActive = item && item.resources === undefined;
       const isPrelude = li.dataset.kind === "prelude";
 
       menu.classList.toggle("grid-item__menu--active", isActive ?? false);

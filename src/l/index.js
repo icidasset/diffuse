@@ -1,7 +1,7 @@
 import foundation from "~/common/foundation.js";
 import * as CID from "~/common/cid.js";
 import * as Output from "~/common/output.js";
-import { createLoader, renderError } from "~/common/loader.js";
+import { createLoader, linkTileResources, renderError } from "~/common/loader.js";
 import { insertPreludes } from "~/common/facets/prelude.js";
 import { computed, effect } from "~/common/signal.js";
 
@@ -36,7 +36,7 @@ const preludeKey = computed(() => {
   if (col.state !== "loaded") return null;
   return col.data
     .filter((f) => f.kind === "prelude")
-    .map((f) => `${f.id}:${f.cid ?? ""}:${f.enabled !== false}`)
+    .map((f) => `${f.id}:${f.enabled !== false}:${JSON.stringify(f.resources ?? null)}`)
     .join(",");
 });
 
@@ -66,6 +66,10 @@ createLoader({
   label: "Facet",
   source: () => output.facets,
   async render(facet) {
+    // Tile facets are content addressed: `facet.cid` is resolved during loading
+    // from the MASL `resources["/"].src` CID, so the loaded root HTML is
+    // verified against it. Plain HTML facets carry no `cid`, so nothing to
+    // verify.
     if (facet.cid) {
       const valid = await CID.verify(
         new TextEncoder().encode(facet.html ?? ""),
@@ -89,6 +93,14 @@ createLoader({
     const range = document.createRange();
     range.selectNode(container);
     const documentFragment = range.createContextualFragment(facet.html ?? "");
+
+    // Rewrite absolute `/…` resource URLs to Blob URLs on the detached fragment
+    // BEFORE inserting it, so the browser never starts a request for the raw
+    // (un-rewritten) path — attaching first would intermittently fetch e.g.
+    // `/styles.css` from the build root and 404.
+    if (facet.tile) {
+      linkTileResources(documentFragment, facet.tile.resources, facet.tile.blocks);
+    }
     container.append(documentFragment);
   },
 });

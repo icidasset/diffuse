@@ -26,6 +26,7 @@
     "@codemirror/lang-css": "npm:@codemirror/lang-css@^6.3.1",
     "@codemirror/lang-html": "npm:@codemirror/lang-html@^6.4.12",
     "@codemirror/lang-javascript": "npm:@codemirror/lang-javascript@^6.2.5",
+    "@codemirror/state": "npm:@codemirror/state@^6.0.0",
     "@fcrozatier/htmlcrunch": "jsr:@fcrozatier/htmlcrunch@^1.5.1",
     "@fortawesome/free-regular-svg-icons": "npm:@fortawesome/free-regular-svg-icons@^7.3.1",
     "@fry69/deep-diff": "jsr:@fry69/deep-diff@^0.1.10",

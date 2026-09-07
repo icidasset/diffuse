@@ -11,6 +11,7 @@ import "@awesome.me/webawesome/dist/components/option/option.js";
 import "~/common/webawesome/detect-dark.js";
 import foundation from "~/common/foundation.js";
 import * as Output from "~/common/output.js";
+import { htmlFacetTile } from "~/common/tiles.js";
 
 // Set doc title
 foundation.setup({ title: "Split View | Diffuse" });
@@ -437,6 +438,7 @@ async function saveSimplifiedCopy() {
   const id = crypto.randomUUID();
   const name = `Split View (${Temporal.Now.instant().toLocaleString()})`;
   const html = generateSimplifiedHTML(id, name);
+  const tile = await htmlFacetTile(html);
   const now = new Date().toISOString();
 
   await output.facets.save([
@@ -445,7 +447,8 @@ async function saveSimplifiedCopy() {
       $type: "sh.diffuse.output.facet",
       id,
       name,
-      html,
+      blocks: tile.blocks,
+      resources: tile.resources,
       createdAt: now,
       updatedAt: now,
     },

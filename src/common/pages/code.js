@@ -3,13 +3,18 @@ import { css as langCss } from "@codemirror/lang-css";
 import { html as langHtml } from "@codemirror/lang-html";
 import { javascript as langJs } from "@codemirror/lang-javascript";
 import { autocompletion } from "@codemirror/autocomplete";
+import { StateEffect } from "@codemirror/state";
 
 import * as TID from "@atcute/tid";
 
-import * as CID from "~/common/cid.js";
 import * as Output from "~/common/output.js";
 import { facetFromURI } from "~/common/facets/utils.js";
-import { loadURI } from "~/common/loader.js";
+import { resolveFacetHTML } from "~/common/loader.js";
+import {
+  decodeBlocks,
+  tileFromFiles,
+  tileResourceEntries,
+} from "~/common/tiles.js";
 import { signal } from "~/common/signal.js";
 
 import { saveFacet } from "./crud.js";
@@ -21,6 +26,12 @@ import { output } from "./output.js";
 
 const $editor = signal(/** @type {EditorView | null} */ (null));
 const $editingFacet = signal(/** @type {Facet | null} */ (null));
+
+/** @type {{ path: string; content: string }[]} */
+let files = [{ path: "/", content: "" }];
+let activeIndex = 0;
+
+const fileDecoder = new TextDecoder();
 
 ////////////////////////////////////////////
 // LOADING
@@ -53,17 +64,335 @@ function setEditorLoading(loading) {
 }
 
 ////////////////////////////////////////////
-// EDITOR
+// EDITOR — TABS + SINGLE CodeMirror VIEW
 ////////////////////////////////////////////
+
+/**
+ * @param {string} path
+ */
+function basename(path) {
+  if (path === "/") return "index.html";
+  const trimmed = path.replace(/\/+$/, "");
+  const idx = trimmed.lastIndexOf("/");
+  return idx >= 0 ? trimmed.slice(idx + 1) : trimmed;
+}
+
+/**
+ * @param {string} path
+ */
+function languageForPath(path) {
+  if (path === "/" || /\.html?$/i.test(path)) return langHtml();
+  if (/\.css$/i.test(path)) return langCss();
+  // js, mjs, json, etc.
+  return langJs();
+}
+
+/**
+ * The base extensions shared by every tab.
+ */
+const baseExtensions = [basicSetup, autocompletion()];
+
+/** @returns {string} */
+function currentContent() {
+  return $editor.value?.state.doc.toString() ?? "";
+}
+
+/** @param {string} content */
+function setEditorContent(content) {
+  $editor.value?.dispatch({
+    changes: { from: 0, to: $editor.value.state.doc.length, insert: content },
+  });
+}
+
+/**
+ * Persists the active tab's current doc into `files`, then switches to `index`.
+ *
+ * @param {number} index
+ */
+function activateTab(index) {
+  const editor = $editor.value;
+  if (!editor) return;
+  if (index < 0 || index >= files.length) return;
+  if (index === activeIndex) return;
+
+  files[activeIndex].content = editor.state.doc.toString();
+  activeIndex = index;
+
+  // Swap language extension + content for the new tab.
+  editor.dispatch({
+    effects: StateEffect.reconfigure.of([
+      ...baseExtensions,
+      languageForPath(files[activeIndex].path),
+    ]),
+  });
+  setEditorContent(files[activeIndex].content);
+
+  renderTabs();
+}
+
+/**
+ * Renames the file at `index` to `newPath`, adjusting the editor's language
+ * if the extension changes. The `/` index cannot be renamed.
+ *
+ * @param {number} index
+ * @param {string} newPath
+ */
+function renameFile(index, newPath) {
+  if (index === 0) return;
+  const trimmed = newPath.trim();
+  if (!trimmed) return;
+  const path = trimmed.startsWith("/") ? trimmed : `/${trimmed}`;
+  if (path === files[index].path) return;
+  if (files.some((f, i) => i !== index && f.path === path)) return;
+
+  const langChanged = languageForPath(path) !== languageForPath(files[index].path);
+  const renamedPath = path;
+  files[index].path = path;
+
+  // Keep `/` first, then alphabetical, and track the renamed file.
+  files.sort((a, b) => (a.path === "/" ? -1 : b.path === "/" ? 1 : a.path.localeCompare(b.path)));
+  activeIndex = files.findIndex((f) => f.path === renamedPath);
+  if (activeIndex < 0) activeIndex = 0;
+
+  if (langChanged) {
+    $editor.value?.dispatch({
+      effects: StateEffect.reconfigure.of([
+        ...baseExtensions,
+        languageForPath(files[activeIndex].path),
+      ]),
+    });
+  }
+  renderTabs();
+}
+
+/**
+ * Adds a new file to the tile. Opens a modal dialog (styled like other facet
+ * dialogs) where the file path, e.g. <code>/style.css</code>, can be entered.
+ */
+function addFile() {
+  let dialog = /** @type {HTMLDialogElement | null} */ (
+    document.getElementById("add-file-dialog")
+  );
+
+  if (!dialog) {
+    dialog = /** @type {HTMLDialogElement} */ (
+      document.createElement("dialog")
+    );
+    dialog.id = "add-file-dialog";
+    dialog.style.cssText =
+      "padding: 0; position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%); margin: 0;";
+    dialog.innerHTML = `
+      <form id="add-file-form">
+        <div class="dialog-header">
+          <strong>Add a file to the tile</strong>
+        </div>
+        <div class="dialog-body">
+          <p style="font-size: var(--fs-sm); margin: 0">
+            Path of the new file, e.g. <code>/style.css</code>. The language is
+            chosen from the extension.
+          </p>
+          <div>
+            <label for="add-file-path">Path</label>
+            <input id="add-file-path" type="text" placeholder="/file.js" required autocomplete="off" />
+          </div>
+        </div>
+        <div class="dialog-footer" style="justify-content: flex-end">
+          <button type="button" id="add-file-cancel">Cancel</button>
+          <button type="submit" class="button--bg-accent">Add file</button>
+        </div>
+      </form>
+    `;
+    document.body.appendChild(dialog);
+
+    dialog.querySelector("#add-file-cancel")?.addEventListener("click", () => {
+      /** @type {HTMLDialogElement} */ (dialog).close();
+    });
+
+    dialog.querySelector("#add-file-form")?.addEventListener("submit", (e) => {
+      e.preventDefault();
+      const input = /** @type {HTMLInputElement | null} */ (
+        dialog?.querySelector("#add-file-path")
+      );
+      const existing = new Set(files.map((f) => f.path));
+      let path = input?.value.trim() ?? "";
+      if (!path.startsWith("/")) path = `/${path}`;
+      if (!path || path === "/" || existing.has(path)) return;
+      files.push({ path, content: "" });
+      /** @type {HTMLDialogElement} */ (dialog).close();
+      activateTab(files.length - 1);
+    });
+  }
+
+  const pathInput = /** @type {HTMLInputElement | null} */ (
+    dialog.querySelector("#add-file-path")
+  );
+  if (pathInput) pathInput.value = "";
+
+  dialog.showModal();
+  pathInput?.focus();
+}
+
+/**
+ * Removes the tab at `index`. The `/` (index) tab cannot be removed.
+ *
+ * @param {number} index
+ */
+function removeFile(index) {
+  if (index === 0 || index >= files.length) return;
+  const editor = $editor.value;
+  if (!editor) return;
+  files[activeIndex].content = editor.state.doc.toString();
+  files.splice(index, 1);
+  if (index <= activeIndex) activeIndex = Math.max(0, activeIndex - 1);
+  setEditorContent(files[activeIndex].content);
+  renderTabs();
+}
+
+/**
+ * Renders the tab bar (<code>#editor-tabs</code>) from the current `files`.
+ */
+function renderTabs() {
+  const tabsEl = document.getElementById("editor-tabs");
+  if (!tabsEl) return;
+
+  tabsEl.textContent = "";
+  files.forEach((file, index) => {
+    const tab = document.createElement("div");
+    tab.role = "button";
+    tab.tabIndex = 0;
+    tab.className = "editor-tab" + (index === activeIndex ? " is-active" : "");
+    tab.title = file.path;
+    tab.addEventListener("click", () => activateTab(index));
+    tab.addEventListener("keydown", (e) => {
+      if (e.key === "Enter" || e.key === " ") {
+        e.preventDefault();
+        activateTab(index);
+      }
+    });
+
+    const label = document.createElement("span");
+    label.textContent = file.path === "/" ? "index" : basename(file.path);
+    label.title = "Double-click to rename";
+    label.addEventListener("dblclick", (e) => {
+      e.stopPropagation();
+      const input = document.createElement("input");
+      input.type = "text";
+      input.value = file.path;
+      input.className = "editor-tab__rename editor-tab__rename--inline";
+      label.replaceWith(input);
+      input.focus();
+      input.select();
+
+      const commit = () => {
+        if (done) return;
+        done = true;
+        renameFile(index, input.value);
+        if (input.isConnected) input.remove();
+        renderTabs();
+      };
+      let done = false;
+      input.addEventListener("keydown", (e) => {
+        if (e.key === "Enter") {
+          e.preventDefault();
+          commit();
+        } else if (e.key === "Escape") {
+          done = true;
+          if (input.isConnected) input.remove();
+          renderTabs();
+        }
+      });
+      input.addEventListener("blur", commit);
+    });
+    tab.append(label);
+
+    if (index !== 0) {
+      const close = document.createElement("button");
+      close.type = "button";
+      close.className = "editor-tab__close";
+      close.title = "Remove file";
+      close.innerHTML = '<i class="ph-bold ph-x editor-tab__icon"></i>';
+      close.addEventListener("click", (e) => {
+        e.stopPropagation();
+        removeFile(index);
+      });
+      tab.append(close);
+    }
+
+    tabsEl.append(tab);
+  });
+
+  const add = document.createElement("button");
+  add.type = "button";
+  add.className = "editor-tab editor-tab--add";
+  add.title = "Add file";
+  add.innerHTML = '<i class="ph-bold ph-plus editor-tab__icon"></i>';
+  add.addEventListener("click", addFile);
+  tabsEl.append(add);
+}
+
+/**
+ * Loads a facet's files into the editor tabs. Inline tiles (with a `resources`
+ * map + `blocks`) load every resource into its own tab; otherwise the `/` index
+ * (resolved via `resolveFacetHTML`) is shown as a single tab.
+ *
+ * @param {Facet} facet
+ */
+async function loadFacetFiles(facet) {
+  const resources = /** @type {Record<string, { src: unknown; "content-type"?: string }> | undefined} */ (
+    facet.resources
+  );
+  if (resources && facet.blocks) {
+    const blocks = await decodeBlocks(facet.blocks);
+    const entries = tileResourceEntries(resources, blocks);
+    const loaded = [];
+    if (entries.size) {
+      for (const [path, entry] of entries) {
+        loaded.push({ path, content: fileDecoder.decode(entry.bytes) });
+      }
+    } else {
+      loaded.push({ path: "/", content: await resolveFacetHTML(facet) });
+    }
+    files = loaded;
+  } else {
+    files = [{ path: "/", content: await resolveFacetHTML(facet) }];
+  }
+
+  activeIndex = 0;
+  // Ensure the `/` index is first.
+  files.sort((a, b) => (a.path === "/" ? -1 : b.path === "/" ? 1 : a.path.localeCompare(b.path)));
+  activeIndex = files.findIndex((f) => f.path === "/");
+  if (activeIndex < 0) activeIndex = 0;
+
+  $editor.value?.dispatch({
+    effects: StateEffect.reconfigure.of([
+      ...baseExtensions,
+      languageForPath(files[activeIndex].path),
+    ]),
+  });
+  setEditorContent(files[activeIndex].content);
+  renderTabs();
+}
 
 export function renderEditor() {
   // Code editor
   const editorContainer = document.body.querySelector("#html-input-container");
   if (!editorContainer) throw new Error("Editor container not found");
 
+  // Tab bar rendered just above the editor.
+  const tabsEl = document.createElement("div");
+  tabsEl.id = "editor-tabs";
+  tabsEl.className = "editor-tabs";
+  editorContainer.before(tabsEl);
+
   const editor = new EditorView({
     parent: editorContainer,
-    doc: `
+    doc: "",
+    extensions: [...baseExtensions, languageForPath("/")],
+  });
+
+  $editor.value = editor;
+
+  files = [{ path: "/", content: `
 <style>
   @import "./styles/base.css";
 </style>
@@ -71,17 +400,10 @@ export function renderEditor() {
 <script type="module">
   import foundation from "~/common/foundation.js";
 </script>
-    `.trim(),
-    extensions: [
-      basicSetup,
-      langHtml(),
-      langCss(),
-      langJs(),
-      autocompletion(),
-    ],
-  });
-
-  $editor.value = editor;
+    `.trim() }];
+  activeIndex = 0;
+  setEditorContent(files[0].content);
+  renderTabs();
   return editor;
 }
 
@@ -111,8 +433,14 @@ async (event) => {
     document.querySelector("#kind-input")
   );
 
-  const html = editor.state.doc.toString();
-  const cid = await CID.create(0x55, new TextEncoder().encode(html));
+  // Persist the active tab's current doc before collecting files.
+  files[activeIndex].content = editor.state.doc.toString();
+
+  /** @type {Record<string, string>} */
+  const fileMap = {};
+  for (const file of files) fileMap[file.path] = file.content;
+  const tile = tileFromFiles(fileMap);
+
   const name = nameEl?.value ?? "nameless";
   const description = descriptionEl?.value ?? "";
   const kind =
@@ -122,20 +450,20 @@ async (event) => {
   const facet = $editingFacet.value
     ? {
       ...$editingFacet.value,
-      cid,
+      blocks: tile.blocks,
       description,
-      html,
       kind,
       name,
+      resources: tile.resources,
     }
     : {
       $type: "sh.diffuse.output.facet",
       id: TID.now(),
-      cid,
+      blocks: tile.blocks,
       description,
-      html,
       kind,
       name,
+      resources: tile.resources,
     };
 
   $editingFacet.value = facet;
@@ -182,16 +510,12 @@ async function editFacet(ogFacet) {
   // Scroll to builder
   document.querySelector("#code")?.scrollIntoView();
 
-  // Make sure HTML is loaded
-  if (!facet.html && facet.uri) {
-    setEditorLoading(true);
-    const html = await loadURI(facet.uri);
-    const cid = await CID.create(0x55, new TextEncoder().encode(html));
-    setEditorLoading(false);
-
-    facet.html = html;
-    facet.cid = cid;
-  }
+  // Load the facet's files into the editor tabs. `loadFacetFiles` handles
+  // inline tiles (each resource becomes a tab) and plain HTML/URI facets (a
+  // single index tab).
+  setEditorLoading(true);
+  await loadFacetFiles(facet);
+  setEditorLoading(false);
 
   $editingFacet.value = facet;
   nameEl.value = facet.name;
@@ -203,11 +527,6 @@ async function editFacet(ogFacet) {
   if (descriptionEl) {
     descriptionEl.value = facet.description ?? "";
   }
-
-  const editor = $editor.value;
-  editor?.dispatch({
-    changes: { from: 0, to: editor.state.doc.length, insert: facet.html },
-  });
 }
 
 export function handleBuildFormSubmit() {
@@ -228,12 +547,9 @@ export function handleBuildFormSubmit() {
     const file = /** @type {HTMLInputElement} */ (event.target).files?.[0];
     if (!file) return;
 
-    const html = await file.text();
-    const cid = await CID.create(0x55, new TextEncoder().encode(html));
-
-    editor.dispatch({
-      changes: { from: 0, to: editor.state.doc.length, insert: html },
-    });
+    const content = await file.text();
+    files[activeIndex].content = content;
+    setEditorContent(content);
   });
 }
 
