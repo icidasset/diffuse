@@ -21,15 +21,25 @@ if ("serviceWorker" in navigator) {
       console.warn("[do-offline] Failed to register service worker:", error);
     });
 
-  // When the SW activates it sends "sw-activated". Reload so the page runs
-  // fresh code under the new SW. To break the loop that can occur when the SW
-  // script itself changes between reloads (esbuild chunk-hash churn in dev),
-  // we store a timestamp. If a second sw-activated arrives within a few seconds
-  // of the previous reload it is the loop — skip it. A stale timestamp means a
-  // genuinely new SW arrived later, so we reload again.
+  // When a new SW takes over, the page needs to reload so it runs fresh code
+  // under the new controller. Two signals can fire when this happens, and
+  // browsers differ in which they deliver (and in what order):
+  //   - the SW explicitly posts "sw-activated" after clients.claim(), and
+  //   - the page fires "controllerchange" when claim() takes effect.
+  // Firefox in particular has been observed to occasionally drop the former
+  // while still switching controllers, leaving the page running stale code
+  // until the next manual refresh. Listen for both and funnel them through a
+  // single debounced reload.
+  //
+  // The debounce breaks the reload loop that can occur when the SW script
+  // itself changes between reloads (esbuild chunk-hash churn in dev): we store
+  // a timestamp, and any second trigger within that window is the loop and is
+  // skipped. A stale timestamp means a genuinely new SW arrived later, so we
+  // reload again. The timestamp lives in sessionStorage so the guard survives
+  // the navigation.
   const RELOAD_GUARD_MS = 5000;
-  navigator.serviceWorker.addEventListener("message", (event) => {
-    if (event.data?.type !== "sw-activated") return;
+
+  function reloadForNewController() {
     const flag = sessionStorage.getItem("sw-activated-reload");
     if (flag) {
       sessionStorage.removeItem("sw-activated-reload");
@@ -37,5 +47,17 @@ if ("serviceWorker" in navigator) {
     }
     sessionStorage.setItem("sw-activated-reload", String(Date.now()));
     location.reload();
+  }
+
+  navigator.serviceWorker.addEventListener("message", (event) => {
+    if (event.data?.type !== "sw-activated") return;
+    reloadForNewController();
+  });
+
+  navigator.serviceWorker.addEventListener("controllerchange", () => {
+    // "controllerchange" also fires if the page loses its controller entirely
+    // (e.g. the SW is unregistered) — don't reload in that case, only when a
+    // (new) controller actually took control.
+    if (navigator.serviceWorker.controller) reloadForNewController();
   });
 }

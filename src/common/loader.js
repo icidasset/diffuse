@@ -13,10 +13,12 @@ import * as CID from "~/common/cid.js";
 import { effect } from "~/common/signal.js";
 
 // When the service worker takes control (clients.claim()), the page is about
-// to reload (see default-layout.js sw-activated handler). Any fetch() calls
-// in flight at that moment will be cancelled by the navigation and throw a
-// NetworkError. We detect the controller change here so we can suppress those
-// spurious errors rather than flashing an error UI before the reload.
+// to reload (see service-worker-loader.js reloadForNewController, which fires
+// on both the "sw-activated" message and the "controllerchange" event). Any
+// fetch() calls in flight at that moment will be cancelled by the navigation
+// and throw a NetworkError. We detect the controller change here so we can
+// suppress those spurious errors rather than flashing an error UI before the
+// reload.
 let swControllerChanging = false;
 
 if ("serviceWorker" in navigator) {
