@@ -1,5 +1,6 @@
 /// <reference lib="webworker" />
 
+import { isAudioFile } from "~/components/input/common.js";
 import { create as createCid } from "./common/cid.js";
 
 /** @type {Record<string, string>} */
@@ -100,6 +101,13 @@ self.addEventListener("fetch", (_event) => {
   // Only cache GET requests.
   if (request.method !== "GET") return;
 
+  // Skip audio/video and partial content
+  const pathname = new URL(request.url).pathname;
+
+  if (request.headers.get("range")) return;
+  if (isAudioFile(pathname)) return;
+
+  // ⚙️
   event.respondWith(handleFetch(request));
 });
 
