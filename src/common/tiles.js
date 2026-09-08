@@ -648,6 +648,49 @@ export function rewriteModuleImports(source, resolve) {
 }
 
 /**
+ * Rewrites absolute URL specifiers in CSS `@import` statements (`@import
+ * "/x.css";`, `@import url("/x.css");`, or an unquoted `url(...)`) to the
+ * resolved URL. Relative/other `url()` references are left untouched. This lets
+ * a tile's stylesheets import each other by path when served as Blob URLs.
+ *
+ * @param {string} source
+ * @param {(specifier: string) => string | undefined} resolve - Maps an absolute specifier to its replacement URL, or `undefined` to leave it alone.
+ * @returns {string}
+ *
+ * @example Rewrites absolute CSS imports and leaves relative ones alone
+ * ```js
+ * import { rewriteCssImports } from "~/common/tiles.js";
+ *
+ * const imp = "@" + "import";
+ * const source =
+ *   imp + ' "/base.css";\n' +
+ *   imp + ' url("/theme.css");\n' +
+ *   imp + " url(/vars.css);\n" +
+ *   imp + ' "./local.css";\n' +
+ *   'background: url("/img.png");';
+ *
+ * const out = rewriteCssImports(source, (spec) =>
+ *   ["/base.css", "/theme.css", "/vars.css"].includes(spec) ? `blob:${spec}` : undefined,
+ * );
+ *
+ * if (!out.includes("\"blob:/base.css\"")) throw new Error("/base.css should be rewritten");
+ * if (!out.includes("url(\"blob:/theme.css\")")) throw new Error("/theme.css in url() should be rewritten");
+ * if (!out.includes("url(blob:/vars.css)")) throw new Error("/vars.css unquoted url() should be rewritten");
+ * if (!out.includes("./local.css")) throw new Error("relative import should be kept");
+ * if (!out.includes("url(\"/img.png\")")) throw new Error("non-import url() should be kept");
+ * ```
+ */
+export function rewriteCssImports(source, resolve) {
+  return source.replace(
+    /(@import\s+(?:url\(\s*)?)(["']?)(\/[^"'()\s]+)\2/g,
+    (match, pre, quote, specifier) => {
+      const url = resolve(specifier);
+      return url ? `${pre}${quote}${url}${quote}` : match;
+    },
+  );
+}
+
+/**
  * Builds an inline tile facet's `resources` + `blocks` from a single piece of
  * HTML content, so the facet's index document is content addressed. The root
  * resource's CID is the CID of the raw HTML bytes.

@@ -14,6 +14,7 @@ import {
   decodeBlocks,
   parseCar,
   resolveRoot,
+  rewriteCssImports,
   rewriteModuleImports,
   tileResourceEntries,
 } from "./tiles.js";
@@ -289,6 +290,12 @@ function isModuleResource(path, contentType) {
   return /\.(cjs|mjs|js|jsx|ts|tsx)$/.test(path);
 }
 
+/** @param {string} path @param {string | undefined} contentType */
+function isCssResource(path, contentType) {
+  const type = (contentType ?? "").toLowerCase();
+  return type.includes("css") || /\.css$/.test(path);
+}
+
 /**
  * @param {Uint8Array | string} content
  * @param {string | undefined} contentType
@@ -326,29 +333,32 @@ export function linkTileResources(container, resources, blocks) {
   }
   if (urls.size === 0) return;
 
-  // Module resources may import each other by absolute path. Blob origins are
-  // excluded from import maps, so rewrite the importing module's specifiers to
-  // the target's Blob URL directly. Iterate to a fixpoint so module → module
-  // chains all point at the final (already-rewritten) Blob URLs.
-  const modulePaths = [...urls.keys()].filter((path) =>
-    isModuleResource(path, entries.get(path)?.contentType ?? undefined)
+  // JS module resources import each other by absolute path; CSS files do so via
+  // @import. Blob origins are excluded from import maps, so rewrite the specifiers
+  // to the target's Blob URL directly. Iterate to a fixpoint so chains all point
+  // at the final (already-rewritten) Blob URLs.
+  const rewritable = [...urls.keys()].filter((path) =>
+    isModuleResource(path, entries.get(path)?.contentType ?? undefined) ||
+    isCssResource(path, entries.get(path)?.contentType ?? undefined)
   );
-  if (modulePaths.length) {
+  if (rewritable.length) {
     const decoder = new TextDecoder();
     let changed = true;
-    let guard = modulePaths.length + 1;
+    let guard = rewritable.length + 1;
     while (changed && guard-- > 0) {
       changed = false;
-      for (const path of modulePaths) {
+      for (const path of rewritable) {
         const entry = entries.get(path);
         if (!entry) continue;
+        const isCss = isCssResource(path, entry.contentType);
+        const rewrite = isCss ? rewriteCssImports : rewriteModuleImports;
         const source = decoder.decode(entry.bytes);
-        const rewritten = rewriteModuleImports(
+        const rewritten = rewrite(
           source,
           (specifier) => urls.get(specifier),
         );
         if (rewritten !== source) {
-          urls.set(path, createBlobURL(rewritten, entry.contentType, true));
+          urls.set(path, createBlobURL(rewritten, entry.contentType, !isCss));
           changed = true;
         }
       }
@@ -371,6 +381,18 @@ export function linkTileResources(container, resources, blocks) {
         return bits.join(" ");
       }).join(",");
       el.setAttribute("srcset", rewritten);
+    }
+
+    // Rewrite inline module/CSS imports (scripts haven't run yet — linking
+    // happens on the detached fragment before it is inserted).
+    if (el.tagName === "SCRIPT") {
+      const text = el.textContent ?? "";
+      const rewritten = rewriteModuleImports(text, (spec) => urls.get(spec));
+      if (rewritten !== text) el.textContent = rewritten;
+    } else if (el.tagName === "STYLE") {
+      const text = el.textContent ?? "";
+      const rewritten = rewriteCssImports(text, (spec) => urls.get(spec));
+      if (rewritten !== text) el.textContent = rewritten;
     }
   }
 }
