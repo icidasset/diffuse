@@ -2,8 +2,6 @@
 @import "./animations.css" layer(base.animations);
 
 @import "./diffuse/colors.css" layer(diffuse.colors);
-@import "./diffuse/font-faces.css" layer(diffuse.font-faces);
-@import "./diffuse/fonts.css" layer(diffuse.fonts);
 
 body {
   background: var(--bg-color);
