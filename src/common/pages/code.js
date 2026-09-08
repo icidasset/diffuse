@@ -67,6 +67,75 @@ function setEditorLoading(loading) {
 // EDITOR — TABS + SINGLE CodeMirror VIEW
 ////////////////////////////////////////////
 
+const DEFAULT_FILES = [{ path: "/", content: `
+<!-- Absolute URLs = Used to reference files of this facet -->
+<!-- Relative URLs = Relative to root of current version of Diffuse -->
+
+<style>
+  @import "./styles/base.css"; /* Import Diffuse base styles */
+  @import "/styles.css";
+</style>
+
+<div id="placeholder"></div>
+<script src="/script.js" type="module"></script>
+  `.trim() }, {
+  path: "/script.js",
+  content: `
+import foundation from "~/common/foundation.js";
+import { effect } from "~/common/signal.js";
+
+// Set document title
+foundation.setup({ title: "Example" });
+
+// Show what's currently playing
+const output = await foundation.orchestrator.output();
+const queue = await foundation.engine.queue();
+
+effect(() => {
+  const now = queue.now();
+  const tracks = output.tracks.collection();
+  const currentlyPlaying = now && tracks.state === "loaded"
+    ? tracks.data.find((t) => t.id === now.id)
+    : undefined;
+
+  const el = foundation.container().querySelector("#placeholder");
+
+  if (currentlyPlaying) {
+    el.innerHTML = (
+      (currentlyPlaying?.tags?.artist ?? "Unknown artist") + " - " +
+      (currentlyPlaying?.tags?.title ?? "Unknown title")
+    );
+    el.classList.remove("is-faded");
+  } else if (tracks.state === "loading") {
+    el.innerHTML = "Loading ...";
+    el.classList.add("is-faded");
+  } else {
+    el.innerHTML = "Queue is empty 🫥";
+    el.classList.add("is-faded");
+  }
+});
+
+// Indicate interface is loaded and ready to use
+// (this hides the default loading animation)
+foundation.ready();
+  `.trim(),
+}, {
+  path: "/styles.css",
+  content: `
+#placeholder {
+  align-items: center;
+  display: flex;
+  font-style: italic;
+  height: 100dvh;
+  justify-content: center;
+}
+
+.is-faded {
+  opacity: 0.4;
+}
+  `.trim(),
+}];
+
 /**
  * @param {string} path
  */
@@ -423,15 +492,7 @@ export function renderEditor() {
 
   $editor.value = editor;
 
-  files = [{ path: "/", content: `
-<style>
-  @import "./styles/base.css";
-</style>
-
-<script type="module">
-  import foundation from "~/common/foundation.js";
-</script>
-    `.trim() }];
+  files = DEFAULT_FILES;
   activeIndex = 0;
   setEditorContent(files[0].content);
   renderTabs();
