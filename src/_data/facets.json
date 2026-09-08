@@ -246,7 +246,6 @@
     "title": "Remember Playback Position",
     "kind": "prelude",
     "category": "Playback",
-    "incomplete": true,
     "desc": "Remember the playback position of long tracks (at least 30 minutes) so you can resume where you left off."
   },
   {
