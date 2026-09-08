@@ -20,15 +20,11 @@ examples:
     opacity: 0.6;
   }
 
-  /* Multi-file (tile) editor tab bar */
+  /* Multi-file (tile) editor tab bar — attached to the editor */
   .editor-tabs {
     display: flex;
-    flex-wrap: wrap;
-    gap: var(--space-2xs);
-    margin-bottom: var(--space-2xs);
-    background: color-mix(in srgb, var(--color) 6%, transparent);
-    border: 1px solid color-mix(in srgb, var(--color) 18%, transparent);
-    border-bottom: none;
+    align-items: stretch;
+    background: transparent;
   }
 
   .editor-tab {
@@ -36,9 +32,9 @@ examples:
     font-size: var(--fs-xs);
     color: var(--accent-contrast, #fff);
     background: var(--color);
-    border: 1px solid var(--border-color); /* same border as page buttons */
-    border-radius: var(--border-radius-sm, 6px);
-    padding: var(--space-3xs) var(--space-2xs);
+    border: 0;
+    border-radius: 0;
+    padding: var(--space-2xs) var(--space-xs);
     cursor: pointer;
     display: inline-flex;
     align-items: center;
@@ -46,13 +42,12 @@ examples:
   }
 
   .editor-tab:hover {
-    border-color: var(--border-color);
     filter: brightness(1.05);
   }
 
   .editor-tab.is-active {
     color: var(--color);
-    background: var(--form-color);
+    background: var(--code-color);
   }
 
   .editor-tab__icon {
@@ -61,7 +56,10 @@ examples:
   }
 
   .editor-tab--add {
-    margin-left: auto;
+    margin-left: 0;
+    flex: 0 0 auto;
+    justify-content: center;
+    padding: 0;
   }
 
   .editor-tab__rename {
@@ -86,6 +84,7 @@ examples:
     font: inherit;
     padding: 0 var(--space-3xs);
     opacity: 0.7;
+    text-box: trim-both cap alphabetic;
   }
   .editor-tab__close:hover {
     opacity: 1;

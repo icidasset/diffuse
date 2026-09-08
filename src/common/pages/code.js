@@ -78,6 +78,17 @@ function basename(path) {
 }
 
 /**
+ * Is this path reserved as the tile's index document (`index.html`), which the
+ * `/` root tab already represents? Such paths cannot be created or renamed to.
+ *
+ * @param {string} path
+ * @returns {boolean}
+ */
+function isReservedIndexPath(path) {
+  return /^\/?index\.html?$/i.test(path.trim());
+}
+
+/**
  * @param {string} path
  */
 function languageForPath(path) {
@@ -143,6 +154,7 @@ function renameFile(index, newPath) {
   if (!trimmed) return;
   const path = trimmed.startsWith("/") ? trimmed : `/${trimmed}`;
   if (path === files[index].path) return;
+  if (isReservedIndexPath(path)) return;
   if (files.some((f, i) => i !== index && f.path === path)) return;
 
   const langChanged = languageForPath(path) !== languageForPath(files[index].path);
@@ -216,7 +228,7 @@ function addFile() {
       const existing = new Set(files.map((f) => f.path));
       let path = input?.value.trim() ?? "";
       if (!path.startsWith("/")) path = `/${path}`;
-      if (!path || path === "/" || existing.has(path)) return;
+      if (!path || path === "/" || isReservedIndexPath(path) || existing.has(path)) return;
       files.push({ path, content: "" });
       /** @type {HTMLDialogElement} */ (dialog).close();
       activateTab(files.length - 1);
@@ -256,6 +268,33 @@ function renderTabs() {
   if (!tabsEl) return;
 
   tabsEl.textContent = "";
+
+  // Add button first, left of the file tabs, sized to match the editor gutter.
+  const add = document.createElement("button");
+  add.type = "button";
+  add.className = "editor-tab editor-tab--add";
+  add.title = "Add file";
+  add.innerHTML = '<i class="ph-bold ph-plus editor-tab__icon"></i>';
+  add.addEventListener("click", addFile);
+  /**
+   * Sizes the add button to the editor gutter width. If the gutter isn't laid
+   * out yet (width is 0), re-measure on the next animation frame until it is.
+   */
+  const sizeAddButton = () => {
+    const gutter = /** @type {Element | null} */ (
+      document.querySelector("#html-input-container .cm-gutters")
+    );
+    if (!gutter) return;
+    const width = gutter.getBoundingClientRect().width;
+    if (width > 0) {
+      add.style.width = `${width}px`;
+    } else {
+      requestAnimationFrame(sizeAddButton);
+    }
+  };
+  sizeAddButton();
+  tabsEl.append(add);
+
   files.forEach((file, index) => {
     const tab = document.createElement("div");
     tab.role = "button";
@@ -271,7 +310,7 @@ function renderTabs() {
     });
 
     const label = document.createElement("span");
-    label.textContent = file.path === "/" ? "index" : basename(file.path);
+    label.textContent = basename(file.path);
     label.title = "Double-click to rename";
     label.addEventListener("dblclick", (e) => {
       e.stopPropagation();
@@ -320,14 +359,6 @@ function renderTabs() {
 
     tabsEl.append(tab);
   });
-
-  const add = document.createElement("button");
-  add.type = "button";
-  add.className = "editor-tab editor-tab--add";
-  add.title = "Add file";
-  add.innerHTML = '<i class="ph-bold ph-plus editor-tab__icon"></i>';
-  add.addEventListener("click", addFile);
-  tabsEl.append(add);
 }
 
 /**
