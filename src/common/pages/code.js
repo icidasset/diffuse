@@ -73,15 +73,16 @@ const DEFAULT_FILES = [{ path: "/", content: `
 
 <style>
   @import "./styles/base.css"; /* Import Diffuse base styles */
-  @import "/styles.css";
+  @import "/example.css";
 </style>
 
 <div id="placeholder"></div>
-<script src="/script.js" type="module"></script>
+
+<script src="/example.js" type="module"></script>
   `.trim() }, {
-  path: "/script.js",
+  path: "/example.js",
   content: `
-import foundation from "~/common/foundation.js";
+import foundation from "~/common/foundation.js"; // This is also a relative URL, "~/" equals "./" (see importmap in html)
 import { effect } from "~/common/signal.js";
 
 // Set document title
@@ -110,7 +111,7 @@ effect(() => {
     el.innerHTML = "Loading ...";
     el.classList.add("is-faded");
   } else {
-    el.innerHTML = "Queue is empty 🫥";
+    el.innerHTML = "😶‍🌫️";
     el.classList.add("is-faded");
   }
 });
@@ -120,7 +121,7 @@ effect(() => {
 foundation.ready();
   `.trim(),
 }, {
-  path: "/styles.css",
+  path: "/example.css",
   content: `
 #placeholder {
   align-items: center;
