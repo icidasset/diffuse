@@ -4,11 +4,11 @@ base: ../
 title: Create | Diffuse
 
 examples:
-  - url: "facets/examples/now-playing/index.html"
+  - url: "facets/examples/now-playing/index.tile"
     title: "Now playing"
     desc: >
       Shows what's currently set to "now playing" in the queue, along with a button to shift the queue to the next track.
-  - url: "facets/examples/generate-playlist/index.html"
+  - url: "facets/examples/generate-playlist/index.tile"
     title: "Generate playlist"
     desc: >
       Make a list of what previously played in the queue.
@@ -30,8 +30,8 @@ examples:
   .editor-tab {
     font: inherit;
     font-size: var(--fs-xs);
-    color: var(--accent-contrast, #fff);
-    background: var(--color);
+    color: var(--text-color);
+    background: transparent;
     border: 0;
     border-radius: 0;
     padding: var(--space-2xs) var(--space-xs);
@@ -42,11 +42,11 @@ examples:
   }
 
   .editor-tab:hover {
-    filter: brightness(1.05);
+    background: color-mix(in srgb, var(--text-color) 8%, transparent);
   }
 
   .editor-tab.is-active {
-    color: var(--color);
+    color: var(--text-color);
     background: var(--code-color);
   }
 

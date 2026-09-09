@@ -1,0 +1,23 @@
+@layer base, diffuse;
+input[type="file"] {
+  background: none;
+  border: none;
+  padding: 0;
+  width: auto;
+}
+.status {
+  font-size: var(--fs-xs);
+}
+.status--success {
+  color: var(--accent);
+  @media (prefers-color-scheme: dark) {
+    color: var(--accent-twist-4);
+  }
+}
+.status--error {
+  color: var(--accent-twist-5);
+  @media (prefers-color-scheme: dark) {
+    color: var(--accent-twist-3);
+  }
+}
+

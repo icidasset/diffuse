@@ -9,9 +9,8 @@ import * as TID from "@atcute/tid";
 
 import * as Output from "~/common/output.js";
 import { facetFromURI } from "~/common/facets/utils.js";
-import { resolveFacetHTML } from "~/common/loader.js";
+import { resolveFacetTile } from "~/common/loader.js";
 import {
-  decodeBlocks,
   tileFromFiles,
   tileResourceEntries,
 } from "~/common/tiles.js";
@@ -366,68 +365,72 @@ function renderTabs() {
   tabsEl.append(add);
 
   files.forEach((file, index) => {
-    const tab = document.createElement("div");
-    tab.role = "button";
-    tab.tabIndex = 0;
-    tab.className = "editor-tab" + (index === activeIndex ? " is-active" : "");
-    tab.title = file.path;
-    tab.addEventListener("click", () => activateTab(index));
-    tab.addEventListener("keydown", (e) => {
-      if (e.key === "Enter" || e.key === " ") {
-        e.preventDefault();
-        activateTab(index);
-      }
-    });
-
-    const label = document.createElement("span");
-    label.textContent = basename(file.path);
-    label.title = "Double-click to rename";
-    label.addEventListener("dblclick", (e) => {
-      e.stopPropagation();
-      const input = document.createElement("input");
-      input.type = "text";
-      input.value = file.path;
-      input.className = "editor-tab__rename editor-tab__rename--inline";
-      label.replaceWith(input);
-      input.focus();
-      input.select();
-
-      const commit = () => {
-        if (done) return;
-        done = true;
-        renameFile(index, input.value);
-        if (input.isConnected) input.remove();
-        renderTabs();
-      };
-      let done = false;
-      input.addEventListener("keydown", (e) => {
-        if (e.key === "Enter") {
+    try {
+      const tab = document.createElement("div");
+      tab.role = "button";
+      tab.tabIndex = 0;
+      tab.className = "editor-tab" + (index === activeIndex ? " is-active" : "");
+      tab.title = file.path;
+      tab.addEventListener("click", () => activateTab(index));
+      tab.addEventListener("keydown", (e) => {
+        if (e.key === "Enter" || e.key === " ") {
           e.preventDefault();
-          commit();
-        } else if (e.key === "Escape") {
-          done = true;
-          if (input.isConnected) input.remove();
-          renderTabs();
+          activateTab(index);
         }
       });
-      input.addEventListener("blur", commit);
-    });
-    tab.append(label);
 
-    if (index !== 0) {
-      const close = document.createElement("button");
-      close.type = "button";
-      close.className = "editor-tab__close";
-      close.title = "Remove file";
-      close.innerHTML = '<i class="ph-bold ph-x editor-tab__icon"></i>';
-      close.addEventListener("click", (e) => {
+      const label = document.createElement("span");
+      label.textContent = basename(file.path);
+      label.title = "Double-click to rename";
+      label.addEventListener("dblclick", (e) => {
         e.stopPropagation();
-        removeFile(index);
-      });
-      tab.append(close);
-    }
+        const input = document.createElement("input");
+        input.type = "text";
+        input.value = file.path;
+        input.className = "editor-tab__rename editor-tab__rename--inline";
+        label.replaceWith(input);
+        input.focus();
+        input.select();
 
-    tabsEl.append(tab);
+        const commit = () => {
+          if (done) return;
+          done = true;
+          renameFile(index, input.value);
+          if (input.isConnected) input.remove();
+          renderTabs();
+        };
+        let done = false;
+        input.addEventListener("keydown", (e) => {
+          if (e.key === "Enter") {
+            e.preventDefault();
+            commit();
+          } else if (e.key === "Escape") {
+            done = true;
+            if (input.isConnected) input.remove();
+            renderTabs();
+          }
+        });
+        input.addEventListener("blur", commit);
+      });
+      tab.append(label);
+
+      if (index !== 0) {
+        const close = document.createElement("button");
+        close.type = "button";
+        close.className = "editor-tab__close";
+        close.title = "Remove file";
+        close.innerHTML = '<i class="ph-bold ph-x editor-tab__icon"></i>';
+        close.addEventListener("click", (e) => {
+          e.stopPropagation();
+          removeFile(index);
+        });
+        tab.append(close);
+      }
+
+      tabsEl.append(tab);
+    } catch (err) {
+      console.error("editor: failed to build tab", file.path, err);
+    }
   });
 }
 
@@ -439,24 +442,24 @@ function renderTabs() {
  * @param {Facet} facet
  */
 async function loadFacetFiles(facet) {
-  const resources = /** @type {Record<string, { src: unknown; "content-type"?: string }> | undefined} */ (
-    facet.resources
-  );
-  if (resources && facet.blocks) {
-    const blocks = await decodeBlocks(facet.blocks);
+  // Resolve the facet's tile (inline `resources`+`blocks`, or a `.tile` CAR
+  // referenced by `uri`), then load every absolute resource into its own tab.
+  const tile = await resolveFacetTile(facet);
+  const resources = tile?.resources;
+  const blocks = tile?.blocks;
+
+  let loaded;
+  if (resources && Object.keys(resources).length && blocks) {
     const entries = tileResourceEntries(resources, blocks);
-    const loaded = [];
-    if (entries.size) {
-      for (const [path, entry] of entries) {
-        loaded.push({ path, content: fileDecoder.decode(entry.bytes) });
-      }
-    } else {
-      loaded.push({ path: "/", content: await resolveFacetHTML(facet) });
-    }
-    files = loaded;
+    loaded = [...entries.entries()].map(([path, entry]) => ({
+      path,
+      content: fileDecoder.decode(entry.bytes),
+    }));
+    if (!loaded.length) loaded = [{ path: "/", content: tile.html }];
   } else {
-    files = [{ path: "/", content: await resolveFacetHTML(facet) }];
+    loaded = [{ path: "/", content: tile?.html ?? "" }];
   }
+  files = loaded;
 
   activeIndex = 0;
   // Ensure the `/` index is first.

@@ -105,7 +105,7 @@ effect(() => {
       <ul class="setup-actions">
         <li>
           <a class="setup-action" href="${loaderHref(
-            "facets/connect/index.html",
+            "facets/connect/index.tile",
           )}" target="_blank">
             <i class="ph-fill ph-file-audio"></i>
             <span>Add some audio</span>

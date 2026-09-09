@@ -1,0 +1,12 @@
+html {
+  font-size: 17px;
+}
+main,
+db-artwork-controller,
+db-browser,
+.mini-player {
+  font-family: "Source Sans 3", ui-sans-serif, system-ui, sans-serif;
+  font-feature-settings: normal;
+  font-optical-sizing: auto;
+}
+

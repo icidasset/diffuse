@@ -1,0 +1,34 @@
+@layer base, diffuse;
+html,
+body {
+  height: 100%;
+  margin: 0;
+  overflow: hidden;
+  padding: 0;
+}
+#container {
+  height: 100%;
+  overflow: hidden;
+}
+body {
+  background: var(--td-bg);
+}
+main {
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+  height: 100%;
+  margin: 0;
+  max-height: 100%;
+  min-height: 0;
+  padding: 0;
+}
+db-tidal-browser {
+  flex: 1;
+  min-height: 0;
+}
+db-tidal-player {
+  flex-shrink: 0;
+  height: 5rem;
+}
+

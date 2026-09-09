@@ -59,32 +59,7 @@
   @import "./styles/base.css";
   @import "./styles/wireframe/ui.css";
   @import "./vendor/@phosphor-icons/web/bold/style.css";
-
-  body {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    height: 100dvh;
-  }
-
-  main {
-    padding: var(--space-md);
-  }
-
-  label {
-    flex: 1;
-    letter-spacing: var(--leading-relaxed);
-    text-transform: uppercase;
-  }
-
-  label input,
-  label select {
-    flex: 1;
-  }
-
-  .row button {
-    flex: 1;
-  }
+  @import "/facet.css";
 </style>
 
-<script type="module" src="facets/playback/auto-queue/index.inline.js"></script>
+<script type="module" src="/facet.js"></script>

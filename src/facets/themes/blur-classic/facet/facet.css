@@ -1,0 +1,11 @@
+html {
+  font-size: 18px;
+}
+main,
+db-blur-classic-controller,
+db-browser {
+  font-family: "Source Sans 3", ui-sans-serif, system-ui, sans-serif;
+  font-feature-settings: normal;
+  font-optical-sizing: auto;
+}
+

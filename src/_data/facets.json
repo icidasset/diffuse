@@ -1,6 +1,6 @@
 [
   {
-    "url": "facets/playback/auto-queue/prelude/index.html",
+    "url": "facets/playback/auto-queue/prelude/index.tile",
     "title": "Automatic Queue",
     "kind": "prelude",
     "category": "Playback",
@@ -8,13 +8,13 @@
     "desc": "Automatically put tracks into the queue. **Always on.** These tracks will always be located after the ones you've added manually."
   },
   {
-    "url": "facets/playback/auto-queue/index.html",
+    "url": "facets/playback/auto-queue/index.tile",
     "title": "Automatic Queue",
     "category": "Playback",
     "desc": "Automatically put tracks into the queue when this interface is opened. Also allows for controlling shuffle, repeat, search, sorting and playlist selection."
   },
   {
-    "url": "facets/themes/blur/facet/index.html",
+    "url": "facets/themes/blur/facet/index.tile",
     "title": "Blur",
     "category": "Themes",
     "featured": true,
@@ -22,20 +22,20 @@
     "desc": "A combination of the classic Diffuse browser and the Apple Music iOS playback screen."
   },
   {
-    "url": "facets/themes/blur/artwork-controller/facet/index.html",
+    "url": "facets/themes/blur/artwork-controller/facet/index.tile",
     "title": "Blur / Artwork Controller",
     "category": "Playback",
     "featured": true,
     "desc": "Audio playback controller with an artwork display. Play audio from the queue, add tracks to your favourites, control the queue and volume."
   },
   {
-    "url": "facets/themes/blur/browser/facet/index.html",
+    "url": "facets/themes/blur/browser/facet/index.tile",
     "title": "Blur / Browser",
     "category": "Browsing",
     "desc": "Collection browser and search with favourite toggling, date grouping, and virtual scrolling."
   },
   {
-    "url": "facets/themes/blur-classic/facet/index.html",
+    "url": "facets/themes/blur-classic/facet/index.tile",
     "title": "Blur Classic",
     "category": "Themes",
     "featured": true,
@@ -43,7 +43,7 @@
     "desc": "A recreation of the Diffuse v3 theme with the browser of the newer Blur theme."
   },
   {
-    "url": "facets/themes/blur-pocket/facet/index.html",
+    "url": "facets/themes/blur-pocket/facet/index.tile",
     "title": "Blur Pocket",
     "category": "Themes",
     "author": "A theme by [@tokono.ma](https://bsky.app/profile/tokono.ma)",
@@ -51,7 +51,7 @@
     "desc": "A mobile-optimised and minimalised version of the Blur theme. Does not include the background images and has a slightly different color palette."
   },
   {
-    "url": "facets/data/cache-tracks/index.html",
+    "url": "facets/data/cache-tracks/index.tile",
     "title": "Cache Tracks",
     "kind": "prelude",
     "category": "Data",
@@ -59,95 +59,95 @@
     "desc": "Store tracks locally for offline usage automatically after they've been playing for a little while."
   },
   {
-    "url": "facets/themes/catalogue-one/facet/index.html",
+    "url": "facets/themes/catalogue-one/facet/index.tile",
     "title": "Catalogue One",
     "category": "Themes",
     "author": "A theme by [@tokono.ma](https://bsky.app/profile/tokono.ma)",
     "desc": "A visual, cover-art-first browsing experience. Browse your collection as grids of albums and artists, manage the queue, and control playback."
   },
   {
-    "url": "facets/misc/command/index.html",
+    "url": "facets/misc/command/index.tile",
     "title": "Command Menu",
     "category": "Miscellaneous",
     "desc": "A command palette for various actions."
   },
   {
-    "url": "facets/connect/index.html",
+    "url": "facets/connect/index.tile",
     "title": "Connect",
     "category": "Data",
     "featured": true,
     "desc": "A listing of some of the options available to use as an audio source, or as a user-data storage method."
   },
   {
-    "url": "facets/connect/atproto-passkey/index.html",
+    "url": "facets/connect/atproto-passkey/index.tile",
     "title": "Connect / Atmosphere (Public)",
     "category": "Data",
     "desc": "Use your AT Protocol account for user-data storage. Your data will be stored as public records, but sensitive data can be encrypted using a passkey."
   },
   {
-    "url": "facets/connect/atproto-space/index.html",
+    "url": "facets/connect/atproto-space/index.tile",
     "title": "Connect / Atmosphere (Space)",
     "category": "Data",
     "incomplete": true,
     "desc": "Use your AT Protocol account for user-data storage. Your data is stored in your own repo and is not broadcast publicly."
   },
   {
-    "url": "facets/connect/dropbox/index.html",
+    "url": "facets/connect/dropbox/index.tile",
     "title": "Connect / Dropbox",
     "category": "Data",
     "desc": "Add Dropbox as an audio source or use it as user-data storage."
   },
   {
-    "url": "facets/connect/https/index.html",
+    "url": "facets/connect/https/index.tile",
     "title": "Connect / HTTPS",
     "category": "Data",
     "desc": "Add HTTPS URLs as audio sources."
   },
   {
-    "url": "facets/connect/https-json/index.html",
+    "url": "facets/connect/https-json/index.tile",
     "title": "Connect / HTTPS + JSON",
     "category": "Data",
     "desc": "Add an HTTPS server with JSON directory listing support as an audio source."
   },
   {
-    "url": "facets/connect/icecast/index.html",
+    "url": "facets/connect/icecast/index.tile",
     "title": "Connect / Icecast",
     "category": "Data",
     "desc": "Add an Icecast stream as an audio source."
   },
   {
-    "url": "facets/connect/local/index.html",
+    "url": "facets/connect/local/index.tile",
     "title": "Connect / Local",
     "category": "Data",
     "desc": "Add local directories or files as audio sources."
   },
   {
-    "url": "facets/connect/opensubsonic/index.html",
+    "url": "facets/connect/opensubsonic/index.tile",
     "title": "Connect / OpenSubsonic",
     "category": "Data",
     "desc": "Add an OpenSubsonic server as an audio source."
   },
   {
-    "url": "facets/connect/s3/index.html",
+    "url": "facets/connect/s3/index.tile",
     "title": "Connect / S3",
     "category": "Data",
     "desc": "Connect to an S3-compatible storage for audio input or user-data storage."
   },
   {
-    "url": "facets/connect/webdav/index.html",
+    "url": "facets/connect/webdav/index.tile",
     "title": "Connect / WebDAV",
     "category": "Data",
     "desc": "Add a WebDAV server as an audio source."
   },
   {
-    "url": "facets/browsing/deduplicate-tracks/prelude/index.html",
+    "url": "facets/browsing/deduplicate-tracks/prelude/index.tile",
     "title": "Deduplicate Tracks",
     "kind": "prelude",
     "category": "Browsing",
     "desc": "Hide duplicate tracks (same artist and same title) from the presented tracks. Your saved data is not affected."
   },
   {
-    "url": "facets/data/artwork-bundle/index.html",
+    "url": "facets/data/artwork-bundle/index.tile",
     "title": "Default Artwork Bundle",
     "kind": "prelude",
     "category": "Data",
@@ -155,7 +155,7 @@
     "desc": "The default setup for track artwork retrieval. Adds support for: embedded audio metadata, Last.fm, and MusicBrainz."
   },
   {
-    "url": "facets/data/input-bundle/index.html",
+    "url": "facets/data/input-bundle/index.tile",
     "title": "Default Input Bundle",
     "kind": "prelude",
     "category": "Data",
@@ -163,7 +163,7 @@
     "desc": "The default setup for audio input sources. Adds support for: Dropbox, HTTPS, Icecast, the local filesystem, OpenSubsonic, S3-compatible storage, and WebDAV."
   },
   {
-    "url": "facets/data/metadata-bundle/index.html",
+    "url": "facets/data/metadata-bundle/index.tile",
     "title": "Default Metadata Bundle",
     "kind": "prelude",
     "category": "Data",
@@ -171,7 +171,7 @@
     "desc": "The default setup for track metadata lookups. Reads tags and audio stats from audio files."
   },
   {
-    "url": "facets/data/output-bundle/index.html",
+    "url": "facets/data/output-bundle/index.tile",
     "title": "Default Output Bundle",
     "kind": "prelude",
     "category": "Data",
@@ -179,7 +179,7 @@
     "desc": "The default setup for user-data storage output. Adds support for: AT Protocol, Dropbox, and S3-compatible storage. For these a custom local-first syncing algorithm is used."
   },
   {
-    "url": "facets/data/upload-bundle/index.html",
+    "url": "facets/data/upload-bundle/index.tile",
     "title": "Default Upload Bundle",
     "kind": "prelude",
     "category": "Data",
@@ -187,34 +187,34 @@
     "desc": "The default setup for uploading audio files to cloud storage. Adds support for: Dropbox."
   },
   {
-    "url": "facets/data/export-import/index.html",
+    "url": "facets/data/export-import/index.tile",
     "title": "Export & Import",
     "category": "Data",
     "desc": "Export all data as a JSON snapshot, or restore from a previously exported file."
   },
   {
-    "url": "facets/data/file-manager/index.html",
+    "url": "facets/data/file-manager/index.tile",
     "title": "File Manager",
     "category": "Data",
     "featured": true,
     "desc": "Upload audio files to play them and optionally sync them with your cloud storage. These are automatically added as inputs (aka. sources)."
   },
   {
-    "url": "facets/themes/ipod/facet/index.html",
+    "url": "facets/themes/ipod/facet/index.tile",
     "title": "iPod",
     "category": "Themes",
     "author": "A theme by [@tokono.ma](https://bsky.app/profile/tokono.ma)",
     "desc": "A recreation of the click-wheel iPod UI. Spin the wheel to scroll, tap the ring for menu / prev / next / play, and press the centre button to select. Alternatively, use your keyboard arrow keys."
   },
   {
-    "url": "facets/data/playlists/index.html",
+    "url": "facets/data/playlists/index.tile",
     "title": "Playlists",
     "category": "Data",
     "featured": true,
     "desc": "Manage your playlists."
   },
   {
-    "url": "facets/playback/preload/prelude/index.html",
+    "url": "facets/playback/preload/prelude/index.tile",
     "title": "Preload Tracks",
     "kind": "prelude",
     "category": "Playback",
@@ -222,72 +222,72 @@
     "desc": "Automatically preload the next track in the queue."
   },
   {
-    "url": "facets/data/process-tracks/prelude/index.html",
+    "url": "facets/data/process-tracks/prelude/index.tile",
     "title": "Process Tracks",
     "kind": "prelude",
     "category": "Data",
     "desc": "Process all your audio inputs into tracks automatically when opening any interface. Only happens once every 10 minutes, if the processing was completed."
   },
   {
-    "url": "facets/data/process-tracks/index.html",
+    "url": "facets/data/process-tracks/index.tile",
     "title": "Process Tracks",
     "category": "Data",
     "desc": "Process all your audio sources into tracks. Shows a progress bar when processing is occuring."
   },
   {
-    "url": "facets/playback/queue/index.html",
+    "url": "facets/playback/queue/index.tile",
     "title": "Queue",
     "category": "Playback",
     "featured": true,
     "desc": "Manage your playback queue. Reorder upcoming tracks, clear the queue, and view playback history."
   },
   {
-    "url": "facets/playback/remember-progress/prelude/index.html",
+    "url": "facets/playback/remember-progress/prelude/index.tile",
     "title": "Remember Playback Position",
     "kind": "prelude",
     "category": "Playback",
     "desc": "Remember the playback position of long tracks (at least 30 minutes) so you can resume where you left off."
   },
   {
-    "url": "facets/misc/scrobble/index.html",
+    "url": "facets/misc/scrobble/index.tile",
     "title": "Scrobble",
     "kind": "prelude",
     "category": "Miscellaneous",
     "desc": "Enable scrobbling, keep track of what you're listening to. Adds support for these scrobblers: Last.fm, ListenBrainz, Rocksky"
   },
   {
-    "url": "facets/misc/scrobble/last.fm/index.html",
+    "url": "facets/misc/scrobble/last.fm/index.tile",
     "title": "Scrobble / Last.fm",
     "category": "Miscellaneous",
     "desc": "Connect to Last.fm to setup the Last.fm scrobbler."
   },
   {
-    "url": "facets/misc/scrobble/listenbrainz/index.html",
+    "url": "facets/misc/scrobble/listenbrainz/index.tile",
     "title": "Scrobble / ListenBrainz",
     "category": "Miscellaneous",
     "desc": "Connect to ListenBrainz to setup the ListenBrainz scrobbler."
   },
   {
-    "url": "facets/misc/scrobble/rocksky/index.html",
+    "url": "facets/misc/scrobble/rocksky/index.tile",
     "title": "Scrobble / Rocksky",
     "category": "Miscellaneous",
     "desc": "Connect to Rocksky to setup the Rocksky scrobbler."
   },
   {
-    "url": "facets/setup/index.html",
+    "url": "facets/setup/index.tile",
     "title": "Setup",
     "category": "Miscellaneous",
     "desc": "An interactive getting-started guide. Shows contextual next steps based on your current progress."
   },
   {
-    "url": "facets/data/sources/index.html",
+    "url": "facets/data/sources/index.tile",
     "title": "Sources",
     "category": "Data",
     "featured": true,
     "desc": "An overview of all audio inputs. Disable a source to hide its tracks without removing them."
   },
   {
-    "url": "facets/data/spectrogram/index.html",
+    "url": "facets/data/spectrogram/index.tile",
     "title": "Spectrogram Analysis",
     "kind": "prelude",
     "category": "Data",
@@ -295,47 +295,47 @@
     "desc": "Analyse the spectrogram of tracks as they play and store the data on their stats. Only runs for tracks that don't already have these stats."
   },
   {
-    "url": "facets/misc/split-view/index.html",
+    "url": "facets/misc/split-view/index.tile",
     "title": "Split View",
     "category": "Miscellaneous",
     "desc": "Arrange multiple facets side-by-side in a resizable split-panel layout."
   },
   {
-    "url": "facets/themes/tidal/facet/index.html",
+    "url": "facets/themes/tidal/facet/index.tile",
     "title": "Tidal",
     "category": "Themes",
     "incomplete": true,
     "desc": "A Tidal-inspired browser. Pick a playlist from the sidebar, browse albums and artists, and play tracks."
   },
   {
-    "url": "facets/themes/tidal/browser/facet/index.html",
+    "url": "facets/themes/tidal/browser/facet/index.tile",
     "title": "Tidal / Browser",
     "category": "Browsing",
     "incomplete": true,
     "desc": "Tidal-style collection browser and search with a playlist sidebar and album / artist grids."
   },
   {
-    "url": "facets/themes/tidal/player/facet/index.html",
+    "url": "facets/themes/tidal/player/facet/index.tile",
     "title": "Tidal / Player",
     "category": "Playback",
     "incomplete": true,
     "desc": "Tidal-style now-playing bar with playback controls, progress and volume."
   },
   {
-    "url": "facets/data/v3-import/index.html",
+    "url": "facets/data/v3-import/index.tile",
     "title": "V3.x Import",
     "category": "Data",
     "desc": "Import data from Diffuse v3."
   },
   {
-    "url": "facets/misc/webmcp/index.html",
+    "url": "facets/misc/webmcp/index.tile",
     "title": "WebMCP",
     "category": "Miscellaneous",
     "incomplete": true,
     "desc": "WebMCP experiment to interact with facets (create, edit, etc)."
   },
   {
-    "url": "facets/themes/winamp/facet/index.html",
+    "url": "facets/themes/winamp/facet/index.tile",
     "title": "Winamp",
     "category": "Themes",
     "featured": true,
@@ -343,13 +343,13 @@
     "desc": "Windows 98 inspired theme with a classic Winamp skin for the audio player. The Winamp playlist is a combination of the queue's history, the track that's currently playing and the future queue items."
   },
   {
-    "url": "facets/themes/winamp/browser/facet/index.html",
+    "url": "facets/themes/winamp/browser/facet/index.tile",
     "title": "Winamp / Browser",
     "category": "Browsing",
     "desc": "Collection browser and search."
   },
   {
-    "url": "facets/data/userdata/index.html",
+    "url": "facets/data/userdata/index.tile",
     "title": "Your data",
     "category": "Data",
     "featured": true,

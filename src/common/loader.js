@@ -307,6 +307,23 @@ function createBlobURL(content, contentType, isModule) {
 }
 
 /**
+ * Makes a relative URL absolute against the Diffuse build root (which the
+ * loader's `<base>` targets). Values that are already absolute, anchors, query
+ * strings, or carry a scheme are returned unchanged.
+ *
+ * @param {string} value
+ * @returns {string}
+ */
+function toBuildRootUrl(value) {
+  const v = value.trim();
+  if (!v || v.startsWith("/") || v.startsWith("#") || v.startsWith("?") ||
+      /^[a-z][a-z0-9+.-]*:/i.test(v)) {
+    return value;
+  }
+  return `/${v}`;
+}
+
+/**
  * Serves a tile's absolute-path resources as Blob URLs and rewrites references
  * to them. Two kinds of rewriting happen, both limited to absolute paths (a
  * leading `/`) matching a tile resource: (1) DOM attributes (`src`/`href`/
@@ -369,7 +386,11 @@ export function linkTileResources(container, resources, blocks) {
     for (const attr of ["src", "href"]) {
       const value = el.getAttribute(attr);
       const linked = value ? urls.get(value) : undefined;
+      // Absolute `/…` tile resources become blob URLs; other relative URLs are
+      // made absolute against the Diffuse build root (the loader's `<base>`)
+      // so they keep working when the tile HTML is served from a blob.
       if (linked !== undefined) el.setAttribute(attr, linked);
+      else if (value) el.setAttribute(attr, toBuildRootUrl(value));
     }
 
     const srcset = el.getAttribute("srcset");
@@ -377,7 +398,7 @@ export function linkTileResources(container, resources, blocks) {
       const rewritten = srcset.split(",").map((part) => {
         const bits = part.trim().split(/\s+/);
         const linked = urls.get(bits[0]);
-        if (linked !== undefined) bits[0] = linked;
+        bits[0] = linked !== undefined ? linked : toBuildRootUrl(bits[0]);
         return bits.join(" ");
       }).join(",");
       el.setAttribute("srcset", rewritten);

@@ -10,29 +10,29 @@ const loaderHref = (path) => `l/?path=${encodeURIComponent(path)}`;
 
 /** @type {Record<string, string>} */
 const icons = {
-  "facets/connect/atproto-passkey/index.html": "at",
-  "facets/connect/atproto-space/index.html": "at",
-  "facets/connect/dropbox/index.html": "cloud",
-  "facets/connect/https/index.html": "globe",
-  "facets/connect/https-json/index.html": "list-bullets",
-  "facets/connect/icecast/index.html": "radio",
-  "facets/connect/local/index.html": "folder-open",
-  "facets/connect/opensubsonic/index.html": "broadcast",
-  "facets/connect/s3/index.html": "hard-drives",
-  "facets/connect/webdav/index.html": "hard-drive",
+  "facets/connect/atproto-passkey/index.tile": "at",
+  "facets/connect/atproto-space/index.tile": "at",
+  "facets/connect/dropbox/index.tile": "cloud",
+  "facets/connect/https/index.tile": "globe",
+  "facets/connect/https-json/index.tile": "list-bullets",
+  "facets/connect/icecast/index.tile": "radio",
+  "facets/connect/local/index.tile": "folder-open",
+  "facets/connect/opensubsonic/index.tile": "broadcast",
+  "facets/connect/s3/index.tile": "hard-drives",
+  "facets/connect/webdav/index.tile": "hard-drive",
 };
 
 const recommended = new Set([
-  "facets/connect/dropbox/index.html",
-  "facets/connect/local/index.html",
-  "facets/connect/s3/index.html",
+  "facets/connect/dropbox/index.tile",
+  "facets/connect/local/index.tile",
+  "facets/connect/s3/index.tile",
 ]);
 
 const facets = facetsData
   .filter(
     (f) =>
       f.url.startsWith("facets/connect/") &&
-      f.url !== "facets/connect/index.html" &&
+      f.url !== "facets/connect/index.tile" &&
       !f.incomplete,
   )
   .map((f) => ({

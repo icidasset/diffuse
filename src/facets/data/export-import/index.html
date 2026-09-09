@@ -2,38 +2,7 @@
   @import "./styles/base.css";
   @import "./vendor/@phosphor-icons/web/bold/style.css";
   @import "./styles/diffuse/facet.css";
-
-  @layer base, diffuse;
-
-  input[type="file"] {
-    background: none;
-    border: none;
-    padding: 0;
-    width: auto;
-  }
-
-  .checkbox-row {
-    align-items: center;
-    flex-direction: row;
-    gap: var(--space-2xs);
-    margin-top: var(--space-2xs);
-
-    input {
-      width: auto;
-    }
-  }
-
-  .status {
-    font-size: var(--fs-xs);
-  }
-
-  .status--success {
-    color: var(--accent);
-  }
-
-  .status--error {
-    color: var(--accent-twist-5);
-  }
+  @import "/facet.css";
 </style>
 
 <main>
@@ -106,4 +75,4 @@
   </div>
 </main>
 
-<script type="module" src="facets/data/export-import/index.inline.js"></script>
+<script type="module" src="/facet.js"></script>

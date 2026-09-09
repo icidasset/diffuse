@@ -33,14 +33,14 @@
     <div class="wa-stack wa-gap-s">
       <wa-select id="facet-select" placeholder="Built-in facets…">
         {{ for item of facets }}
-          {{ if item.url !== "facets/misc/split-view/index.html" && item.kind !== "prelude" }}
+          {{ if item.url !== "facets/misc/split-view/index.tile" && item.kind !== "prelude" }}
             <wa-option value="{{ item.url }}">{{ item.title }}</wa-option>
           {{ /if }}
         {{ /for }}
       </wa-select>
       <wa-input
         id="custom-path"
-        placeholder="facets/playback/auto-queue/index.html"
+        placeholder="facets/playback/auto-queue/index.tile"
         style="flex: 1"
       ></wa-input>
       <wa-button id="custom-confirm" variant="neutral" appearance="filled" pill>Load</wa-button>
@@ -140,4 +140,4 @@
   }
 </style>
 
-<script type="module" src="facets/misc/split-view/index.inline.js"></script>
+<script type="module" src="/facet.js"></script>

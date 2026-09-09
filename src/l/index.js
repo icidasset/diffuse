@@ -97,9 +97,14 @@ createLoader({
     // Rewrite absolute `/…` resource URLs to Blob URLs on the detached fragment
     // BEFORE inserting it, so the browser never starts a request for the raw
     // (un-rewritten) path — attaching first would intermittently fetch e.g.
-    // `/styles.css` from the build root and 404.
+    // `/styles.css` from the build root and 404. If linking fails for any
+    // reason, still render the facet rather than leaving the page blank.
     if (facet.tile) {
-      linkTileResources(documentFragment, facet.tile.resources, facet.tile.blocks);
+      try {
+        linkTileResources(documentFragment, facet.tile.resources, facet.tile.blocks);
+      } catch (err) {
+        console.error("Failed to link tile resources", err);
+      }
     }
     container.append(documentFragment);
   },

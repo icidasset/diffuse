@@ -1,0 +1,16 @@
+html {
+  font-size: 18px;
+}
+main,
+db-artwork-controller,
+db-browser {
+  font-family: "Source Sans 3", ui-sans-serif, system-ui, sans-serif;
+  font-feature-settings: normal;
+  font-optical-sizing: auto;
+}
+@media (orientation: landscape) and (width < 63rem) {
+  db-artwork-controller {
+    font-size: calc((var(--fs-sm) + var(--fs-xs)) / 2);
+  }
+}
+

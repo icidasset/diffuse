@@ -89,7 +89,7 @@ export function atprotoPasskey(output) {
   passkey.setAttribute("namespace", "atproto-passkey");
   passkey.setAttribute(
     "connect",
-    "facets/connect/atproto-passkey/index.html",
+    "facets/connect/atproto-passkey/index.tile",
   );
   passkey.setAttribute(
     "output-selector",
@@ -139,7 +139,7 @@ export function atprotoSpace(output) {
   sync.setAttribute("namespace", "atproto-space");
   sync.setAttribute(
     "connect",
-    "facets/connect/atproto-space/index.html",
+    "facets/connect/atproto-space/index.tile",
   );
   sync.setAttribute("output-selector", "#do-output__dor-atproto-space");
 
@@ -177,7 +177,7 @@ export function dropbox(output) {
   sync.setAttribute("namespace", "dropbox");
   sync.setAttribute(
     "connect",
-    "facets/connect/dropbox/index.html",
+    "facets/connect/dropbox/index.tile",
   );
   sync.setAttribute("output-selector", "#do-output__dob-dropbox");
 
@@ -217,7 +217,7 @@ export function s3(output) {
   sync.setAttribute("namespace", "s3");
   sync.setAttribute(
     "connect",
-    "facets/connect/s3/index.html",
+    "facets/connect/s3/index.tile",
   );
   sync.setAttribute("output-selector", "#do-output__dob-s3");
 

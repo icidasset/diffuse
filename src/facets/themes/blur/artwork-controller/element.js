@@ -454,7 +454,7 @@ class ArtworkController extends DiffuseElement {
               const loaderUrl = new URL("l/", base);
               loaderUrl.searchParams.set(
                 "path",
-                "facets/themes/blur/artwork-controller/facet/index.html",
+                "facets/themes/blur/artwork-controller/facet/index.tile",
               );
               loaderUrl.searchParams.set("group", this.group);
               window.open(loaderUrl.toString(), "_blank");

@@ -23,11 +23,13 @@ export async function insertPreludes(facets, container) {
     if (!tile?.html) continue;
 
     const fragment = range.createContextualFragment(tile.html);
-    if (tile.resources && Object.keys(tile.resources).length) {
-      // Rewrite absolute `/…` resource URLs to Blob URLs on the detached
-      // fragment BEFORE inserting it, so the browser never requests the raw
-      // (un-rewritten) path from the build root.
+    // Always run linking: it rewrites tile resources to Blob URLs and makes any
+    // relative URLs absolute against the Diffuse build root. If linking fails,
+    // still inject the prelude rather than skipping it.
+    try {
       linkTileResources(fragment, tile.resources, tile.blocks);
+    } catch (err) {
+      console.error("Failed to link prelude resources", err);
     }
     container.append(fragment);
   }

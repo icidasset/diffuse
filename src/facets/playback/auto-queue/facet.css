@@ -1,0 +1,22 @@
+body {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 100dvh;
+}
+main {
+  padding: var(--space-md);
+}
+label {
+  flex: 1;
+  letter-spacing: var(--leading-relaxed);
+  text-transform: uppercase;
+}
+label input,
+label select {
+  flex: 1;
+}
+.row button {
+  flex: 1;
+}
+

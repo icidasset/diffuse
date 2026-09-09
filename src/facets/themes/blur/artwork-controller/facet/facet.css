@@ -1,0 +1,11 @@
+db-artwork-controller {
+  font-family: "Source Sans 3", ui-sans-serif, system-ui, sans-serif;
+  font-feature-settings: normal;
+  font-optical-sizing: auto;
+}
+@media (min-width: 70em) {
+  db-artwork-controller {
+    font-size: var(--fs-sm);
+  }
+}
+

@@ -8,7 +8,9 @@ import sourceMaps from "lume/plugins/source_maps.ts";
 
 import * as path from "@std/path";
 import { ensureDirSync } from "@std/fs/ensure-dir";
+import { existsSync } from "@std/fs/exists";
 import { walkSync } from "@std/fs/walk";
+import { buildTileCar } from "./tasks/tile-car.ts";
 import { nodeModulesPolyfillPlugin } from "esbuild-plugins-node-modules-polyfill";
 import { wasmLoader } from "esbuild-plugin-wasm";
 import autoprefixer from "autoprefixer";
@@ -134,9 +136,10 @@ site.use(esbuild({
 
 site.add([".js"]);
 
-// *.inline.js files are inlined into their companion HTML at build/serve time.
-// Exclude them from the regular build so esbuild doesn't try to bundle them.
-site.ignore((p) => p.endsWith(".inline.js") || p.endsWith("SKILL.md"));
+// *.facet.js files (facets' own scripts) are packaged into their `.tile` CARs at
+// build time; exclude them from the regular build so esbuild doesn't try to
+// bundle them.
+site.ignore((p) => p.endsWith("facet.js") || p.endsWith("SKILL.md"));
 
 ////////////////////////////////////////////
 // CSS
@@ -457,39 +460,43 @@ site.addEventListener("afterBuild", writeFileTree);
 site.addEventListener("afterUpdate", writeFileTree);
 
 ////////////////////////////////////////////
-// INLINE JS FOR FACETS
+// BUILD TILE CARS FOR FACETS
 ////////////////////////////////////////////
 
-const SCRIPT_SRC_RE =
-  /<script type="module" src="([^"]+\.inline\.js)"><\/script>/;
+// For every bundled facet (`src/facets/**/index.html` + `facet.js`), build a
+// DASL-style `.tile` CAR (index.html at `/`, facet.js at `/facet.js`) and write
+// it into the build output next to the facet.
+async function buildTileCars() {
+  const facetsDir = "src/facets";
+  const distDir = "dist/facets";
 
-site.process([".html"], (pages) => {
-  for (const page of pages) {
-    const content = page.text;
-    if (!content) continue;
-    const match = SCRIPT_SRC_RE.exec(content);
-    if (!match) continue;
+  for (const entry of walkSync(facetsDir, { includeDirs: true })) {
+    if (!entry.isDirectory) continue;
+    const indexHtml = path.join(entry.path, "index.html");
+    const facetJs = path.join(entry.path, "facet.js");
+    if (!existsSync(indexHtml) || !existsSync(facetJs)) continue;
 
-    const jsPath = path.join("src", match[1]);
-    try {
-      page.text = htmlWithInlineJs({ content, jsPath, match: match[0] });
-    } catch {
-      // leave as-is if the source file can't be read
+    /** @type {Record<string, { content: string }>} */
+    const files: Record<string, { content: string }> = {
+      "/": { content: Deno.readTextFileSync(indexHtml) },
+      "/facet.js": { content: Deno.readTextFileSync(facetJs) },
+    };
+    const facetCss = path.join(entry.path, "facet.css");
+    if (existsSync(facetCss)) {
+      files["/facet.css"] = { content: Deno.readTextFileSync(facetCss) };
     }
-  }
-});
 
-function htmlWithInlineJs({ content, match, jsPath }: {
-  content: string;
-  match: string;
-  jsPath: string;
-}): string {
-  const js =
-    Deno.readTextFileSync(jsPath).split("\n").map((line) => `  ${line}`).join(
-      "\n",
-    ).trimEnd() + "\n";
-  return content.replace(match, `<script type="module">\n${js}</script>`);
+    const car = await buildTileCar(files, {});
+
+    const rel = path.relative(facetsDir, entry.path);
+    const outDir = path.join(distDir, rel);
+    ensureDirSync(outDir);
+    Deno.writeFileSync(path.join(outDir, "index.tile"), car);
+  }
 }
+
+site.addEventListener("afterBuild", buildTileCars);
+site.addEventListener("afterUpdate", buildTileCars);
 
 ////////////////////////////////////////////
 // COMPRESSION

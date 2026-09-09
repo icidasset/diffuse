@@ -1,0 +1,8 @@
+@layer base, diffuse;
+.facet__right {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-sm);
+  width: 24rem;
+}
+
