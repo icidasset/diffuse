@@ -6,6 +6,11 @@ export type Progress = {
 };
 
 export type Actions = {
-  process: (args: { tracks: Track[]; disabledUris: string[] }) => Promise<Track[] | null>;
+  process: (args: {
+    tracks: Track[];
+    disabledUris: string[];
+    /** When provided, only tracks whose uri starts with one of these prefixes are processed. */
+    onlyUris?: string[];
+  }) => Promise<Track[] | null>;
   progress: () => Progress;
 };

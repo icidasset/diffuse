@@ -127,6 +127,7 @@ effect(() => {
 effect(() => {
   const sourcesRecord = sourcesOrchestrator.sources();
   const statusMap = onlineMap.get();
+  const isProcessing = processOrchestrator.isProcessing();
 
   const tracksCol = outputOrchestrator.tracks.collection();
   const tracks = tracksCol.state === "loaded" ? tracksCol.data : [];
@@ -174,6 +175,16 @@ effect(() => {
                 </span>
               </div>
               <button
+                class="button--plain button--icon"
+                title="Process source"
+                ?disabled="${isProcessing}"
+                @click="${() => processSource(uri)}"
+              >
+                <i class="ph-fill ${isProcessing
+                  ? "ph-arrows-clockwise animate-spin"
+                  : "ph-arrows-clockwise"}"></i>
+              </button>
+              <button
                 class="button--plain"
                 title="${isDisabled ? "Enable source" : "Disable source"}"
                 @click="${() => sourcesOrchestrator.toggle(uri)}"
@@ -213,6 +224,16 @@ effect(() => {
                 </div>
                 <button
                   class="button--plain button--icon"
+                  title="Process source"
+                  ?disabled="${isProcessing}"
+                  @click="${() => processSource(uri)}"
+                >
+                  <i class="ph-fill ${isProcessing
+                    ? "ph-arrows-clockwise animate-spin"
+                    : "ph-arrows-clockwise"}"></i>
+                </button>
+                <button
+                  class="button--plain button--icon"
                   title="${isDisabled ? "Enable source" : "Disable source"}"
                   @click="${() => sourcesOrchestrator.toggle(uri)}"
                 >
@@ -243,6 +264,17 @@ effect(() => {
 
 async function removeEphemeralSources() {
   return removeSource(SCHEME_EPHEMERAL_CACHE, "Files stored in the browser");
+}
+
+/**
+ * Processes a single source into tracks, leaving every other source untouched.
+ *
+ * @param {string} uri
+ */
+async function processSource(uri) {
+  const output = await foundation.orchestrator.output();
+  await Output.data(output.tracks);
+  await processOrchestrator.process([trackPrefix(uri)]);
 }
 
 /**

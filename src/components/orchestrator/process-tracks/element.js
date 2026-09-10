@@ -192,7 +192,14 @@ class ProcessTracksOrchestrator extends BroadcastableDiffuseElement {
 
   // ACTIONS
 
-  async process() {
+  /**
+   * (Re)processes tracks. When `onlyUris` is provided, only tracks belonging
+   * to those source URIs (matched by prefix) are processed; all other tracks
+   * are preserved untouched.
+   *
+   * @param {string[]} [onlyUris]
+   */
+  async process(onlyUris = []) {
     if (!this.output) return;
     if (this.#isProcessing.value) return;
 
@@ -208,6 +215,7 @@ class ProcessTracksOrchestrator extends BroadcastableDiffuseElement {
     const result = await this.#proxy.process({
       tracks: cachedTracks,
       disabledUris,
+      onlyUris,
     });
 
     if (result) {

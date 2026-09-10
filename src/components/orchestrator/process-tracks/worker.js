@@ -34,7 +34,7 @@ const process = (
 ) => /** @type {ActionsWithTunnel<Actions>["process"]} */ (async (
   { data, ports },
 ) => {
-  const { tracks: cachedTracks, disabledUris } = data;
+  const { tracks: cachedTracks, disabledUris, onlyUris } = data;
 
   // Reset progress
   $progress.value = { processed: 0, total: 0 };
@@ -48,19 +48,31 @@ const process = (
   ports.input.start();
   ports.metadata.start();
 
+  // When a set of source URIs is provided, only those sources are (re)processed;
+  // tracks belonging to any other source are preserved as-is. An empty list
+  // reprocesses everything, matching the original behaviour.
+  const inScope = (/** @type {Track} */ t) =>
+    !onlyUris || onlyUris.length === 0 ||
+      onlyUris.some((/** @type {string} */ uri) => t.uri.startsWith(uri));
+
   // Split disabled tracks out — they are preserved as-is and skipped for listing/metadata
   const isDisabled = (/** @type {Track} */ t) =>
     disabledUris.some((/** @type {string} */ uri) => t.uri.startsWith(uri));
-  const disabledTracks = cachedTracks.filter(isDisabled);
-  const enabledCachedTracks = cachedTracks.filter((t) => !isDisabled(t));
 
-  // List from enabled sources only
+  const scopedTracks = cachedTracks.filter(inScope);
+  const otherTracks = cachedTracks.filter((t) => !inScope(t));
+
+  const disabledTracks = scopedTracks.filter(isDisabled);
+  const enabledCachedTracks = scopedTracks.filter((t) => !isDisabled(t));
+
+  // List from enabled sources only (within scope)
   const tracks = await input.list(enabledCachedTracks);
 
   // Persist the full track list immediately so that an interrupted metadata
   // processing run doesn't lose discovered tracks. On next run they'll come
   // back as cachedTracks and only the ones without metadata need reprocessing.
-  announce("list", [...tracks, ...disabledTracks], context);
+  // Untouched out-of-scope tracks are kept so a scoped run never clobbers them.
+  announce("list", [...tracks, ...disabledTracks, ...otherTracks], context);
 
   // Reset progress
   $progress.value = { processed: 0, total: tracks.length };
@@ -97,7 +109,7 @@ const process = (
     Promise.resolve([]),
   );
 
-  const allTracks = [...tracksWithMetadata, ...disabledTracks];
+  const allTracks = [...tracksWithMetadata, ...disabledTracks, ...otherTracks];
 
   // Changed?
   const diff = deepDiff.diff(allTracks, cachedTracks);
