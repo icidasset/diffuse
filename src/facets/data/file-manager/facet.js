@@ -7,6 +7,7 @@ import {
   CACHE_KEY_PREFIX,
   SCHEME as SCHEME_EPHEMERAL_CACHE,
 } from "~/components/input/ephemeral-cache/constants.js";
+import { isAudioFile } from "~/components/input/common.js";
 import { SCHEME as SCHEME_DROPBOX } from "~/components/input/dropbox/constants.js";
 import { effect, signal } from "~/common/signal.js";
 import { safeDecodeURIComponent } from "~/common/utils.js";
@@ -331,8 +332,13 @@ dropzone?.addEventListener("drop", async (e) => {
   dropzone.classList.remove("dropzone--active");
 
   const dragEvent = /** @type {DragEvent} */ (e);
+  // `dataTransfer.files` is reliably populated in every browser, but Firefox
+  // (and older Safari) can return `null` from `getAsFile()` for files dragged
+  // in from the OS. Read the direct files from `files` and only use `items` to
+  // additionally expand dropped directories via the (non-standard) entries API.
+  const directFiles = Array.from(dragEvent.dataTransfer?.files ?? []);
   const items = Array.from(dragEvent.dataTransfer?.items ?? []);
-  const files = await collectFiles(items);
+  const files = await collectFiles(items, directFiles);
   if (files.length === 0) return;
 
   await cacheFiles(files);
@@ -1133,10 +1139,14 @@ async function cacheFiles(files) {
 
 /**
  * @param {DataTransferItem[]} items
+ * @param {File[]} directFiles
  * @returns {Promise<File[]>}
  */
-async function collectFiles(items) {
-  const files = /** @type {File[]} */ ([]);
+async function collectFiles(items, directFiles) {
+  // `isAudioFile` matches on the filename extension. This is deliberate: it
+  // relies on the canonical `~/components/input/common.js` list and works even
+  // when Firefox reports an empty `File.type` for OS-dragged files.
+  const files = directFiles.filter((file) => isAudioFile(file.name));
 
   await Promise.all(
     items.map(async (item) => {
@@ -1147,10 +1157,13 @@ async function collectFiles(items) {
         const dirFiles = await readDirectoryEntry(
           /** @type {FileSystemDirectoryEntry} */ (entry),
         );
-        files.push(...dirFiles);
+        files.push(...dirFiles.filter((file) => isAudioFile(file.name)));
       } else {
+        // `getAsFile()` can return `null` on Firefox for OS-dragged files, so
+        // a `File` arriving here is best-effort; direct files already came via
+        // `dataTransfer.files`. Only add when it's usable.
         const file = item.getAsFile();
-        if (file?.type.startsWith("audio/")) files.push(file);
+        if (file && isAudioFile(file.name)) files.push(file);
       }
     }),
   );
