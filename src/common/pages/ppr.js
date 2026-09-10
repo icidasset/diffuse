@@ -41,6 +41,7 @@ async function initJsBasedOnPage(url) {
     case "/create":
       Build.renderEditor();
       Build.handleBuildFormSubmit();
+      Build.renderDefaultExamples();
       Build.listenForExamplesEdit();
       await Build.editFacetFromURL();
       break;

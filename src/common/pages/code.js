@@ -30,6 +30,15 @@ const $editingFacet = signal(/** @type {Facet | null} */ (null));
 let files = [{ path: "/", content: "" }];
 let activeIndex = 0;
 
+// True once the user has modified the new-facet template in any way (typed in
+// the editor, added/renamed/removed a tab, or imported a file). Used so we only
+// swap in the default template when the kind changes before any editing happens.
+let startedEditing = false;
+
+// Guards `setEditorContent` so the doc-change update listener can tell apart
+// programmatic content swaps from genuine user edits.
+let isProgrammaticSet = false;
+
 const fileDecoder = new TextDecoder();
 
 ////////////////////////////////////////////
@@ -66,7 +75,7 @@ function setEditorLoading(loading) {
 // EDITOR — TABS + SINGLE CodeMirror VIEW
 ////////////////////////////////////////////
 
-const DEFAULT_FILES = [{ path: "/", content: `
+const DEFAULT_INTERFACE = [{ path: "/", content: `
 <!-- Absolute URLs = Used to reference files of this facet -->
 <!-- Relative URLs = Relative to root of current version of Diffuse -->
 
@@ -136,6 +145,116 @@ foundation.ready();
   `.trim(),
 }];
 
+const DEFAULT_PRELUDE = [{ path: "/", content: `
+<script src="/example.js" type="module"></script>
+  `.trim() }, {
+  path: "/example.js",
+  content: `
+import foundation from "~/common/foundation.js";
+import { effect } from "~/common/signal.js";
+
+effect(() => {
+  // When an interface includes the audio engine in addition to this feature facet, call 'setup'
+  const audio = foundation.signals.engine.audio();
+  if (audio) setup(audio);
+});
+
+const STORAGE_KEY = "example/resume";
+const RESTORED = new WeakMap();
+
+/**
+ * Remember the active track's position and restore it the next time it plays.
+ */
+function setup(audio) {
+  const saved = JSON.parse(localStorage.getItem(STORAGE_KEY) ?? "{}");
+
+  effect(() => {
+    const item = audio.items().find((i) => !i.isPreload);
+    const st = item && audio.state(item.id);
+    if (!st) return;
+
+    // Restore once, when the active track is ready to play.
+    if (st.loadingState() === "loaded" && !RESTORED.has(item)) {
+      RESTORED.set(item, true);
+      const seconds = saved[item.id];
+      if (seconds > 5) audio.seek({ audioId: item.id, currentTime: seconds });
+    }
+
+    // Persist progress; forget finished tracks so they restart next time.
+    const duration = st.duration();
+    if (duration > 0) {
+      if (st.currentTime() < 0.98 * duration) {
+        saved[item.id] = st.currentTime();
+      } else {
+        delete saved[item.id];
+      }
+
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(saved));
+    }
+  });
+}
+  `.trim(),
+}];
+
+/**
+ * The built-in examples shown on the Create page. Each one corresponds to a
+ * default template in this file (DEFAULT_INTERFACE / DEFAULT_PRELUDE) that the
+ * editor can start from when clicked.
+ */
+export const DEFAULT_EXAMPLES = [
+  {
+    title: "Interface starter template",
+    kind: "interactive",
+    desc: "The default interactive facet example. It shows what's currently playing, or a placeholder if nothing's in the queue yet.",
+  },
+  {
+    title: "Feature starter template",
+    kind: "prelude",
+    desc: "The default feature facet example. Shows how to watch for the creation of a particular foundation element and then do something when that happens.",
+  },
+];
+
+/**
+ * Renders the built-in default examples into the `#examples-list` container on
+ * the Create page.
+ */
+export function renderDefaultExamples() {
+  const container = /** @type {HTMLElement | null} */ (
+    document.getElementById("examples-list")
+  );
+  if (!container) return;
+
+  const ul = document.createElement("ul");
+  for (const example of DEFAULT_EXAMPLES) {
+    const li = document.createElement("li");
+    li.setAttribute("data-kind", example.kind);
+    li.style.marginTop = "var(--space-md)";
+
+    const head = document.createElement("div");
+    head.style.cssText =
+      "display: flex; gap: var(--space-xs); justify-content: space-between;";
+
+    const title = document.createElement("span");
+    title.textContent = example.title;
+
+    const edit = document.createElement("button");
+    edit.className = "button--tiny button--bg-accent";
+    edit.setAttribute("rel", "edit");
+    edit.innerHTML =
+      '<span class="with-icon"><i class="ph-fill ph-code-block"></i> Edit</span>';
+
+    head.append(title, edit);
+
+    const desc = document.createElement("div");
+    desc.className = "list-description";
+    desc.textContent = example.desc;
+
+    li.append(head, desc);
+    ul.appendChild(li);
+  }
+  container.replaceChildren(ul);
+}
+
 /**
  * @param {string} path
  */
@@ -170,7 +289,13 @@ function languageForPath(path) {
 /**
  * The base extensions shared by every tab.
  */
-const baseExtensions = [basicSetup, autocompletion()];
+const markEditedExtension = EditorView.updateListener.of((update) => {
+  // A user-typed change marks the template as edited, but never a programmatic
+  // `setEditorContent` swap. Kept in `baseExtensions` so it survives every
+  // `StateEffect.reconfigure` (when switching tabs or the facet kind).
+  if (update.docChanged && !isProgrammaticSet) startedEditing = true;
+});
+const baseExtensions = [basicSetup, autocompletion(), markEditedExtension];
 
 /** @returns {string} */
 function currentContent() {
@@ -179,9 +304,11 @@ function currentContent() {
 
 /** @param {string} content */
 function setEditorContent(content) {
+  isProgrammaticSet = true;
   $editor.value?.dispatch({
     changes: { from: 0, to: $editor.value.state.doc.length, insert: content },
   });
+  isProgrammaticSet = false;
 }
 
 /**
@@ -229,6 +356,7 @@ function renameFile(index, newPath) {
   const langChanged = languageForPath(path) !== languageForPath(files[index].path);
   const renamedPath = path;
   files[index].path = path;
+  startedEditing = true;
 
   // Keep `/` first, then alphabetical, and track the renamed file.
   files.sort((a, b) => (a.path === "/" ? -1 : b.path === "/" ? 1 : a.path.localeCompare(b.path)));
@@ -300,6 +428,7 @@ function addFile() {
       if (!path || path === "/" || isReservedIndexPath(path) || existing.has(path)) return;
       files.push({ path, content: "" });
       /** @type {HTMLDialogElement} */ (dialog).close();
+      startedEditing = true;
       activateTab(files.length - 1);
     });
   }
@@ -325,6 +454,7 @@ function removeFile(index) {
   files[activeIndex].content = editor.state.doc.toString();
   files.splice(index, 1);
   if (index <= activeIndex) activeIndex = Math.max(0, activeIndex - 1);
+  startedEditing = true;
   setEditorContent(files[activeIndex].content);
   renderTabs();
 }
@@ -477,6 +607,45 @@ async function loadFacetFiles(facet) {
   renderTabs();
 }
 
+/**
+ * Replaces the new-facet editor's tabs with the default template for `kind`.
+ * Only called when creating a brand-new facet that hasn't been edited yet.
+ *
+ * @param {"interactive" | "prelude"} kind
+ */
+function applyDefaultTemplateForKind(kind) {
+  const defaults = kind === "prelude" ? DEFAULT_PRELUDE : DEFAULT_INTERFACE;
+  files = defaults.map((f) => ({ ...f }));
+  activeIndex = files.findIndex((f) => f.path === "/");
+  if (activeIndex < 0) activeIndex = 0;
+
+  $editor.value?.dispatch({
+    effects: StateEffect.reconfigure.of([
+      ...baseExtensions,
+      languageForPath(files[activeIndex].path),
+    ]),
+  });
+  setEditorContent(files[activeIndex].content);
+  startedEditing = false;
+  renderTabs();
+}
+
+/**
+ * Loads a built-in default template (interactive or prelude) into the editor
+ * as a brand-new facet, e.g. when a default example is clicked.
+ *
+ * @param {"interactive" | "prelude"} kind
+ */
+function loadDefaultExample(kind) {
+  $editingFacet.value = null;
+  const kindEl = /** @type {HTMLSelectElement | null} */ (
+    document.querySelector("#kind-input")
+  );
+  if (kindEl) kindEl.value = kind;
+  applyDefaultTemplateForKind(kind);
+  globalThis.scrollTo({ top: 0 });
+}
+
 export function renderEditor() {
   // Code editor
   const editorContainer = document.body.querySelector("#html-input-container");
@@ -496,8 +665,9 @@ export function renderEditor() {
 
   $editor.value = editor;
 
-  files = DEFAULT_FILES;
+  files = DEFAULT_INTERFACE.map((f) => ({ ...f }));
   activeIndex = 0;
+  startedEditing = false;
   setEditorContent(files[0].content);
   renderTabs();
   return editor;
@@ -634,6 +804,20 @@ export function handleBuildFormSubmit() {
     onBuildSubmit(editor),
   );
 
+  const kindEl = /** @type {HTMLSelectElement | null} */ (
+    document.querySelector("#kind-input")
+  );
+  // When creating a brand-new facet, switching the kind swaps in that kind's
+  // default template — but only if the user hasn't started editing yet, and
+  // never while editing an existing facet.
+  kindEl?.addEventListener("change", () => {
+    if ($editingFacet.value) return;
+    if (startedEditing) return;
+    applyDefaultTemplateForKind(
+      /** @type {"interactive" | "prelude"} */ (kindEl?.value ?? "interactive"),
+    );
+  });
+
   const importBtn = document.querySelector("#import-button");
   const importInput = document.querySelector("#import-input");
 
@@ -645,6 +829,7 @@ export function handleBuildFormSubmit() {
 
     const content = await file.text();
     files[activeIndex].content = content;
+    startedEditing = true;
     setEditorContent(content);
   });
 }
@@ -669,25 +854,34 @@ export function listenForExamplesEdit() {
       const rel = target.getAttribute("rel");
       if (!rel) return;
 
-      const uri = target.closest("li")?.getAttribute("data-uri");
+      const li = target.closest("li");
+      if (!li) return;
+
+      // Built-in default template example — no source URI, just load the
+      // matching default from this page into the editor.
+      if (rel === "edit" && li.dataset.kind && !li.dataset.uri) {
+        loadDefaultExample(
+          /** @type {"interactive" | "prelude"} */ (li.dataset.kind),
+        );
+        return;
+      }
+
+      const uri = li.getAttribute("data-uri");
       if (!uri) return;
 
-      const name = target.closest("li")?.getAttribute("data-name");
+      const name = li.getAttribute("data-name");
       if (!name) return;
 
-      const kind = target.closest("li")?.getAttribute("data-kind") ?? undefined;
+      const kind = li.getAttribute("data-kind") ?? undefined;
 
-      switch (rel) {
-        case "edit": {
-          setEditorLoading(true);
-          const facet = await facetFromURI({ kind, name, uri }, {
-            fetchHTML: true,
-          });
-          setEditorLoading(false);
-          editFacet(facet);
-          document.querySelector("#code")?.scrollIntoView();
-          break;
-        }
+      if (rel === "edit") {
+        setEditorLoading(true);
+        const facet = await facetFromURI({ kind, name, uri }, {
+          fetchHTML: true,
+        });
+        setEditorLoading(false);
+        editFacet(facet);
+        globalThis.scrollTo({ top: 0 });
       }
     },
   );

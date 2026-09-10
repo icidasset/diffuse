@@ -2,16 +2,6 @@
 layout: layouts/kitchen.vto
 base: ../
 title: Create | Diffuse
-
-examples:
-  - url: "facets/examples/now-playing/index.tile"
-    title: "Now playing"
-    desc: >
-      Shows what's currently set to "now playing" in the queue, along with a button to shift the queue to the next track.
-  - url: "facets/examples/generate-playlist/index.tile"
-    title: "Generate playlist"
-    desc: >
-      Make a list of what previously played in the queue.
 ---
 
 <style>
@@ -281,6 +271,7 @@ examples:
       Some simple examples to help you understand how to write your own facet. Click the edit button to load them into the code editor above.
     </p>
 
-    {{ await comp.examples({ id: "examples", items: examples }) }}
+    <div id="examples-list">
+    </div>
   </section>
 </div>
