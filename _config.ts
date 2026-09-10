@@ -2,6 +2,7 @@ import { dotenvRun } from "@dotenv-run/esbuild";
 import lume from "lume/mod.ts";
 
 import brotli from "lume/plugins/brotli.ts";
+import { compress as compressBrotli } from "lume/deps/brotli.ts";
 import esbuild from "lume/plugins/esbuild.ts";
 import postcss from "lume/plugins/postcss.ts";
 import sourceMaps from "lume/plugins/source_maps.ts";
@@ -136,10 +137,34 @@ site.use(esbuild({
 
 site.add([".js"]);
 
-// *.facet.js files (facets' own scripts) are packaged into their `.tile` CARs at
-// build time; exclude them from the regular build so esbuild doesn't try to
-// bundle them.
-site.ignore((p) => p.endsWith("facet.js") || p.endsWith("SKILL.md"));
+// Every bundled facet (`src/facets/**/index.html` + `facet.js`) is packaged into
+// a `.tile` CAR by `buildTileCars`, which embeds `/` (index.html), `/facet.js`,
+// and `/facet.css` (when present). Those embedded files are served exclusively
+// from the tile at runtime, so keep them out of the regular build output — the
+// loose copies in dist would otherwise be redundant. `*.facet.js` files are
+// ignored wholesale so esbuild doesn't try to bundle them (for tile facets the
+// script lives inside the `.tile` CAR instead). `SKILL.md` is packaged into the
+// diffuse-facet skill rather than the site build.
+const tileFacetEmbeddedPaths = new Set<string>();
+for (const entry of walkSync("./src/facets", { includeDirs: true })) {
+  if (!entry.isDirectory) continue;
+  const indexHtml = path.join(entry.path, "index.html");
+  const facetJs = path.join(entry.path, "facet.js");
+  if (!existsSync(indexHtml) || !existsSync(facetJs)) continue;
+
+  const base = `/${path.relative("./src", entry.path)}`;
+  tileFacetEmbeddedPaths.add(base + "/index.html");
+  if (existsSync(path.join(entry.path, "facet.css"))) {
+    tileFacetEmbeddedPaths.add(base + "/facet.css");
+  }
+}
+
+site.ignore(
+  (p) =>
+    p.endsWith("facet.js") ||
+    p.endsWith("SKILL.md") ||
+    tileFacetEmbeddedPaths.has(p),
+);
 
 ////////////////////////////////////////////
 // CSS
@@ -463,22 +488,45 @@ site.addEventListener("afterUpdate", writeFileTree);
 // BUILD TILE CARS FOR FACETS
 ////////////////////////////////////////////
 
-// For every bundled facet (`src/facets/**/index.html` + `facet.js`), build a
-// DASL-style `.tile` CAR (index.html at `/`, facet.js at `/facet.js`) and write
-// it into the build output next to the facet.
+// For every bundled facet (`src/facets/**/facet.js` next to an `index.html`, or
+// an `index.vto` that Lume renders to `index.html`), build a DASL-style `.tile`
+// CAR (index at `/`, facet.js at `/facet.js`) and write it into the build output
+// next to the facet.
+//
+// The embedded files are served exclusively from the tile, so once the tile is
+// written the loose copies in `dist` are removed — they would otherwise be
+// redundant. For `index.html` facets the regular build already excludes them
+// (see `site.ignore` above); here we also catch `.vto` facets whose rendered
+// page is produced by Lume before this `afterBuild` hook runs.
 async function buildTileCars() {
   const facetsDir = "src/facets";
   const distDir = "dist/facets";
 
   for (const entry of walkSync(facetsDir, { includeDirs: true })) {
     if (!entry.isDirectory) continue;
-    const indexHtml = path.join(entry.path, "index.html");
     const facetJs = path.join(entry.path, "facet.js");
-    if (!existsSync(indexHtml) || !existsSync(facetJs)) continue;
+    if (!existsSync(facetJs)) continue;
+
+    // The tile index comes from a static `index.html`, or — when the facet is
+    // authored as a `.vto` template — from the page Lume already rendered
+    // (which bakes in any template data, e.g. the facet picker options).
+    const indexHtml = path.join(entry.path, "index.html");
+    const indexVto = path.join(entry.path, "index.vto");
+    let indexContent;
+    if (existsSync(indexHtml)) {
+      indexContent = Deno.readTextFileSync(indexHtml);
+    } else if (existsSync(indexVto)) {
+      const rel = path.relative(facetsDir, entry.path);
+      const rendered = path.join(distDir, rel, "index.html");
+      if (!existsSync(rendered)) continue;
+      indexContent = Deno.readTextFileSync(rendered);
+    } else {
+      continue;
+    }
 
     /** @type {Record<string, { content: string }>} */
     const files: Record<string, { content: string }> = {
-      "/": { content: Deno.readTextFileSync(indexHtml) },
+      "/": { content: indexContent },
       "/facet.js": { content: Deno.readTextFileSync(facetJs) },
     };
     const facetCss = path.join(entry.path, "facet.css");
@@ -492,6 +540,28 @@ async function buildTileCars() {
     const outDir = path.join(distDir, rel);
     ensureDirSync(outDir);
     Deno.writeFileSync(path.join(outDir, "index.tile"), car);
+
+    // The tile CAR is fetched over the network by the loader, so give it a
+    // brotli `.br` sidecar like the html/css assets. Caddy's `precompressed`
+    // serves it with `Content-Encoding: br` and the browser (and service
+    // worker, via `fetch`) transparently decompresses — the loader and the
+    // content-address cache never see the compressed bytes, only the tile's
+    // original bytes, so CIDs stay stable. Written in the same pass as the
+    // tile so the sidecar can never go stale.
+    Deno.writeFileSync(
+      path.join(outDir, "index.tile.br"),
+      compressBrotli(car, undefined, 6),
+    );
+
+    // Drop the loose embedded files (and any brotli/source-map sidecars) now
+    // that they're packaged inside the tile.
+    for (const name of ["index.html", "facet.js", "facet.css"]) {
+      for (const suffix of ["", ".br", ".map"]) {
+        try {
+          Deno.removeSync(path.join(outDir, name + suffix));
+        } catch { /* already gone */ }
+      }
+    }
   }
 }
 
