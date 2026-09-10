@@ -787,10 +787,47 @@ export function tileFromFiles(files) {
 }
 
 /**
- * Lifts a legacy facet record that carries a raw `html` string (and possibly a
- * `cid`) into a tile facet: the `html` becomes the `/` resource, with its bytes
- * stored in `blocks`, and the old `html`/`cid` fields are dropped. This is the
- * one-shot migration for facilities stored before the tile schema. Synchronous
+ * Upgrade a stored facet's `uri` from an old `.html` bundle path to the new
+ * `.tile` path. Before the tile schema the bundled facets were pointed at loose
+ * `index.html` files (`diffuse://facets/…/index.html`); the build now packages
+ * each facet into an `index.tile` CAR at the same directory, so a stale `.html`
+ * `uri` no longer resolves. This rewrites the `diffuse://` scheme's trailing
+ * `index.html` to `index.tile`. Only the Diffuse bundle's own facets moved to
+ * `.tile`, so external (`http(s)://`, `at://`) and other `.html` URIs are left
+ * untouched.
+ *
+ * @param {Record<string, unknown>} record
+ * @returns {Record<string, unknown>}
+ *
+ * @example Rewrites a stale bundle html path to its tile
+ * ```js
+ * import { rewriteLegacyURIPath } from "~/common/tiles.js";
+ *
+ * const upgraded = rewriteLegacyURIPath({ id: "f", name: "x", uri: "diffuse://facets/data/file-manager/index.html" });
+ * if (upgraded.uri !== "diffuse://facets/data/file-manager/index.tile") throw new Error("expected the tile uri");
+ * const untouched = rewriteLegacyURIPath({ id: "g", name: "y", uri: "https://example.com/facet.html" });
+ * if (untouched.uri !== "https://example.com/facet.html") throw new Error("external uris should be left alone");
+ * ```
+ */
+export function rewriteLegacyURIPath(record) {
+  const uri = record.uri;
+  if (typeof uri !== "string") return record;
+
+  const upgraded = uri.replace(
+    /^diffuse:\/\/(.+)\/index\.html$/i,
+    "diffuse://$1/index.tile",
+  );
+  return upgraded === uri ? record : { ...record, uri: upgraded };
+}
+
+/**
+ * Lifts a legacy facet record to the current tile shape. In addition to
+ * rewriting any stale `.html` bundle `uri` (see {@link rewriteLegacyURIPath}), a
+ * record that carries a raw `html` string (and possibly a `cid`) is lifted into
+ * a tile facet: the `html` becomes the `/` resource, with its bytes stored in
+ * `blocks`, and the old `html`/`cid` fields are dropped. Already-tile records
+ * (`resources` present) are left unchanged apart from any uri rewrite. This is
+ * the one-shot migration for facets stored before the tile schema. Synchronous
  * because {@link htmlFacetTile} no longer needs async compression.
  *
  * @param {Record<string, unknown>} record
@@ -806,12 +843,21 @@ export function tileFromFiles(files) {
  * const root = await resolveInlineTile(lifted.resources, lifted.blocks);
  * if (root?.html !== "<p>hi</p>") throw new Error("lifted content should resolve");
  * ```
+ *
+ * @example Rewrites a stale uri even for already-tile facets
+ * ```js
+ * import { migrateLegacyFacet } from "~/common/tiles.js";
+ *
+ * const upgraded = migrateLegacyFacet({ id: "f", name: "x", uri: "diffuse://facets/data/sources/index.html", resources: { "/": {} }, blocks: {} });
+ * if (upgraded.uri !== "diffuse://facets/data/sources/index.tile") throw new Error("stale uri should be upgraded");
+ * ```
  */
 export function migrateLegacyFacet(record) {
-  const html = record.html;
-  if (typeof html !== "string" || record.resources) return record;
+  const upgraded = rewriteLegacyURIPath(record);
+  const html = upgraded.html;
+  if (typeof html !== "string" || upgraded.resources) return upgraded;
 
-  const { html: _html, cid: _cid, ...rest } = record;
+  const { html: _html, cid: _cid, ...rest } = upgraded;
   const tile = htmlFacetTile(html);
   return { ...rest, resources: tile.resources, blocks: tile.blocks };
 }

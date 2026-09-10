@@ -21,7 +21,7 @@ import {
   register,
   resolve,
 } from "~/common/lens-registry.js";
-import { resolveInlineTile } from "~/common/tiles.js";
+import { resolveInlineTile, rewriteLegacyURIPath } from "~/common/tiles.js";
 
 // Unit tests for the self-describing envelope + migration/write-back machinery.
 // These use distinct NSIDs per test so the module-level lens registry does not
@@ -114,6 +114,46 @@ describe("common/self-describing + lens", () => {
       const alreadyTile = records.find((r) => r.id === "b")!;
       expect(alreadyTile.resources).toBeDefined();
       expect(alreadyTile.blocks).toBeDefined();
+    });
+
+    it("lifts a legacy facet uri from the old .html bundle path to .tile on read", () => {
+      // A facet stored before the tile conversion points at the loose bundle
+      // `index.html`; the build now serves an `index.tile` CAR at the same dir.
+      const envelope = wrap([
+        { id: "f1", name: "Old", uri: "diffuse://facets/data/file-manager/index.html" },
+        // Already-tile facets also carry a stale uri and must be upgraded.
+        { id: "f2", name: "Tile", uri: "diffuse://facets/data/sources/index.html", resources: { "/": { src: { $link: "bafk..." } } }, blocks: {} },
+        // External uris are not bundle paths and must be left alone.
+        { id: "f3", name: "Ext", uri: "https://example.com/facet.html" },
+      ], { schema: "sh.diffuse.output.facet" });
+      const out = migrateEnvelope(envelope, "facets", resolve);
+      const records = out.data as Array<Record<string, unknown>>;
+
+      const lifted = records.find((r) => r.id === "f1")!;
+      expect(lifted.uri).toBe("diffuse://facets/data/file-manager/index.tile");
+
+      const tile = records.find((r) => r.id === "f2")!;
+      expect(tile.uri).toBe("diffuse://facets/data/sources/index.tile");
+      expect(tile.resources).toBeDefined();
+
+      const ext = records.find((r) => r.id === "f3")!;
+      expect(ext.uri).toBe("https://example.com/facet.html");
+    });
+
+    it("rewriteLegacyURIPath rewrites only stale diffuse bundle paths", () => {
+      const upgraded = rewriteLegacyURIPath({
+        id: "f", name: "x", uri: "diffuse://facets/themes/blur/facet/index.html",
+      });
+      expect(upgraded.uri).toBe("diffuse://facets/themes/blur/facet/index.tile");
+
+      const untouched = rewriteLegacyURIPath({
+        id: "g", name: "y", uri: "https://example.com/facet.html",
+      });
+      expect(untouched.uri).toBe("https://example.com/facet.html");
+
+      // A missing/untyped uri passes through as-is.
+      const noUri = rewriteLegacyURIPath({ id: "h", name: "z" });
+      expect("uri" in noUri).toBe(false);
     });
 
     it("migrateEnvelope tolerates non-array facets data (no crash, passes through)", () => {
