@@ -320,7 +320,10 @@ function toBuildRootUrl(value) {
       /^[a-z][a-z0-9+.-]*:/i.test(v)) {
     return value;
   }
-  return `/${v}`;
+  // Resolve against the loader's `<base>` (the Diffuse build root) rather than
+  // prefixing a bare `/`, so the URL stays inside the deployment's subfolder
+  // instead of always pointing at the domain root.
+  return new URL(v, document.baseURI).href;
 }
 
 /**
