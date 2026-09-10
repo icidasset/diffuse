@@ -1,12 +1,29 @@
 <link rel="stylesheet" href="styles/base.css" />
 <link rel="stylesheet" href="facets/themes/blur/font-faces.css" />
 <link rel="stylesheet" href="facets/themes/blur/variables.css" />
-<link rel="stylesheet" href="facets/themes/blur/facet/index.css" />
 <link rel="stylesheet" href="vendor/@phosphor-icons/web/bold/style.css" />
 <link rel="stylesheet" href="vendor/@phosphor-icons/web/fill/style.css" />
 
 <style>
   @import "/facet.css";
+
+  html {
+    font-size: 18px;
+  }
+
+  main,
+  db-artwork-controller,
+  db-browser {
+    font-family: "Source Sans 3", ui-sans-serif, system-ui, sans-serif;
+    font-feature-settings: normal;
+    font-optical-sizing: auto;
+  }
+
+  @media (orientation: landscape) and (width < 63rem) {
+    db-artwork-controller {
+      font-size: calc((var(--fs-sm) + var(--fs-xs)) / 2);
+    }
+  }
 </style>
 
 <div id="bg-overlay"></div>
