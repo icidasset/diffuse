@@ -2,6 +2,13 @@ import { html, nothing, render as litRender } from "lit-html";
 
 import { NAME as ATPROTO_PASSKEY_NAME } from "~/components/output/raw/atproto-passkey/element.js";
 import { NAME as PASSKEY_NAME } from "~/components/transformer/output/refiner/passkey-encryption/element.js";
+// The passkey transformer sits on top of the atproto-sync transformer
+// (`output-selector="#do-output__dtor-atproto-sync"`): importing the module
+// here defines the custom element, otherwise `base()` collections stay in
+// "loading" forever and passkey setup/adoption hangs. The prelude only defines
+// it once the output has been activated, which has not happened yet on this
+// connect page.
+import "~/components/transformer/output/raw/atproto-sync/element.js";
 import { effect, signal } from "~/common/signal.js";
 import foundation from "~/common/foundation.js";
 

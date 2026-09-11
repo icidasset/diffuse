@@ -245,16 +245,31 @@ class PasskeyEncryptionTransformer extends OutputTransformer {
    * has finished loading. The effect is disposed on the first loaded run (deferred
    * past its initialiser to avoid a TDZ error on `stop`).
    *
+   * Rejects when the collection has not reached "loaded" within `timeoutMs`
+   * (e.g. the element chain behind `base()` never upgraded), so re-keying
+   * surfaces an error instead of leaving the UI stuck in a pending state.
+   *
    * @param {{ collection: () => { state: string; data?: unknown[] } }} manager
+   * @param {string} label - Human-readable collection name for the timeout error
+   * @param {number} [timeoutMs=30_000]
    * @returns {Promise<unknown[]>}
    */
-  #whenLoaded(manager) {
-    return new Promise((resolve) => {
-      let resolved = false;
+  #whenLoaded(manager, label, timeoutMs = 30_000) {
+    return new Promise((resolve, reject) => {
+      let settled = false;
+
+      const timer = setTimeout(() => {
+        if (settled) return;
+        settled = true;
+        stop();
+        reject(new Error(`Timed out waiting for ${label} to load`));
+      }, timeoutMs);
+
       const stop = this.effect(() => {
         const c = manager.collection();
-        if (resolved || c.state !== "loaded") return;
-        resolved = true;
+        if (settled || c.state !== "loaded") return;
+        settled = true;
+        clearTimeout(timer);
         queueMicrotask(() => {
           stop();
           resolve(c.data ?? []);
@@ -280,8 +295,8 @@ class PasskeyEncryptionTransformer extends OutputTransformer {
     const oldKey = this.#encryptionKey.value;
     const base = this.base();
 
-    const rawSettings = await this.#whenLoaded(base.settings);
-    const rawTracks = await this.#whenLoaded(base.tracks);
+    const rawSettings = await this.#whenLoaded(base.settings, "settings");
+    const rawTracks = await this.#whenLoaded(base.tracks, "tracks");
 
     // Re-encrypt everything the current passkey can still decrypt, leaving
     // anything it cannot decrypt as-is (still encrypted, so it stays locked).
