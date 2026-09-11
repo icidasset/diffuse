@@ -243,6 +243,7 @@ export function openAddFromURIModal() {
       descriptionEdited = true;
     });
 
+    /** @type {ReturnType<typeof setTimeout> | undefined} */
     let fillTimer;
     uriEl?.addEventListener("input", () => {
       clearTimeout(fillTimer);

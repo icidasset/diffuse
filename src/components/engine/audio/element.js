@@ -1049,13 +1049,13 @@ class AudioEngineItem extends BroadcastableDiffuseElement {
   static observedAttributes = ["preload"];
 
   // MEDIA ERROR RETRY
-  /** @type {number | undefined} Pending automatic retry timeout. */
+  /** @type {ReturnType<typeof setTimeout> | undefined} Pending automatic retry timeout. */
   #retryTimer = undefined;
   /** @type {number} Retry attempts already used. */
   #retryAttempt = 0;
 
   // LOAD WATCHDOG
-  /** @type {number | undefined} Pending load-watchdog timeout. */
+  /** @type {ReturnType<typeof setTimeout> | undefined} Pending load-watchdog timeout. */
   #watchdogTimer = undefined;
   /** @type {number} Watchdog trips used for backoff growth. */
   #watchdogAttempt = 0;
