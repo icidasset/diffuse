@@ -45,6 +45,13 @@ const UNROUTE_AUDIO = Symbol("unrouteAudio");
 const RETRY_BASE_DELAY_MS = 500;
 const RETRY_MAX_DELAY_MS = 30_000;
 
+/**
+ * How long a load may go without ANY data (`progress` events) before the load
+ * watchdog treats it as hung and reloads. Doubles per trip up to
+ * {@link RETRY_MAX_DELAY_MS}, then keeps checking at that ceiling.
+ */
+const LOAD_WATCHDOG_MS = 3_000;
+
 ////////////////////////////////////////////
 // ELEMENT
 ////////////////////////////////////////////
@@ -399,7 +406,11 @@ class AudioEngine extends BroadcastableDiffuseElement {
         const err =
           "Couldn't play audio automatically. Please resume playback manually.";
         console.error(err, e);
-        item.intendsToPlay = false;
+
+        // A real media error leaves the element dead: keep the intent so the
+        // automatic retry (`errorEvent`) reloads and replays it. Only clear
+        // the intent when the element itself is still usable.
+        if (!audio.error) item.intendsToPlay = false;
         item.$state.isPlaying.set(false);
       });
     });
@@ -433,7 +444,7 @@ class AudioEngine extends BroadcastableDiffuseElement {
    * @type {Actions["seek"]}
    */
   seek({ audioId, currentTime, percentage }) {
-    this.#withAudioNode(audioId, (audio) => {
+    this.#withAudioNode(audioId, (audio, item) => {
       if (currentTime != undefined) {
         audio.currentTime = currentTime;
       } else if (
@@ -441,6 +452,18 @@ class AudioEngine extends BroadcastableDiffuseElement {
         audio.duration !== Infinity
       ) {
         audio.currentTime = percentage * audio.duration;
+      }
+
+      // A seek starts a fresh load at the new position. If playback was
+      // expected, surface the rebuffer as "loading", re-assert the play
+      // intent (the retry loop needs it if the range fetch errors — the
+      // pending `play()` promise rejection would otherwise clear it before
+      // `errorEvent` sees it), and arm the load watchdog (a range fetch that
+      // stalls produces no `waiting`/`error` while `audio.seeking` is true).
+      if (item.intendsToPlay || item.$state.isPlaying.get()) {
+        item.intendsToPlay = true;
+        item.$state.loadingState.set("loading");
+        item.armLoadWatchdog();
       }
     });
   }
@@ -1031,11 +1054,11 @@ class AudioEngineItem extends BroadcastableDiffuseElement {
   /** @type {number} Retry attempts already used. */
   #retryAttempt = 0;
 
-  // STALL RETRY
-  /** @type {number} Next `performance.now()` at which a stalled reload may run. */
-  #stallGateUntil = 0;
-  /** @type {number} Stalled-reload attempts used for backoff growth. */
-  #stallAttempt = 0;
+  // LOAD WATCHDOG
+  /** @type {number | undefined} Pending load-watchdog timeout. */
+  #watchdogTimer = undefined;
+  /** @type {number} Watchdog trips used for backoff growth. */
+  #watchdogAttempt = 0;
 
   constructor() {
     super();
@@ -1091,6 +1114,9 @@ class AudioEngineItem extends BroadcastableDiffuseElement {
     super.attributeChangedCallback(name, oldValue, newValue);
     if (name === "preload") {
       this.$state.isPreload.set(newValue !== null);
+
+      // Now the active track: start watching its load for hangs.
+      if (newValue === null) this.#armWatchdog();
     }
   }
 
@@ -1111,12 +1137,16 @@ class AudioEngineItem extends BroadcastableDiffuseElement {
     audio.addEventListener("playing", this.playingEvent);
     audio.addEventListener("suspend", this.suspendEvent);
     audio.addEventListener("timeupdate", this.timeupdateEvent);
-    audio.addEventListener("stalled", this.stalledEvent);
+    audio.addEventListener("progress", this.progressEvent);
     audio.addEventListener("waiting", this.waitingEvent);
 
     // Transition from initialisation to loading for non-preload items
     if (!this.hasAttribute("preload")) {
       this.$state.loadingState.set("loading");
+
+      // Watch the initial load: a fetch that hangs without data never fires
+      // `error`, so the watchdog reloads it after a data-less window.
+      this.#armWatchdog();
     }
 
     // Setup broadcasting if part of group
@@ -1202,6 +1232,7 @@ class AudioEngineItem extends BroadcastableDiffuseElement {
    */
   disconnectedCallback() {
     this.cancelMediaRetry();
+    this.#disarmWatchdog();
 
     // NOTE: the Web Audio source node is intentionally NOT detached here. A
     // `createMediaElementSource` node can only be made once per element, so
@@ -1304,6 +1335,11 @@ class AudioEngineItem extends BroadcastableDiffuseElement {
 
     this.$state.loadingState.set("loading");
     audio.load();
+
+    // The error loop only re-acts on a new `error` event; the watchdog covers
+    // the case where this retry's fetch hangs without one.
+    this.#armWatchdog();
+
     this.engine?.play({ audioId: this.id });
   }
 
@@ -1319,6 +1355,14 @@ class AudioEngineItem extends BroadcastableDiffuseElement {
     }
     this.#retryAttempt = 0;
     this.autoRetrying = false;
+  }
+
+  /**
+   * Watchdog access for the engine (`seek` re-arms it, since a seek starts a
+   * fresh load). No-op when already armed.
+   */
+  armLoadWatchdog() {
+    this.#armWatchdog();
   }
 
   // EVENTS
@@ -1347,10 +1391,11 @@ class AudioEngineItem extends BroadcastableDiffuseElement {
       item.removeAttribute("initial-progress");
     }
 
-    // Data arrived — reset the stalled-reload backoff.
+    // Data arrived or became playable — the load is healthy; stop watching
+    // (mid-playback refills are covered by `waitingEvent` re-arming).
     if (item) {
-      item.#stallAttempt = 0;
-      item.#stallGateUntil = 0;
+      item.#watchdogAttempt = 0;
+      item.#disarmWatchdog();
     }
 
     finishedLoading(event);
@@ -1422,8 +1467,8 @@ class AudioEngineItem extends BroadcastableDiffuseElement {
     const item = engineItem(audio);
     item?.cancelMediaRetry();
     if (item) {
-      item.#stallAttempt = 0;
-      item.#stallGateUntil = 0;
+      item.#watchdogAttempt = 0;
+      item.#disarmWatchdog();
     }
     item?.$state.isPlaying.set(false);
   }
@@ -1455,8 +1500,8 @@ class AudioEngineItem extends BroadcastableDiffuseElement {
       item.intendsToPlay = false;
       item.autoRetrying = false;
       item.#retryAttempt = 0;
-      item.#stallAttempt = 0;
-      item.#stallGateUntil = 0;
+      item.#watchdogAttempt = 0;
+      item.#disarmWatchdog();
     }
     item?.$state.isPlaying.set(true);
 
@@ -1475,65 +1520,135 @@ class AudioEngineItem extends BroadcastableDiffuseElement {
    */
   timeupdateEvent(event) {
     const audio = /** @type {HTMLAudioElement} */ (event.target);
-    if (isNaN(audio.duration) || audio.duration === 0) return;
+    const item = engineItem(audio);
+    if (!item) return;
 
-    engineItem(audio)?.$state.currentTime.set(audio.currentTime);
+    // Playback is progressing — clear any lingering "loading" state (set by
+    // a mid-playback `waiting`) so the theme doesn't keep showing
+    // "Loading audio ..." while the track plays. The browser only restores
+    // `canplay`/`playing` when readyState crosses its thresholds, which it
+    // may not do after a brief refill stall. A `timeupdate` caused by a seek
+    // (position jump while rebuffering) doesn't count as progress.
+    if (
+      !audio.paused && !audio.seeking &&
+      item.$state.loadingState.get() !== "loaded"
+    ) {
+      item.$state.loadingState.set("loaded");
+    }
+
+    if (isNaN(audio.duration) || audio.duration === 0) return;
+    item.$state.currentTime.set(audio.currentTime);
   }
 
   /**
    * @param {Event} event
    */
-  stalledEvent(event) {
-    const audio = /** @type {HTMLAudioElement} */ (event.target);
-    const item = engineItem(audio);
+  progressEvent(event) {
+    const item = engineItem(/** @type {HTMLMediaElement} */ (event.target));
     if (!item) return;
 
-    // `stalled` = the browser is actively fetching (networkState LOADING) but
-    // no data has come for a while. That's the "new track's fetch hung" case:
-    // no `error` ever fires, so the error retry loop can't help — reload
-    // explicitly so a transient connectivity loss resolves on its own.
-    if (item.hasAttribute("preload")) return;
-    if (item.autoRetrying) return; // error retry loop owns reloads while active
-    if (audio.src.startsWith("blob:")) return; // MediaSource items manage their own
-    if (audio.error || audio.readyState >= 2) return; // playable — nothing to reload
-    if (document.hidden) return; // backgrounded loads are suspended anyway (iOS)
-    if (audio.networkState !== HTMLMediaElement.NETWORK_LOADING) return;
-    if (!item.intendsToPlay && !item.$state.isPlaying.get()) return;
+    // Bytes are arriving — the load is alive. Restart the watchdog window
+    // from the base delay so a slow-but-steady download never trips it.
+    item.#watchdogAttempt = 0;
+    item.#armWatchdog();
+  }
 
-    // has enough buffered data to play on — the browser may keep fetching in
-    // its own time; don't abort a healthy buffer over a slow refetch.
+  // LOAD WATCHDOG
+
+  /**
+   * Starts watching for a hung load. Browsers don't reliably fire
+   * `stalled`/`error` while a fetch sits in NETWORK_LOADING without data, so
+   * the watchdog polls instead: `progress` (bytes arriving), `canplay` and
+   * `playing` all re-arm or disarm it — if the timer fires anyway, the load
+   * has been data-less for the whole backoff window and gets reloaded.
+   */
+  #armWatchdog() {
+    if (this.#watchdogTimer !== undefined) return;
+    if (!this.isConnected) return;
+
+    const delay = Math.min(
+      LOAD_WATCHDOG_MS * 2 ** this.#watchdogAttempt,
+      RETRY_MAX_DELAY_MS,
+    );
+    this.#watchdogTimer = setTimeout(() => {
+      this.#watchdogTimer = undefined;
+      this.#watchdogTrip();
+    }, delay);
+  }
+
+  /** Stops the load watchdog (paused, dropped, playable). */
+  #disarmWatchdog() {
+    if (this.#watchdogTimer !== undefined) {
+      clearTimeout(this.#watchdogTimer);
+      this.#watchdogTimer = undefined;
+    }
+  }
+
+  /** Called when a load produced no data (and no error) for the backoff window. */
+  #watchdogTrip() {
+    if (!this.isConnected) return;
+
+    let audio;
+    try {
+      audio = this.audio;
+    } catch {
+      return;
+    }
+
+    if (this.hasAttribute("preload")) return;
+    if (audio.src.startsWith("blob:")) return; // MediaSource items manage their own loads
+    if (document.hidden) return; // backgrounded loads are suspended anyway (iOS)
+
+    // The error retry loop is armed AND the element is errored: it owns
+    // reloads until its next attempt clears the error (and re-arms us). If
+    // the element isn't errored the loop is between attempts — a hang with no
+    // `error` is exactly the watchdog's job, so fall through and reload.
+    if (this.autoRetrying && audio.error) return;
+
+    // The load is actually fine — data arrived or the element is playable
+    // since the timer was set. Give up watching until the next load kicks in.
+    if (!audio.error && audio.readyState >= 2) {
+      this.#watchdogAttempt = 0;
+      return;
+    }
+    if (audio.error) return; // error retry loop owns reloads; `#retryMedia` re-arms
+
+    // Enough buffered data to play on — a slow refetch isn't a hang.
     if (
       audio.buffered.length > 0 &&
       audio.buffered.end(audio.buffered.length - 1) > audio.currentTime + 5
     ) {
+      this.#watchdogAttempt = 0;
       return;
     }
 
-    // Backoff: the browser fires `stalled` on its own cadence, so only reload
-    // once per (doubling, capped) window — same policy as the error retry.
-    const now = performance.now();
-    if (now < item.#stallGateUntil) return;
-    const delay = Math.min(
-      RETRY_BASE_DELAY_MS * 2 ** item.#stallAttempt,
-      RETRY_MAX_DELAY_MS,
-    );
-    item.#stallAttempt += 1;
-    item.#stallGateUntil = now + delay;
+    // Nobody asked for this load yet (paused, play pending elsewhere): keep
+    // checking, but don't reload — an abort here would discard the bytes a
+    // future `play()` could already use.
+    if (!this.intendsToPlay && !this.$state.isPlaying.get()) {
+      this.#armWatchdog();
+      return;
+    }
+
+    this.#watchdogAttempt += 1;
 
     // Preserve position across the reload (no-op for a never-started load).
     if (
       !isNaN(audio.duration) && audio.duration > 0 &&
       audio.duration !== Infinity
     ) {
-      item.setAttribute(
+      this.setAttribute(
         "initial-progress",
         JSON.stringify(audio.currentTime / audio.duration),
       );
     }
 
-    item.$state.loadingState.set("loading");
+    this.$state.loadingState.set("loading");
     audio.load();
-    if (item.intendsToPlay) item.engine?.play({ audioId: item.id });
+    if (this.intendsToPlay) {
+      this.engine?.play({ audioId: this.id });
+    }
+    this.#armWatchdog();
   }
 
   /**
@@ -1544,10 +1659,17 @@ class AudioEngineItem extends BroadcastableDiffuseElement {
 
     const audio = /** @type {HTMLAudioElement} */ (event.target);
     if (audio.seeking) return;
-    if (audio.networkState !== HTMLMediaElement.NETWORK_IDLE) return;
 
     const item = engineItem(audio);
     if (!item || item.hasAttribute("preload")) return;
+
+    // Playback stalled for data — a (re)load is expected. Watch it for hangs
+    // whether the browser is mid-fetch (LOADING) or has given up (IDLE, load
+    // below). `progress`, `seek` and `retryMedia` arm it as well; all paths
+    // share the single watchdog timer.
+    item.#armWatchdog();
+
+    if (audio.networkState !== HTMLMediaElement.NETWORK_IDLE) return;
 
     const progress = !isNaN(audio.duration) && audio.duration > 0 &&
         audio.duration !== Infinity
