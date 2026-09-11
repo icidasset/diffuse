@@ -200,7 +200,8 @@ function renderNode(node, path, isRoot) {
 
   if (node.facet) {
     const title =
-      document.querySelector(`#facet-select wa-option[value="${node.facet}"]`)
+      Array.from(document.querySelectorAll("#facet-select wa-option"))
+        .find((option) => option.getAttribute("value") === node.facet)
         ?.textContent?.trim() ?? node.facet;
     const label = document.createElement("div");
     label.className = "pane-name";
