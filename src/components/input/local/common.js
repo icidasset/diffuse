@@ -1,6 +1,5 @@
 import * as IDB from "idb-keyval";
 import * as URI from "fast-uri";
-
 import { isAudioFile } from "~/components/input/common.js";
 import { safeDecodeURIComponent } from "~/common/utils.js";
 import { IDB_HANDLES, SCHEME } from "./constants.js";
@@ -163,14 +162,19 @@ export async function loadHandles() {
  * @returns {{ tid: string; path: string } | undefined}
  */
 export function parseURI(uriString) {
+  // NOTE: we can't use `new URL()` here — in browsers, non-special
+  // schemes like `local:` don't get an authority, so `new URL("local://tid/...").host`
+  // is empty and every URI would fail to parse. `fast-uri` parses the
+  // authority for any scheme (RFC 3986), which is also what other input
+  // components (e.g. s3) use.
   try {
-    const url = new URL(uriString);
-    if (url.protocol !== `${SCHEME}:`) return undefined;
+    const url = URI.parse(uriString);
+    if (url.scheme !== SCHEME) return undefined;
     if (!url.host) return undefined;
 
     return {
       tid: url.host,
-      path: safeDecodeURIComponent(url.pathname),
+      path: safeDecodeURIComponent(url.path || "/"),
     };
   } catch {
     return undefined;
