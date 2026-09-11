@@ -25,6 +25,19 @@ export function serverId(server) {
 }
 
 /**
+ * Normalise a directory path to its canonical form: a single leading slash,
+ * no trailing slash (the root stays "/") and no repeated slashes, so stray
+ * `//` inputs can never produce double-slash URLs.
+ *
+ * @param {string} dir
+ * @returns {string}
+ */
+export function normalizeDir(dir) {
+  const cleaned = dir.replace(/\/{2,}/g, "/").replace(/^\/|\/$/g, "");
+  return cleaned === "" ? "/" : "/" + cleaned;
+}
+
+/**
  * Build a https-json:// URI.
  * Protocol can be embedded in host (eg. http://localhost:8080) and is stored
  * as a query param so the URI authority stays valid.
@@ -56,7 +69,7 @@ export function parseURI(uriString) {
   if (!uri.host) return undefined;
 
   const qs = QS.parse(uri.query || "");
-  const dir = typeof qs.dir === "string" ? qs.dir : "/";
+  const dir = typeof qs.dir === "string" ? normalizeDir(qs.dir) : "/";
   const protocol = typeof qs.protocol === "string" ? qs.protocol : undefined;
   const exclude = typeof qs.exclude === "string"
     ? qs.exclude.split(",").filter(Boolean)
@@ -85,7 +98,9 @@ export function toHttpUrl(server, path = "") {
         : "https"
     }://${server.host}`;
 
-  return base.replace(/\/$/, "") + (path ? "/" + path.replace(/^\//, "") : "");
+  // Strip ALL leading/trailing slashes on both sides of the join, so a stray
+  // `//` in host or path can never produce a double-slash URL.
+  return base.replace(/\/+$/, "") + (path ? "/" + path.replace(/^\/+/, "") : "");
 }
 
 /**

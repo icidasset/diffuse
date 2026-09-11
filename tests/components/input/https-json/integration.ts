@@ -30,12 +30,10 @@ let port: number;
 
 beforeAll(async () => {
   const started = await mockServer((req, url) => {
-    // Normalise path: ensure leading slash, no trailing slash (except root)
-    let dir = url.pathname;
-    if (!dir.startsWith("/")) dir = "/" + dir;
-    if (dir.length > 1 && dir.endsWith("/")) dir = dir.slice(0, -1);
-
-    const entries = (FILESYSTEM as Record<string, { name: string; type: string }[]>)[dir];
+    // Match the pathname exactly. The client must never send `//` URLs, so a
+    // repeated slash would 404 here, mirroring strict servers that do not
+    // normalise paths.
+    const entries = (FILESYSTEM as Record<string, { name: string; type: string }[]>)[url.pathname];
     if (!entries) return new Response("", { status: 404 });
 
     return new Response(JSON.stringify(entries), {
@@ -52,6 +50,12 @@ afterAll(async () => {
 });
 
 describe("components/input/https-json (integration)", () => {
+  it("parseURI normalises repeated slashes in dir", () => {
+    const uri = buildURI({ host: `127.0.0.1:${port}`, dir: "//music/" }, "");
+    const parsed = parseURI(uri);
+    expect(parsed?.server.dir).toBe("/music");
+  });
+
   it("consult returns true when the server responds ok", async () => {
     const uri = buildURI({ host: `127.0.0.1:${port}`, dir: "/" }, "");
     const result = await Worker.consult(uri);
@@ -92,6 +96,25 @@ describe("components/input/https-json (integration)", () => {
     expect(uris.some((u) => u.includes("song2.mp3"))).toBe(true);
     expect(uris.some((u) => u.includes("cover.jpg"))).toBe(false);
     expect(uris.some((u) => u.includes("readme.txt"))).toBe(false);
+  });
+
+  it("list works with a dir containing repeated slashes (legacy `//` URIs)", async () => {
+    const uri = buildURI({ host: `127.0.0.1:${port}`, dir: "//music/" }, "");
+
+    const tracks = await Worker.list([{
+      $type: "sh.diffuse.output.track",
+      id: "placeholder-2",
+      kind: "placeholder",
+      uri,
+    }]);
+
+    // The `//` dir is normalised to `/music`, so the strict mock server
+    // (which 404s any double-slash path) still serves the listing.
+    expect(tracks.length).toBe(3);
+    const uris = tracks.map((t) => t.uri);
+    expect(uris.some((u) => u.includes("track1.mp3"))).toBe(true);
+    expect(uris.some((u) => u.includes("song1.flac"))).toBe(true);
+    expect(uris.some((u) => u.includes("song2.mp3"))).toBe(true);
   });
 
   it("list respects exclude list", async () => {

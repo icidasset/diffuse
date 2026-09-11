@@ -3,7 +3,7 @@ import { html } from "lit-html";
 
 import * as Output from "~/common/output.js";
 import { SCHEME } from "~/components/input/https-json/constants.js";
-import { buildURI, parseURI, serverId } from "~/components/input/https-json/common.js";
+import { buildURI, normalizeDir, parseURI, serverId } from "~/components/input/https-json/common.js";
 import { effect } from "~/common/signal.js";
 import foundation from "~/common/foundation.js";
 
@@ -122,7 +122,7 @@ async function removeServer(uri) {
 
 async function addServer() {
   const host = hostInput.value?.trim();
-  const dir = dirInput.value?.trim() || "/";
+  const dir = normalizeDir(dirInput.value?.trim() || "/");
   const exclude = (excludeInput.value ?? "").split(",").map((s) => s.trim()).filter(Boolean);
 
   if (!host) return;
