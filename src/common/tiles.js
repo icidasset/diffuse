@@ -797,7 +797,7 @@ export function tileFromFiles(files) {
  * untouched.
  *
  * @param {Record<string, unknown>} record
- * @returns {Record<string, unknown>}
+ * @returns {Record<string, unknown> & { uri?: string }}
  *
  * @example Rewrites a stale bundle html path to its tile
  * ```js

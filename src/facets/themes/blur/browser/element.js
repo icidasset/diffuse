@@ -963,7 +963,7 @@ class Browser extends DiffuseElement {
     const closeBtn = html`
       <a
         class="toolbar-icon-btn toolbar-icon-btn--link"
-        href="l/?path=facets%2Fdata%2Fplaylists%2Findex.html"
+        href="l/?path=facets%2Fdata%2Fplaylists%2Findex.tile"
         target="_blank"
         title="Open playlist manager"
       >

@@ -15,6 +15,7 @@ import {
   parseCar,
   resolveRoot,
   rewriteCssImports,
+  rewriteLegacyURIPath,
   rewriteModuleImports,
   tileResourceEntries,
 } from "./tiles.js";
@@ -206,6 +207,14 @@ export async function ensureHTML(item) {
  * resources map and blocks. Handles inline tiles (a `resources` map plus a
  * `blocks` map) and `.tile` CARs referenced by `uri`.
  *
+ * Stale `diffuse://` bundle paths pointing at a loose `index.html` (leftover
+ * from before the build packaged every facet into an `index.tile` CAR) are
+ * rewritten to the `.tile` path first, so pre-tile links, bookmarks, and
+ * stored URIs that escaped migration still resolve to the tile instead of
+ * falling back to a loose-file fetch (which would inject the facet HTML
+ * without tile resource linking — its absolute `/facet.js`/`/facet.css`
+ * references then resolve against the deployment root and 404).
+ *
  * @param {{ uri?: string; resources?: unknown; blocks?: Record<string, unknown> }} item
  * @returns {Promise<MaterializedTile | undefined>}
  */
@@ -218,8 +227,11 @@ async function materializeTile(item) {
     return { html: root.html, cid: root.cid, resources, blocks };
   }
 
-  if (item.uri?.endsWith(".tile")) {
-    return await loadTileURI(item.uri);
+  const uri = typeof item.uri === "string"
+    ? rewriteLegacyURIPath({ uri: item.uri }).uri
+    : item.uri;
+  if (uri?.endsWith(".tile")) {
+    return await loadTileURI(uri);
   }
 
   return undefined;

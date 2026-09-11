@@ -1568,7 +1568,7 @@ class WinampElement extends DiffuseElement {
   };
 
   #openConnect = () => {
-    window.open("l/?path=facets%2Fconnect%2Findex.html", "_blank");
+    window.open("l/?path=facets%2Fconnect%2Findex.tile", "_blank");
   };
 
   #next = () => {
