@@ -34,5 +34,5 @@ The exposed `webAudio` graph gives consumers (`context`, `input`, `destination`)
 - `input` is the post-volume tap point that every `<audio>` element feeds into. `input.gain` carries the master volume, so `HTMLMediaElement.volume` is kept at unity for routed elements.
 - To apply DSP, a consumer disconnects the default `input → destination` edge and reconnects it through its own chain, ending at the destination — e.g. `input → biquadFilter → analyser → destination` for an equalizer/visualizer.
 - `destination` is `context.destination`, the standard output used to complete any inserted chain.
-- The `AudioContext` starts in the browser-suspended state; the engine unlocks it on the first user gesture and resumes it on `play()`.
-- The context is created lazily (the first time an element is routed or `webAudio` is accessed) and closed when the engine is disconnected.
+- The `AudioContext` starts in the browser-suspended state; the engine installs persistent gesture listeners that unlock it on any user interaction and re-unlock it whenever the browser suspends it again later (audio-session interruptions, backgrounding, route changes). It additionally resumes on `play()` and when the page becomes visible again.
+- The context is created lazily (the first time an element is routed or `webAudio` is accessed) and kept alive for the page's lifetime: `createMediaElementSource` may only be called once per element, so a torn-down graph would leave existing elements permanently muted. Source nodes are only released when their item is dropped (engine render cleanup).

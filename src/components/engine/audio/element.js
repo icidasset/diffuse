@@ -288,9 +288,13 @@ class AudioEngine extends BroadcastableDiffuseElement {
       audio.load();
     });
 
-    // Detach the <audio> source nodes and close the shared AudioContext.
-    this.#teardownWebAudio();
-
+    // NOTE: The shared Web Audio graph is intentionally left untouched here.
+    // `createMediaElementSource` may only be called once per element, so
+    // detaching the source nodes or closing the AudioContext while the
+    // engine's elements still exist would permanently mute them if the engine
+    // is ever re-connected (the nodes cannot be re-created). The graph lives
+    // for the page's lifetime instead; re-connected items simply keep feeding
+    // it through their existing nodes.
     super.disconnectedCallback();
   }
 
@@ -896,19 +900,36 @@ class AudioEngine extends BroadcastableDiffuseElement {
     // Apply the (possibly persisted) master volume to the freshly created node.
     input.gain.value = this.#volume.value;
 
-    // Unlock the context on the first user gesture so playback that was
-    // requested before any interaction (e.g. autoplay) can proceed.
-    if (context.state === "suspended") {
-      const unlock = () => {
+    // Unlock the context on any user gesture, for the life of the page.
+    // Mobile browsers start the context suspended (autoplay policy) and can
+    // suspend it again at any time (audio-session interruptions, route
+    // changes, backgrounding). `resume()` is only ever allowed inside a user
+    // gesture, so keep the listeners installed permanently: every routed
+    // element's output flows through this context, and a context nobody
+    // re-unlocks means silent playback. `resume()` on a running context is a
+    // no-op, so re-firing on every interaction is safe.
+    const unlock = () => {
+      if (context.state !== "running") {
         context.resume().catch(() => {});
-        ["touchstart", "touchend", "mousedown", "keydown"].forEach((e) => {
-          document.body.removeEventListener(e, unlock);
-        });
-      };
-      ["touchstart", "touchend", "mousedown", "keydown"].forEach((e) => {
-        document.body.addEventListener(e, unlock);
-      });
-    }
+      }
+    };
+    ["touchstart", "touchend", "mousedown", "keydown"].forEach((e) => {
+      document.addEventListener(e, unlock, { passive: true });
+    });
+
+    // Interruption watchdog: attempt an immediate resume whenever the browser
+    // suspends the context while the page is visible (e.g. iOS after a
+    // lock-screen interaction). If the browser demands a gesture, the
+    // persistent listeners above cover the next interaction.
+    context.addEventListener("statechange", () => {
+      if (context.state === "suspended" && !document.hidden) {
+        context.resume().catch(() => {});
+      }
+    });
+
+    // Re-unlock a context that was suspended while the page was backgrounded
+    // (mobile Safari suspends the audio session off-screen).
+    document.addEventListener("visibilitychange", unlock);
   }
 
   /**
@@ -930,10 +951,18 @@ class AudioEngine extends BroadcastableDiffuseElement {
       source = this.#audioContext.createMediaElementSource(audio);
     } catch {
       // A `createMediaElementSource` node can only be created once per element.
-      // Treat a reused element we don't hold a node for (e.g. after the engine
-      // was torn down and reconnected) as already routed and skip it — the
-      // element simply won't be part of the graph in that case.
-      this.#sourceNodes.set(audio, /** @type {any} */ (null));
+      // This can only happen for an element whose node belongs to a graph that
+      // was torn down — its output is owned by a dead node and cannot be
+      // re-routed. Do NOT register it as routed: the `#sourceNodes` map is
+      // also the volume effect's “handled by the graph” marker, and a bogus
+      // entry would bypass master volume (full-volume output). Fall back to
+      // element-level volume instead, which the volume effect keeps in sync.
+      audio.volume = this.#volume.value;
+      console.warn(
+        "Failed to route audio element through the Web Audio graph; " +
+          "falling back to element-level volume.",
+        audio,
+      );
       return;
     }
     source.connect(this.#input);
@@ -963,22 +992,6 @@ class AudioEngine extends BroadcastableDiffuseElement {
   /** Resumes the shared AudioContext if it is suspended (e.g. autoplay policy). */
   #resumeContext() {
     this.#audioContext?.resume().catch(() => {});
-  }
-
-  /** Tears down the graph and all per-element source nodes. */
-  #teardownWebAudio() {
-    for (const audio of this.#sourceNodes.keys()) {
-      this[UNROUTE_AUDIO](audio);
-    }
-
-    this.#sourceNodes.clear();
-
-    // Detach from the destination, then close the context to free resources.
-    if (this.#input) this.#input.disconnect();
-    this.#audioContext?.close().catch(() => {});
-
-    this.#audioContext = undefined;
-    this.#input = undefined;
   }
 }
 
@@ -1148,16 +1161,12 @@ class AudioEngineItem extends BroadcastableDiffuseElement {
    * @override
    */
   disconnectedCallback() {
-    // Unhook the source node so the engine can tear the graph down cleanly
-    // once the item is dropped. The engine also handles this in its render
-    // cleanup, so this is just a safety net.
-    let audio;
-    try {
-      audio = this.audio;
-    } catch {
-      return;
-    }
-    this.engine?.[UNROUTE_AUDIO](audio);
+    // NOTE: the Web Audio source node is intentionally NOT detached here. A
+    // `createMediaElementSource` node can only be made once per element, so
+    // un-routing a still-reusable element (e.g. the engine moving in and out
+    // of the DOM) would permanently silence it. Items that are actually
+    // dropped are un-routed by the engine's render cleanup before lit drops
+    // them.
     super.disconnectedCallback();
   }
 
