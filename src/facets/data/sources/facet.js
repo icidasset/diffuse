@@ -185,7 +185,7 @@ effect(() => {
                   : "ph-arrows-clockwise"}"></i>
               </button>
               <button
-                class="button--plain"
+                class="button--plain button--icon"
                 title="${isDisabled ? "Enable source" : "Disable source"}"
                 @click="${() => sourcesOrchestrator.toggle(uri)}"
               >
