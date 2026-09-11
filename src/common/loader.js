@@ -448,12 +448,20 @@ export function renderError(container, error, options) {
 ////////////////////////////////////////////
 
 /**
+ * Resolves an `at://` URI to the record value stored at that address.
+ * Reusable outside of loading (e.g. to preview a facet before adding it).
+ * Throws when the URI is incomplete or can't be resolved.
+ *
  * @param {string} uri
- * @returns {Promise<string>}
+ * @returns {Promise<any>}
  */
-async function atprotoLoader(uri) {
+export async function loadAtProtoRecord(uri) {
   const parts = uri.replace(/at:\/\//, "").split("/");
   const [repo, collection, rkey] = parts;
+
+  if (!repo || !collection || !rkey) {
+    throw new Error(`Invalid at:// URI: ${uri}`);
+  }
 
   const resolver = new LocalActorResolver({
     handleResolver: new XrpcHandleResolver({
@@ -481,6 +489,16 @@ async function atprotoLoader(uri) {
       params: { repo: identity.did, collection, rkey },
     }),
   );
+
+  return value;
+}
+
+/**
+ * @param {string} uri
+ * @returns {Promise<string>}
+ */
+async function atprotoLoader(uri) {
+  const value = await loadAtProtoRecord(uri);
 
   if (value.html) {
     return value.html;
