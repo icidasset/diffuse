@@ -36,6 +36,15 @@ const ROUTE_AUDIO = Symbol("routeAudio");
 /** @type {unique symbol} */
 const UNROUTE_AUDIO = Symbol("unrouteAudio");
 
+/**
+ * Automatic retry policy for transient media errors (network / CORS-handshake
+ * failures). The delay doubles per attempt from {@link RETRY_BASE_DELAY_MS}
+ * up to {@link RETRY_MAX_DELAY_MS}, then stays at the ceiling and keeps
+ * retrying until playback succeeds, the user pauses, or the item is dropped.
+ */
+const RETRY_BASE_DELAY_MS = 500;
+const RETRY_MAX_DELAY_MS = 30_000;
+
 ////////////////////////////////////////////
 // ELEMENT
 ////////////////////////////////////////////
@@ -318,6 +327,7 @@ class AudioEngine extends BroadcastableDiffuseElement {
    */
   pause({ audioId }) {
     this.#withAudioNode(audioId, (audio, item) => {
+      item.cancelMediaRetry();
       audio.pause();
       item.intendsToPlay = false;
       // Set `isPlaying` to false optimistically, mirroring `play()`. The
@@ -344,6 +354,11 @@ class AudioEngine extends BroadcastableDiffuseElement {
       const routed = this.#sourceNodes.has(audio);
       audio.volume = volume ?? (routed ? 1 : this.volume());
       audio.muted = false;
+
+      // An errored element can't be restarted with play() alone — re-run
+      // resource selection first so both manual retries and the automatic
+      // recovery in `errorEvent` attempt a fresh fetch.
+      if (audio.error) audio.load();
 
       // TODO: Might need this for `data-initial-progress`
       //       Does seem to cause trouble when broadcasting
@@ -375,6 +390,11 @@ class AudioEngine extends BroadcastableDiffuseElement {
         // the isPlaying intent must survive so stall recovery (see
         // `waitingEvent`) can resume playback on the next canplay.
         if (e?.name === "AbortError") return;
+
+        // Failure of an attempt driven by the automatic retry loop (see
+        // `errorEvent`): the loop owns recovery and keeps retrying, so don't
+        // clear the intent or surface a "resume manually" error.
+        if (item.autoRetrying) return;
 
         const err =
           "Couldn't play audio automatically. Please resume playback manually.";
@@ -1005,6 +1025,12 @@ class AudioEngineItem extends BroadcastableDiffuseElement {
   static NAME = "diffuse/engine/audio/item";
   static observedAttributes = ["preload"];
 
+  // MEDIA ERROR RETRY
+  /** @type {number | undefined} Pending automatic retry timeout. */
+  #retryTimer = undefined;
+  /** @type {number} Retry attempts already used. */
+  #retryAttempt = 0;
+
   constructor() {
     super();
 
@@ -1019,6 +1045,13 @@ class AudioEngineItem extends BroadcastableDiffuseElement {
      * starts, on explicit pause, or when playback fails in the foreground.
      */
     this.intendsToPlay = false;
+
+    /**
+     * True while the automatic retry loop is active. The engine's `play()`
+     * catch uses it to suppress the "resume playback manually" error for
+     * attempts the loop itself drives.
+     */
+    this.autoRetrying = false;
 
     /**
      * @type {AudioState}
@@ -1161,6 +1194,8 @@ class AudioEngineItem extends BroadcastableDiffuseElement {
    * @override
    */
   disconnectedCallback() {
+    this.cancelMediaRetry();
+
     // NOTE: the Web Audio source node is intentionally NOT detached here. A
     // `createMediaElementSource` node can only be made once per element, so
     // un-routing a still-reusable element (e.g. the engine moving in and out
@@ -1204,6 +1239,79 @@ class AudioEngineItem extends BroadcastableDiffuseElement {
     const el = this.closest("de-audio");
     if (el) return /** @type {AudioEngine} */ (el);
     else return null;
+  }
+
+  // MEDIA ERROR RETRY
+
+  /**
+   * Schedules the next automatic retry after a transient media error. The
+   * delay doubles per attempt (from {@link RETRY_BASE_DELAY_MS}) up to a
+   * {@link RETRY_MAX_DELAY_MS} ceiling, then keeps retrying at that ceiling
+   * until playback succeeds or the loop is cancelled (pause, drop).
+   */
+  #scheduleMediaRetry() {
+    if (this.#retryTimer !== undefined) return;
+    if (!this.isConnected) return;
+
+    this.autoRetrying = true;
+    const delay = Math.min(
+      RETRY_BASE_DELAY_MS * 2 ** this.#retryAttempt,
+      RETRY_MAX_DELAY_MS,
+    );
+    this.#retryAttempt += 1;
+    this.#retryTimer = setTimeout(() => {
+      this.#retryTimer = undefined;
+      this.#retryMedia();
+    }, delay);
+  }
+
+  /**
+   * Reloads an errored element and resumes playback. Called by the retry
+   * timer; `initial-progress` (consumed in `canplayEvent`) preserves the
+   * playback position across the reload.
+   */
+  #retryMedia() {
+    if (!this.isConnected) return;
+
+    let audio;
+    try {
+      audio = this.audio;
+    } catch {
+      return;
+    }
+
+    // Only retry while the element actually has an error. If it recovered on
+    // its own (browser-side retry, buffered data arriving) a `load()` here
+    // would abort a healthy/playing element and start the failure cycle over.
+    if (!audio.error) return;
+
+    if (
+      !isNaN(audio.duration) && audio.duration > 0 &&
+      audio.duration !== Infinity
+    ) {
+      this.setAttribute(
+        "initial-progress",
+        JSON.stringify(audio.currentTime / audio.duration),
+      );
+    }
+
+    this.$state.loadingState.set("loading");
+    audio.load();
+    this.engine?.play({ audioId: this.id });
+  }
+
+  /**
+   * Stops the automatic retry loop (explicit pause, engine pause, or the
+   * item being dropped). Safe to call from the engine for `pause()`.
+   * Resets the backoff so the next failure starts from the base delay again.
+   */
+  cancelMediaRetry() {
+    if (this.#retryTimer !== undefined) {
+      clearTimeout(this.#retryTimer);
+      this.#retryTimer = undefined;
+    }
+    this.#retryAttempt = 0;
+    this.autoRetrying = false;
   }
 
   // EVENTS
@@ -1265,7 +1373,32 @@ class AudioEngineItem extends BroadcastableDiffuseElement {
     const audio = /** @type {HTMLAudioElement} */ (event.target);
     const code = audio.error?.code || 0;
 
-    engineItem(audio)?.$state.loadingState.set({ error: { code } });
+    const item = engineItem(audio);
+    if (!item) return;
+
+    // MEDIA_ERR_ABORTED: benign — fires whenever a `load()` interrupts an
+    // in-flight request (our own retry reloads, `waitingEvent` recovery,
+    // source swaps). Surface it as an error and the UI would show a stuck
+    // "Audio error" after playback already recovered.
+    if (code === 1) return;
+
+    item.$state.loadingState.set({ error: { code } });
+
+    // Transient network / CORS-handshake failures: retry automatically so
+    // playback resumes on its own once the source is reachable again. The
+    // first failure requires intent (the track was supposed to play);
+    // afterwards the loop keeps retrying on its own.
+    if (item.hasAttribute("preload")) return;
+    if (audio.src.startsWith("blob:")) return; // MediaSource items handle their own errors
+    if (code !== 2 && code !== 4) return; // MEDIA_ERR_NETWORK / MEDIA_ERR_SRC_NOT_SUPPORTED
+    if (
+      item.#retryAttempt === 0 &&
+      !item.intendsToPlay &&
+      !item.$state.isPlaying.get()
+    ) {
+      return;
+    }
+    item.#scheduleMediaRetry();
   }
 
   /**
@@ -1274,7 +1407,7 @@ class AudioEngineItem extends BroadcastableDiffuseElement {
   pauseEvent(event) {
     const audio = /** @type {HTMLAudioElement} */ (event.target);
     const item = engineItem(audio);
-
+    item?.cancelMediaRetry();
     item?.$state.isPlaying.set(false);
   }
 
@@ -1299,8 +1432,13 @@ class AudioEngineItem extends BroadcastableDiffuseElement {
     const audio = /** @type {HTMLAudioElement} */ (event.target);
     const item = engineItem(audio);
 
-    // Playback truly started, intent fulfilled.
-    if (item) item.intendsToPlay = false;
+    // Playback truly started, intent fulfilled. Leave the retry loop and
+    // reset the backoff so the next failure starts from the base delay.
+    if (item) {
+      item.intendsToPlay = false;
+      item.autoRetrying = false;
+      item.#retryAttempt = 0;
+    }
     item?.$state.isPlaying.set(true);
 
     finishedLoading(event);
