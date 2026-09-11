@@ -1031,6 +1031,12 @@ class AudioEngineItem extends BroadcastableDiffuseElement {
   /** @type {number} Retry attempts already used. */
   #retryAttempt = 0;
 
+  // STALL RETRY
+  /** @type {number} Next `performance.now()` at which a stalled reload may run. */
+  #stallGateUntil = 0;
+  /** @type {number} Stalled-reload attempts used for backoff growth. */
+  #stallAttempt = 0;
+
   constructor() {
     super();
 
@@ -1105,6 +1111,7 @@ class AudioEngineItem extends BroadcastableDiffuseElement {
     audio.addEventListener("playing", this.playingEvent);
     audio.addEventListener("suspend", this.suspendEvent);
     audio.addEventListener("timeupdate", this.timeupdateEvent);
+    audio.addEventListener("stalled", this.stalledEvent);
     audio.addEventListener("waiting", this.waitingEvent);
 
     // Transition from initialisation to loading for non-preload items
@@ -1340,6 +1347,12 @@ class AudioEngineItem extends BroadcastableDiffuseElement {
       item.removeAttribute("initial-progress");
     }
 
+    // Data arrived — reset the stalled-reload backoff.
+    if (item) {
+      item.#stallAttempt = 0;
+      item.#stallGateUntil = 0;
+    }
+
     finishedLoading(event);
   }
 
@@ -1408,6 +1421,10 @@ class AudioEngineItem extends BroadcastableDiffuseElement {
     const audio = /** @type {HTMLAudioElement} */ (event.target);
     const item = engineItem(audio);
     item?.cancelMediaRetry();
+    if (item) {
+      item.#stallAttempt = 0;
+      item.#stallGateUntil = 0;
+    }
     item?.$state.isPlaying.set(false);
   }
 
@@ -1433,11 +1450,13 @@ class AudioEngineItem extends BroadcastableDiffuseElement {
     const item = engineItem(audio);
 
     // Playback truly started, intent fulfilled. Leave the retry loop and
-    // reset the backoff so the next failure starts from the base delay.
+    // reset the backoffs so the next failure starts from the base delay.
     if (item) {
       item.intendsToPlay = false;
       item.autoRetrying = false;
       item.#retryAttempt = 0;
+      item.#stallAttempt = 0;
+      item.#stallGateUntil = 0;
     }
     item?.$state.isPlaying.set(true);
 
@@ -1459,6 +1478,62 @@ class AudioEngineItem extends BroadcastableDiffuseElement {
     if (isNaN(audio.duration) || audio.duration === 0) return;
 
     engineItem(audio)?.$state.currentTime.set(audio.currentTime);
+  }
+
+  /**
+   * @param {Event} event
+   */
+  stalledEvent(event) {
+    const audio = /** @type {HTMLAudioElement} */ (event.target);
+    const item = engineItem(audio);
+    if (!item) return;
+
+    // `stalled` = the browser is actively fetching (networkState LOADING) but
+    // no data has come for a while. That's the "new track's fetch hung" case:
+    // no `error` ever fires, so the error retry loop can't help — reload
+    // explicitly so a transient connectivity loss resolves on its own.
+    if (item.hasAttribute("preload")) return;
+    if (item.autoRetrying) return; // error retry loop owns reloads while active
+    if (audio.src.startsWith("blob:")) return; // MediaSource items manage their own
+    if (audio.error || audio.readyState >= 2) return; // playable — nothing to reload
+    if (document.hidden) return; // backgrounded loads are suspended anyway (iOS)
+    if (audio.networkState !== HTMLMediaElement.NETWORK_LOADING) return;
+    if (!item.intendsToPlay && !item.$state.isPlaying.get()) return;
+
+    // has enough buffered data to play on — the browser may keep fetching in
+    // its own time; don't abort a healthy buffer over a slow refetch.
+    if (
+      audio.buffered.length > 0 &&
+      audio.buffered.end(audio.buffered.length - 1) > audio.currentTime + 5
+    ) {
+      return;
+    }
+
+    // Backoff: the browser fires `stalled` on its own cadence, so only reload
+    // once per (doubling, capped) window — same policy as the error retry.
+    const now = performance.now();
+    if (now < item.#stallGateUntil) return;
+    const delay = Math.min(
+      RETRY_BASE_DELAY_MS * 2 ** item.#stallAttempt,
+      RETRY_MAX_DELAY_MS,
+    );
+    item.#stallAttempt += 1;
+    item.#stallGateUntil = now + delay;
+
+    // Preserve position across the reload (no-op for a never-started load).
+    if (
+      !isNaN(audio.duration) && audio.duration > 0 &&
+      audio.duration !== Infinity
+    ) {
+      item.setAttribute(
+        "initial-progress",
+        JSON.stringify(audio.currentTime / audio.duration),
+      );
+    }
+
+    item.$state.loadingState.set("loading");
+    audio.load();
+    if (item.intendsToPlay) item.engine?.play({ audioId: item.id });
   }
 
   /**
