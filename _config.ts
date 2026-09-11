@@ -569,6 +569,58 @@ site.addEventListener("afterBuild", buildTileCars);
 site.addEventListener("afterUpdate", buildTileCars);
 
 ////////////////////////////////////////////
+// SOURCE MAPS
+////////////////////////////////////////////
+
+// The sourceMaps() plugin (via lume's esbuild integration) stamps every
+// generated .map with sourceRoot and sources pointing at the build machine's
+// absolute path (file:///var/.../diffuse). Served on the deploy host as-is,
+// those file:// URLs leak the developer's filesystem and make Firefox throw
+// "Content may not load or link to file:///" when it resolves a module's
+// source map. Neutralize the local path so the maps are relative (and
+// harmless) instead of pointing at local files.
+function sanitizeSourceMaps() {
+  const buildPath = site.dest();
+
+  for (const entry of walkSync(buildPath, { includeFiles: true })) {
+    if (!entry.isFile || !entry.name.endsWith(".map")) continue;
+
+    const filePath = entry.path;
+    let text: string;
+    try {
+      text = Deno.readTextFileSync(filePath);
+    } catch {
+      continue; // Transient read failure — skip.
+    }
+
+    if (!text.includes("file://")) continue;
+
+    try {
+      const map = JSON.parse(text);
+
+      if (typeof map.sourceRoot === "string" && map.sourceRoot.startsWith("file://")) {
+        map.sourceRoot = "";
+      }
+
+      if (Array.isArray(map.sources)) {
+        map.sources = map.sources.map((source: unknown) =>
+          typeof source === "string" && source.startsWith("file://")
+            ? source.replace("file://", "")
+            : source,
+        );
+      }
+
+      Deno.writeTextFileSync(filePath, JSON.stringify(map));
+    } catch {
+      // Not a JSON source map — leave it untouched.
+    }
+  }
+}
+
+site.addEventListener("afterBuild", sanitizeSourceMaps);
+site.addEventListener("afterUpdate", sanitizeSourceMaps);
+
+////////////////////////////////////////////
 // COMPRESSION
 ////////////////////////////////////////////
 
