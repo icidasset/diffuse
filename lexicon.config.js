@@ -2,7 +2,7 @@ import { defineLexiconConfig } from "@atcute/lex-cli";
 
 export default defineLexiconConfig({
   generate: {
-    files: ["lexicons/**/*.json"],
+    files: ["lexicons/output/*.json"],
     outdir: "src/definitions/",
   },
 });
