@@ -36,7 +36,8 @@ Install [Deno](https://docs.deno.com/runtime/getting_started/installation/).
 
 ```shell
 deno run gen:defs:types
-deno run build # or deno run serve
+deno run build
+deno run serve
 ```
 
 Diffuse is built with:
