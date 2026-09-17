@@ -577,7 +577,7 @@ effect(() => {
     : "ph-fill ph-arrows-clockwise";
   processLabel.textContent = isProcessing
     ? (pct !== null ? `Processing (${pct}%)` : "Listing")
-    : "Process local tracks";
+    : "Process";
 });
 
 processBtn?.addEventListener("click", async () => {
