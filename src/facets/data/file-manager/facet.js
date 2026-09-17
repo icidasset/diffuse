@@ -577,12 +577,14 @@ effect(() => {
     : "ph-fill ph-arrows-clockwise";
   processLabel.textContent = isProcessing
     ? (pct !== null ? `Processing (${pct}%)` : "Listing")
-    : "Process";
+    : "Process local tracks";
 });
 
 processBtn?.addEventListener("click", async () => {
   await Output.data(outputOrchestrator.tracks);
-  await processOrchestrator.process();
+  // Only (re)process local files (the ephemeral cache); remote/cloud
+  // tracks are left untouched.
+  await processOrchestrator.process([`${SCHEME_EPHEMERAL_CACHE}://`]);
 });
 
 ////////////////////////////////////////////
