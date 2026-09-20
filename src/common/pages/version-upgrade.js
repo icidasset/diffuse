@@ -369,10 +369,13 @@ export async function versionUpgrade() {
     !parseSemver(versionOrCid).prerelease?.length;
   const lastArtifact = getLatestArtifact(artifacts, {
     includePrerelease: !currentIsStable,
-    // The `latest` alias points at the most stable released artifact, never a
-    // rolling nightly. Other non-semver slugs (e.g. `4.x-nightly`) keep
-    // considering nightlies.
-    excludeNightlies: versionOrCid === "latest",
+    // Nightlies are rolling builds and never upgrade candidates: a coerced
+    // `4.x-nightly` (4.99.0-nightly) would otherwise outrank every release of
+    // the same major and flag prerelease or CID pages as outdated, even
+    // though the `/latest/` target never resolves to a nightly. The
+    // `4.x-nightly` page itself is a non-semver slug, so checkIsLatest keeps
+    // treating it as latest regardless.
+    excludeNightlies: true,
   });
   const isLatest = checkIsLatest(versionOrCid, lastArtifact);
 
