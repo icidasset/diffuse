@@ -16,10 +16,12 @@ import { writeTextFileSync } from "@std/fs/unstable-write-text-file";
  * regenerating the definitions stays JSR-publishable.
  */
 
-const AMBIENT_IMPORT = 'import type {} from "@atcute/lexicons/ambient";';
+// lex-cli's output uses single-quoted imports, but older releases used double
+// quotes, so match either style.
+const AMBIENT_IMPORT = /import type \{\} from ['"]@atcute\/lexicons\/ambient['"];\n/;
 
 const AMBIENT_BLOCK =
-  /declare module "@atcute\/lexicons\/ambient" \{\s*\n\s*interface Records \{\s*\n\s*"[^"]+": [a-zA-Z]+\w*;\s*\n\s*\}\s*\n\}/g;
+  /declare module ['"]@atcute\/lexicons\/ambient['"] \{\s*\n\s*interface Records \{\s*\n\s*"[^"]+": [a-zA-Z]+\w*;\s*\n\s*\}\s*\n\}/g;
 
 function* tsFiles(dir: string): Generator<string> {
   for (const entry of Deno.readDirSync(dir)) {
@@ -37,7 +39,7 @@ function strip(path: string) {
   const before = text;
 
   text = text.replace(AMBIENT_BLOCK, "");
-  text = text.replace(`${AMBIENT_IMPORT}\n`, "");
+  text = text.replace(AMBIENT_IMPORT, "");
 
   // Avoid touching files that never had the augmentation.
   if (text !== before) {
