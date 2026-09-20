@@ -92,6 +92,11 @@ class TrackDetailsElement extends DiffuseElement {
           display: block;
           height: 100%;
           width: 100%;
+
+          /* Don't inherit the surrounding text colour: inside the window's
+             <dialog> Firefox on Windows resolves the UA colour to the (white)
+             OS window text colour, leaving values unreadable on the panel. */
+          color: var(--text-color);
         }
 
         .window-body {

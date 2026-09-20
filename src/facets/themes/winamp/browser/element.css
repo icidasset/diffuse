@@ -2,6 +2,12 @@
   display: flex;
   flex-direction: column;
   height: 100%;
+
+  /* Don't inherit the surrounding text colour. This element lives inside the
+     window's <dialog>, whose UA stylesheet sets `color: CanvasText`; Firefox on
+     Windows maps that to the OS window text colour, which is white in dark
+     mode, leaving the search row and action buttons unreadable on the panel. */
+  color: var(--text-color);
 }
 
 /***********************************
@@ -43,7 +49,6 @@ search select {
 }
 
 table {
-  color: var(--text-color);
   table-layout: fixed;
   width: 100%;
 }
