@@ -830,6 +830,18 @@ export function rewriteLegacyURIPath(record) {
  * the one-shot migration for facets stored before the tile schema. Synchronous
  * because {@link htmlFacetTile} no longer needs async compression.
  *
+ * A legacy record that points at a Diffuse bundle facet (`diffuse://…`) carries
+ * a frozen copy of that facet's HTML captured when it was added or opened in the
+ * editor instead of a genuine custom facet. Such a copy is dropped in favour of
+ * the live `uri`: it predates the tile schema and references bundle files that
+ * are no longer served loose (e.g. `/facet.js`, `/facet.css`), so lifting it into
+ * an inline tile leaves those references resolving against the deployment root,
+ * where they 404. The frozen copy is recognised either as raw pre-tile `html` or
+ * as an inline tile whose `resources` hold only the `/` root (every bundled tile
+ * also ships `/facet.js`, so a lone `/` is never a real edit). External
+ * (`http(s)://`, `at://`) and uriless records keep their inline HTML as the
+ * offline copy.
+ *
  * @param {Record<string, unknown>} record
  * @returns {Record<string, unknown> & { resources?: TileResources; blocks?: Record<string, unknown> }}
  *
@@ -844,20 +856,61 @@ export function rewriteLegacyURIPath(record) {
  * if (root?.html !== "<p>hi</p>") throw new Error("lifted content should resolve");
  * ```
  *
- * @example Rewrites a stale uri even for already-tile facets
+ * @example Prefers the live bundle uri over a stale inline html copy
  * ```js
  * import { migrateLegacyFacet } from "~/common/tiles.js";
  *
- * const upgraded = migrateLegacyFacet({ id: "f", name: "x", uri: "diffuse://facets/data/sources/index.html", resources: { "/": {} }, blocks: {} });
+ * const bundle = migrateLegacyFacet({ id: "f", name: "Winamp", uri: "diffuse://facets/themes/winamp/facet/index.html", html: "<script src=\"/facet.js\"></script>", cid: "old" });
+ * if (bundle.uri !== "diffuse://facets/themes/winamp/facet/index.tile") throw new Error("bundle uri should be upgraded");
+ * if (bundle.resources !== undefined) throw new Error("stale inline html should be dropped for a bundle facet");
+ * ```
+ *
+ * @example Rewrites a stale uri on a genuine already-tile facet, keeping its resources
+ * ```js
+ * import { migrateLegacyFacet } from "~/common/tiles.js";
+ *
+ * const upgraded = migrateLegacyFacet({ id: "f", name: "x", uri: "diffuse://facets/data/sources/index.html", resources: { "/": {}, "/facet.js": {} }, blocks: {} });
  * if (upgraded.uri !== "diffuse://facets/data/sources/index.tile") throw new Error("stale uri should be upgraded");
+ * if (!upgraded.resources) throw new Error("a real edit's resources should be kept");
  * ```
  */
 export function migrateLegacyFacet(record) {
   const upgraded = rewriteLegacyURIPath(record);
+
+  // Prefer the live bundle over a frozen copy of it (see above). A `diffuse://`
+  // uri marks a bundle facet; the frozen copy may be either the raw pre-tile
+  // `html` or an inline tile already lifted from it that carries a lone `/`
+  // resource (every bundled tile also has at least `/facet.js`, so a lone `/`
+  // means the tile came from lifting a stale html copy, not a real edit).
+  if (isBundleURI(upgraded.uri) && (typeof upgraded.html === "string" || isRootOnlyTile(upgraded))) {
+    const { html: _html, cid: _cid, resources: _resources, blocks: _blocks, ...rest } = upgraded;
+    return rest;
+  }
+
   const html = upgraded.html;
   if (typeof html !== "string" || upgraded.resources) return upgraded;
 
   const { html: _html, cid: _cid, ...rest } = upgraded;
   const tile = htmlFacetTile(html);
   return { ...rest, resources: tile.resources, blocks: tile.blocks };
+}
+
+/** @param {unknown} uri */
+function isBundleURI(uri) {
+  return typeof uri === "string" && uri.startsWith("diffuse://");
+}
+
+/**
+ * Whether the record is an inline tile whose `resources` contain only the `/`
+ * root resource (the shape produced by lifting a legacy `html` copy).
+ *
+ * @param {Record<string, unknown>} record
+ */
+function isRootOnlyTile(record) {
+  const resources = record.resources;
+  if (!resources || typeof resources !== "object" || Array.isArray(resources)) {
+    return false;
+  }
+  const keys = Object.keys(resources);
+  return keys.length === 1 && keys[0] === "/";
 }

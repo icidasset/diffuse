@@ -21,7 +21,11 @@ import {
   register,
   resolve,
 } from "~/common/lens-registry.js";
-import { resolveInlineTile, rewriteLegacyURIPath } from "~/common/tiles.js";
+import {
+  migrateLegacyFacet,
+  resolveInlineTile,
+  rewriteLegacyURIPath,
+} from "~/common/tiles.js";
 
 // Unit tests for the self-describing envelope + migration/write-back machinery.
 // These use distinct NSIDs per test so the module-level lens registry does not
@@ -121,8 +125,9 @@ describe("common/self-describing + lens", () => {
       // `index.html`; the build now serves an `index.tile` CAR at the same dir.
       const envelope = wrap([
         { id: "f1", name: "Old", uri: "diffuse://facets/data/file-manager/index.html" },
-        // Already-tile facets also carry a stale uri and must be upgraded.
-        { id: "f2", name: "Tile", uri: "diffuse://facets/data/sources/index.html", resources: { "/": { src: { $link: "bafk..." } } }, blocks: {} },
+        // Already-tile facets also carry a stale uri and must be upgraded; a
+        // genuine tile keeps its resources (every bundled tile has `/facet.js`).
+        { id: "f2", name: "Tile", uri: "diffuse://facets/data/sources/index.html", resources: { "/": { src: { $link: "bafk..." } }, "/facet.js": { src: { $link: "bafk..." } } }, blocks: {} },
         // External uris are not bundle paths and must be left alone.
         { id: "f3", name: "Ext", uri: "https://example.com/facet.html" },
       ], { schema: "sh.diffuse.output.facet" });
@@ -138,6 +143,81 @@ describe("common/self-describing + lens", () => {
 
       const ext = records.find((r) => r.id === "f3")!;
       expect(ext.uri).toBe("https://example.com/facet.html");
+    });
+
+    it("prefers the live bundle uri over a legacy facet's stale inline html copy", () => {
+      // A facet added (or opened in the editor) before the tile schema stored a
+      // frozen copy of the bundle's HTML alongside its `uri`. Lifting that copy
+      // into an inline tile would pin the facet to HTML whose `/facet.js` and
+      // `/facet.css` references 404 at the deployment root; the migration must
+      // instead defer to the live bundle tile.
+      const migrated = migrateLegacyFacet({
+        id: "w",
+        name: "Winamp",
+        uri: "diffuse://facets/themes/winamp/facet/index.html",
+        html: '<script type="module" src="/facet.js"></script>',
+        cid: "old",
+      });
+
+      expect(migrated.uri).toBe(
+        "diffuse://facets/themes/winamp/facet/index.tile",
+      );
+      expect("html" in migrated).toBe(false);
+      expect("cid" in migrated).toBe(false);
+      expect(migrated.resources).toBeUndefined();
+      expect(migrated.blocks).toBeUndefined();
+    });
+
+    it("drops a bundle facet's persisted root-only lifted tile in favour of the uri", () => {
+      // A stale copy already lifted and then re-saved (e.g. by toggling
+      // favourite) persists as an inline tile with a lone `/` resource. Every
+      // real bundled tile also ships `/facet.js`, so this shape is still the
+      // stale copy and must yield to the live bundle uri.
+      const migrated = migrateLegacyFacet({
+        id: "w",
+        name: "Winamp",
+        uri: "diffuse://facets/themes/winamp/facet/index.tile",
+        resources: { "/": { src: { $link: "bafk..." } } },
+        blocks: { bafk: "" },
+      });
+
+      expect(migrated.uri).toBe(
+        "diffuse://facets/themes/winamp/facet/index.tile",
+      );
+      expect(migrated.resources).toBeUndefined();
+      expect(migrated.blocks).toBeUndefined();
+    });
+
+    it("keeps a genuine custom facet's root-only tile (no bundle uri)", () => {
+      const migrated = migrateLegacyFacet({
+        id: "c",
+        name: "Custom",
+        resources: { "/": { src: { $link: "bafk..." } } },
+        blocks: { bafk: "" },
+      });
+
+      expect(migrated.resources).toBeDefined();
+      expect(migrated.blocks).toBeDefined();
+    });
+
+    it("still lifts a legacy external or uriless facet into an inline tile", () => {
+      const external = migrateLegacyFacet({
+        id: "e",
+        name: "Ext",
+        uri: "https://example.com/facet.html",
+        html: "<p>hi</p>",
+      });
+      expect(external.html).toBeUndefined();
+      expect(typeof external.resources).toBe("object");
+      expect(typeof external.blocks).toBe("object");
+
+      const uriless = migrateLegacyFacet({
+        id: "u",
+        name: "Custom",
+        html: "<p>custom</p>",
+      });
+      expect(uriless.html).toBeUndefined();
+      expect(typeof uriless.resources).toBe("object");
     });
 
     it("rewriteLegacyURIPath rewrites only stale diffuse bundle paths", () => {
