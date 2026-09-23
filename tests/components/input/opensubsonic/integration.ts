@@ -91,21 +91,21 @@ afterAll(async () => {
 });
 
 describe("components/input/opensubsonic (integration)", () => {
-  it("consult returns true when the server pings ok", async () => {
+  it('consult returns "yes" when the server pings ok', async () => {
     const uri = `opensubsonic://user:pass@127.0.0.1:${port}?tls=f`;
     const result = await Worker.consult(uri);
     expect(result.supported).toBe(true);
     if (result.supported) {
-      expect(result.consult).toBe(true);
+      expect(result.consult).toBe("yes");
     }
   });
 
-  it("consult returns false when the server is unreachable", async () => {
+  it('consult returns "no" when the server is unreachable', async () => {
     const uri = `opensubsonic://user:pass@127.0.0.1:${port + 9999}?tls=f`;
     const result = await Worker.consult(uri);
     expect(result.supported).toBe(true);
     if (result.supported) {
-      expect(result.consult).toBe(false);
+      expect(result.consult).toBe("no");
     }
   });
 
@@ -173,7 +173,7 @@ describe("components/input/opensubsonic (integration)", () => {
     const keys = Object.keys(result);
     expect(keys.length).toBe(1);
     const grouping = result[keys[0]];
-    expect(grouping.available).toBe(true);
+    expect(grouping.available).toBe("yes");
     expect(grouping.uris).toEqual([uri]);
   });
 
@@ -183,7 +183,7 @@ describe("components/input/opensubsonic (integration)", () => {
     const keys = Object.keys(result);
     expect(keys.length).toBe(1);
     const grouping = result[keys[0]];
-    expect(grouping.available).toBe(false);
+    expect(grouping.available).toBe("no");
   });
 
   it("detach with scheme removes all opensubsonic tracks", async () => {

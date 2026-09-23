@@ -31,12 +31,12 @@ describe("components/input/https (integration)", () => {
     expect(resolved).toBe(undefined);
   });
 
-  it("consult returns false for an unreachable host", async () => {
+  it('consult returns "no" for an unreachable host', async () => {
     // Port 1 on localhost — nothing listens, connection refused.
     const result = await Worker.consult("https://127.0.0.1:1/audio.mp3");
     expect(result.supported).toBe(true);
     if (result.supported) {
-      expect(result.consult).toBe(false);
+      expect(result.consult).toBe("no");
     }
   });
 
@@ -77,8 +77,8 @@ describe("components/input/https (integration)", () => {
       "https://127.0.0.1:1/b.mp3",
     ]);
     const key = "https://127.0.0.1:1";
-    expect(result[key]?.available).toBe(false);
-    if (!result[key]?.available) {
+    expect(result[key]?.available).toBe("no");
+    if (result[key]?.available === "no") {
       expect(result[key]?.reason).toBeDefined();
     }
     expect(result[key]?.uris).toEqual([

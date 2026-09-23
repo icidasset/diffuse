@@ -56,21 +56,21 @@ describe("components/input/https-json (integration)", () => {
     expect(parsed?.server.dir).toBe("/music");
   });
 
-  it("consult returns true when the server responds ok", async () => {
+  it('consult returns "yes" when the server responds ok', async () => {
     const uri = buildURI({ host: `127.0.0.1:${port}`, dir: "/" }, "");
     const result = await Worker.consult(uri);
     expect(result.supported).toBe(true);
     if (result.supported) {
-      expect(result.consult).toBe(true);
+      expect(result.consult).toBe("yes");
     }
   });
 
-  it("consult returns false when the server is unreachable", async () => {
+  it('consult returns "no" when the server is unreachable', async () => {
     const uri = buildURI({ host: `127.0.0.1:${port + 9999}`, dir: "/" }, "");
     const result = await Worker.consult(uri);
     expect(result.supported).toBe(true);
     if (result.supported) {
-      expect(result.consult).toBe(false);
+      expect(result.consult).toBe("no");
     }
   });
 
@@ -155,7 +155,7 @@ describe("components/input/https-json (integration)", () => {
     const result = await Worker.groupConsult([uri]);
     const keys = Object.keys(result);
     expect(keys.length).toBe(1);
-    expect(result[keys[0]].available).toBe(true);
+    expect(result[keys[0]].available).toBe("yes");
   });
 
   it("groupConsult reports unavailable for an unreachable server", async () => {
@@ -163,7 +163,7 @@ describe("components/input/https-json (integration)", () => {
     const result = await Worker.groupConsult([uri]);
     const keys = Object.keys(result);
     expect(keys.length).toBe(1);
-    expect(result[keys[0]].available).toBe(false);
+    expect(result[keys[0]].available).toBe("no");
   });
 
   it("detach with scheme removes all https-json tracks", async () => {

@@ -70,27 +70,27 @@ afterAll(async () => {
 });
 
 describe("components/input/icecast (integration)", () => {
-  it("consult returns true for a live stream with ICY metadata", async () => {
+  it('consult returns "yes" for a live stream with ICY metadata', async () => {
     const result = await Worker.consult(`icecast://127.0.0.1:${goodPort}/stream.mp3?tls=0`);
     expect(result.supported).toBe(true);
     if (result.supported) {
-      expect(result.consult).toBe(true);
+      expect(result.consult).toBe("yes");
     }
   });
 
-  it("consult returns false for a stream without icy-metaint", async () => {
+  it('consult returns "no" for a stream without icy-metaint', async () => {
     const result = await Worker.consult(`icecast://127.0.0.1:${plainPort}/noicy?tls=0`);
     expect(result.supported).toBe(true);
     if (result.supported) {
-      expect(result.consult).toBe(false);
+      expect(result.consult).toBe("no");
     }
   });
 
-  it("consult returns false for an unreachable host", async () => {
+  it('consult returns "no" for an unreachable host', async () => {
     const result = await Worker.consult(`icecast://127.0.0.1:${deadPort}/stream.mp3?tls=0`);
     expect(result.supported).toBe(true);
     if (result.supported) {
-      expect(result.consult).toBe(false);
+      expect(result.consult).toBe("no");
     }
   });
 
@@ -134,7 +134,7 @@ describe("components/input/icecast (integration)", () => {
       `icecast://127.0.0.1:${goodPort}/stream.mp3?tls=0`,
     ]);
     const key = `icecast://127.0.0.1:${goodPort}`;
-    expect(result[key]?.available).toBe(true);
+    expect(result[key]?.available).toBe("yes");
     expect(result[key]?.uris).toEqual([
       `icecast://127.0.0.1:${goodPort}/stream.mp3?tls=0`,
     ]);
@@ -145,8 +145,8 @@ describe("components/input/icecast (integration)", () => {
       `icecast://127.0.0.1:${deadPort}/stream.mp3?tls=0`,
     ]);
     const key = `icecast://127.0.0.1:${deadPort}`;
-    expect(result[key]?.available).toBe(false);
-    if (!result[key]?.available) {
+    expect(result[key]?.available).toBe("no");
+    if (result[key]?.available === "no") {
       expect(result[key]?.reason).toBeDefined();
     }
   });
