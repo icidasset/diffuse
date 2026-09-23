@@ -44,12 +44,22 @@ if ("serviceWorker" in navigator) {
  *
  * @typedef {{ html?: string; uri?: string; cid?: string; resources?: unknown; blocks?: Record<string, unknown>; tile?: TileLink; id: string; name: string; $type: string }} LoadableItem
  *
- * `html` and `cid` are internal, non-persisted fields populated while loading:
- * `html` is the facet's resolved index document (for fragment injection), `cid`
- * is the tile root resource's CID (for content-addressed verification), and
- * `tile` carries the resolved resources + blocks so loaders can serve the
- * tile's absolute-path resources as Blob URLs.
+ * `html`, `cid` and `tile` are internal, non-persisted fields supplied by
+ * `ensureHTML` on a resolved copy of the record — never written onto the record
+ * itself, since records usually live in a persisted collection: `html` is the
+ * facet's resolved index document (for fragment injection), `cid` is the tile
+ * root resource's CID (for content-addressed verification), and `tile` carries
+ * the resolved resources + blocks so loaders can serve the tile's absolute-path
+ * resources as Blob URLs.
  */
+
+/**
+ * Memoised resolved copies from `ensureHTML`, keyed by the input item, so a
+ * record is only resolved once without being mutated in place.
+ *
+ * @type {WeakMap<object, any>}
+ */
+const resolvedHTML = new WeakMap();
 
 /**
  * @typedef {object} LoaderConfig
@@ -131,18 +141,24 @@ export function createLoader(config) {
       return renderError(container, `${config.label} not found`);
     }
 
-    // Make sure HTML is loaded when a URI is specified
-    ensureHTML(item).catch((err) => {
+    // Make sure HTML is loaded when a URI is specified. `ensureHTML` returns a
+    // resolved copy rather than mutating `item`, which is usually a record inside
+    // the (persisted) collection.
+    let loadable = item;
+
+    ensureHTML(item).then((resolved) => {
+      loadable = resolved;
+    }).catch((err) => {
       if (swControllerChanging) return;
       renderError(container, `Failed to load URI: ${item.uri}`, {
         context: err,
         throw: true,
       });
     }).then(() => {
-      if (item.id === loadedId) return;
-      loadedId = item.id ?? null;
-      config.render(item);
-    })
+      if (loadable.id === loadedId) return;
+      loadedId = loadable.id ?? null;
+      config.render(loadable);
+    });
   });
 }
 
@@ -170,12 +186,17 @@ export async function loadURI(uri) {
  */
 
 /**
- * Ensures the item has HTML loaded. Tiles (inline `resources`+`blocks`, or a
- * `.tile` CAR referenced by `uri`) resolve their `/` resource; for those,
- * `item.cid` is set to the root resource's CID for content-addressed integrity
- * and `item.tile` carries the resolved resources + blocks so callers can serve
- * the tile's absolute-path resources. Otherwise falls back to loading `uri` as
- * plain HTML.
+ * Resolves an item's HTML without mutating it. Tiles (inline `resources` +
+ * `blocks`, or a `.tile` CAR referenced by `uri`) resolve their `/` resource;
+ * for those the returned copy carries `cid` (the root resource's CID, for
+ * content-addressed integrity) and `tile` (the resolved resources + blocks, so
+ * callers can serve the tile's absolute-path resources). Otherwise it falls
+ * back to loading `uri` as plain HTML.
+ *
+ * The result is memoised per input item, so any `html`/`cid`/`tile` added here
+ * never leaks onto the original record. Persisting those would embed the facet's
+ * whole HTML document and, worse, a `Map` of blocks that encoders such as CBOR
+ * cannot represent.
  *
  * @template {{ html?: string; uri?: string; cid?: string; resources?: unknown; blocks?: Record<string, unknown>; tile?: TileLink }} T
  * @param {T} item
@@ -184,22 +205,29 @@ export async function loadURI(uri) {
 export async function ensureHTML(item) {
   if (item.html) return item;
 
+  const memo = resolvedHTML.get(item);
+  if (memo) return memo;
+
+  /** @type {T} */
+  let loaded = item;
+
   const tile = await materializeTile(item);
   if (tile) {
-    item.html = tile.html;
-    item.cid = tile.cid;
-    item.tile = {
-      resources: tile.resources,
-      blocks: tile.blocks,
-    };
-    return item;
+    loaded = /** @type {T} */ ({
+      ...item,
+      cid: tile.cid,
+      html: tile.html,
+      tile: {
+        resources: tile.resources,
+        blocks: tile.blocks,
+      },
+    });
+  } else if (item.uri) {
+    loaded = /** @type {T} */ ({ ...item, html: await loadURI(item.uri) });
   }
 
-  if (item.uri) {
-    item.html = await loadURI(item.uri);
-  }
-
-  return item;
+  resolvedHTML.set(item, loaded);
+  return loaded;
 }
 
 /**
