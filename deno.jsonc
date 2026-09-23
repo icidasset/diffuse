@@ -1,6 +1,6 @@
 {
   "name": "@toko/diffuse",
-  "version": "4.0.0-alpha.4",
+  "version": "4.0.0-alpha.5",
   "license": "FSL-1.1-MIT",
   "vendor": true,
   "nodeModulesDir": "auto",
