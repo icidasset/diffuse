@@ -163,21 +163,47 @@ export async function resolve({ data, ports }) {
 ////////////////////////////////////////////
 
 /**
+ * Time budget for downloading a file into the offline cache. Generous because
+ * these are full audio files, possibly over slow links — but bounded so a peer
+ * that goes unreachable mid-download (e.g. a laptop that sleeps or roams while
+ * connected over Tailscale) can't leave a request pending forever while
+ * holding one of the browser's few connections to that origin.
+ */
+const CACHE_FETCH_TIMEOUT_MS = 5 * 60_000;
+
+/**
  * @type {ActionsWithTunnel<Actions>['cache']}
  */
 export async function cache({ data, ports }) {
   const uris = data;
 
   await Promise.all(uris.map(async (uri) => {
-    if (await IDB.get(CACHE_KEY_PREFIX + uri) !== undefined) return;
+    try {
+      if (await IDB.get(CACHE_KEY_PREFIX + uri) !== undefined) return;
 
-    const resolved = await resolve({ data: { uri }, ports });
-    if (!resolved || "stream" in resolved) return;
+      const resolved = await resolve({ data: { uri }, ports });
+      if (!resolved || "stream" in resolved) return;
 
-    const response = await fetch(resolved.url);
-    if (!response.ok) return;
+      const controller = new AbortController();
+      const timeoutId = setTimeout(
+        () => controller.abort(),
+        CACHE_FETCH_TIMEOUT_MS,
+      );
 
-    await IDB.set(CACHE_KEY_PREFIX + uri, await response.blob());
+      let response;
+      try {
+        response = await fetch(resolved.url, { signal: controller.signal });
+      } finally {
+        clearTimeout(timeoutId);
+      }
+
+      if (!response.ok) return;
+
+      await IDB.set(CACHE_KEY_PREFIX + uri, await response.blob());
+    } catch {
+      // Unreachable source / aborted download: skip this uri and keep
+      // caching the rest rather than failing the whole batch.
+    }
   }));
 }
 
