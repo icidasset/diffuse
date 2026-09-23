@@ -197,6 +197,16 @@ export function isImageFile(filename) {
 }
 
 /**
+ * Time budget for fetching bytes (currently artwork-sized payloads). Without
+ * this a request to a server that accepts the connection but never answers —
+ * a half-open connection after a network change or laptop sleep — stays
+ * pending forever, holding one of the browser's few connections to that
+ * origin. Enough leaked requests eventually starve all traffic to that
+ * server, including audio streaming.
+ */
+const BYTES_TIMEOUT_MS = 30_000;
+
+/**
  * Fetch a URL and return its body bytes, or `null` if the request failed.
  *
  * @param {string} url
@@ -204,9 +214,19 @@ export function isImageFile(filename) {
  * @returns {Promise<Uint8Array | null>}
  */
 export async function bytesFromUrl(url, signal) {
-  const response = await fetch(url, { signal });
-  if (!response.ok) return null;
-  return new Uint8Array(await response.arrayBuffer());
+  const controller = new AbortController();
+  const timeoutId = setTimeout(() => controller.abort(), BYTES_TIMEOUT_MS);
+  const onAbort = () => controller.abort();
+  signal?.addEventListener("abort", onAbort, { once: true });
+
+  try {
+    const response = await fetch(url, { signal: controller.signal });
+    if (!response.ok) return null;
+    return new Uint8Array(await response.arrayBuffer());
+  } finally {
+    clearTimeout(timeoutId);
+    signal?.removeEventListener("abort", onAbort);
+  }
 }
 
 /**

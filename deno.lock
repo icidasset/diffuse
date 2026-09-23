@@ -126,6 +126,7 @@
     "npm:esbuild-plugins-node-modules-polyfill@^1.8.3": "1.8.3_esbuild@0.28.0",
     "npm:esbuild@0.28.0": "0.28.0",
     "npm:fast-average-color@^9.5.2": "9.6.0",
+    "npm:fast-uri@^3.1.0": "3.1.8",
     "npm:idb-keyval@^6.3.0": "6.3.0",
     "npm:iso-base@^4.4.0": "4.4.0",
     "npm:kmenu@^2.0.3": "2.0.4",
@@ -2072,6 +2073,9 @@
         "merge2",
         "micromatch"
       ]
+    },
+    "fast-uri@3.1.8": {
+      "integrity": "sha512-GZMtZUTNRpOVIECoXwLNZS5xUGE+mVNbTB8h/7Rwh2TFWcBQiPzTgyZi05BF9UMZKkLJv8XBRJTlU7zg8+ZfMg=="
     },
     "fastq@1.20.3": {
       "integrity": "sha512-XKv5nnLs6nLF71NgiKJLIZFLkPyIEuOselLG7ujZnGrRfQK8HpvY+WqKhAJUAdLomwVHErVS4LfxFlPq0/FTAw==",

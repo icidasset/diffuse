@@ -20,6 +20,14 @@ const ANALYSIS_SAMPLE_RATE = 22050;
 // stats; we just skip the spectral descriptors.
 const MAX_DURATION_MS = 4 * 60 * 60 * 1000; // 4 hours
 
+/**
+ * Time budget for downloading the audio data to analyse. Without it a request
+ * to a server that accepts the connection but never answers — a half-open
+ * connection after a network change or laptop sleep — stays pending forever
+ * while holding one of the browser's few connections to that origin.
+ */
+const FETCH_TIMEOUT_MS = 60_000;
+
 const SPECTRAL_KEYS = [
   "spectralCentroid",
   "spectralRolloff",
@@ -41,22 +49,37 @@ function hasSpectralStats(stats) {
  * Reads a `ReadableStream` into a single `ArrayBuffer`.
  *
  * @param {ReadableStream<Uint8Array>} stream
+ * @param {AbortSignal} [signal] When aborted, pending reads reject (for
+ *   fetch-backed streams the underlying request is cancelled too).
  * @returns {Promise<ArrayBuffer>}
  */
-async function readStreamToArrayBuffer(stream) {
+async function readStreamToArrayBuffer(stream, signal) {
   const reader = stream.getReader();
+
+  const onAbort = () => reader.cancel().catch(() => {});
+  signal?.addEventListener("abort", onAbort, { once: true });
+
   /** @type {Uint8Array[]} */
   const chunks = [];
   let total = 0;
 
-  for (;;) {
-    const { done, value } = await reader.read();
-    if (done) break;
-    if (value) {
-      chunks.push(value);
-      total += value.byteLength;
+  try {
+    for (;;) {
+      const { done, value } = await reader.read();
+      if (done) break;
+      if (value) {
+        chunks.push(value);
+        total += value.byteLength;
+      }
     }
+  } finally {
+    signal?.removeEventListener("abort", onAbort);
   }
+
+  // `reader.cancel()` resolves pending reads with `done: true`, so an abort
+  // looks like a clean end-of-stream. Throw explicitly so truncated data is
+  // never treated as a complete file.
+  if (signal?.aborted) throw new Error("stream read aborted");
 
   const result = new Uint8Array(total);
   let offset = 0;
@@ -134,40 +157,48 @@ export async function patch({ data: track, ports }) {
   if (!resGet) return track;
 
   // Turn whatever `resolve` gave us into an ArrayBuffer.
-  let arrayBuffer;
+  const controller = new AbortController();
+  const timeoutId = setTimeout(() => controller.abort(), FETCH_TIMEOUT_MS);
+
   try {
+    let arrayBuffer;
     if ("stream" in resGet) {
+      // Aborting the fetch signal errors fetch-backed streams, which makes
+      // the pending `read()` reject instead of waiting forever.
       arrayBuffer = await readStreamToArrayBuffer(
         /** @type {ReadableStream<Uint8Array>} */ (resGet.stream),
+        controller.signal,
       );
     } else if ("url" in resGet) {
-      const res = await fetch(resGet.url);
+      const res = await fetch(resGet.url, { signal: controller.signal });
       if (!res.ok) return track;
       arrayBuffer = await res.arrayBuffer();
     } else {
       return track;
     }
+
+    const decoded = await decodeToMono(arrayBuffer);
+    if (!decoded) return track;
+
+    const spectral = analyseSpectrogram(decoded.samples, decoded.sampleRate);
+
+    /** @type {TrackStats} */
+    const stats = removeUndefinedValuesFromRecord({
+      ...track.stats,
+      ...spectral,
+    });
+
+    return {
+      ...track,
+      stats,
+      updatedAt: new Date().toISOString(),
+    };
   } catch (err) {
     console.warn("spectrogram: failed to fetch audio data", err);
     return track;
+  } finally {
+    clearTimeout(timeoutId);
   }
-
-  const decoded = await decodeToMono(arrayBuffer);
-  if (!decoded) return track;
-
-  const spectral = analyseSpectrogram(decoded.samples, decoded.sampleRate);
-
-  /** @type {TrackStats} */
-  const stats = removeUndefinedValuesFromRecord({
-    ...track.stats,
-    ...spectral,
-  });
-
-  return {
-    ...track,
-    stats,
-    updatedAt: new Date().toISOString(),
-  };
 }
 
 ////////////////////////////////////////////
