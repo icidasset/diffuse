@@ -1,0 +1,47 @@
+<style>
+  @import "./styles/base.css";
+  @import "./styles/diffuse/facet.css";
+  @import "./vendor/@phosphor-icons/web/fill/style.css";
+  @import "/facet.css";
+</style>
+
+<main>
+  <div class="facet__left">
+    <div>
+      <a href="./dashboard/" class="diffuse-logo-container">
+        <svg viewBox="0 0 902 134" width="160">
+          <title>Diffuse</title>
+          <use
+            xlink:href="images/diffuse-current.svg#diffuse"
+            href="images/diffuse-current.svg#diffuse"
+          ></use>
+        </svg>
+      </a>
+    </div>
+    <h1>Audio output</h1>
+    <p>
+      Choose which output device each facet group plays through.
+    </p>
+    <p class="button-row" style="margin-top: var(--space-md)">
+      <button id="refresh-btn">
+        <i class="ph-fill ph-arrows-clockwise"></i>
+        <span>Refresh</span>
+      </button>
+      <button id="reveal-btn">
+        <i class="ph-fill ph-speaker-high"></i>
+        <span>Show device names</span>
+      </button>
+    </p>
+    <p id="support-note" class="caption" hidden></p>
+  </div>
+
+  <div class="facet__right">
+    <ul id="groups-list" class="output-list"></ul>
+    <p id="empty" class="caption" hidden>
+      No audio output devices found. Make sure your browser exposes them and try
+      refreshing.
+    </p>
+  </div>
+</main>
+
+<script type="module" src="/facet.js"></script>

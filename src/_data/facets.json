@@ -1,5 +1,11 @@
 [
   {
+    "url": "facets/playback/audio-output/index.tile",
+    "title": "Audio Output",
+    "category": "Playback",
+    "desc": "Pick which audio output device (speaker, headphones, …) each facet group plays through."
+  },
+  {
     "url": "facets/playback/auto-queue/prelude/index.tile",
     "title": "Automatic Queue",
     "kind": "prelude",

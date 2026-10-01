@@ -107,6 +107,14 @@ class AudioEngine extends BroadcastableDiffuseElement {
   /** @type {Map<HTMLAudioElement, MediaElementAudioSourceNode>} */
   #sourceNodes = new Map();
 
+  /**
+   * Output device id last applied to the shared context. An empty string is
+   * the browser/system default, so a freshly created graph only calls
+   * `setSinkId` when this group actually has a stored preference.
+   * @type {string}
+   */
+  #appliedSink = "";
+
   // SIGNALS
 
   #items = signal(/** @type {AudioUrl[]} */ ([]));
@@ -203,7 +211,24 @@ class AudioEngine extends BroadcastableDiffuseElement {
       localStorage.setItem(VOLUME_KEY, this.#volume.value.toString());
     });
 
-    // iOS: resume playback that silently failed to start while the page was
+    // Follow audio-output changes made elsewhere (e.g. the Audio Output facet
+    // running in another frame/tab). `storage` fires in every other same-origin
+    // document, so each group's engine picks up its own preference live. The
+    // key is namespaced by group, so this only reacts to this group's setting.
+    this.effect(() => {
+      const key = this.#sinkStorageKey();
+
+      /** @param {StorageEvent} event */
+      const onStorage = (event) => {
+        if (event.key !== null && event.key !== key) return;
+        this.#applySink();
+      };
+
+      globalThis.addEventListener("storage", onStorage);
+      return () => globalThis.removeEventListener("storage", onStorage);
+    });
+
+    // iOS: resume playback that silently failed to start while the page is
     // hidden (mobile Safari suspends media loading & the audio session in
     // the background). If playback was requested but the element is paused,
     // replay it now that the page is visible — reloading first if nothing
@@ -973,6 +998,9 @@ class AudioEngine extends BroadcastableDiffuseElement {
     // Apply the (possibly persisted) master volume to the freshly created node.
     input.gain.value = this.#volume.value;
 
+    // Apply the (possibly persisted) audio output device for this group.
+    this.#applySink();
+
     // Unlock the context on any user gesture, for the life of the page.
     // Mobile browsers start the context suspended (autoplay policy) and can
     // suspend it again at any time (audio-session interruptions, route
@@ -1065,6 +1093,71 @@ class AudioEngine extends BroadcastableDiffuseElement {
   /** Resumes the shared AudioContext if it is suspended (e.g. autoplay policy). */
   #resumeContext() {
     this.#audioContext?.resume().catch(() => {});
+  }
+
+  // AUDIO OUTPUT (SINK)
+
+  /**
+   * Selects the audio output device for this group and persists the choice.
+   *
+   * The device id comes from `navigator.mediaDevices.enumerateDevices()`
+   * (`kind === "audiooutput"`); an empty string selects the system default.
+   * Applied to the shared {@link AudioContext} via `setSinkId`, so every routed
+   * `<audio>` element plays through the chosen device. Best-effort: browsers
+   * without `AudioContext.setSinkId` (Firefox/Safari) ignore it and keep using
+   * the system default.
+   *
+   * @param {string} sinkId
+   */
+  async setSink(sinkId) {
+    if (sinkId) localStorage.setItem(this.#sinkStorageKey(), sinkId);
+    else localStorage.removeItem(this.#sinkStorageKey());
+
+    await this.#applySink();
+  }
+
+  /** @returns {string} localStorage key holding this group's output device id. */
+  #sinkStorageKey() {
+    return `${this.constructor.prototype.constructor.NAME}/${this.group}/sink`;
+  }
+
+  /**
+   * Applies the stored output device to the shared AudioContext. No-op until
+   * the graph exists or when the stored value hasn't changed.
+   */
+  async #applySink() {
+    const context = this.#audioContext;
+    if (!context) return;
+
+    const sinkId = localStorage.getItem(this.#sinkStorageKey()) ?? "";
+    if (sinkId === this.#appliedSink) return;
+
+    const ctx =
+      /** @type {AudioContext & { setSinkId?: (id: string) => Promise<void> }} */ (
+        context
+      );
+
+    if (typeof ctx.setSinkId !== "function") {
+      // No support: remember the value so we don't warn on every interaction.
+      this.#appliedSink = sinkId;
+      if (sinkId) {
+        console.warn(
+          "This browser does not support selecting an audio output device " +
+            "(AudioContext.setSinkId); using the system default.",
+        );
+      }
+      return;
+    }
+
+    try {
+      await ctx.setSinkId(sinkId);
+      this.#appliedSink = sinkId;
+    } catch (err) {
+      // e.g. NotAllowedError (permission / cross-origin iframe policy) or
+      // NotFoundError (device unplugged). Keep the current device and retry
+      // when the preference changes again.
+      console.warn("Failed to set the audio output device.", err);
+    }
   }
 }
 

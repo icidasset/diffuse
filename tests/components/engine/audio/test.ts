@@ -206,6 +206,82 @@ describe("components/engine/audio", () => {
     expect(result).toBe(0.4);
   });
 
+  it("persists the audio output device to localStorage", async () => {
+    const stored = await testWeb(async () => {
+      const mod = await import("~/components/engine/audio/element.js");
+      const engine = new mod.CLASS();
+      document.body.append(engine);
+      await engine.setSink("test-output-device");
+
+      for (let i = 0; i < localStorage.length; i++) {
+        const key = localStorage.key(i)!;
+        if (key.includes("engine/audio") && key.endsWith("/sink")) {
+          return localStorage.getItem(key);
+        }
+      }
+      return null;
+    });
+
+    expect(stored).toBe("test-output-device");
+  });
+
+  it("clears the stored audio output device when set to the system default", async () => {
+    const stored = await testWeb(async () => {
+      const mod = await import("~/components/engine/audio/element.js");
+      const engine = new mod.CLASS();
+      document.body.append(engine);
+      await engine.setSink("test-output-device");
+      await engine.setSink("");
+
+      for (let i = 0; i < localStorage.length; i++) {
+        const key = localStorage.key(i)!;
+        if (key.includes("engine/audio") && key.endsWith("/sink")) {
+          return localStorage.getItem(key);
+        }
+      }
+      return null;
+    });
+
+    expect(stored).toBe(null);
+  });
+
+  it("applies the stored audio output device to the shared AudioContext", async () => {
+    const calls = await testWeb(async () => {
+      const calls: string[] = [];
+
+      // Stub `setSinkId` so the test doesn't depend on native support and can
+      // observe what the engine applies.
+      const proto = AudioContext.prototype as unknown as {
+        setSinkId?: (id: string) => Promise<void>;
+      };
+      const original = proto.setSinkId;
+      proto.setSinkId = (id: string) => {
+        calls.push(id);
+        return Promise.resolve();
+      };
+
+      try {
+        localStorage.setItem("diffuse/engine/audio/default/sink", "device-x");
+
+        const mod = await import("~/components/engine/audio/element.js");
+        const engine = new mod.CLASS();
+        document.body.append(engine);
+
+        // Accessing `webAudio` lazily creates the graph, which applies the
+        // stored sink for the group.
+        void engine.webAudio;
+        await new Promise((resolve) => setTimeout(resolve, 0));
+
+        return calls;
+      } finally {
+        if (original === undefined) delete proto.setSinkId;
+        else proto.setSinkId = original;
+      }
+    });
+
+    expect(calls).toContain("device-x");
+  });
+
   // Sample audio tests
 
   it("state returns undefined for unknown audio id", async () => {
