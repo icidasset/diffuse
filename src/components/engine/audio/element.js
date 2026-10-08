@@ -64,6 +64,21 @@ const LOAD_WATCHDOG_MS = 3_000;
  */
 const LOAD_WAIT_LIMIT = 10;
 
+/**
+ * How many consecutive data-less watchdog reloads an element may attempt
+ * before recovery is declared futile. When the cause is not the element but
+ * what it shares with everything else — the browser's connection pool to that
+ * host (one wedged HTTP/2 connection carries all of them; on HTTP/1.1 six
+ * hung sockets block the rest) or a server that accepts connections but never
+ * answers — every fresh request pends forever too. Continuing the cycle
+ * cannot recover and only occupies more of the connections recovery needs,
+ * while piling up "pending" entries. Past the limit the element stops
+ * reloading and surfaces a terminal error; the counter resets on data,
+ * playback, a seek, refocus or `online`, each of which grants one fresh
+ * bounded budget.
+ */
+const DATALESS_RELOAD_LIMIT = 5;
+
 ////////////////////////////////////////////
 // ELEMENT
 ////////////////////////////////////////////
@@ -654,6 +669,7 @@ class AudioEngine extends BroadcastableDiffuseElement {
     if (!this.#mediaSourceUrls.has(id)) {
       // Item was removed while waiting
       URL.revokeObjectURL(objectUrl);
+      stream.cancel().catch(() => {});
       return;
     }
 
@@ -661,6 +677,7 @@ class AudioEngine extends BroadcastableDiffuseElement {
     if (!itemEl) {
       URL.revokeObjectURL(objectUrl);
       this.#mediaSourceUrls.delete(id);
+      stream.cancel().catch(() => {});
       return;
     }
 
@@ -786,6 +803,12 @@ class AudioEngine extends BroadcastableDiffuseElement {
       }
     } finally {
       itemEl.audio.removeEventListener("seeking", onSeeking);
+
+      // Stop pulling from the stream's underlying source (e.g. a fetch).
+      // Exiting the read loop without cancelling leaves the producer's
+      // request open — a permanently pending connection. Cancelling an
+      // already-cancelled/done reader is a no-op.
+      reader.cancel().catch(() => {});
     }
   }
 
@@ -1184,6 +1207,11 @@ class AudioEngineItem extends BroadcastableDiffuseElement {
   #watchdogAttempt = 0;
   /** @type {number} Consecutive data-less windows spent waiting on an in-flight fetch. */
   #loadWaitTrips = 0;
+  /** @type {number} Consecutive data-less reloads — recovery-declared-futile counter. */
+  #datalessReloads = 0;
+
+  /** @type {(() => void) | undefined} Visibility/online re-arm listener. */
+  #rearmListener = undefined;
 
   constructor() {
     super();
@@ -1279,6 +1307,34 @@ class AudioEngineItem extends BroadcastableDiffuseElement {
     // is cancelled (see `#watchdogTrip`).
     this.#armWatchdog();
 
+    // Re-arm a bounded recovery attempt when conditions may have changed:
+    // refocusing (e.g. after background recovery) or the network coming back.
+    // An element that gave up (see `#watchdogTrip`) gets one fresh budget
+    // here; healthy loads just reset and stop from the trip. Without this,
+    // an element that declared recovery futile would never retry on its own.
+    // Scoped to elements with play intent or an error so paused, never-loaded
+    // items don't start a perpetual trip loop.
+    this.#rearmListener = () => {
+      if (document.hidden) return;
+
+      let errored = false;
+      try {
+        errored = this.audio?.error != null;
+      } catch {
+        // No child <audio> yet — nothing to recover.
+        return;
+      }
+
+      if (
+        !this.intendsToPlay && !this.$state.isPlaying.get() && !errored
+      ) return;
+
+      this.#datalessReloads = 0;
+      this.#armWatchdog();
+    };
+    document.addEventListener("visibilitychange", this.#rearmListener);
+    globalThis.addEventListener("online", this.#rearmListener);
+
     // Setup broadcasting if part of group
     if (this.hasAttribute("group")) {
       const actions = this.broadcast(
@@ -1363,6 +1419,12 @@ class AudioEngineItem extends BroadcastableDiffuseElement {
   disconnectedCallback() {
     this.cancelMediaRetry();
     this.#disarmWatchdog();
+
+    if (this.#rearmListener) {
+      document.removeEventListener("visibilitychange", this.#rearmListener);
+      globalThis.removeEventListener("online", this.#rearmListener);
+      this.#rearmListener = undefined;
+    }
 
     // NOTE: the Web Audio source node is intentionally NOT detached here. A
     // `createMediaElementSource` node can only be made once per element, so
@@ -1499,6 +1561,9 @@ class AudioEngineItem extends BroadcastableDiffuseElement {
    * fresh load). No-op when already armed.
    */
   armLoadWatchdog() {
+    // A seek is explicit intent and starts a fresh load: grant a fresh
+    // bounded-recovery budget along with it.
+    this.#datalessReloads = 0;
     this.#armWatchdog();
   }
 
@@ -1631,6 +1696,10 @@ class AudioEngineItem extends BroadcastableDiffuseElement {
     item?.$state.hasEnded.set(false);
     item?.$state.isPlaying.set(true);
 
+    // Explicit play intent: grant a fresh bounded-recovery budget (a
+    // capped-out element gets one full cycle back on user action).
+    if (item) item.#resetWatchdog();
+
     // In case audio was preloaded:
     if (audio.readyState >= 2) finishedLoading(event);
   }
@@ -1740,6 +1809,7 @@ class AudioEngineItem extends BroadcastableDiffuseElement {
   #resetWatchdog() {
     this.#watchdogAttempt = 0;
     this.#loadWaitTrips = 0;
+    this.#datalessReloads = 0;
   }
 
   /** Stops the load watchdog (paused, dropped, playable). */
@@ -1778,7 +1848,19 @@ class AudioEngineItem extends BroadcastableDiffuseElement {
     }
 
     if (audio.src.startsWith("blob:")) return; // MediaSource items manage their own loads
-    if (document.hidden) return; // backgrounded loads are suspended anyway (iOS)
+
+    // On iOS the OS suspends background loads (and tears down the audio
+    // session), so a hidden trip can only observe false positives — bail out.
+    // Everywhere else, background tabs keep loading media: a fetch that dies
+    // silently while hidden (laptop sleep, network switch) never fires
+    // `error`/`progress`, so skipping the trip here would strand its pending
+    // request AND leave the watchdog disarmed (this return is the only
+    // non-re-arming exit for a connected element). Leaked pending requests
+    // pile up until the browser's per-host connection limit starves all
+    // traffic to that server, including audio — the same failure mode the
+    // `BYTES_TIMEOUT_MS` guard in `components/input/common.js` documents for
+    // artwork fetches.
+    if (IS_IOS && document.hidden) return;
 
     // The error retry loop is armed AND the element is errored: it owns
     // reloads until its next attempt clears the error (and re-arms us). If
@@ -1855,6 +1937,19 @@ class AudioEngineItem extends BroadcastableDiffuseElement {
     ) {
       this.#loadWaitTrips += 1;
       this.#armWatchdog();
+      return;
+    }
+
+    // Sustained data-less failure: stop the reload cycle. See
+    // DATALESS_RELOAD_LIMIT — when the wedged state is the connection pool or
+    // the server itself, another reload cannot recover and keeps occupying
+    // the connections recovery needs. Surface a terminal error instead; the
+    // budget is restored by data, playback, a seek, refocus or `online`.
+    this.#datalessReloads += 1;
+    if (this.#datalessReloads > DATALESS_RELOAD_LIMIT) {
+      if (this.#datalessReloads === DATALESS_RELOAD_LIMIT + 1) {
+        this.$state.loadingState.set({ error: { code: 2 } }); // MEDIA_ERR_NETWORK
+      }
       return;
     }
 
