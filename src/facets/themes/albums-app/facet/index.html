@@ -1,0 +1,24 @@
+<link rel="stylesheet" href="styles/base.css" />
+<link rel="stylesheet" href="facets/themes/albums-app/fonts.css" />
+<link rel="stylesheet" href="facets/themes/albums-app/variables.css" />
+<link rel="stylesheet" href="vendor/@phosphor-icons/web/bold/style.css" />
+<link rel="stylesheet" href="vendor/@phosphor-icons/web/fill/style.css" />
+
+<style>
+  @import "/facet.css";
+</style>
+
+<main>
+  <da-browser
+    output-selector="do-output"
+    tracks-selector="do-scoped-tracks"
+    queue-engine-selector="de-queue"
+    scope-engine-selector="de-scope"
+    favourites-orchestrator-selector="do-favourites"
+    artwork-selector="do-artwork"
+    cover-groups-orchestrator-selector="do-cover-groups"
+    controller-orchestrator-selector="do-controller"
+  ></da-browser>
+</main>
+
+<script type="module" src="/facet.js"></script>

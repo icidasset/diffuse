@@ -1,5 +1,13 @@
 [
   {
+    "url": "facets/themes/albums-app/facet/index.tile",
+    "title": "Albums.app",
+    "category": "Themes",
+    "featured": true,
+    "author": "A theme by [@tokono.ma](https://bsky.app/profile/tokono.ma)",
+    "desc": "A theme based on the iPad version of the [Albums](https://www.albumstheapp.com/) app."
+  },
+  {
     "url": "facets/playback/audio-output/index.tile",
     "title": "Audio Output",
     "category": "Playback",

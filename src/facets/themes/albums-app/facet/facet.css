@@ -1,0 +1,53 @@
+html,
+body {
+  height: 100%;
+  margin: 0;
+  overflow: hidden;
+  padding: 0;
+}
+
+body {
+  background: var(--da-bg);
+  color: var(--da-text);
+  font-family:
+    "Inter",
+    ui-sans-serif,
+    system-ui,
+    -apple-system,
+    "Segoe UI",
+    Roboto,
+    sans-serif;
+}
+
+#container {
+  height: 100%;
+}
+
+main {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  margin: 0 auto;
+  max-width: 150rem;
+  overflow: hidden;
+  padding: 0.75rem;
+  width: 100%;
+
+  @media (min-width: 47.5rem) and (min-height: 40rem) {
+    padding: 1.25rem;
+  }
+
+  @media (min-width: 75rem) and (min-height: 42.5rem) {
+    padding: 1.5rem;
+  }
+}
+
+da-browser {
+  border-radius: 0.75rem;
+  box-shadow:
+    0 0 0 1px rgb(255 255 255 / 0.08),
+    0 24px 64px rgb(0 0 0 / 0.55);
+  flex: 1;
+  min-height: 0;
+  min-width: 0;
+}
