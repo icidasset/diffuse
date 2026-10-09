@@ -215,6 +215,9 @@ class Browser extends DiffuseElement {
 
   #view = signal(restoreView() ?? /** @type {View} */ ({ type: "albums" }));
 
+  /** Tracks picked via their cover in list views (insertion-ordered). */
+  #selectedTracks = signal(/** @type {Set<string>} */ (new Set()));
+
   #catalogCollapsed = signal(false);
 
   #playlistFilter = signal("");
@@ -633,6 +636,7 @@ class Browser extends DiffuseElement {
    * @param {View} view
    */
   #navigateTo(view) {
+    this.#selectedTracks.value = new Set();
     this.#history.value = [...this.#history.value, this.#view.value];
     this.#future.value = [];
     this.#view.value = view;
@@ -666,6 +670,7 @@ class Browser extends DiffuseElement {
    */
   setSelectedPlaylist = (playlist) => {
     this.$scope.value?.setPlaylist(playlist);
+    this.#selectedTracks.value = new Set();
     this.#view.value = { type: "playlist-tracks" };
     this.#renderedTracks = undefined;
   };
@@ -746,12 +751,49 @@ class Browser extends DiffuseElement {
   };
 
   /**
-   * Appends every track of the current view to the end of the queue.
+   * Tracks picked via their cover in the current list view, in list
+   * order. Falls back to every track of the view when nothing is
+   * selected.
+   * @returns {Track[]}
+   */
+  #queueTargets() {
+    const selected = this.#selectedTracks.value;
+    const tracks = this.#currentViewTracks();
+    return selected.size
+      ? tracks.filter((t) => selected.has(t.id))
+      : tracks;
+  }
+
+  /**
+   * Appends the selected tracks (or the whole view) to the end of the
+   * queue, then clears the selection.
    */
   addViewToQueue = () => {
-    const tracks = this.#currentViewTracks();
+    const tracks = this.#queueTargets();
     if (!tracks.length) return;
     this.$queue.value?.add({ trackIds: tracks.map((t) => t.id) });
+    this.#selectedTracks.value = new Set();
+  };
+
+  /**
+   * Inserts the selected tracks (or the whole view) right after the
+   * currently playing track, then clears the selection.
+   */
+  playNext = () => {
+    const tracks = this.#queueTargets();
+    if (!tracks.length) return;
+    this.$queue.value?.add({ inFront: true, trackIds: tracks.map((t) => t.id) });
+    this.#selectedTracks.value = new Set();
+  };
+
+  /**
+   * Toggles a track's selection (cover click in list views).
+   * @param {Track} track
+   */
+  toggleTrackSelection = (track) => {
+    const selected = new Set(this.#selectedTracks.value);
+    selected.has(track.id) ? selected.delete(track.id) : selected.add(track.id);
+    this.#selectedTracks.value = selected;
   };
 
   /**
@@ -1068,6 +1110,26 @@ class Browser extends DiffuseElement {
   }
 
   /**
+   * Measures the rendered track-row height — rem-based sizes scale with
+   * the root font size, so the hardcoded px stride is only an estimate.
+   * Without this the row borders drift out of the content's rhythm.
+   */
+  #measureTracks() {
+    const row = /** @type {HTMLElement | null} */ (
+      this.root().querySelector(".da-track-row")
+    );
+    if (!row?.offsetHeight) return;
+
+    const height = row.offsetHeight;
+    if (height === this.#rowStride) return;
+
+    this.#rowStride = height;
+    this.#renderedStartIndex = -1;
+    this.#renderedEndIndex = -1;
+    this.forceRender();
+  }
+
+  /**
    * Lazily fetch the thumbnail for a catalog row (playlist, album or artist).
    * The row resolves its representative track off the render path.
    * @param {string} key  Art cache key
@@ -1346,6 +1408,7 @@ class Browser extends DiffuseElement {
     requestAnimationFrame(() => {
       this.#syncViewportObserver();
       this.#measureCatalog();
+      this.#measureTracks();
     });
 
     return html`
@@ -1893,9 +1956,17 @@ class Browser extends DiffuseElement {
         <div class="da-header__subtitle">${subtitle}</div>
 
         <div class="da-header__actions">
+          <button class="da-pill" @click="${this.playNext}">
+            <i class="ph-bold ph-caret-right"></i>
+            <span>Play Next${this.#selectedTracks.value.size
+              ? ` (${this.#selectedTracks.value.size})`
+              : ``}</span>
+          </button>
           <button class="da-pill" @click="${this.addViewToQueue}">
             <i class="ph-bold ph-list-plus"></i>
-            <span>Add to Queue</span>
+            <span>Add to Queue${this.#selectedTracks.value.size
+              ? ` (${this.#selectedTracks.value.size})`
+              : ``}</span>
           </button>
 
           ${searchTerm
@@ -2135,7 +2206,8 @@ class Browser extends DiffuseElement {
     const { startIndex, endIndex } = this.#computeWindow(count);
     this.#renderedStartIndex = startIndex;
     this.#renderedEndIndex = endIndex;
-    const totalSize = count * TRACK_ROW_STRIDE;
+    const stride = this.#rowStride;
+    const totalSize = count * stride;
 
     // Column sort state (hidden when an ordered playlist dictates the order)
     const playlistOrdered = /** @type {any} */ (this.$provider.value)
@@ -2201,7 +2273,7 @@ class Browser extends DiffuseElement {
               tracks.slice(startIndex, endIndex).map((track, i) => ({
                 track,
                 index: startIndex + i,
-                top: (startIndex + i) * TRACK_ROW_STRIDE,
+                top: (startIndex + i) * stride,
               })),
               (entry) => `da-tr-${entry.track.id}`,
               (entry) => this.#renderTrackRow(html, entry.track, entry.top),
@@ -2229,15 +2301,24 @@ class Browser extends DiffuseElement {
 
     const currentId = this.currentTrack()?.id;
     const isCurrent = currentId === track.id;
+    const isSelected = this.#selectedTracks.value.has(track.id);
 
     return html`
       <div
-        class="da-track-row ${isCurrent ? `da-track-row--current` : ""}"
+        class="da-track-row ${isSelected ? `da-track-row--selected` : ""} ${isCurrent ? `da-track-row--current` : ""}"
         style="transform: translateY(${top}px);"
         @dblclick="${() => this.playTrack(track)}"
       >
         <div class="da-track__title">
-          <div class="da-track__art">
+          <button
+            class="da-track__select ${isSelected ? `da-track__select--on` : ""}"
+            @click="${(/** @type {Event} */ e) => {
+              e.stopPropagation();
+              this.toggleTrackSelection(track);
+            }}"
+            title="${isSelected ? `Deselect track` : `Select track`}
+            aria-pressed="${isSelected ? `true` : `false`}
+          >
             ${artUrl
               ? html`<img src="${artUrl}" alt="" loading="lazy" />`
               : html`
@@ -2245,7 +2326,8 @@ class Browser extends DiffuseElement {
                   <i class="ph-fill ph-music-notes"></i>
                 </div>
               `}
-          </div>
+            <i class="ph-bold ph-check da-track__select-check"></i>
+          </button>
           <span class="da-track__title-text">${trackTitle(track)}</span>
           ${isCurrent
             ? html`<i class="ph-fill ph-speaker-high da-track__playing"></i>`

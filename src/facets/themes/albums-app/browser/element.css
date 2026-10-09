@@ -850,6 +850,54 @@ a.da-titlebar__btn {
   background: var(--da-surface);
 }
 
+.da-track-row--selected,
+.da-track-row--selected:hover {
+  background: color-mix(in oklch, var(--da-accent) 14%, transparent);
+}
+
+.da-track__select {
+  border: 0;
+  border-radius: 0.25rem;
+  cursor: pointer;
+  flex-shrink: 0;
+  height: 2rem;
+  overflow: hidden;
+  padding: 0;
+  position: relative;
+  width: 2rem;
+}
+
+.da-track__select img {
+  display: block;
+  height: 100%;
+  object-fit: cover;
+  width: 100%;
+}
+
+.da-track__select .da-track-art-placeholder {
+  font-size: 0.75rem;
+}
+
+.da-track__select-check {
+  align-items: center;
+  background: rgb(0 0 0 / 0.5);
+  color: #fff;
+  display: none;
+  height: 100%;
+  inset: 0;
+  justify-content: center;
+  position: absolute;
+}
+
+.da-track__select--on .da-track__select-check {
+  display: flex;
+}
+
+.da-track__select--on img,
+.da-track__select--on .da-track-art-placeholder {
+  opacity: 0.55;
+}
+
 .da-track-row--current .da-track__title-text {
   color: var(--da-accent);
 }
@@ -867,13 +915,6 @@ a.da-titlebar__btn {
   height: 2rem;
   overflow: hidden;
   width: 2rem;
-}
-
-.da-track__art img {
-  display: block;
-  height: 100%;
-  object-fit: cover;
-  width: 100%;
 }
 
 .da-track__art .da-track-art-placeholder {
