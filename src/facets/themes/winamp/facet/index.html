@@ -8,7 +8,7 @@
 <main>
   <!-- 🪟 -->
   <section class="windows">
-    
+
 
     <dtw-window-manager>
       <!-- BROWSER -->
@@ -64,12 +64,6 @@
 
   <!-- 🛋️ -->
   <section class="desktop">
-    <!-- WINAMP -->
-    <a class="button desktop__item" id="desktop-winamp">
-      <img src="images/icons/windows_98/winamp2-32x32.png" height="32" />
-      <label>Winamp</label>
-    </a>
-
     <!-- INPUT -->
     <a
       class="button desktop__item"
@@ -77,13 +71,33 @@
       target="_blank"
     >
       <img src="images/icons/windows_98/cd_audio_cd_a-4.png" height="32" />
-      <label for="input-window">Manage audio inputs</label>
+      <label for="input-window">Audio inputs</label>
     </a>
 
     <!-- OUTPUT -->
-    <a class="button desktop__item" href="l/?path=facets%2Fconnect%2Findex.tile" target="_blank">
+    <a
+      class="button desktop__item"
+      href="l/?path=facets%2Fdata%2Fuserdata%2Findex.tile"
+      target="_blank"
+    >
       <img src="images/icons/windows_98/computer_user_pencil-0.png" height="32" />
-      <label for="output-window">Manage user data</label>
+      <label for="output-window">User data</label>
+    </a>
+
+    <!-- NEW INSTANCE -->
+    <a
+      class="button desktop__item"
+      id="desktop-new-instance"
+      title="Open a new Winamp"
+    >
+      <img src="images/icons/windows_98/soundpu2-4.png" height="32" />
+      <label>New instance</label>
+    </a>
+
+    <!-- WINAMP -->
+    <a class="button desktop__item" id="desktop-winamp">
+      <img src="images/icons/windows_98/winamp2-32x32.png" height="32" />
+      <label>Winamp</label>
     </a>
 
     <!-- BROWSE -->

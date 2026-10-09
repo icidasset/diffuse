@@ -90,6 +90,32 @@ document.body.querySelector("#desktop-batch")?.addEventListener(
   },
 );
 
+// Open a new window with a fresh instance group, i.e. an independent player
+// with its own queue and playback state (shared collection and sources).
+// Live instances reveal their group through the locks held by their
+// components (same trick and naming as the Blur themes).
+document.body.querySelector("#desktop-new-instance")?.addEventListener(
+  "dblclick",
+  async () => {
+    const state = await navigator.locks.query();
+    const held = (state.held ?? []).flatMap((l) => l.name ? [l.name] : []);
+
+    let nextGroup;
+
+    if (!held.some((n) => n.includes("/Deck B"))) {
+      nextGroup = "Deck B";
+    } else if (!held.some((n) => n.includes("/Deck C"))) {
+      nextGroup = "Deck C";
+    } else {
+      return;
+    }
+
+    const url = new URL(document.location.href);
+    url.searchParams.set("group", nextGroup);
+    window.open(url.toString(), "_blank");
+  },
+);
+
 ////////////////////////////////////////////
 // 🛠️
 ////////////////////////////////////////////
