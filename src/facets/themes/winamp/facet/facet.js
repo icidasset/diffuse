@@ -116,6 +116,10 @@ document.body.querySelector("#desktop-new-instance")?.addEventListener(
   },
 );
 
+// Active instance group, shown in the bottom-right of the desktop
+const groupLabel = foundation.GROUP === "facets" ? "Deck A" : foundation.GROUP;
+document.body.querySelector(".desktop__group")?.append(groupLabel);
+
 ////////////////////////////////////////////
 // 🛠️
 ////////////////////////////////////////////

@@ -23,6 +23,7 @@ main > section {
  ***********************************/
 .desktop {
   align-items: start;
+  align-content: flex-start;
   display: flex;
   flex-wrap: wrap;
   gap: 12px;
@@ -38,6 +39,7 @@ main > section {
   display: inline-flex;
   flex-direction: column;
   font-family: inherit;
+  text-align: center;
   text-decoration: none;
   user-select: none;
 
@@ -61,4 +63,14 @@ main > section {
       outline-offset: 2px;
     }
   }
+}
+
+.desktop__group {
+  bottom: 0;
+  color: inherit;
+  font-family: inherit;
+  left: 0;
+  pointer-events: none;
+  position: absolute;
+  user-select: none;
 }
