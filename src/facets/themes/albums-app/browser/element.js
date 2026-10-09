@@ -32,6 +32,48 @@ const GRID_ROW_GAP = 20; // 1.25rem gap between grid rows
 const GRID_OVERSCAN_ROWS = 2;
 const GRID_GROUP_HEIGHT = 37; // letter header, corrected after measure
 
+// Catalog column virtual scroll (fixed row heights, like the track list).
+// These are only initial estimates — the real rendered heights are
+// measured per render, since rem-based sizes scale with the root font.
+const CATALOG_ROW_STRIDE = 44; // 2.75rem
+const CATALOG_LETTER_HEIGHT = 44; // 2.75rem
+const CATALOG_OVERSCAN = 10;
+
+const VIEW_STORAGE_KEY = "da.theme.albums-app.view";
+
+const collator = new Intl.Collator();
+
+/**
+ * Restores the last active view from localStorage. The representative
+ * `track` of detail views is not serialized — it's re-attached from the
+ * library once tracks are available.
+ * @returns {View | null}
+ */
+function restoreView() {
+  try {
+    const raw = localStorage.getItem(VIEW_STORAGE_KEY);
+    if (!raw) return null;
+
+    const parsed = JSON.parse(raw);
+    if (typeof parsed?.type !== "string") return null;
+
+    const validTypes = [
+      "albums",
+      "artists",
+      "tracks",
+      "playlist-tracks",
+      "album",
+      "artist",
+    ];
+
+    if (!validTypes.includes(parsed.type)) return null;
+
+    return /** @type {View} */ (parsed);
+  } catch {
+    return null;
+  }
+}
+
 /**
  * @param {Track} track
  */
@@ -145,6 +187,10 @@ class Browser extends DiffuseElement {
     /** @type {import("~/components/orchestrator/controller/element.js").CLASS | undefined} */ (undefined),
   );
 
+  $repeatShuffle = signal(
+    /** @type {import("~/components/engine/repeat-shuffle/element.js").CLASS | undefined} */ (undefined),
+  );
+
   $output = signal(
     /** @type {OutputElement | undefined} */ (undefined),
   );
@@ -167,7 +213,7 @@ class Browser extends DiffuseElement {
 
   // SIGNALS - state
 
-  #view = signal(/** @type {View} */ ({ type: "albums" }));
+  #view = signal(restoreView() ?? /** @type {View} */ ({ type: "albums" }));
 
   #catalogCollapsed = signal(false);
 
@@ -185,12 +231,26 @@ class Browser extends DiffuseElement {
   #artFetchQueue = [];
   #artFetchActive = 0;
   #artRenderScheduled = false;
-  /** @type {IntersectionObserver | undefined} */
-  #rowArtObserver = undefined;
+
+  // Catalog column virtual scroll state
+  #catalogScrollTop = 0;
+  #catalogViewportHeight = window.innerHeight;
+  #catalogTopOffset = 0;
+  #catalogRowStride = CATALOG_ROW_STRIDE;
+  #catalogLetterHeight = CATALOG_LETTER_HEIGHT;
+  /** @type {{ letter: string; rows: any[] }[] | null} */
+  #catalogSections = null;
+  /** @type {({ type: "letter"; label: string } | { type: "row"; row: any })[]} */
+  #catalogItems = [];
+  /** @type {number[]} */
+  #catalogOffsets = [];
+  #renderedCatalogStart = -1;
+  #renderedCatalogEnd = -1;
 
   // Cover grid virtual scroll state
   #gridScrollTop = 0;
   #gridViewportHeight = window.innerHeight;
+  #gridPanelWidth = 0;
   #gridLabelHeight = 0;
   #gridCols = 4;
   #gridStride = 240;
@@ -289,6 +349,81 @@ class Browser extends DiffuseElement {
   $artistRows = computed(() =>
     this.$sortedArtistGroups().flatMap((g) => g.groups));
 
+  /**
+   * Representative (first matching) track per playlist, computed in one
+   * pass. Criteria shapes are deduped across playlists, so the cost is
+   * O(tracks × distinct shapes) instead of a per-playlist library filter.
+   */
+  $playlistFirstTracks = computed(() => {
+    const col = this.$output.value?.playlistItems.collection();
+    const tracks = this.$provider.value?.tracks() ?? [];
+
+    /** @type {Map<string, Track | undefined>} */
+    const first = new Map();
+    if (!col || col.state !== "loaded" || !tracks.length) return first;
+
+    const items = col.data;
+    if (!items.length) return first;
+
+    // Dedupe criteria shapes across playlists: shape key → fields +
+    // value key → playlists using it
+    const shapes = /**
+      @type {Map<string, { fields: { parts: string[]; transformations: string[] | undefined }[]; keys: Map<string, Set<string>> }>}
+    */ (new Map());
+    for (const item of items) {
+      const shapeKey = item.criteria
+        .map((c) => `${c.field}\0${(c.transformations ?? []).join(",")}`)
+        .join("\0\0");
+
+      let shape = shapes.get(shapeKey);
+      if (!shape) {
+        shape = {
+          fields: item.criteria.map((c) => ({
+            parts: c.field.split("."),
+            transformations: c.transformations,
+          })),
+          keys: new Map(),
+        };
+        shapes.set(shapeKey, shape);
+      }
+
+      const valueKey = item.criteria
+        .map((c) => Playlist.transform(c.value, c.transformations))
+        .join("\0");
+
+      let playlists = shape.keys.get(valueKey);
+      if (!playlists) {
+        playlists = new Set();
+        shape.keys.set(valueKey, playlists);
+      }
+      playlists.add(item.playlist);
+    }
+
+    // One pass over the tracks attributes each to the first playlist
+    // (in track order) that matches it
+    for (const track of tracks) {
+      for (const shape of shapes.values()) {
+        const valueKey = shape.fields
+          .map(({ parts, transformations }) =>
+            Playlist.transform(
+              parts.reduce((v, f) => v?.[f], /** @type {any} */ (track)),
+              transformations,
+            )
+          )
+          .join("\0");
+
+        const playlists = shape.keys.get(valueKey);
+        if (!playlists) continue;
+
+        for (const name of playlists) {
+          if (!first.has(name)) first.set(name, track);
+        }
+      }
+    }
+
+    return first;
+  });
+
   $favouritesSet = computed(() => {
     const items = this.$favourites.value?.playlistItems() ?? [];
     return new Set(
@@ -323,6 +458,12 @@ class Browser extends DiffuseElement {
     const controller = queryOptional(
       this,
       "controller-orchestrator-selector",
+    );
+
+    /** @type {import("~/components/engine/repeat-shuffle/element.js").CLASS | null} */
+    const repeatShuffle = queryOptional(
+      this,
+      "repeat-shuffle-engine-selector",
     );
 
     /** @type {OutputElement} */
@@ -376,6 +517,12 @@ class Browser extends DiffuseElement {
       });
     }
 
+    if (repeatShuffle) {
+      whenElementsDefined({ repeatShuffle }).then(() => {
+        this.$repeatShuffle.value = repeatShuffle;
+      });
+    }
+
     // Reset scroll when the track list changes
     this.effect(() => {
       const _ = this.$currentTracks();
@@ -388,17 +535,44 @@ class Browser extends DiffuseElement {
       });
     });
 
-    // Observe catalog rows for lazy thumbnail loading
+    // Remember the current screen across reloads
     this.effect(() => {
-      const _albums = this.$albumRows();
-      const _artists = this.$artistRows();
-      const _filter = this.#playlistFilter.value;
-      const _view = this.#view.value;
-      const col = this.$output.value?.playlistItems.collection();
-      const _playlists = col?.state === "loaded" ? col.data.length : undefined;
+      const view = this.#view.value;
+      try {
+        const { track, ...rest } = /** @type {any} */ (view);
+        localStorage.setItem(VIEW_STORAGE_KEY, JSON.stringify(rest));
+      } catch {
+        // storage unavailable — non-fatal
+      }
+    });
+
+    // Re-attach the representative track to a restored detail view once
+    // the library is available; fall back to the overview when the
+    // album / artist no longer exists
+    this.effect(() => {
+      const tracks = this.$provider.value?.tracks() ?? [];
+      if (!tracks.length) return;
+
+      const view = this.#view.value;
+      if (view.type !== "album" && view.type !== "artist") return;
+      if (view.track) return;
 
       untracked(() => {
-        requestAnimationFrame(() => this.#setupRowArtObserver());
+        if (view.type === "album") {
+          const list = this.$tracksByAlbum().get(view.albumKey);
+          if (list?.length) {
+            this.#view.value = { ...view, track: list[0] };
+          } else {
+            this.#view.value = { type: "albums" };
+          }
+        } else {
+          const list = this.$tracksByArtist().get(view.artistKey);
+          if (list?.length) {
+            this.#view.value = { ...view, track: list[0] };
+          } else {
+            this.#view.value = { type: "artists" };
+          }
+        }
       });
     });
 
@@ -415,7 +589,6 @@ class Browser extends DiffuseElement {
     this.#resizeObserver?.disconnect();
     this.#resizeObserver = undefined;
     this.#observedPanel = null;
-    this.#disconnectRowArtObserver();
   }
 
   // HELPERS
@@ -460,7 +633,6 @@ class Browser extends DiffuseElement {
    * @param {View} view
    */
   #navigateTo(view) {
-    this.#disconnectRowArtObserver();
     this.#history.value = [...this.#history.value, this.#view.value];
     this.#future.value = [];
     this.#view.value = view;
@@ -472,7 +644,6 @@ class Browser extends DiffuseElement {
     if (hist.length === 0) return;
     const prev = hist[hist.length - 1];
     if (!prev) return;
-    this.#disconnectRowArtObserver();
     this.#future.value = [this.#view.value, ...this.#future.value];
     this.#history.value = hist.slice(0, -1);
     this.#view.value = prev;
@@ -484,7 +655,6 @@ class Browser extends DiffuseElement {
     if (fut.length === 0) return;
     const next = fut[0];
     if (!next) return;
-    this.#disconnectRowArtObserver();
     this.#history.value = [...this.#history.value, this.#view.value];
     this.#future.value = fut.slice(1);
     this.#view.value = next;
@@ -631,17 +801,20 @@ class Browser extends DiffuseElement {
   /**
    * @param {string} letter
    */
-  jumpToLetter = (letter) => {
+  jumpToLetter(letter) {
     const panel = this.root().querySelector(".da-catalog__scroll");
-    const section = this.root().querySelector(
-      `.da-playlist-section[data-letter="${letter}"]`,
+    if (!panel) return;
+
+    const index = this.#catalogItems.findIndex(
+      (item) => item.type === "letter" && item.label === letter,
     );
-    if (!panel || !section) return;
+    if (index < 0) return;
+
     panel.scrollTo({
-      top: /** @type {HTMLElement} */ (section).offsetTop,
+      top: this.#catalogOffsets[index] + this.#catalogTopOffset,
       behavior: "smooth",
     });
-  };
+  }
 
   // MINI PLAYER
 
@@ -660,6 +833,16 @@ class Browser extends DiffuseElement {
 
   next = () => {
     this.$controller.value?.$queue.value?.shift();
+  };
+
+  toggleShuffle = () => {
+    const rs = this.$repeatShuffle.value;
+    if (rs) rs.setShuffle(!rs.shuffle());
+  };
+
+  toggleRepeat = () => {
+    const rs = this.$repeatShuffle.value;
+    if (rs) rs.setRepeat(!rs.repeat());
   };
 
   previous = () => {
@@ -899,66 +1082,137 @@ class Browser extends DiffuseElement {
       if (this.#coverArtCache.has(key)) return;
       const track = resolveTrack();
       if (!track) {
-        this.#coverArtCache.set(key, null);
-        this.#scheduleArtRender();
+        // Negative-cache only when the library is actually loaded — an
+        // empty library means the tracks haven't arrived yet, in which
+        // case the re-render on their arrival retries this
+        if (this.$provider.value?.tracks().length) {
+          this.#coverArtCache.set(key, null);
+          this.#scheduleArtRender();
+        }
         return;
       }
       this.#fetchAlbumArt(key, track);
     });
   }
 
-  #setupRowArtObserver() {
-    const root = this.root().querySelector(".da-catalog__scroll");
-    if (!root) return;
+  // CATALOG VIRTUAL SCROLL
 
-    this.#rowArtObserver?.disconnect();
+  /**
+   * Flattens the letter-grouped catalog sections into a virtual item list
+   * (letter headers + one item per row) with cumulative height offsets.
+   * @param {{ letter: string; rows: any[] }[]} sections
+   */
+  #rebuildCatalogItems(sections) {
+    /** @type {({ type: "letter"; label: string } | { type: "row"; row: any })[]} */
+    const items = [];
 
-    this.#rowArtObserver = new IntersectionObserver(
-      (entries) => {
-        for (const entry of entries) {
-          if (!entry.isIntersecting) continue;
-          const el = /** @type {HTMLElement} */ (entry.target);
-          const key = el.dataset.artKey;
-          const trackId = el.dataset.artTrackId;
-          if (key) {
-            this.#ensureRowArt(key, () =>
-              trackId
-                ? this.$provider.value?.tracks().find((t) => t.id === trackId)
-                : this.#resolvePlaylistTrack(el.dataset.playlist ?? ""));
-            this.#rowArtObserver?.unobserve(entry.target);
-          }
-        }
-      },
-      { root, rootMargin: "100px" },
-    );
-
-    for (
-      const row of this.root().querySelectorAll("[data-art-key]")
-    ) {
-      this.#rowArtObserver.observe(row);
+    for (const { letter, rows } of sections) {
+      items.push({ type: "letter", label: letter });
+      for (const row of rows) items.push({ type: "row", row });
     }
+
+    this.#catalogItems = items;
+
+    const offsets = new Array(items.length + 1);
+    offsets[0] = 0;
+    let acc = 0;
+    for (let i = 0; i < items.length; i++) {
+      acc += items[i].type === "letter"
+        ? this.#catalogLetterHeight
+        : this.#catalogRowStride;
+      offsets[i + 1] = acc;
+    }
+    this.#catalogOffsets = offsets;
   }
 
   /**
-   * First track matching a playlist, used as its thumbnail.
-   * @param {string} name
-   * @returns {Track | undefined}
+   * Visible window of catalog items for the current scroll position.
+   * Pure math — no DOM reads (the scroll-panel offset is measured per
+   * render).
+   * @returns {{ startIndex: number; endIndex: number }}
    */
-  #resolvePlaylistTrack(name) {
-    const col = this.$output.value?.playlistItems.collection();
-    const tracks = this.$provider.value?.tracks() ?? [];
-    const items = col?.state === "loaded"
-      ? col.data.filter((i) => i.playlist === name)
-      : [];
+  #computeCatalogRange() {
+    const virtualTop = this.#catalogScrollTop - this.#catalogTopOffset;
+    const over = CATALOG_OVERSCAN * this.#catalogRowStride;
 
-    if (!items.length) return undefined;
-    return Playlist.filterByPlaylist(tracks, items)[0];
+    const items = this.#catalogItems;
+    const offsets = this.#catalogOffsets;
+    const top = virtualTop - over;
+    const bottom = virtualTop + this.#catalogViewportHeight + over;
+
+    let startIndex = 0;
+    while (startIndex < items.length && offsets[startIndex + 1] <= top) {
+      startIndex++;
+    }
+
+    let endIndex = startIndex;
+    while (endIndex < items.length && offsets[endIndex] < bottom) {
+      endIndex++;
+    }
+
+    return { startIndex, endIndex };
   }
 
-  #disconnectRowArtObserver() {
-    this.#rowArtObserver?.disconnect();
-    this.#rowArtObserver = undefined;
+  #renderIfCatalogWindowChanged() {
+    if (!this.#catalogItems.length) return;
+
+    const { startIndex, endIndex } = this.#computeCatalogRange();
+    if (
+      startIndex === this.#renderedCatalogStart &&
+      endIndex === this.#renderedCatalogEnd
+    ) return;
+
+    this.forceRender();
   }
+
+  /**
+   * Measures the catalog scroll panel: the virtual container's offset
+   * within it (search + heading above), its viewport height, and the
+   * REAL rendered row/letter heights (rem-based sizes scale with the
+   * root font size — the px estimates are only fallbacks).
+   */
+  #measureCatalog() {
+    const virtual = /** @type {HTMLElement | null} */ (
+      this.root().querySelector(".da-catalog-virtual")
+    );
+    const panel = /** @type {HTMLElement | null} */ (
+      this.root().querySelector(".da-catalog__scroll")
+    );
+    if (!virtual || !panel) return;
+
+    this.#catalogTopOffset = virtual.offsetTop - panel.offsetTop;
+    this.#catalogViewportHeight = panel.clientHeight;
+
+    let dirty = false;
+
+    const letter = /** @type {HTMLElement | null} */ (
+      this.root().querySelector(".da-playlist-section__letter")
+    );
+    if (letter?.offsetHeight) {
+      dirty = this.#catalogLetterHeight !== letter.offsetHeight;
+      this.#catalogLetterHeight = letter.offsetHeight;
+    }
+
+    const row = /** @type {HTMLElement | null} */ (
+      this.root().querySelector(".da-playlist-row")
+    );
+    if (row?.offsetHeight) {
+      dirty = dirty || this.#catalogRowStride !== row.offsetHeight;
+      this.#catalogRowStride = row.offsetHeight;
+    }
+
+    if (dirty) {
+      this.#rebuildCatalogItems(this.#catalogSections ?? []);
+      this.forceRender();
+    }
+
+    this.#renderIfCatalogWindowChanged();
+  }
+
+  /**
+   * The playlist thumbnails' representative tracks come from the
+   * `$playlistFirstTracks` computed — a single pass over the library.
+   */
 
   // SCROLL TRACKING
 
@@ -985,6 +1239,9 @@ class Browser extends DiffuseElement {
         } else if (panel.classList.contains("da-tracks-panel")) {
           this.#scrollTop = panel.scrollTop;
           this.#renderIfWindowChanged();
+        } else if (panel.classList.contains("da-catalog__scroll")) {
+          this.#catalogScrollTop = panel.scrollTop;
+          this.#renderIfCatalogWindowChanged();
         }
       },
       { capture: true, passive: true, signal: this.#scrollAbort.signal },
@@ -1022,9 +1279,16 @@ class Browser extends DiffuseElement {
         if (height <= 0) return;
 
         if (isGrid) {
-          if (this.#gridViewportHeight === height) return;
+          // React to width changes too: the column count depends on it,
+          // and a render is needed even when the visible row range
+          // doesn't move, so the grid gets re-measured
+          const width = panel.clientWidth;
+          const changed = height !== this.#gridViewportHeight ||
+            width !== this.#gridPanelWidth;
           this.#gridViewportHeight = height;
-          this.#renderIfGridWindowChanged();
+          this.#gridPanelWidth = width;
+
+          if (changed) this.forceRender();
         } else {
           if (this.#viewportHeight === height) return;
           this.#viewportHeight = height;
@@ -1079,7 +1343,10 @@ class Browser extends DiffuseElement {
 
     // Keep observers pointed at the current scroll panel — it can be
     // replaced by any re-render (e.g. when the library loads)
-    requestAnimationFrame(() => this.#syncViewportObserver());
+    requestAnimationFrame(() => {
+      this.#syncViewportObserver();
+      this.#measureCatalog();
+    });
 
     return html`
       <link rel="stylesheet" href="styles/base.css" />
@@ -1228,6 +1495,8 @@ class Browser extends DiffuseElement {
   #renderMiniPlayer(html) {
     const track = this.currentTrack();
     const isPlaying = this.isPlaying();
+    const isShuffle = this.$repeatShuffle.value?.shuffle() ?? false;
+    const isRepeat = this.$repeatShuffle.value?.repeat() ?? false;
     const audioState = this.$controller.value?.audio();
     const progress = audioState?.progress() ?? 0;
     const currentTime = audioState?.currentTime();
@@ -1273,14 +1542,28 @@ class Browser extends DiffuseElement {
         </div>
 
         <div class="da-mini__controls">
+          <button
+            @click="${this.toggleShuffle}"
+            data-enabled="${isShuffle ? `t` : `f`}"
+            title="Toggle shuffle"
+          >
+            <i class="ph-${isShuffle ? `fill` : `bold`} ph-shuffle"></i>
+          </button>
           <button @click="${this.previous}" title="Previous track">
-            <i class="ph-fill ph-rewind"></i>
+            <i class="ph-bold ph-skip-back"></i>
           </button>
           <button class="da-mini__play" @click="${this.playPause}" title="${isPlaying ? `Pause` : `Play`}">
-            <i class="ph-fill ${isPlaying ? `ph-pause` : `ph-play`}"></i>
+            <i class="ph-bold ${isPlaying ? `ph-pause` : `ph-play`}"></i>
           </button>
           <button @click="${this.next}" title="Next track">
-            <i class="ph-fill ph-fast-forward"></i>
+            <i class="ph-bold ph-skip-forward"></i>
+          </button>
+          <button
+            @click="${this.toggleRepeat}"
+            data-enabled="${isRepeat ? `t` : `f`}"
+            title="Toggle repeat"
+          >
+            <i class="ph-${isRepeat ? `fill` : `bold`} ph-repeat"></i>
           </button>
         </div>
       </div>
@@ -1298,16 +1581,16 @@ class Browser extends DiffuseElement {
   }
 
   /**
-   * Filtered, letter-grouped rows for the catalog column.
-   * @returns {{ label: string; placeholder: string; emptyLabel: string; sections: { letter: string; rows: { key: string; label: string; artKey: string; trackId: string | undefined }[] }[] } | null}
+   * Filtered, letter-grouped rows for the catalog column. Memoized so
+   * the per-render cost stays constant regardless of library size.
    */
-  #catalogData() {
+  $catalogData = computed(() => {
     const mode = this.#catalogMode();
     if (!mode) return null;
 
     const filter = this.#playlistFilter.value.trim().toLowerCase();
 
-    /** @type {{ key: string; label: string; artKey: string; trackId: string | undefined }[]} */
+    /** @type {{ key: string; label: string; artKey: string; track: Track | undefined }[]} */
     let rows;
     let label;
     let placeholder;
@@ -1318,7 +1601,7 @@ class Browser extends DiffuseElement {
         key: a.albumKey,
         label: a.albumName,
         artKey: a.albumKey,
-        trackId: a.track.id,
+        track: a.track,
       }));
       label = "Albums";
       placeholder = "Album name...";
@@ -1328,22 +1611,25 @@ class Browser extends DiffuseElement {
         key: a.artistKey,
         label: a.artistName,
         artKey: a.artistKey,
-        trackId: a.track.id,
+        track: a.track,
       }));
       label = "Artists";
       placeholder = "Artist name...";
       emptyLabel = "No artists";
     } else {
+      // Reads the tracks signal too, so the playlist list re-renders
+      // (and thumbnails retry) when the library arrives
+      const _firstTracks = this.$playlistFirstTracks();
       const col = this.$output.value?.playlistItems.collection();
       rows = col?.state === "loaded"
         ? [...Playlist.gather(col.data).values()]
           .map((p) => p.name)
-          .sort((a, b) => a.localeCompare(b))
+          .sort(collator.compare)
           .map((name) => ({
             key: name,
             label: name,
             artKey: `playlist:${name}`,
-            trackId: undefined,
+            track: undefined,
           }))
         : [];
       label = "Playlists";
@@ -1362,19 +1648,29 @@ class Browser extends DiffuseElement {
       emptyLabel,
       sections: groupByLetter(rows),
     };
-  }
+  });
 
   /**
    * @param {Function} html
    */
   #renderCatalog(html) {
-    const data = this.#catalogData();
+    const data = this.$catalogData();
     const collapsed = this.#catalogCollapsed.value;
 
     if (!data) return nothing;
 
-    const currentView = this.#view.value;
-    const currentPlaylist = this.$scope.value?.playlist();
+    // Rebuild the virtual item list when the sections change
+    if (data.sections !== this.#catalogSections) {
+      this.#catalogSections = data.sections;
+      this.#rebuildCatalogItems(data.sections);
+    }
+
+    const { startIndex, endIndex } = this.#computeCatalogRange();
+    this.#renderedCatalogStart = startIndex;
+    this.#renderedCatalogEnd = endIndex;
+
+    const items = this.#catalogItems;
+    const totalHeight = this.#catalogOffsets[items.length] ?? 0;
     const letters = data.sections.map((s) => s.letter);
 
     return html`
@@ -1394,34 +1690,26 @@ class Browser extends DiffuseElement {
           ${data.sections.length > 0
             ? html`
               <div class="da-catalog__label">${data.label}</div>
-              ${data.sections.map(({ letter, rows }) => html`
-                <div class="da-playlist-section" data-letter="${letter}">
-                  <div class="da-playlist-section__letter">${letter}</div>
-                  ${rows.map((row) => {
-                    const isActive = currentView.type === "album"
-                      ? currentView.albumKey === row.key
-                      : currentView.type === "artist"
-                      ? currentView.artistKey === row.key
-                      : currentView.type === "playlist-tracks" &&
-                          currentPlaylist === row.key;
-                    return html`
-                      <button
-                        class="da-playlist-row ${isActive
-                        ? `da-playlist-row--active`
-                        : ""}"
-                        data-art-key="${row.artKey}"
-                        data-art-track-id="${row.trackId ?? ""}"
-                        data-playlist="${row.key}"
-                        @click="${() => this.#activateCatalogRow(row)}"
-                        title="${row.label}"
-                      >
-                        ${this.#renderCatalogThumb(html, row)}
-                        <span>${row.label}</span>
-                      </button>
-                    `;
-                  })}
-                </div>
-              `)}
+              <div
+                class="da-catalog-virtual"
+                style="height: ${totalHeight}px;"
+              >
+                ${repeat(
+                  items.slice(startIndex, endIndex).map((item, i) => ({
+                    item,
+                    top: this.#catalogOffsets[startIndex + i],
+                  })),
+                  (entry) => entry.item.type === "letter"
+                    ? `letter-${entry.item.label}`
+                    : `row-${entry.item.row.key}`,
+                  (entry) => entry.item.type === "letter"
+                    ? html`<div
+                        class="da-playlist-section__letter"
+                        style="top: ${entry.top}px;"
+                      >${entry.item.label}</div>`
+                    : this.#renderCatalogRow(html, entry.item.row, entry.top),
+                )}
+              </div>
             `
             : html`
               <div class="da-catalog__empty">
@@ -1450,7 +1738,7 @@ class Browser extends DiffuseElement {
 
   /**
    * Opens a catalog row: album detail, artist detail or playlist tracks.
-   * @param {{ key: string; label: string; artKey: string; trackId: string | undefined }} row
+   * @param {{ key: string; label: string; artKey: string; track: Track | undefined }} row
    */
   #activateCatalogRow(row) {
     const mode = this.#catalogMode();
@@ -1472,25 +1760,45 @@ class Browser extends DiffuseElement {
 
   /**
    * @param {Function} html
-   * @param {{ key: string; label: string; artKey: string; trackId: string | undefined }} row
+   * @param {{ key: string; label: string; artKey: string; track: Track | undefined }} row
+   * @param {number} top
    */
-  #renderCatalogThumb(html, row) {
+  #renderCatalogRow(html, row, top) {
     const artUrl = this.#coverArtCache.get(row.artKey);
-    this.#ensureRowArt(row.artKey, () =>
-      row.trackId
-        ? this.$provider.value?.tracks().find((t) => t.id === row.trackId)
-        : this.#resolvePlaylistTrack(row.key));
+
+    if (row.track) {
+      this.#fetchAlbumArt(row.artKey, row.track);
+    } else {
+      this.#ensureRowArt(row.artKey, () =>
+        this.$playlistFirstTracks().get(row.key));
+    }
+
+    const currentView = this.#view.value;
+    const currentPlaylist = this.$scope.value?.playlist();
+    const isActive = currentView.type === "album"
+      ? currentView.albumKey === row.key
+      : currentView.type === "artist"
+      ? currentView.artistKey === row.key
+      : currentView.type === "playlist-tracks" && currentPlaylist === row.key;
 
     return html`
-      <div class="da-playlist-thumb">
-        ${artUrl
-          ? html`<img src="${artUrl}" alt="" loading="lazy" />`
-          : html`
-            <div class="da-playlist-thumb__placeholder">
-              <i class="ph-fill ph-music-notes"></i>
-            </div>
-          `}
-      </div>
+      <button
+        class="da-playlist-row ${isActive ? `da-playlist-row--active` : ""}"
+        style="top: ${top}px;"
+        @click="${() => this.#activateCatalogRow(row)}"
+        title="${row.label}"
+      >
+        <div class="da-playlist-thumb">
+          ${artUrl
+            ? html`<img src="${artUrl}" alt="" loading="lazy" />`
+            : html`
+              <div class="da-playlist-thumb__placeholder">
+                <i class="ph-fill ph-music-notes"></i>
+              </div>
+            `}
+        </div>
+        <span>${row.label}</span>
+      </button>
     `;
   }
 
