@@ -5,7 +5,7 @@ import { insertPreludes } from "~/common/facets/prelude.js";
 import foundation from "~/common/foundation.js";
 import * as Output from "~/common/output.js";
 
-foundation.setup({ title: "Setup | Diffuse" });
+foundation.setup({ title: "Setup Diffuse" });
 
 /** @param {string} path */
 const loaderHref = (path) => `./l/?path=${encodeURIComponent(path)}`;

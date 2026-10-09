@@ -14,7 +14,7 @@ import foundation from "~/common/foundation.js";
 
 import { setup, waitForOutputOption } from "~/facets/connect/common.js";
 
-foundation.setup({ title: "Connect Atmosphere | Diffuse" });
+foundation.setup({ title: "Connect Atmosphere" });
 
 /**
  * @import { ATProtoPasskeyOutputElement } from "@specs/components/output/raw/atproto-passkey/types.d.ts"

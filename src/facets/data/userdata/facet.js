@@ -9,7 +9,7 @@ import { data as facetsData } from "~/facets/index.js";
  * @typedef {{ id: string, label: string, element: import("@specs/components/output/types.d.ts").OutputElement }} OutputOption
  */
 
-foundation.setup({ title: "Your data | Diffuse" });
+foundation.setup({ title: "Your data" });
 
 ////////////////////////////////////////////
 // SETUP

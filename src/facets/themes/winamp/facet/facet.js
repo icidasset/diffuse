@@ -4,7 +4,7 @@ import { effect } from "~/common/signal.js";
 import WindowManager from "~/facets/themes/winamp/window-manager/element.js";
 
 // Set doc title
-foundation.setup({ title: "Winamp | Diffuse" });
+foundation.setup({ title: "Winamp" });
 
 /**
  * @import {OutputElement} from "@specs/components/output/types.d.ts"

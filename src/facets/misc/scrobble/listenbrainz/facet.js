@@ -5,7 +5,7 @@ import { effect } from "~/common/signal.js";
 // SETUP
 ////////////////////////////////////////////
 
-foundation.setup({ title: "ListenBrainz | Scrobble | Diffuse" });
+foundation.setup({ title: "ListenBrainz | Scrobble" });
 
 const [configurator, output] = await Promise.all([
   foundation.configurator.scrobbles(),

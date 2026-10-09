@@ -9,7 +9,7 @@ import foundation from "~/common/foundation.js";
 
 import { setup } from "~/facets/connect/common.js";
 
-foundation.setup({ title: "Connect Icecast | Diffuse" });
+foundation.setup({ title: "Connect Icecast" });
 
 ////////////////////////////////////////////
 // SETUP

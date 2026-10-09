@@ -1,6 +1,6 @@
 import foundation from "~/common/foundation.js";
 
-foundation.setup({ title: "Tidal | Diffuse" });
+foundation.setup({ title: "Tidal" });
 
 const [
   out,

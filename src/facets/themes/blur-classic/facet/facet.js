@@ -10,7 +10,7 @@ const overlayEl = document.querySelector("#bg-overlay");
 if (overlayEl) document.body.appendChild(overlayEl);
 
 // Set doc title
-foundation.setup({ title: "Blur Classic | Diffuse" });
+foundation.setup({ title: "Blur Classic" });
 
 ////////////////////////////////////////////
 // 🚀

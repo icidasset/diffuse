@@ -2,7 +2,7 @@ import foundation from "~/common/foundation.js";
 import { effect } from "~/common/signal.js";
 
 // Set doc title
-foundation.setup({ title: "Last.fm | Scrobble | Diffuse" });
+foundation.setup({ title: "Last.fm | Scrobble" });
 
 ////////////////////////////////////////////
 // SETUP

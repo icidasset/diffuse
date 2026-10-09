@@ -1,7 +1,7 @@
 import * as TID from "@atcute/tid";
 import foundation from "~/common/foundation.js";
 
-foundation.setup({ title: "V3.x Import | Diffuse" });
+foundation.setup({ title: "Diffuse v3.x Import" });
 
 const main = /** @type {HTMLElement} */ (document.querySelector("main"));
 

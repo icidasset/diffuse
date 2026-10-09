@@ -38,7 +38,7 @@ const PENDING_DELETE_KEY = "file-manager:pending-delete";
  * "Artist - Title" label survives upload (remote tracks) and reloads. */
 const CID_NAMES_KEY = "file-manager:cid-names";
 
-foundation.setup({ title: "File Manager | Diffuse" });
+foundation.setup({ title: "File Manager" });
 
 ////////////////////////////////////////////
 // SETUP

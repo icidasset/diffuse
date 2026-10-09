@@ -13,7 +13,7 @@ import foundation from "~/common/foundation.js";
 
 import { setup, waitForOutputOption } from "~/facets/connect/common.js";
 
-foundation.setup({ title: "Connect Dropbox | Diffuse" });
+foundation.setup({ title: "Connect Dropbox" });
 
 /**
  * @import { DropboxOutputElement } from "@specs/components/output/bytes/dropbox/types.d.ts"

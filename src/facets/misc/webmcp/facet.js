@@ -218,7 +218,7 @@ async function registerFacetTools() {
   });
 }
 
-foundation.setup({ title: "WebMCP | Diffuse" });
+foundation.setup({ title: "WebMCP" });
 
 const status = document.querySelector("#webmcp-status");
 

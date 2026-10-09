@@ -8,7 +8,7 @@ import { effect } from "~/common/signal.js";
  * @import { Track } from "~/definitions/types.d.ts"
  */
 
-foundation.setup({ title: "Queue | Diffuse" });
+foundation.setup({ title: "Queue" });
 
 ////////////////////////////////////////////
 // SETUP

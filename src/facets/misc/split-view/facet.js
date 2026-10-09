@@ -14,7 +14,7 @@ import * as Output from "~/common/output.js";
 import { htmlFacetTile } from "~/common/tiles.js";
 
 // Set doc title
-foundation.setup({ title: "Split View | Diffuse" });
+foundation.setup({ title: "Split View" });
 
 /**
  * @import { default as WaSplitPanel } from "@awesome.me/webawesome/dist/components/split-panel/split-panel.js"
@@ -400,7 +400,7 @@ ${generateNodeHTML(state, "  ")}
   import "~/common/webawesome/detect-dark.js";
   import foundation from "~/common/foundation.js";
 
-  foundation.setup({ title: ${JSON.stringify(name + " | Diffuse")} });
+  foundation.setup({ title: ${JSON.stringify(name)} });
 
   const layout = document.querySelector("#layout");
 

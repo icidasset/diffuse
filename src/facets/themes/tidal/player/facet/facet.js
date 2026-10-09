@@ -1,7 +1,7 @@
 import foundation from "~/common/foundation.js";
 import PlayerElement from "~/facets/themes/tidal/player/element.js";
 
-foundation.setup({ title: "Player | Tidal | Diffuse" });
+foundation.setup({ title: "Player | Tidal" });
 
 // Setup the prerequisite elements
 await foundation.orchestrator.queueAudio();

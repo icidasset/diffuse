@@ -3,7 +3,7 @@ import foundation from "~/common/foundation.js";
 import { effect } from "~/common/signal.js";
 
 // Set doc title
-foundation.setup({ title: "Export & Import | Diffuse" });
+foundation.setup({ title: "Export & Import" });
 
 // Setup
 const main = /** @type {HTMLElement} */ (document.querySelector("main"));

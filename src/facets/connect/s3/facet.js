@@ -11,7 +11,7 @@ import foundation from "~/common/foundation.js";
 
 import { setup, waitForOutputOption } from "~/facets/connect/common.js";
 
-foundation.setup({ title: "Connect S3 | Diffuse" });
+foundation.setup({ title: "Connect S3" });
 
 /**
  * @import { Bucket } from "@specs/components/input/s3/types.d.ts"

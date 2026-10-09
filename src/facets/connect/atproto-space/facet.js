@@ -6,7 +6,7 @@ import foundation from "~/common/foundation.js";
 
 import { setup, waitForOutputOption } from "~/facets/connect/common.js";
 
-foundation.setup({ title: "Connect Atmosphere Spaces | Diffuse" });
+foundation.setup({ title: "Connect Atmosphere Spaces" });
 
 /**
  * @import { ATProtoSpaceOutputElement } from "@specs/components/output/raw/atproto-space/types.d.ts"

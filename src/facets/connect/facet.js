@@ -3,7 +3,7 @@ import { html, render as litRender } from "lit-html";
 import { data as facetsData } from "~/facets/index.js";
 import foundation from "~/common/foundation.js";
 
-foundation.setup({ title: "Connect | Diffuse" });
+foundation.setup({ title: "Connect" });
 
 /** @param {string} path */
 const loaderHref = (path) => `l/?path=${encodeURIComponent(path)}`;

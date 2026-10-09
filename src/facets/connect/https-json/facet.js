@@ -13,7 +13,7 @@ import { setup } from "~/facets/connect/common.js";
  * @import { Server } from "~/components/input/https-json/common.js"
  */
 
-foundation.setup({ title: "Connect HTTPS / JSON Listing | Diffuse" });
+foundation.setup({ title: "Connect HTTPS / JSON Listing" });
 
 ////////////////////////////////////////////
 // SETUP

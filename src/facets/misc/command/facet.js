@@ -3,7 +3,7 @@ import { effect } from "~/common/signal.js";
 import { CommandCore } from "~/vendor/kmenu-core/index.js";
 import * as Playlist from "~/common/playlist.js";
 
-foundation.setup({ title: "Command Menu | Diffuse" });
+foundation.setup({ title: "Command Menu" });
 
 // ---------------------------------------------------------------------------
 // Foundation setup

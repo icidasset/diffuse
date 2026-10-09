@@ -14,7 +14,7 @@ import { setup } from "~/facets/connect/common.js";
  * @import {Track} from "~/definitions/types.d.ts"
  */
 
-foundation.setup({ title: "Connect Local | Diffuse" });
+foundation.setup({ title: "Connect Local" });
 
 ////////////////////////////////////////////
 // SETUP

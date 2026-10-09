@@ -9,7 +9,7 @@ import * as Playlist from "~/common/playlist.js";
  */
 
 // Set doc title
-foundation.setup({ title: "iPod | Diffuse" });
+foundation.setup({ title: "My iPod" });
 
 ////////////////////////////////////////////
 // SETUP

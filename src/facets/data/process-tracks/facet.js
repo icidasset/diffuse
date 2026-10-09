@@ -3,7 +3,7 @@ import { html, render as litRender } from "lit-html";
 import { effect } from "~/common/signal.js";
 import foundation from "~/common/foundation.js";
 
-foundation.setup({ title: "Process Tracks | Diffuse" });
+foundation.setup({ title: "Process Tracks" });
 
 const main = /** @type {HTMLElement} */ (document.querySelector("main"));
 

@@ -2,7 +2,7 @@ import foundation from "~/common/foundation.js";
 import BrowserElement from "~/facets/themes/winamp/browser/element.js";
 
 // Set doc title
-foundation.setup({ title: "Browser | Winamp | Diffuse" });
+foundation.setup({ title: "Browser | Winamp" });
 
 const [out, que, scp, trc, inp, fav] = await Promise.all([
   foundation.orchestrator.output(),

@@ -56,7 +56,7 @@ Facets are HTML fragments (no `<!doctype>`, `<html>`, or `<head>`). The loader i
   import foundation from "~/common/foundation.js";
   import { effect } from "~/common/signal.js";
 
-  foundation.setup({ title: "My Facet | Diffuse" });
+  foundation.setup({ title: "My Facet" });
 
   // wire up elements …
 

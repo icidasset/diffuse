@@ -23,7 +23,7 @@ const SCHEME_NAMES = {
   [SCHEME_S3]: "S3",
 };
 
-foundation.setup({ title: "Sources | Diffuse" });
+foundation.setup({ title: "Sources" });
 
 ////////////////////////////////////////////
 // SETUP

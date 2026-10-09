@@ -6,7 +6,7 @@ import { effect } from "~/common/signal.js";
  */
 
 // Set doc title
-foundation.setup({ title: "Blur Pocket | Diffuse" });
+foundation.setup({ title: "Blur Pocket" });
 
 ////////////////////////////////////////////
 // 🚀 Foundation

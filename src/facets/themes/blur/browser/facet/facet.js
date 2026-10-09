@@ -2,7 +2,7 @@ import foundation from "~/common/foundation.js";
 import BrowserElement from "~/facets/themes/blur/browser/element.js";
 
 // Set doc title
-foundation.setup({ title: "Browser | Blur | Diffuse" });
+foundation.setup({ title: "Browser | Blur" });
 
 const [out, que, scp, art, cov, fav, trc] = await Promise.all([
   foundation.orchestrator.output(),

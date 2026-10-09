@@ -3,7 +3,7 @@ import { html, nothing, render as litRender } from "lit-html";
 import foundation, { GROUP } from "~/common/foundation.js";
 import { effect, signal } from "~/common/signal.js";
 
-foundation.setup({ title: "Audio output | Diffuse" });
+foundation.setup({ title: "Audio output" });
 
 ////////////////////////////////////////////
 // CONSTANTS

@@ -13,7 +13,7 @@ import { setup } from "~/facets/connect/common.js";
  * @import { Server } from "@specs/components/input/webdav/types.d.ts"
  */
 
-foundation.setup({ title: "Connect WebDAV | Diffuse" });
+foundation.setup({ title: "Connect WebDAV" });
 
 ////////////////////////////////////////////
 // SETUP

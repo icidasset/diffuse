@@ -14,7 +14,7 @@ import { NAME as ATPROTO_PASSKEY_NAME } from "~/components/output/raw/atproto-pa
 ////////////////////////////////////////////
 
 // Set doc title
-foundation.setup({ title: "Rocksky | Scrobble | Diffuse" });
+foundation.setup({ title: "Rocksky | Scrobble" });
 
 const [configurator, output] = await Promise.all([
   foundation.configurator.scrobbles(),

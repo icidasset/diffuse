@@ -10,7 +10,7 @@ import * as Playlist from "~/common/playlist.js";
  */
 
 // Set doc title
-foundation.setup({ title: "Catalogue One | Diffuse" });
+foundation.setup({ title: "Catalogue One" });
 
 ////////////////////////////////////////////
 // SETUP — engines & orchestrators

@@ -1,7 +1,7 @@
 import foundation from "~/common/foundation.js";
 import BrowserElement from "~/facets/themes/tidal/browser/element.js";
 
-foundation.setup({ title: "Tidal | Diffuse" });
+foundation.setup({ title: "Tidal" });
 
 const [out, que, scp, art, cov, fav, trc] = await Promise.all([
   foundation.orchestrator.output(),

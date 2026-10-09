@@ -10,7 +10,7 @@ import { effect } from "~/common/signal.js";
  * @import { PlaylistItem, Track } from "~/definitions/types.d.ts"
  */
 
-foundation.setup({ title: "Playlists | Diffuse" });
+foundation.setup({ title: "Playlists" });
 
 ////////////////////////////////////////////
 // SETUP
