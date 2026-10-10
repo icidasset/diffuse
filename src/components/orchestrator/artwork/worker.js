@@ -10,6 +10,13 @@ import { ostiary, rpc, workerProxy } from "~/common/worker.js";
  * @import {Artwork} from "@specs/components/orchestrator/artwork/types.d.ts"
  */
 
+/**
+ * Cached entry shape. `validated` marks entries whose bytes have been
+ * confirmed to decode as an image — entries written before validation
+ * existed may be junk (e.g. cached error pages).
+ * @typedef {Artwork & { validated?: boolean }} CachedArtwork
+ */
+
 // multicodec raw bytes
 const RAW = 0x55;
 
@@ -64,13 +71,30 @@ async function processRequest(track, ports) {
   );
 
   if (cachedCids?.length) {
-    /** @type {Artwork[]} */
+    /** @type {CachedArtwork[]} */
     const art = await Promise.all(
       cachedCids.map((cid) => IDB.get(`${IDB_ARTWORK_PREFIX}/image/${cid}`)),
     );
 
     const found = art.filter(Boolean);
-    if (found.length) return found[0].bytes;
+    if (found.length) {
+      const entry = found[0];
+      if (entry.validated || await isImage(entry.bytes)) {
+        // Flag older entries as validated so the decode check runs at
+        // most once per image
+        if (!entry.validated) {
+          await IDB.set(`${IDB_ARTWORK_PREFIX}/image/${cachedCids[0]}`, {
+            ...entry,
+            validated: true,
+          });
+        }
+        return entry.bytes;
+      }
+
+      // Undecodable junk (e.g. error pages cached by older versions) —
+      // drop the mapping so the providers get another shot
+      await IDB.set(`${IDB_ARTWORK_PREFIX}/track/${track.id}`, []);
+    }
   }
 
   // 🚀
@@ -94,10 +118,14 @@ async function processRequest(track, ports) {
     return null;
   }
 
+  // Don't cache bytes that aren't actually an image — they'd be served
+  // back forever and render as a broken thumbnail in the UI
+  if (!await isImage(bytes)) return null;
+
   const mime = detectMime(bytes);
 
-  /** @type {Artwork} */
-  const art = { bytes, mime };
+  /** @type {CachedArtwork} */
+  const art = { bytes, mime, validated: true };
 
   // Save artwork to IDB — store by content CID, map track to that CID
   const cid = await createCid(RAW, bytes);
@@ -107,6 +135,26 @@ async function processRequest(track, ports) {
   await IDB.set(`${IDB_ARTWORK_PREFIX}/track/${track.id}`, [cid]);
 
   return bytes;
+}
+
+/**
+ * Checks the bytes actually decode as an image, so junk (HTML error
+ * pages, corrupt embedded art) never reaches the cache or the UI.
+ * @param {Uint8Array} bytes
+ * @returns {Promise<boolean>}
+ */
+async function isImage(bytes) {
+  try {
+    const bitmap = await createImageBitmap(
+      new Blob([/** @type {BlobPart} */ (bytes)], {
+        type: "application/octet-stream",
+      }),
+    );
+    bitmap.close();
+    return true;
+  } catch {
+    return false;
+  }
 }
 
 /**

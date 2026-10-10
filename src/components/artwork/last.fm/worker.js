@@ -58,11 +58,21 @@ ostiary((context) => {
  */
 async function findCover(remainingMatches, signal) {
   const album = remainingMatches[0];
-  const url = album ? album.image[album.image.length - 1]["#text"] : null;
+  const url = album
+    ? album.image?.[album.image.length - 1]?.["#text"]
+    : null;
 
   return url && url !== ""
     ? await fetch(url, { signal })
-      .then((r) => r.blob())
+      .then((r) => {
+        // Error pages and rate-limit responses must not be treated as
+        // artwork — undecodable bytes would get cached and rendered as
+        // a broken image forever.
+        if (!r.ok || !r.headers.get("content-type")?.startsWith("image/")) {
+          throw new Error("Not an image response");
+        }
+        return r.blob();
+      })
       .then(async (b) => new Uint8Array(await b.arrayBuffer()))
       .catch(() => findCover(remainingMatches.slice(1), signal))
     : album
