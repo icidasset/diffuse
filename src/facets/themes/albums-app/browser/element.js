@@ -624,6 +624,20 @@ class Browser extends DiffuseElement {
       }
     });
 
+    // Keep the scope engine's group-by in lockstep with the view: the
+    // Years / Added on sections own it, and every other view unsets it.
+    // The scope value is persisted (and replicated across scopes), and
+    // scoped-tracks re-sorts `tracks()` by the group key while it's set
+    // — so a stale value would otherwise keep other views grouped.
+    this.effect(() => {
+      const view = this.#view.value;
+      untracked(() => {
+        this.$scope.value?.setGroupBy(
+          view.type === "group-tracks" ? view.groupBy : undefined,
+        );
+      });
+    });
+
     // Re-attach the representative track to a restored detail view once
     // the library is available; fall back to the overview when the
     // album / artist no longer exists
