@@ -39,19 +39,21 @@ const CATALOG_ROW_STRIDE = 44; // 2.75rem
 const CATALOG_LETTER_HEIGHT = 44; // 2.75rem
 const CATALOG_OVERSCAN = 10;
 
-const VIEW_STORAGE_KEY = "da.theme.albums-app.view";
+// UI state is keyed per facet group (deck): da.theme.albums-app/<group>/…
+const STORAGE_PREFIX = "da.theme.albums-app";
 
 const collator = new Intl.Collator();
 
 /**
- * Restores the last active view from localStorage. The representative
- * `track` of detail views is not serialized — it's re-attached from the
- * library once tracks are available.
+ * Restores the last active view for a deck group from localStorage. The
+ * representative `track` of detail views is not serialized — it's
+ * re-attached from the library once tracks are available.
+ * @param {string} group
  * @returns {View | null}
  */
-function restoreView() {
+function restoreView(group) {
   try {
-    const raw = localStorage.getItem(VIEW_STORAGE_KEY);
+    const raw = localStorage.getItem(`${STORAGE_PREFIX}/${group}/view`);
     if (!raw) return null;
 
     const parsed = JSON.parse(raw);
@@ -78,6 +80,19 @@ function restoreView() {
     return /** @type {View} */ (parsed);
   } catch {
     return null;
+  }
+}
+
+/**
+ * Restores the catalog filter for a deck group across reloads.
+ * @param {string} group
+ * @returns {string}
+ */
+function restoreFilter(group) {
+  try {
+    return localStorage.getItem(`${STORAGE_PREFIX}/${group}/filter`) ?? "";
+  } catch {
+    return "";
   }
 }
 
@@ -199,6 +214,27 @@ class Browser extends DiffuseElement {
     this.attachShadow({ mode: "open" });
   }
 
+  /**
+   * The facet sets the deck's `group` attribute right after the element
+   * upgrades, so the per-group UI state (last view, catalog filter) is
+   * loaded from localStorage at that point, not at construction.
+   * @override
+   * @param {string} name
+   * @param {string} oldValue
+   * @param {string} newValue
+   */
+  attributeChangedCallback(name, oldValue, newValue) {
+    if (name === "group" && newValue && oldValue !== newValue) {
+      batch(() => {
+        const view = restoreView(newValue);
+        if (view) this.#view.value = view;
+        this.#playlistFilter.value = restoreFilter(newValue);
+      });
+    }
+
+    super.attributeChangedCallback(name, oldValue, newValue);
+  }
+
   // SIGNALS - dependencies
 
   $artwork = signal(
@@ -239,7 +275,9 @@ class Browser extends DiffuseElement {
 
   // SIGNALS - state
 
-  #view = signal(restoreView() ?? /** @type {View} */ ({ type: "albums" }));
+  // Restored per deck group once the `group` attribute lands (see
+  // attributeChangedCallback) — it isn't known at construction time
+  #view = signal(/** @type {View} */ ({ type: "albums" }));
 
   /** Tracks picked via their cover in list views (insertion-ordered). */
   #selectedTracks = signal(/** @type {Set<string>} */ (new Set()));
@@ -247,6 +285,9 @@ class Browser extends DiffuseElement {
   #catalogCollapsed = signal(false);
 
   #playlistFilter = signal("");
+
+  /** Live value of the rail search field (the × button tracks typing). */
+  #railSearchValue = signal("");
 
   #history = signal(/** @type {View[]} */ ([]));
   #future = signal(/** @type {View[]} */ ([]));
@@ -622,12 +663,30 @@ class Browser extends DiffuseElement {
       });
     });
 
-    // Remember the current screen across reloads
+    // Remember the current screen across reloads, keyed per deck group
     this.effect(() => {
       const view = this.#view.value;
+      // Don't persist anything until the deck identity is known
+      if (!this.hasAttribute("group")) return;
       try {
         const { track, ...rest } = /** @type {any} */ (view);
-        localStorage.setItem(VIEW_STORAGE_KEY, JSON.stringify(rest));
+        localStorage.setItem(
+          `${STORAGE_PREFIX}/${this.group}/view`,
+          JSON.stringify(rest),
+        );
+      } catch {
+        // storage unavailable — non-fatal
+      }
+    });
+
+    // Remember the catalog filter across reloads, keyed per deck group
+    this.effect(() => {
+      const filter = this.#playlistFilter.value;
+      if (!this.hasAttribute("group")) return;
+      try {
+        const key = `${STORAGE_PREFIX}/${this.group}/filter`;
+        if (filter) localStorage.setItem(key, filter);
+        else localStorage.removeItem(key);
       } catch {
         // storage unavailable — non-fatal
       }
@@ -792,6 +851,13 @@ class Browser extends DiffuseElement {
     this.#future.value = fut.slice(1);
     this.#view.value = next;
     this.#renderedTracks = undefined;
+  };
+
+  /** Tracks the rail search field's live value so the × can show/hide. */
+  updateRailSearchValue = () => {
+    /** @type {HTMLInputElement | null} */
+    const input = this.root().querySelector("#da-search-input");
+    this.#railSearchValue.value = input?.value ?? "";
   };
 
   /**
@@ -976,7 +1042,13 @@ class Browser extends DiffuseElement {
     /** @type {HTMLInputElement | null} */
     const input = this.root().querySelector("#da-search-input");
     if (input) input.value = "";
+    this.#railSearchValue.value = "";
     this.$scope.value?.setSearchTerm(undefined);
+  };
+
+  /** Clears the catalog column filter (the input re-renders from the signal). */
+  clearCatalogFilter = () => {
+    this.#playlistFilter.value = "";
   };
 
   setPlaylistFilter = () => {
@@ -1679,8 +1751,22 @@ class Browser extends DiffuseElement {
               type="search"
               placeholder="Album, artist, or song..."
               .value="${this.$scope.value?.searchTerm() ?? ""}"
+              @input="${this.updateRailSearchValue}"
               @change="${this.setSearchTerm}"
             />
+            ${(this.#railSearchValue.value ||
+              this.$scope.value?.searchTerm() ||
+              "").length
+              ? html`
+                <button
+                  class="da-search-clear"
+                  @click="${this.clearSearch}"
+                  title="Clear search"
+                >
+                  <i class="ph-fill ph-x-circle"></i>
+                </button>
+              `
+              : nothing}
           </div>
 
           <div class="da-rail__label">
@@ -1937,6 +2023,17 @@ class Browser extends DiffuseElement {
               .value="${this.#playlistFilter.value}"
               @input="${this.setPlaylistFilter}"
             />
+            ${this.#playlistFilter.value
+              ? html`
+                <button
+                  class="da-search-clear"
+                  @click="${this.clearCatalogFilter}"
+                  title="Clear filter"
+                >
+                  <i class="ph-fill ph-x-circle"></i>
+                </button>
+              `
+              : nothing}
           </div>
 
           ${data.sections.length > 0
