@@ -251,6 +251,15 @@ class Browser extends DiffuseElement {
   #history = signal(/** @type {View[]} */ ([]));
   #future = signal(/** @type {View[]} */ ([]));
 
+  // Mini player audio state — loading is debounced so quick track
+  // switches don't flash the spinner
+  /** @type {ReturnType<typeof setTimeout> | undefined} */
+  #isLoadingTimeout = undefined;
+
+  #isLoading = signal(false);
+
+  #audioError = signal(false);
+
   // Cover art cache (albums, artists and playlist thumbnails share it)
   /** @type {Map<string, string | null | undefined>} */
   #coverArtCache = new Map();
@@ -638,6 +647,30 @@ class Browser extends DiffuseElement {
       });
     });
 
+    // Mini player loading / error state. The loading spinner only
+    // surfaces after a short delay so fast track switches don't flash
+    // it; errors surface immediately (pattern from blur / winamp).
+    this.effect(() => {
+      const now = !!this.$controller.value?.$queue.value?.now();
+      const loadingState = this.$controller.value?.audio()?.loadingState();
+      const isError = now && typeof loadingState === "object" &&
+        loadingState !== null && "error" in loadingState;
+      const isLoading = now && !isError && loadingState !== "loaded";
+
+      if (this.#isLoadingTimeout) clearTimeout(this.#isLoadingTimeout);
+
+      if (isLoading) {
+        this.#isLoadingTimeout = setTimeout(
+          () => this.#isLoading.value = true,
+          2000,
+        );
+      } else {
+        this.#isLoading.value = false;
+      }
+
+      this.#audioError.value = isError;
+    });
+
     // Re-attach the representative track to a restored detail view once
     // the library is available; fall back to the overview when the
     // album / artist no longer exists
@@ -681,6 +714,10 @@ class Browser extends DiffuseElement {
     this.#resizeObserver?.disconnect();
     this.#resizeObserver = undefined;
     this.#observedPanel = null;
+    if (this.#isLoadingTimeout) {
+      clearTimeout(this.#isLoadingTimeout);
+      this.#isLoadingTimeout = undefined;
+    }
   }
 
   // HELPERS
@@ -978,6 +1015,19 @@ class Browser extends DiffuseElement {
       this.$controller.value?.$audio.value?.pause({ audioId });
     } else if (audioId) {
       this.$controller.value?.$audio.value?.play({ audioId });
+    }
+  };
+
+  /** Retry the current track after a load error, resuming at its position. */
+  reload = () => {
+    const audioId = this.$controller.value?.$queue.value?.now()?.id;
+    if (audioId) {
+      const progress = this.$controller.value?.audio()?.progress();
+      this.$controller.value?.$audio.value?.reload({
+        audioId,
+        play: true,
+        progress,
+      });
     }
   };
 
@@ -1680,6 +1730,9 @@ class Browser extends DiffuseElement {
       this.#fetchAlbumArt(albumKey, track);
     }
 
+    const isLoading = this.#isLoading.value;
+    const isError = this.#audioError.value;
+
     return html`
       <div class="da-mini">
         <div class="da-mini__head">
@@ -1691,6 +1744,13 @@ class Browser extends DiffuseElement {
                   <i class="ph-fill ph-music-notes"></i>
                 </div>
               `}
+            ${isLoading
+              ? html`
+                <div class="da-mini__art-loading" title="Loading ...">
+                  <i class="ph-bold ph-spinner-gap"></i>
+                </div>
+              `
+              : nothing}
           </div>
           <div class="da-mini__meta">
             <span class="da-mini__title">${track?.tags?.title ?? "Not playing"}</span>
@@ -1720,8 +1780,13 @@ class Browser extends DiffuseElement {
           <button @click="${this.previous}" title="Previous track">
             <i class="ph-bold ph-skip-back"></i>
           </button>
-          <button class="da-mini__play" @click="${this.playPause}" title="${isPlaying ? `Pause` : `Play`}">
-            <i class="ph-bold ${isPlaying ? `ph-pause` : `ph-play`}"></i>
+          <button
+            class="da-mini__play ${isError ? `da-mini__play--error` : ""}"
+            @click="${isError ? this.reload : this.playPause}"
+            title="${isError ? `Reload` : isPlaying ? `Pause` : `Play`}">
+            <i class="${isError
+              ? `ph-fill ph-warning-circle`
+              : `ph-bold ${isPlaying ? `ph-pause` : `ph-play`}`}"></i>
           </button>
           <button @click="${this.next}" title="Next track">
             <i class="ph-bold ph-skip-forward"></i>

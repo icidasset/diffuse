@@ -98,6 +98,7 @@ a.da-titlebar__btn {
   font-size: 0.75rem;
   font-weight: 600;
   margin-right: 0.25rem;
+  white-space: nowrap;
 }
 
 /* Shell */
@@ -248,7 +249,32 @@ a.da-titlebar__btn {
   flex-shrink: 0;
   height: 2.25rem;
   overflow: hidden;
+  position: relative;
   width: 2.25rem;
+}
+
+.da-mini__art-loading {
+  align-items: center;
+  background: rgb(0 0 0 / 0.45);
+  bottom: 0;
+  color: var(--da-text);
+  display: flex;
+  justify-content: center;
+  left: 0;
+  position: absolute;
+  right: 0;
+  top: 0;
+}
+
+.da-mini__art-loading i {
+  animation: da-mini-spin 1.6s linear infinite;
+  font-size: 1.25rem;
+}
+
+@keyframes da-mini-spin {
+  to {
+    transform: rotate(360deg);
+  }
 }
 
 .da-mini__art img {
@@ -365,6 +391,10 @@ a.da-titlebar__btn {
   height: 2.25rem;
   justify-content: center;
   width: 2.25rem;
+}
+
+.da-mini__play--error {
+  background: var(--da-accent);
 }
 
 .da-mini__play i {
