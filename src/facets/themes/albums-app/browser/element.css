@@ -483,7 +483,7 @@ a.da-titlebar__btn {
 
 .da-playlist-row span {
   overflow: hidden;
-  text-box: trim-both cap alphabetic;
+  text-box: trim-both text text;
   text-overflow: ellipsis;
   white-space: nowrap;
 }
@@ -950,7 +950,7 @@ a.da-titlebar__btn {
 .da-track__artist span,
 .da-track__album span,
 .da-track__time {
-  text-box: trim-both cap alphabetic;
+  text-box: trim-both text text;
 }
 
 .da-track__time {
