@@ -318,6 +318,7 @@ class Browser extends DiffuseElement {
 
   // Catalog column virtual scroll state
   #catalogScrollTop = 0;
+  #lastCatalogMode = /** @type {"albums" | "artists" | "years" | "added" | "playlists" | null | undefined} */ (undefined);
   #catalogViewportHeight = window.innerHeight;
   #catalogTopOffset = 0;
   #catalogRowStride = CATALOG_ROW_STRIDE;
@@ -441,13 +442,17 @@ class Browser extends DiffuseElement {
     return this.#sortGroups(groups);
   });
 
+  // Catalog rows read the RAW groups — the dedupe helpers order entries
+  // alphabetically, and the column must not re-order when the scope's
+  // sort direction / sort-by changes (that's the cover grid's business).
+
   /** Flattened album rows for the catalog column. */
   $albumRows = computed(() =>
-    this.$sortedCoverGroups().flatMap((g) => g.groups));
+    (this.$coverGroups.value?.coverGroups() ?? []).flatMap((g) => g.groups));
 
   /** Flattened artist rows for the catalog column. */
   $artistRows = computed(() =>
-    this.$sortedArtistGroups().flatMap((g) => g.groups));
+    (this.$coverGroups.value?.artistGroups() ?? []).flatMap((g) => g.groups));
 
   /** Tracks grouped by release year, newest first. */
   $yearGroups = computed(() => {
@@ -655,6 +660,20 @@ class Browser extends DiffuseElement {
         this.$repeatShuffle.value = repeatShuffle;
       });
     }
+
+    // Reset the catalog column to the top when it loads different
+    // content (rail section switch). Same-mode navigation (album →
+    // album) must not jump the list, so key off the mode, not the view.
+    this.effect(() => {
+      const mode = this.#catalogMode();
+      untracked(() => {
+        if (mode === this.#lastCatalogMode) return;
+        this.#lastCatalogMode = mode;
+        this.#catalogScrollTop = 0;
+        const panel = this.root().querySelector(".da-catalog__scroll");
+        panel?.scrollTo(0, 0);
+      });
+    });
 
     // Reset scroll when the track list changes
     this.effect(() => {
@@ -1010,6 +1029,12 @@ class Browser extends DiffuseElement {
     const selected = new Set(this.#selectedTracks.value);
     selected.has(track.id) ? selected.delete(track.id) : selected.add(track.id);
     this.#selectedTracks.value = selected;
+  };
+
+  toggleSortDirection = () => {
+    const scope = this.$scope.value;
+    if (!scope) return;
+    scope.setSortDirection(scope.sortDirection() === "desc" ? "asc" : "desc");
   };
 
   /**
@@ -2348,6 +2373,7 @@ class Browser extends DiffuseElement {
     const view = this.#view.value;
     const playlist = this.$scope.value?.playlist();
     const searchTerm = this.$scope.value?.searchTerm();
+    const sortDirection = this.$scope.value?.sortDirection();
 
     /** @type {string} */
     let title;
@@ -2419,6 +2445,17 @@ class Browser extends DiffuseElement {
             <span>Add to Queue${this.#selectedTracks.value.size
               ? ` (${this.#selectedTracks.value.size})`
               : ``}</span>
+          </button>
+          <button
+            class="da-pill da-pill--icon"
+            @click="${this.toggleSortDirection}"
+            title="Sort direction: ${sortDirection === "desc"
+              ? `Descending`
+              : `Ascending`}"
+          >
+            <i class="ph-bold ${sortDirection === "desc"
+              ? `ph-sort-descending`
+              : `ph-sort-ascending`}"></i>
           </button>
 
           ${searchTerm

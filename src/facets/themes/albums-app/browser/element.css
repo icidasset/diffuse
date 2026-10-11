@@ -774,6 +774,10 @@ a.da-titlebar__btn {
   background: var(--da-surface-strong);
 }
 
+.da-pill--icon {
+  padding: 0.5rem;
+}
+
 .da-pill--active {
   background: var(--da-surface-strong);
   color: var(--da-accent);
