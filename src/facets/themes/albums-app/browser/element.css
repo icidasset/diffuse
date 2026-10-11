@@ -323,6 +323,7 @@ a.da-titlebar__btn {
 }
 
 .da-mini__title {
+  font-size: 0.75rem;
   font-weight: 700;
   overflow: hidden;
   text-overflow: ellipsis;
@@ -338,7 +339,7 @@ a.da-titlebar__btn {
 }
 
 .da-mini__album {
-  font-weight: 500;
+  font-weight: 700;
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
@@ -713,7 +714,7 @@ a.da-titlebar__btn {
 }
 
 .da-header__title {
-  font-size: 1.5rem;
+  font-size: 1.375rem;
   font-weight: 700;
   letter-spacing: -0.02em;
   line-height: 1.2;
@@ -736,7 +737,7 @@ a.da-titlebar__btn {
 
 .da-header__subtitle {
   color: var(--da-text-dim);
-  font-size: 0.75rem;
+  font-size: 0.625rem;
   margin-top: 0.25rem;
 }
 
