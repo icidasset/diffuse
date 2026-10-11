@@ -417,6 +417,112 @@ a.da-titlebar__btn {
   background: var(--da-accent);
 }
 
+/* Queue / history panel (replaces the mini player) + buttons row */
+
+.da-mini-panel {
+  display: flex;
+  flex-direction: column;
+  gap: 0.125rem;
+  max-height: 11.5rem;
+  overflow-y: auto;
+}
+
+.da-mini-panel__label {
+  color: var(--da-text-dim);
+  font-size: 0.65rem;
+  font-weight: 600;
+  letter-spacing: 0.05em;
+  padding: 0 0.25rem 0.25rem;
+  text-transform: uppercase;
+}
+
+.da-mini-panel__row {
+  border-radius: 0.375rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.0625rem;
+  min-width: 0;
+  padding: 0.25rem 0.375rem;
+}
+
+.da-mini-panel__row--current {
+  background: var(--da-surface);
+}
+
+.da-mini-panel__row--current .da-mini-panel__title {
+  color: var(--da-accent);
+}
+
+.da-mini-panel__title {
+  font-size: 0.75rem;
+  font-weight: 600;
+  overflow: hidden;
+  text-box: trim-both text text;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.da-mini-panel__artist {
+  color: var(--da-text-dim);
+  font-size: 0.65rem;
+  overflow: hidden;
+  text-box: trim-both text text;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.da-mini-panel__empty {
+  color: var(--da-text-faint);
+  font-size: 0.75rem;
+  padding: 0.5rem 0.25rem;
+  text-align: center;
+}
+
+.da-volume {
+  position: relative;
+}
+
+.da-volume-pop {
+  background: var(--da-surface-strong);
+  border: 1px solid var(--da-border);
+  border-radius: 0.5rem;
+  box-shadow: 0 4px 12px rgb(0 0 0 / 0.35);
+  display: flex;
+  justify-content: center;
+  padding: 0.5rem 0.25rem;
+  position: absolute;
+  right: -0.25rem;
+  top: calc(100% + 0.5rem);
+  z-index: 10;
+}
+
+/* Vertical slider: writing-mode + rtl puts max at the top */
+
+.da-volume-slider {
+  appearance: none;
+  background: transparent;
+  direction: rtl;
+  height: 6.25rem;
+  margin: 0;
+  width: 1rem;
+  writing-mode: vertical-lr;
+}
+
+.da-volume-slider::-webkit-slider-runnable-track {
+  background: rgb(255 255 255 / 0.28);
+  border-radius: 2px;
+  width: 3px;
+}
+
+.da-volume-slider::-webkit-slider-thumb {
+  appearance: none;
+  background: var(--da-text);
+  border-radius: 50%;
+  height: 11px;
+  margin-left: -4px;
+  width: 11px;
+}
+
 .da-mini__play i {
   font-size: 1.5rem;
   line-height: 1;

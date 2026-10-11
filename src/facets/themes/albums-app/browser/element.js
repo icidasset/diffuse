@@ -301,6 +301,11 @@ class Browser extends DiffuseElement {
 
   #audioError = signal(false);
 
+  /** Panel shown in place of the mini player (queue / history). */
+  #playerPanel = signal(/** @type {"queue" | "history" | null} */ (null));
+
+  #volumeOpen = signal(false);
+
   // Cover art cache (albums, artists and playlist thumbnails share it)
   /** @type {Map<string, string | null | undefined>} */
   #coverArtCache = new Map();
@@ -1103,6 +1108,32 @@ class Browser extends DiffuseElement {
     }
   };
 
+  toggleQueuePanel = () => {
+    this.#playerPanel.value = this.#playerPanel.value === "queue"
+      ? null
+      : "queue";
+  };
+
+  toggleHistoryPanel = () => {
+    this.#playerPanel.value = this.#playerPanel.value === "history"
+      ? null
+      : "history";
+  };
+
+  toggleVolume = () => {
+    this.#volumeOpen.value = !this.#volumeOpen.value;
+  };
+
+  /**
+   * @param {Event} event
+   */
+  setVolume = (event) => {
+    const target = /** @type {HTMLInputElement} */ (event.target);
+    this.$controller.value?.$audio.value?.adjustVolume({
+      volume: Number(target.value) / 100,
+    });
+  };
+
   next = () => {
     this.$controller.value?.$queue.value?.shift();
   };
@@ -1683,25 +1714,31 @@ class Browser extends DiffuseElement {
    * @param {string} title
    */
   #renderTitlebar(html, title) {
+    const panel = this.#playerPanel.value;
+
     return html`
       <header class="da-titlebar">
-        <a
-          class="da-titlebar__btn"
-          href="l/?path=facets%2Fdata%2Fsources%2Findex.tile"
-          target="_blank"
-          title="Audio inputs"
+        <button
+          class="da-titlebar__btn ${panel === "queue"
+            ? `da-titlebar__btn--active`
+            : ""}"
+          @click="${this.toggleQueuePanel}"
+          title="${panel === "queue" ? `Close queue` : `Queue`}"
         >
-          <i class="ph-bold ph-archive-box"></i>
-        </a>
+          <i class="ph-bold ${panel === "queue" ? `ph-x` : `ph-queue`}"></i>
+        </button>
 
-        <a
-          class="da-titlebar__btn"
-          href="l/?path=facets%2Fplayback%2Fqueue%2Findex.tile"
-          target="_blank"
-          title="Queue"
+        <button
+          class="da-titlebar__btn ${panel === "history"
+            ? `da-titlebar__btn--active`
+            : ""}"
+          @click="${this.toggleHistoryPanel}"
+          title="${panel === "history" ? `Close history` : `History`}"
         >
-          <i class="ph-bold ph-queue"></i>
-        </a>
+          <i class="ph-bold ${panel === "history"
+            ? `ph-x`
+            : `ph-clock-counter-clockwise`}"></i>
+        </button>
 
         <button
           class="da-titlebar__btn ${this.#catalogCollapsed.value
@@ -1720,6 +1757,37 @@ class Browser extends DiffuseElement {
 
         <span class="da-titlebar__group">${this.getAttribute("group-label") ??
         this.group}</span>
+
+        <div class="da-volume">
+          ${this.#volumeOpen.value
+            ? html`
+              <div class="da-volume-pop">
+                <input
+                  class="da-volume-slider"
+                  type="range"
+                  min="0"
+                  max="100"
+                  .value="${String(
+                    Math.round(
+                      (this.$controller.value?.$audio.value?.volume() ?? 1) *
+                        100,
+                    ),
+                  )}"
+                  @input="${this.setVolume}"
+                />
+              </div>
+            `
+            : nothing}
+          <button
+            class="da-titlebar__btn ${this.#volumeOpen.value
+              ? `da-titlebar__btn--active`
+              : ""}"
+            @click="${this.toggleVolume}"
+            title="Volume"
+          >
+            <i class="ph-bold ${this.#volumeIcon()}"></i>
+          </button>
+        </div>
 
         <button class="da-titlebar__btn" @click="${this.#emitNewDeck}" title="Open a new deck">
           <i class="ph-bold ph-circles-three-plus"></i>
@@ -1788,7 +1856,11 @@ class Browser extends DiffuseElement {
           })}
         </div>
 
-        <div class="da-rail__player">${this.#renderMiniPlayer(html)}</div>
+        <div class="da-rail__player">
+          ${this.#playerPanel.value
+            ? this.#renderPlayerPanel(html)
+            : this.#renderMiniPlayer(html)}
+        </div>
       </aside>
     `;
   }
@@ -1890,10 +1962,75 @@ class Browser extends DiffuseElement {
   }
 
   /**
-   * Which content the catalog column shows for the current view.
-   * `null` means the column is hidden (Songs view).
-   * @returns {"albums" | "artists" | "playlists" | null}
+   * Queue / history list shown in place of the mini player. Queue shows
+   * the current track followed by what's coming; history is the played
+   * list, most recent first. Items resolve against the (unfiltered)
+   * output collection, like the queue facet does.
+   * @param {Function} html
    */
+  #renderPlayerPanel(html) {
+    const panel = this.#playerPanel.value;
+    const queue = this.$controller.value?.$queue.value;
+    const now = queue?.now() ?? null;
+    const col = this.$output.value?.tracks.collection();
+    const library = col?.state === "loaded" ? col.data : [];
+    const findTrack = /** @param {string} id */ (id) =>
+      library.find((t) => t.id === id);
+
+    /** @type {{ id: string; current: boolean }[]} */
+    const items = panel === "history"
+      ? [...(queue?.past() ?? [])].reverse().map((item) => ({
+        id: item.id,
+        current: false,
+      }))
+      : [
+        ...(now ? [{ id: now.id, current: true }] : []),
+        ...(queue?.future() ?? []).map((item) => ({
+          id: item.id,
+          current: false,
+        })),
+      ];
+
+    return html`
+      <div class="da-mini-panel">
+        <div class="da-mini-panel__label">${panel === "history"
+          ? "History"
+          : "Queue"}</div>
+        ${items.length
+          ? items.map(({ id, current }) => {
+            const track = findTrack(id);
+            return html`
+              <div
+                class="da-mini-panel__row ${current
+                  ? `da-mini-panel__row--current`
+                  : ""}"
+              >
+                <span class="da-mini-panel__title">${track
+                  ? trackTitle(track)
+                  : "Unknown track"}</span>
+                <span class="da-mini-panel__artist">${track?.tags?.artist ?? "—"}</span>
+              </div>
+            `;
+          })
+          : html`
+            <div class="da-mini-panel__empty">${panel === "history"
+              ? "No history yet"
+              : "Queue is empty"}</div>
+          `}
+      </div>
+    `;
+  }
+
+  /** Speaker icon reflecting the current audio volume. */
+  #volumeIcon() {
+    const volume = this.$controller.value?.$audio.value?.volume() ?? 1;
+    return volume === 0
+      ? "ph-speaker-none"
+      : volume <= 0.5
+      ? "ph-speaker-low"
+      : "ph-speaker-high";
+  }
+
   /**
    * Which content the catalog column shows for the current view.
    * `null` means the column is hidden (Songs view).
