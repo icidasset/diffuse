@@ -365,6 +365,8 @@ class Browser extends DiffuseElement {
   #observedPanel = null;
   /** @type {AbortController | undefined} */
   #scrollAbort;
+  /** @type {AbortController | undefined} */
+  #uiAbort;
   /** @type {Track[] | undefined} */
   #renderedTracks = undefined;
 
@@ -785,6 +787,7 @@ class Browser extends DiffuseElement {
     });
 
     this.#setupScrollListener();
+    this.#setupOutsideClickCloser();
   }
 
   /**
@@ -794,6 +797,8 @@ class Browser extends DiffuseElement {
     super.disconnectedCallback();
     this.#scrollAbort?.abort();
     this.#scrollAbort = undefined;
+    this.#uiAbort?.abort();
+    this.#uiAbort = undefined;
     this.#resizeObserver?.disconnect();
     this.#resizeObserver = undefined;
     this.#observedPanel = null;
@@ -1593,6 +1598,35 @@ class Browser extends DiffuseElement {
         }
       },
       { capture: true, passive: true, signal: this.#scrollAbort.signal },
+    );
+  }
+
+  /**
+   * Close the volume popover on pointer-down anywhere outside of it
+   * (document-level, since clicks outside the element count too).
+   * `composedPath()` is required because document-level listeners see
+   * shadow-internal targets retargeted to the host element.
+   */
+  #setupOutsideClickCloser() {
+    if (this.#uiAbort) return;
+
+    this.#uiAbort = new AbortController();
+
+    document.addEventListener(
+      "pointerdown",
+      (event) => {
+        if (!this.#volumeOpen.value) return;
+
+        const wrap = this.root().querySelector(".da-volume");
+        if (!wrap) return;
+
+        const inside = event.composedPath().some(
+          (node) => node instanceof Node && wrap.contains(node),
+        );
+
+        if (!inside) this.#volumeOpen.value = false;
+      },
+      { signal: this.#uiAbort.signal },
     );
   }
 

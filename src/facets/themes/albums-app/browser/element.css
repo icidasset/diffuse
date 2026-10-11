@@ -490,10 +490,11 @@ a.da-titlebar__btn {
   box-shadow: 0 4px 12px rgb(0 0 0 / 0.35);
   display: flex;
   justify-content: center;
+  left: 50%;
   padding: 0.5rem 0.25rem;
   position: absolute;
-  right: -0.25rem;
   top: calc(100% + 0.5rem);
+  transform: translateX(-50%);
   z-index: 10;
 }
 
