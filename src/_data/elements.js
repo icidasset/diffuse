@@ -217,7 +217,7 @@ export default {
       url: "components/orchestrator/path-collections/element.js",
       title: "Path Collections",
       desc:
-        "Wraps an output element to generate ephemeral playlists based on the first path segment of each track's URI. Ephemeral items are excluded from storage.",
+        "Wraps an output element to generate ephemeral playlists based on a path part of each track's URI. The 1-based part can be set using the `path-part` attribute (defaults to the first). Ephemeral items are excluded from storage.",
     },
     {
       url: "components/orchestrator/process-tracks/element.js",

@@ -116,6 +116,55 @@ describe("components/orchestrator/path-collections", () => {
     expect(result).toEqual(["music"]);
   });
 
+  it("supports grouping by a configurable path part, percent-decoded", async () => {
+    const result = await testWeb(async () => {
+      const idbMod = await import(
+        "~/components/output/polymorphic/indexed-db/element.js"
+      );
+      const mod = await import(
+        "~/components/orchestrator/path-collections/element.js"
+      );
+
+      const output = new idbMod.CLASS();
+      output.id = "test-idb-pathpart";
+      document.body.append(output);
+
+      const t = new mod.CLASS();
+      t.setAttribute("path-part", "2");
+      t.setAttribute("output-selector", "#test-idb-pathpart");
+      document.body.append(t);
+
+      await t.tracks.save([
+        {
+          $type: "sh.diffuse.output.track",
+          id: "t1",
+          uri:
+            "https://example.com/Primary/techno%20.%20minimal%20.%20acid/album/track.mp3",
+        },
+        {
+          $type: "sh.diffuse.output.track",
+          id: "t2",
+          uri: "https://example.com/Primary/ambient/album/track.mp3",
+        },
+        {
+          $type: "sh.diffuse.output.track",
+          id: "t3",
+          uri: "https://example.com/onlyroot.mp3",
+        },
+      ]);
+      await output.playlistItems.save([]);
+
+      const col = t.playlistItems.collection();
+      if (col.state !== "loaded") return null;
+      return (col.data as Array<{ ephemeral?: boolean; playlist: string }>)
+        .filter((p) => p.ephemeral)
+        .map((p) => p.playlist)
+        .sort();
+    });
+
+    expect(result).toEqual(["ambient", "techno . minimal . acid"]);
+  });
+
   it("ephemeral items do not include tracks with URI that has no path segment", async () => {
     const result = await testWeb(async () => {
       const idbMod = await import(

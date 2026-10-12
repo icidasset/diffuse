@@ -548,7 +548,11 @@ async function spectrogramAudio() {
   return findExistingOrAdd(sao, signals.orchestrator.spectrogramAudio);
 }
 
-async function pathCollections() {
+/**
+ * @param {Object} [options] - Options
+ * @param {number} [options.pathPart] - 1-based path part of each track's URI to group playlists by. Defaults to 1.
+ */
+async function pathCollections(options) {
   const [{ CLASS: PathCollectionsOrchestrator }, o] = await Promise.all([
     import("~/components/orchestrator/path-collections/element.js"),
     output(),
@@ -557,6 +561,10 @@ async function pathCollections() {
   const pco = new PathCollectionsOrchestrator();
   pco.setAttribute("group", GROUP);
   pco.setAttribute("output-selector", o.selector);
+
+  if (options?.pathPart) {
+    pco.setAttribute("path-part", String(options.pathPart));
+  }
 
   return findExistingOrAdd(pco, signals.orchestrator.pathCollections);
 }
