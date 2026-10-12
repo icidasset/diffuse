@@ -234,6 +234,16 @@
   color: var(--da-text);
 }
 
+.da-titlebar__btn:disabled {
+  color: var(--da-text-faint);
+  cursor: default;
+  opacity: 0.4;
+}
+
+.da-titlebar__btn:disabled:hover {
+  background: transparent;
+}
+
 a.da-titlebar__btn {
   text-decoration: none;
 }
@@ -604,12 +614,28 @@ a.da-titlebar__btn {
 }
 
 .da-mini-panel__row {
+  background: transparent;
+  border: 0;
   border-radius: 0.375rem;
+  color: inherit;
+  cursor: pointer;
   display: flex;
   flex-direction: column;
+  font-family: inherit;
+  font-size: inherit;
   gap: 0.0625rem;
   min-width: 0;
   padding: 0.25rem 0.375rem;
+  text-align: left;
+  transition: background-color 100ms;
+}
+
+.da-mini-panel__row:hover {
+  background: var(--da-surface);
+}
+
+.da-mini-panel__row--current:hover {
+  background: var(--da-surface);
 }
 
 .da-mini-panel__row--current {

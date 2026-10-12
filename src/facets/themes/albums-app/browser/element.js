@@ -170,6 +170,7 @@ function groupByLetter(rows) {
  * @typedef {{ type: "artist"; artistKey: string; artistName: string; trackCount: number; track: Track }} ArtistItem
  * @typedef {{ type: "group-tracks"; groupBy: "tags.year" | "createdAt" | "decades"; value: string | undefined }} GroupTracksView
  * @typedef {{ type: "albums" } | { type: "artists" } | { type: "tracks" } | { type: "playlist-tracks" } | GroupTracksView | AlbumItem | ArtistItem } View
+ * @typedef {{ view: View; playlist: string | undefined; sortBy: string[] | undefined; sortDirection: "asc" | "desc" | undefined }} NavEntry
  */
 
 /** Library rail entries, ordered alphabetically. */
@@ -299,8 +300,8 @@ class Browser extends DiffuseElement {
   /** Live value of the rail search field (the × button tracks typing). */
   #railSearchValue = signal("");
 
-  #history = signal(/** @type {View[]} */ ([]));
-  #future = signal(/** @type {View[]} */ ([]));
+  #history = signal(/** @type {NavEntry[]} */ ([]));
+  #future = signal(/** @type {NavEntry[]} */ ([]));
 
   // Mini player audio state — loading is debounced so quick track
   // switches don't flash the spinner
@@ -897,32 +898,68 @@ class Browser extends DiffuseElement {
    */
   #navigateTo(view) {
     this.#selectedTracks.value = new Set();
-    this.#history.value = [...this.#history.value, this.#view.value];
+    // Snapshot the full 2nd-sidebar context (scope playlist + sort) so
+    // back/forward restore catalog selections, not just the view
+    this.#history.value = [
+      ...this.#history.value,
+      {
+        view: this.#view.value,
+        playlist: this.$scope.value?.playlist(),
+        sortBy: this.$scope.value?.sortBy(),
+        sortDirection: this.$scope.value?.sortDirection(),
+      },
+    ];
     this.#future.value = [];
     this.#view.value = view;
     this.#renderedTracks = undefined;
   }
 
+  /** Restores a history entry's view + 2nd-sidebar context.
+   * @param {NavEntry} entry
+   */
+  #restoreEntry(entry) {
+    const scope = this.$scope.value;
+    batch(() => {
+      this.#view.value = entry.view;
+      scope?.setPlaylist(entry.playlist);
+      if (entry.sortBy) scope?.setSortBy(entry.sortBy);
+      scope?.setSortDirection(entry.sortDirection);
+    });
+    this.#renderedTracks = undefined;
+  }
+
   goBack = () => {
     const hist = this.#history.value;
-    if (hist.length === 0) return;
     const prev = hist[hist.length - 1];
     if (!prev) return;
-    this.#future.value = [this.#view.value, ...this.#future.value];
+    this.#future.value = [
+      {
+        view: this.#view.value,
+        playlist: this.$scope.value?.playlist(),
+        sortBy: this.$scope.value?.sortBy(),
+        sortDirection: this.$scope.value?.sortDirection(),
+      },
+      ...this.#future.value,
+    ];
     this.#history.value = hist.slice(0, -1);
-    this.#view.value = prev;
-    this.#renderedTracks = undefined;
+    this.#restoreEntry(prev);
   };
 
   goForward = () => {
     const fut = this.#future.value;
-    if (fut.length === 0) return;
     const next = fut[0];
     if (!next) return;
-    this.#history.value = [...this.#history.value, this.#view.value];
+    this.#history.value = [
+      ...this.#history.value,
+      {
+        view: this.#view.value,
+        playlist: this.$scope.value?.playlist(),
+        sortBy: this.$scope.value?.sortBy(),
+        sortDirection: this.$scope.value?.sortDirection(),
+      },
+    ];
     this.#future.value = fut.slice(1);
-    this.#view.value = next;
-    this.#renderedTracks = undefined;
+    this.#restoreEntry(next);
   };
 
   /** Tracks the rail search field's live value so the × can show/hide. */
@@ -1098,9 +1135,60 @@ class Browser extends DiffuseElement {
       ),
     );
 
-    // Keep the open view / scope filter pointed at the renamed playlist
+    // Keep the open view / scope filter pointed at the renamed playlist,
+    // and update history entries so back/forward don't resurrect the old name
     if (this.$scope.value?.playlist() === oldName) {
       this.$scope.value?.setPlaylist(newName);
+    }
+    /** @param {NavEntry[]} entries */
+    const remap = (entries) =>
+      entries.map((entry) =>
+        entry.playlist === oldName ? { ...entry, playlist: newName } : entry,
+      );
+    this.#history.value = remap(this.#history.value);
+    this.#future.value = remap(this.#future.value);
+  };
+
+  /**
+   * Removes the selected tracks from the current playlist: deletes every
+   * playlist item whose criteria match a selected track. A track that
+   * matched several items disappears entirely from the playlist.
+   */
+  removeSelectedFromPlaylist = async () => {
+    const output = this.$output.value;
+    const playlist = this.$scope.value?.playlist();
+    const selected = this.#selectedTracks.value;
+    if (!output || !playlist || !selected.size) return;
+
+    const tracks = this.#currentViewTracks().filter((t) => selected.has(t.id));
+    const col = output.playlistItems.collection();
+    if (col.state !== "loaded") return;
+
+    const removeIds = new Set(
+      col.data
+        .filter((item) => item.playlist === playlist)
+        .filter((item) =>
+          tracks.some((track) => Playlist.match(track, item))
+        )
+        .map((item) => item.id),
+    );
+    if (!removeIds.size) return;
+
+    await output.playlistItems.save(
+      col.data.filter((item) => !removeIds.has(item.id)),
+    );
+
+    // Removing the last items empties the playlist — it also disappears
+    // from the catalog (gather has nothing to group), so drop back to
+    // the "select a playlist" view instead of a dead track list
+    const updated = output.playlistItems.collection();
+    const stillExists = updated.state === "loaded" &&
+      updated.data.some((item) => item.playlist === playlist);
+
+    if (stillExists) {
+      this.#selectedTracks.value = new Set();
+    } else {
+      this.setSelectedPlaylist(undefined);
     }
   };
 
@@ -2073,6 +2161,23 @@ class Browser extends DiffuseElement {
           <i class="ph-bold ph-sidebar-simple"></i>
         </button>
 
+        <button
+          class="da-titlebar__btn"
+          ?disabled="${!this.#history.value.length}"
+          @click="${this.goBack}"
+          title="Back"
+        >
+          <i class="ph-bold ph-caret-left"></i>
+        </button>
+        <button
+          class="da-titlebar__btn"
+          ?disabled="${!this.#future.value.length}"
+          @click="${this.goForward}"
+          title="Forward"
+        >
+          <i class="ph-bold ph-caret-right"></i>
+        </button>
+
         <span class="da-titlebar__divider"></span>
         <span class="da-titlebar__title">${title}</span>
 
@@ -2295,22 +2400,46 @@ class Browser extends DiffuseElement {
     const panel = this.#playerPanel.value;
     const queue = this.$controller.value?.$queue.value;
     const now = queue?.now() ?? null;
+    const past = queue?.past() ?? [];
+    const future = queue?.future() ?? [];
     const col = this.$output.value?.tracks.collection();
     const library = col?.state === "loaded" ? col.data : [];
     const findTrack = /** @param {string} id */ (id) =>
       library.find((t) => t.id === id);
 
-    /** @type {{ id: string; current: boolean }[]} */
+    /** move() operates on the flat [past…, now, future…] list */
+    const offset = past.length + (now ? 1 : 0);
+
+    /**
+     * Queue rows jump to the clicked track (move to front + shift + play);
+     * the now row resumes; history rows rewind the queue to that point
+     * (`unshift` pushes the skipped tracks back onto the future).
+     * @type {{ id: string; current: boolean; click?: () => void }[]}
+     */
     const items = panel === "history"
-      ? [...(queue?.past() ?? [])].reverse().map((item) => ({
+      ? [...past].reverse().map((item, r) => ({
         id: item.id,
         current: false,
+        click: () => queue?.unshift({ by: r + 1 }),
       }))
       : [
-        ...(now ? [{ id: now.id, current: true }] : []),
-        ...(queue?.future() ?? []).map((item) => ({
+        ...(now
+          ? [{
+            id: now.id,
+            current: true,
+            click: () =>
+              this.$controller.value?.$audio.value?.play({ audioId: now.id }),
+          }]
+          : []),
+        ...future.map((item, i) => ({
           id: item.id,
           current: false,
+          click: () => {
+            if (!queue) return;
+            queue.move({ key: item.key, to: offset + i });
+            queue.shift();
+            this.$controller.value?.$audio.value?.play({ audioId: item.id });
+          },
         })),
       ];
 
@@ -2320,19 +2449,20 @@ class Browser extends DiffuseElement {
           ? "History"
           : "Queue"}</div>
         ${items.length
-          ? items.map(({ id, current }) => {
+          ? items.map(({ id, current, click }) => {
             const track = findTrack(id);
             return html`
-              <div
+              <button
                 class="da-mini-panel__row ${current
                   ? `da-mini-panel__row--current`
                   : ""}"
+                @click="${click}"
               >
                 <span class="da-mini-panel__title">${track
                   ? trackTitle(track)
                   : "Unknown track"}</span>
                 <span class="da-mini-panel__artist">${track?.tags?.artist ?? "—"}</span>
-              </div>
+              </button>
             `;
           })
           : html`
@@ -2808,6 +2938,13 @@ class Browser extends DiffuseElement {
     if (mode === "albums") {
       const item = this.$albumRows().find((a) => a.albumKey === row.key);
       if (item) {
+        // An album's track list reads best in album order, whatever
+        // global sort was active before
+        const scope = this.$scope.value;
+        if (scope) {
+          scope.setSortBy(COLUMN_SORT.album);
+          scope.setSortDirection("asc");
+        }
         this.openAlbum({ type: "album", ...item });
       }
     } else if (mode === "artists") {
@@ -2817,15 +2954,18 @@ class Browser extends DiffuseElement {
       }
     } else if (mode === "years" || mode === "added" || mode === "decades") {
       const view = /** @type {View & { type: "group-tracks" }} */ (this.#view.value);
-      this.#view.value = { ...view, value: row.key };
-      this.#renderedTracks = undefined;
+      this.#navigateTo({ ...view, value: row.key });
       // The scroll-reset effect can't see the panel while the empty
       // state is showing, so reset the track list position here
       this.#scrollTop = 0;
       const panel = this.root().querySelector(".da-tracks-panel");
       panel?.scrollTo(0, 0);
     } else {
-      this.setSelectedPlaylist(row.key);
+      // Playlist selection navigates (with a history entry) — the scope
+      // playlist rides along in the entry snapshot
+      const scope = this.$scope.value;
+      if (scope) scope.setPlaylist(row.key);
+      this.#navigateTo({ type: "playlist-tracks" });
     }
   }
 
@@ -3047,6 +3187,19 @@ class Browser extends DiffuseElement {
               ? `ph-sort-descending`
               : `ph-sort-ascending`}"></i>
           </button>
+          ${view.type === "playlist-tracks" && playlist &&
+              this.#selectedTracks.value.size &&
+              !this.#isEphemeralPlaylist(playlist)
+            ? html`
+              <button
+                class="da-pill da-pill--icon"
+                @click="${this.removeSelectedFromPlaylist}"
+                title="Remove from playlist"
+              >
+                <i class="ph-bold ph-trash"></i>
+              </button>
+            `
+            : nothing}
 
           ${searchTerm
             ? html`
