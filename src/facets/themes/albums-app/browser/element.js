@@ -73,7 +73,11 @@ function restoreView(group) {
     if (!validTypes.includes(parsed.type)) return null;
 
     if (parsed.type === "group-tracks") {
-      if (parsed.groupBy !== "tags.year" && parsed.groupBy !== "createdAt") {
+      if (
+        parsed.groupBy !== "tags.year" &&
+        parsed.groupBy !== "createdAt" &&
+        parsed.groupBy !== "decades"
+      ) {
         return null;
       }
     }
@@ -164,16 +168,17 @@ function groupByLetter(rows) {
 /**
  * @typedef {{ type: "album"; albumKey: string; albumName: string; artist: string; track: Track }} AlbumItem
  * @typedef {{ type: "artist"; artistKey: string; artistName: string; trackCount: number; track: Track }} ArtistItem
- * @typedef {{ type: "group-tracks"; groupBy: "tags.year" | "createdAt"; value: string | undefined }} GroupTracksView
+ * @typedef {{ type: "group-tracks"; groupBy: "tags.year" | "createdAt" | "decades"; value: string | undefined }} GroupTracksView
  * @typedef {{ type: "albums" } | { type: "artists" } | { type: "tracks" } | { type: "playlist-tracks" } | GroupTracksView | AlbumItem | ArtistItem } View
  */
 
 /** Library rail entries, ordered alphabetically. */
-/** @type {{ type: "albums" | "artists" | "years" | "added" | "playlists" | "tracks"; label: string; icon: string }[]} */
+/** @type {{ type: "albums" | "artists" | "years" | "added" | "decades" | "playlists" | "tracks"; label: string; icon: string }[]} */
 const LIBRARY_ITEMS = [
   { type: "added", label: "Added on", icon: "ph-clock" },
   { type: "albums", label: "Albums", icon: "ph-vinyl-record" },
   { type: "artists", label: "Artists", icon: "ph-microphone-stage" },
+  { type: "decades", label: "Decades", icon: "ph-hourglass" },
   { type: "playlists", label: "Playlists", icon: "ph-playlist" },
   { type: "tracks", label: "Songs", icon: "ph-music-notes" },
   { type: "years", label: "Years", icon: "ph-calendar" },
@@ -199,6 +204,7 @@ const RAIL_FOR_VIEW = /** @type {const} */ ({
   album: "albums",
   artists: "artists",
   artist: "artists",
+  decades: "decades",
   "playlist-tracks": "playlists",
   tracks: "tracks",
 });
@@ -329,7 +335,7 @@ class Browser extends DiffuseElement {
 
   // Catalog column virtual scroll state
   #catalogScrollTop = 0;
-  #lastCatalogMode = /** @type {"albums" | "artists" | "years" | "added" | "playlists" | null | undefined} */ (undefined);
+  #lastCatalogMode = /** @type {"albums" | "artists" | "years" | "added" | "decades" | "playlists" | null | undefined} */ (undefined);
   #catalogViewportHeight = window.innerHeight;
   #catalogTopOffset = 0;
   #catalogRowStride = CATALOG_ROW_STRIDE;
@@ -398,14 +404,16 @@ class Browser extends DiffuseElement {
   });
 
   /**
-   * Tracks belonging to the selected year / month of a group view.
-   * @param {{ groupBy: "tags.year" | "createdAt"; value: string | undefined }} view
+   * Tracks belonging to the selected year / month / decade of a group view.
+   * @param {{ groupBy: "tags.year" | "createdAt" | "decades"; value: string | undefined }} view
    * @returns {Track[]}
    */
   #groupTracks(view) {
     if (!view.value) return [];
     const groups = view.groupBy === "createdAt"
       ? this.$addedGroups()
+      : view.groupBy === "decades"
+      ? this.$decadeGroups()
       : this.$yearGroups();
     return groups.find((g) => g.label === view.value)?.tracks ?? [];
   }
@@ -471,8 +479,10 @@ class Browser extends DiffuseElement {
   $yearGroups = computed(() => {
     const map = new Map();
     for (const t of this.$provider.value?.tracks() ?? []) {
-      const year = t.tags?.year;
-      if (year == null) continue;
+      const year = Number(t.tags?.year);
+      // Ignore missing / implausible years (e.g. a mistyped "200") so
+      // garbage tags don't produce nonsense buckets
+      if (!year || year < 1000) continue;
       const key = String(year);
       if (!map.has(key)) map.set(key, []);
       map.get(key)?.push(t);
@@ -480,6 +490,21 @@ class Browser extends DiffuseElement {
     return [...map.entries()]
       .sort((a, b) => collator.compare(b[0], a[0]))
       .map(([label, groupTracks]) => ({ label, tracks: groupTracks }));
+  });
+
+  /** Tracks grouped by the release decade, newest first. */
+  $decadeGroups = computed(() => {
+    const map = new Map();
+    for (const t of this.$provider.value?.tracks() ?? []) {
+      const year = Number(t.tags?.year);
+      if (!year || year < 1000) continue;
+      const key = `${Math.floor(year / 10) * 10}s`;
+      if (!map.has(key)) map.set(key, []);
+      map.get(key)?.push(t);
+    }
+    return [...map.entries()]
+      .sort((a, b) => collator.compare(b[0], a[0]))
+      .map(([label, tracks]) => ({ label, tracks }));
   });
 
   /** Tracks grouped by the month they were processed, newest first. */
@@ -736,11 +761,16 @@ class Browser extends DiffuseElement {
     // The scope value is persisted (and replicated across scopes), and
     // scoped-tracks re-sorts `tracks()` by the group key while it's set
     // — so a stale value would otherwise keep other views grouped.
+    // Decades don't map to a scope group-by key (scoped-tracks wouldn't
+    // know it), so they unset it too — the decade's track list follows
+    // the user's column sort.
     this.effect(() => {
       const view = this.#view.value;
       untracked(() => {
         this.$scope.value?.setGroupBy(
-          view.type === "group-tracks" ? view.groupBy : undefined,
+          view.type === "group-tracks" && view.groupBy !== "decades"
+            ? view.groupBy
+            : undefined,
         );
       });
     });
@@ -915,17 +945,21 @@ class Browser extends DiffuseElement {
   /**
    * The library rail item a view belongs to.
    * @param {View} view
-   * @returns {"albums" | "artists" | "years" | "added" | "playlists" | "tracks"}
+   * @returns {"albums" | "artists" | "years" | "added" | "decades" | "playlists" | "tracks"}
    */
   #railItemFor(view) {
     if (view.type === "group-tracks") {
-      return view.groupBy === "createdAt" ? "added" : "years";
+      return view.groupBy === "createdAt"
+        ? "added"
+        : view.groupBy === "decades"
+        ? "decades"
+        : "years";
     }
     return RAIL_FOR_VIEW[view.type];
   }
 
   /**
-   * @param {"albums" | "artists" | "years" | "added" | "playlists" | "tracks"} type
+   * @param {"albums" | "artists" | "years" | "added" | "decades" | "playlists" | "tracks"} type
    */
   #browse(type) {
     const current = this.#view.value;
@@ -946,7 +980,13 @@ class Browser extends DiffuseElement {
 
     if (type === "albums") this.#navigateTo({ type: "albums" });
     else if (type === "artists") this.#navigateTo({ type: "artists" });
-    else if (type === "years") {
+    else if (type === "decades") {
+      this.#navigateTo({
+        type: "group-tracks",
+        groupBy: "decades",
+        value: undefined,
+      });
+    } else if (type === "years") {
       this.#navigateTo({
         type: "group-tracks",
         groupBy: "tags.year",
@@ -1982,7 +2022,12 @@ class Browser extends DiffuseElement {
     if (view.type === "tracks") return "Songs";
     if (view.type === "playlist-tracks") return playlist ?? "Playlists";
     if (view.type === "group-tracks") {
-      return view.value ?? (view.groupBy === "createdAt" ? "Added on" : "Years");
+      return view.value ??
+        (view.groupBy === "createdAt"
+          ? "Added on"
+          : view.groupBy === "decades"
+          ? "Decades"
+          : "Years");
     }
     return "Albums";
   }
@@ -2312,7 +2357,7 @@ class Browser extends DiffuseElement {
   /**
    * Which content the catalog column shows for the current view.
    * `null` means the column is hidden (Songs view).
-   * @returns {"albums" | "artists" | "years" | "added" | "playlists" | null}
+   * @returns {"albums" | "artists" | "years" | "added" | "decades" | "playlists" | null}
    */
   #catalogMode() {
     const railItem = this.#railItemFor(this.#view.value);
@@ -2355,17 +2400,33 @@ class Browser extends DiffuseElement {
       label = "Artists";
       placeholder = "Artist name...";
       emptyLabel = "No artists";
-    } else if (mode === "years" || mode === "added") {
-      const groups = mode === "years" ? this.$yearGroups() : this.$addedGroups();
+    } else if (mode === "years" || mode === "added" || mode === "decades") {
+      const groups = mode === "years"
+        ? this.$yearGroups()
+        : mode === "added"
+        ? this.$addedGroups()
+        : this.$decadeGroups();
       rows = groups.map((g) => ({
         key: g.label,
         label: g.label,
         artKey: undefined,
         track: undefined,
       }));
-      label = mode === "years" ? "Years" : "Months";
-      placeholder = mode === "years" ? "Year..." : "Month...";
-      emptyLabel = mode === "years" ? "No years" : "No months";
+      label = mode === "years"
+        ? "Years"
+        : mode === "added"
+        ? "Months"
+        : "Decades";
+      placeholder = mode === "years"
+        ? "Year..."
+        : mode === "added"
+        ? "Month..."
+        : "Decade...";
+      emptyLabel = mode === "years"
+        ? "No years"
+        : mode === "added"
+        ? "No months"
+        : "No decades";
     } else {
       // Reads the tracks signal too, so the playlist list re-renders
       // (and thumbnails retry) when the library arrives
@@ -2396,8 +2457,9 @@ class Browser extends DiffuseElement {
       label,
       placeholder,
       emptyLabel,
-      flat: mode === "years" || mode === "added",
-      sections: mode === "years" || mode === "added"
+      flat:
+        mode === "years" || mode === "added" || mode === "decades",
+      sections: mode === "years" || mode === "added" || mode === "decades"
         ? [{ letter: "", rows }]
         : groupByLetter(rows),
     };
@@ -2753,7 +2815,7 @@ class Browser extends DiffuseElement {
       if (item) {
         this.openArtist({ type: "artist", ...item });
       }
-    } else if (mode === "years" || mode === "added") {
+    } else if (mode === "years" || mode === "added" || mode === "decades") {
       const view = /** @type {View & { type: "group-tracks" }} */ (this.#view.value);
       this.#view.value = { ...view, value: row.key };
       this.#renderedTracks = undefined;
@@ -2831,13 +2893,21 @@ class Browser extends DiffuseElement {
       (view.type === "group-tracks" && !view.value)
     ) {
       const what = view.type === "group-tracks"
-        ? (view.groupBy === "createdAt" ? "month" : "year")
+        ? (view.groupBy === "createdAt"
+          ? "month"
+          : view.groupBy === "decades"
+          ? "decade"
+          : "year")
         : "playlist";
       return html`
         <main class="da-main">
           <div class="da-empty">
             <i class="ph-fill ${view.type === "group-tracks"
-              ? (view.groupBy === "createdAt" ? `ph-clock` : `ph-calendar`)
+              ? (view.groupBy === "createdAt"
+                ? `ph-clock`
+                : view.groupBy === "decades"
+                ? `ph-hourglass`
+                : `ph-calendar`)
               : `ph-playlist`}"></i>
             <p>Select a ${what}</p>
           </div>
@@ -2900,8 +2970,19 @@ class Browser extends DiffuseElement {
       const count = this.$currentTracks().length;
       subtitle = `${count} ${count === 1 ? "song" : "songs"}`;
     } else if (view.type === "group-tracks") {
-      title = view.value ?? (view.groupBy === "createdAt" ? "Added on" : "Years");
-      badge = view.value ? (view.groupBy === "createdAt" ? "Month" : "Year") : "";
+      title = view.value ??
+        (view.groupBy === "createdAt"
+          ? "Added on"
+          : view.groupBy === "decades"
+          ? "Decades"
+          : "Years");
+      badge = view.value
+        ? (view.groupBy === "createdAt"
+          ? "Month"
+          : view.groupBy === "decades"
+          ? "Decade"
+          : "Year")
+        : "";
       const count = this.$currentTracks().length;
       subtitle = `${count} ${count === 1 ? "song" : "songs"}`;
     } else {
