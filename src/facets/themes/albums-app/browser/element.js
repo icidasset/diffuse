@@ -121,15 +121,18 @@ function formatDuration(ms) {
 }
 
 /**
+ * `mm:ss`, keeping a negative sign — the mini player passes a negative
+ * remaining-time countdown for the right-hand timestamp.
  * @param {number | undefined} seconds
  * @returns {string}
  */
 function formatClock(seconds) {
   if (seconds === undefined || Number.isNaN(seconds)) return "0:00";
-  const totalSec = Math.max(0, Math.round(seconds));
+  const sign = seconds < 0 ? "-" : "";
+  const totalSec = Math.abs(Math.round(seconds));
   const m = Math.floor(totalSec / 60);
   const s = totalSec % 60;
-  return `${m}:${String(s).padStart(2, "0")}`;
+  return `${sign}${m}:${String(s).padStart(2, "0")}`;
 }
 
 /**
@@ -2469,7 +2472,7 @@ class Browser extends DiffuseElement {
 
         <div class="da-header__actions">
           <button class="da-pill" @click="${this.playNext}">
-            <i class="ph-bold ph-caret-right"></i>
+            <i class="ph-bold ph-play"></i>
             <span>Play Next${this.#selectedTracks.value.size
               ? ` (${this.#selectedTracks.value.size})`
               : ``}</span>
