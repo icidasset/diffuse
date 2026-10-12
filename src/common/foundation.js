@@ -68,9 +68,6 @@ const signals = {
     output: signal(
       /** @type {import("~/components/orchestrator/output/element.js").CLASS | null} */ (null),
     ),
-    pathCollections: signal(
-      /** @type {import("~/components/orchestrator/path-collections/element.js").CLASS | null} */ (null),
-    ),
     processTracks: signal(
       /** @type {import("~/components/orchestrator/process-tracks/element.js").CLASS | null} */ (null),
     ),
@@ -122,7 +119,6 @@ export const config = {
     favourites,
     mediaSession,
     output,
-    pathCollections,
     processTracks,
     queueAudio,
     scopedTracks,
@@ -158,7 +154,6 @@ export const config = {
       favourites: signals.orchestrator.favourites.get,
       mediaSession: signals.orchestrator.mediaSession.get,
       output: signals.orchestrator.output.get,
-      pathCollections: signals.orchestrator.pathCollections.get,
       processTracks: signals.orchestrator.processTracks.get,
       queueAudio: signals.orchestrator.queueAudio.get,
       scopedTracks: signals.orchestrator.scopedTracks.get,
@@ -546,27 +541,6 @@ async function spectrogramAudio() {
   sao.setAttribute("output-selector", o.selector);
 
   return findExistingOrAdd(sao, signals.orchestrator.spectrogramAudio);
-}
-
-/**
- * @param {Object} [options] - Options
- * @param {number} [options.pathPart] - 1-based path part of each track's URI to group playlists by. Defaults to 1.
- */
-async function pathCollections(options) {
-  const [{ CLASS: PathCollectionsOrchestrator }, o] = await Promise.all([
-    import("~/components/orchestrator/path-collections/element.js"),
-    output(),
-  ]);
-
-  const pco = new PathCollectionsOrchestrator();
-  pco.setAttribute("group", GROUP);
-  pco.setAttribute("output-selector", o.selector);
-
-  if (options?.pathPart) {
-    pco.setAttribute("path-part", String(options.pathPart));
-  }
-
-  return findExistingOrAdd(pco, signals.orchestrator.pathCollections);
 }
 
 async function sources() {

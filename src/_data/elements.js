@@ -214,12 +214,6 @@ export default {
         "A default output configuration. Contains all the outputs provided here along with the relevant transformers.",
     },
     {
-      url: "components/orchestrator/path-collections/element.js",
-      title: "Path Collections",
-      desc:
-        "Wraps an output element to generate ephemeral playlists based on a path part of each track's URI. The 1-based part can be set using the `path-part` attribute (defaults to the first). Ephemeral items are excluded from storage.",
-    },
-    {
       url: "components/orchestrator/process-tracks/element.js",
       title: "Process Inputs Into Tracks",
       desc:
@@ -354,6 +348,13 @@ export default {
       title: "Output / Refiner / Track URI Passkey",
       desc:
         "Encrypts track URIs using a passkey-derived PRF key. On read, decrypts encrypted:// URIs transparently; on write, re-encrypts all URIs before passing downstream.",
+    },
+    {
+      url:
+        "components/transformer/output/refiner/path-collections/element.js",
+      title: "Output / Refiner / Path Collections",
+      desc:
+        "Generates ephemeral playlists based on a path part of each track's URI. The 1-based part can be set using the `path-part` attribute (defaults to the first). Percent-encoded parts are decoded. Items with an id prefixed `path-collections/` are excluded from storage.",
     },
     {
       url: "components/transformer/output/string/json/element.js",

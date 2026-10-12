@@ -27,7 +27,6 @@ await Promise.all([
 
 const scopedTracks = await foundation.orchestrator.scopedTracks();
 const output = await foundation.orchestrator.output();
-const pathCollections = await foundation.orchestrator.pathCollections();
 await foundation.orchestrator.sources();
 await foundation.orchestrator.processTracks({ disableWhenReady: true });
 await foundation.orchestrator.queueAudio();
@@ -464,7 +463,7 @@ const songsMenu = () => {
 /** @returns {MenuFrame} */
 const playlistsMenu = () => {
   const $items = computed(() => {
-    const col = pathCollections.playlistItems.collection();
+    const col = output.playlistItems.collection();
     const items = col.state === "loaded" ? col.data : [];
     const map = Playlist.gather(items);
     const names = sortNames([...map.values()].map((p) => p.name));
@@ -489,7 +488,7 @@ const playlistsMenu = () => {
  */
 const playlistMenu = (name) => {
   const $items = computed(() => {
-    const col = pathCollections.playlistItems.collection();
+    const col = output.playlistItems.collection();
     const allItems = col.state === "loaded" ? col.data : [];
     const playlistItems = allItems.filter((item) => item.playlist === name);
     const ordered = Playlist.sort(playlistItems);

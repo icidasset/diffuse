@@ -1,5 +1,5 @@
 import { computed, signal } from "~/common/signal.js";
-import { OutputTransformer } from "~/components/transformer/output/base.js";
+import { OutputTransformer } from "../../base.js";
 import { defineElement } from "~/common/element.js";
 
 /**
@@ -7,13 +7,27 @@ import { defineElement } from "~/common/element.js";
  */
 
 ////////////////////////////////////////////
+// CONSTANTS
+////////////////////////////////////////////
+
+// Id prefix of the ephemeral items this transformer generates. Items with
+// an id starting with this prefix are excluded from storage on save.
+const ID_PREFIX = "path-collections";
+
+////////////////////////////////////////////
 // ELEMENT
 ////////////////////////////////////////////
 
-class PathCollectionsOrchestrator extends OutputTransformer {
-  static NAME = "diffuse/orchestrator/path-collections";
+/**
+ * @extends {OutputTransformer}
+ */
+class PathCollectionsTransformer extends OutputTransformer {
+  static NAME = "diffuse/transformer/output/refiner/path-collections";
 
-  static observedAttributes = ["path-part"];
+  /**
+   * @override
+   */
+  static observedAttributes = ["output-selector", "path-part"];
 
   /** 1-based path part of each track's URI to group playlists by. Defaults to 1. */
   #pathPart = signal(1);
@@ -43,7 +57,7 @@ class PathCollectionsOrchestrator extends OutputTransformer {
       /** @type {(typeof base.playlistItems.save)} */
       save: async (items) => {
         await base.playlistItems.save(
-          (items || []).filter((p) => !p.ephemeral),
+          (items || []).filter((p) => !p.id.startsWith(`${ID_PREFIX}/`)),
         );
       },
     };
@@ -66,6 +80,12 @@ class PathCollectionsOrchestrator extends OutputTransformer {
 }
 
 /**
+ * One ephemeral playlist item per track: the playlist is named after the
+ * track's nth path part, and the item matches exactly that track (criteria
+ * only support exact equality). Grouping the items by their `playlist` name
+ * (see `Playlist.gather`) then yields one playlist per path part containing
+ * all of its tracks.
+ *
  * @param {Track[]} tracks
  * @param {number} pathPart
  * @returns {PlaylistItem[]}
@@ -74,26 +94,17 @@ function createEphemeralItems(tracks, pathPart) {
   /** @type {PlaylistItem[]} */
   const items = [];
 
-  /** @type {Set<string>} */
-  const segmentsAdded = new Set();
-
   tracks.forEach((track) => {
     const segment = pathSegment(track.uri, pathPart);
     if (!segment) return;
 
-    if (segmentsAdded.has(segment)) return;
-
-    /** @type {PlaylistItem} */
-    const item = {
+    items.push({
       $type: "sh.diffuse.output.playlistItem",
-      id: `path-collections/${track.id}`,
+      id: `${ID_PREFIX}/${track.id}`,
       playlist: segment,
       criteria: [{ field: "uri", value: /** @type {any} */ (track.uri) }],
       ephemeral: true,
-    };
-
-    items.push(item);
-    segmentsAdded.add(segment);
+    });
   });
 
   return items;
@@ -130,13 +141,13 @@ function parsePathPart(value) {
   return Number.isNaN(parsed) || parsed < 1 ? 1 : parsed;
 }
 
-export default PathCollectionsOrchestrator;
+export default PathCollectionsTransformer;
 
 ////////////////////////////////////////////
 // REGISTER
 ////////////////////////////////////////////
 
-export const CLASS = PathCollectionsOrchestrator;
-export const NAME = "do-path-collections";
+export const CLASS = PathCollectionsTransformer;
+export const NAME = "dtor-path-collections";
 
 defineElement(NAME, CLASS);

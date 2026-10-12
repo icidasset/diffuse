@@ -29,7 +29,6 @@ import * as _OrchestratorCoverGroups from "./orchestrator/cover-groups/element.j
 import * as _OrchestratorFavourites from "./orchestrator/favourites/element.js"
 import * as _OrchestratorMediaSession from "./orchestrator/media-session/element.js"
 import * as _OrchestratorOutput from "./orchestrator/output/element.js"
-import * as _OrchestratorPathCollections from "./orchestrator/path-collections/element.js"
 import * as _OrchestratorProcessTracks from "./orchestrator/process-tracks/element.js"
 import * as _OrchestratorQueueAudio from "./orchestrator/queue-audio/element.js"
 import * as _OrchestratorScopedTracks from "./orchestrator/scoped-tracks/element.js"
@@ -48,6 +47,7 @@ import * as _TransformerOutputRawAtprotoSync from "./transformer/output/raw/atpr
 import * as _TransformerOutputRefinerDefault from "./transformer/output/refiner/default/element.js"
 import * as _TransformerOutputRefinerInitialContents from "./transformer/output/refiner/initial-contents/element.js"
 import * as _TransformerOutputRefinerPasskeyEncryption from "./transformer/output/refiner/passkey-encryption/element.js"
+import * as _TransformerOutputRefinerPathCollections from "./transformer/output/refiner/path-collections/element.js"
 import * as _TransformerOutputStringJson from "./transformer/output/string/json/element.js"
 import * as _UploadDropbox from "./upload/dropbox/element.js"
 
@@ -98,7 +98,6 @@ export const orchestrator = {
   favourites: _OrchestratorFavourites,
   mediaSession: _OrchestratorMediaSession,
   output: _OrchestratorOutput,
-  pathCollections: _OrchestratorPathCollections,
   processTracks: _OrchestratorProcessTracks,
   queueAudio: _OrchestratorQueueAudio,
   scopedTracks: _OrchestratorScopedTracks,
@@ -138,6 +137,7 @@ export const transformer = {
       default: _TransformerOutputRefinerDefault,
       initialContents: _TransformerOutputRefinerInitialContents,
       passkeyEncryption: _TransformerOutputRefinerPasskeyEncryption,
+      pathCollections: _TransformerOutputRefinerPathCollections,
     },
     string: {
       json: _TransformerOutputStringJson,

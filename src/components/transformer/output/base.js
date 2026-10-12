@@ -9,6 +9,8 @@ import { computed, signal } from "~/common/signal.js";
  * @template [T=null]
  */
 export class OutputTransformer extends BroadcastableDiffuseElement {
+  static observedAttributes = ["output-selector"];
+
   // SIGNALS
 
   #output = signal(/** @type {OutputElement<T> | undefined} */ (undefined));
@@ -35,6 +37,32 @@ export class OutputTransformer extends BroadcastableDiffuseElement {
       this.#output.value = output;
       this.#outputWhenDefined.resolve(null);
     });
+  }
+
+  /**
+   * @override
+   * @param {string} name
+   * @param {string} oldValue
+   * @param {string} newValue
+   */
+  attributeChangedCallback(name, oldValue, newValue) {
+    super.attributeChangedCallback(name, oldValue, newValue);
+
+    // Re-resolve the output when rewired at runtime (eg. when a transformer
+    // is inserted into an existing output chain). Before connecting, the
+    // initial query is handled by `connectedCallback`.
+    if (
+      name === "output-selector" && this.isConnected &&
+      oldValue !== newValue
+    ) {
+      /** @type {OutputElement<T>} */
+      const output = query(this, "output-selector");
+
+      customElements.whenDefined(output.localName).then(() => {
+        this.#output.value = output;
+        this.#outputWhenDefined.resolve(null);
+      });
+    }
   }
 
   // MANAGER

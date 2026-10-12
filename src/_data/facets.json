@@ -221,6 +221,13 @@
     "desc": "A recreation of the click-wheel iPod UI. Spin the wheel to scroll, tap the ring for menu / prev / next / play, and press the centre button to select. Alternatively, use your keyboard arrow keys."
   },
   {
+    "url": "facets/data/path-playlists/prelude/index.tile",
+    "title": "Path Playlists",
+    "kind": "prelude",
+    "category": "Data",
+    "desc": "Automatically generate playlists from the folder structure of your audio sources. Each unique first path part of a track's URI becomes a playlist containing its tracks. These playlists are generated on the fly and are not stored. Edit the `PATH_PART` code to change which path part to use as the unique playlist name."
+  },
+  {
     "url": "facets/data/playlists/index.tile",
     "title": "Playlists",
     "category": "Data",
