@@ -45,8 +45,8 @@ main {
 da-browser {
   border-radius: 0.75rem;
   box-shadow:
-    0 0 0 1px rgb(255 255 255 / 0.08),
-    0 24px 64px rgb(0 0 0 / 0.55);
+    0 0 0 1px var(--da-window-ring),
+    var(--da-window-shadow);
   flex: 1;
   min-height: 0;
   min-width: 0;

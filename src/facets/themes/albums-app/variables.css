@@ -10,4 +10,30 @@
   --da-accent: #f5931e;
   --da-border: rgb(255 255 255 / 0.07);
   --da-hairline: rgb(255 255 255 / 0.06);
+  --da-progress-track: rgb(255 255 255 / 0.28);
+  --da-shadow: 0 4px 12px rgb(0 0 0 / 0.35);
+  --da-window-ring: rgb(255 255 255 / 0.08);
+  --da-window-shadow: 0 24px 64px rgb(0 0 0 / 0.55);
+  color-scheme: dark;
+}
+
+@media (prefers-color-scheme: light) {
+  :root,
+  :host {
+    --da-bg: #d9d9de;
+    --da-window: #f5f5f7;
+    --da-surface: #e9e9ee;
+    --da-surface-strong: #dcdce1;
+    --da-text: #1d1d1f;
+    --da-text-dim: #6e6e73;
+    --da-text-faint: #98989e;
+    --da-accent: #f5931e;
+    --da-border: rgb(0 0 0 / 0.10);
+    --da-hairline: rgb(0 0 0 / 0.08);
+    --da-progress-track: rgb(0 0 0 / 0.15);
+    --da-shadow: 0 4px 12px rgb(0 0 0 / 0.18);
+    --da-window-ring: rgb(0 0 0 / 0.12);
+    --da-window-shadow: 0 24px 64px rgb(0 0 0 / 0.22);
+    color-scheme: light;
+  }
 }

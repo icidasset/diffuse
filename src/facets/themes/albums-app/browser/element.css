@@ -277,7 +277,8 @@ a.da-titlebar__btn {
   align-items: center;
   background: rgb(0 0 0 / 0.45);
   bottom: 0;
-  color: var(--da-text);
+  /* Over the dark scrim, so white in both modes */
+  color: #fff;
   display: flex;
   justify-content: center;
   left: 0;
@@ -352,7 +353,7 @@ a.da-titlebar__btn {
 
 .da-mini__progress progress {
   appearance: none;
-  background: rgb(255 255 255 / 0.28);
+  background: var(--da-progress-track);
   border: 0;
   border-radius: 2px;
   display: block;
@@ -487,7 +488,7 @@ a.da-titlebar__btn {
   background: var(--da-surface-strong);
   border: 1px solid var(--da-border);
   border-radius: 0.5rem;
-  box-shadow: 0 4px 12px rgb(0 0 0 / 0.35);
+  box-shadow: var(--da-shadow);
   display: flex;
   justify-content: center;
   left: 50%;
@@ -511,7 +512,7 @@ a.da-titlebar__btn {
 }
 
 .da-volume-slider::-webkit-slider-runnable-track {
-  background: rgb(255 255 255 / 0.28);
+  background: var(--da-progress-track);
   border-radius: 2px;
   width: 3px;
 }
@@ -839,7 +840,7 @@ a.da-titlebar__btn {
   aspect-ratio: 1;
   background: var(--da-surface);
   border-radius: 0.5rem;
-  box-shadow: 0 4px 12px rgb(0 0 0 / 0.35);
+  box-shadow: var(--da-shadow);
   overflow: hidden;
   transition: transform 150ms ease;
 }
