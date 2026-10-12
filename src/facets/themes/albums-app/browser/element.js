@@ -2751,7 +2751,7 @@ class Browser extends DiffuseElement {
     const sortIcon = /** @param {string} col */ (col) =>
       sortedColumn === col
         ? html`<i class="ph-bold ph-caret-${
-          sortDirection === "desc" ? "down" : "up"
+          sortDirection === "desc" ? "up" : "down"
         }"></i>`
         : nothing;
 
