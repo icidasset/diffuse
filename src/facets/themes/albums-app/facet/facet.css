@@ -6,6 +6,14 @@ body {
   padding: 0;
 }
 
+/* Dynamic viewport height: keeps the layout flush with the mobile
+ * browser chrome as the URL bar collapses/expands */
+@supports (height: 100dvh) {
+  body {
+    height: 100dvh;
+  }
+}
+
 body {
   background: var(--da-bg);
   color: var(--da-text);

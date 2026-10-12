@@ -385,6 +385,14 @@ class Browser extends DiffuseElement {
   #scrollAbort;
   /** @type {AbortController | undefined} */
   #uiAbort;
+  /** @type {AbortController | undefined} */
+  #mobileAbort;
+  /** @type {MediaQueryList | undefined} */
+  #mobileQuery;
+  #mobilePaneSynced = false;
+
+  /** Last row click, for double-tap/double-click-to-play. */
+  #lastRowClick = /** @type {{ id: string; time: number } | undefined} */ (undefined);
   /** @type {Track[] | undefined} */
   #renderedTracks = undefined;
 
@@ -832,6 +840,7 @@ class Browser extends DiffuseElement {
 
     this.#setupScrollListener();
     this.#setupOutsideClickCloser();
+    this.#setupMobilePane();
   }
 
   /**
@@ -843,6 +852,8 @@ class Browser extends DiffuseElement {
     this.#scrollAbort = undefined;
     this.#uiAbort?.abort();
     this.#uiAbort = undefined;
+    this.#mobileAbort?.abort();
+    this.#mobileAbort = undefined;
     this.#resizeObserver?.disconnect();
     this.#resizeObserver = undefined;
     this.#observedPanel = null;
@@ -1380,6 +1391,23 @@ class Browser extends DiffuseElement {
     const selected = new Set(this.#selectedTracks.value);
     selected.has(track.id) ? selected.delete(track.id) : selected.add(track.id);
     this.#selectedTracks.value = selected;
+  };
+
+  /**
+   * Row click → play on double-tap/double-click. Mobile browsers don't
+   * synthesize `dblclick` from double-taps, so timing is handled here.
+   * The row's buttons stop propagation, so this only sees row-area taps.
+   * @param {Track} track
+   */
+  onRowClick = (track) => {
+    const now = Date.now();
+    const last = this.#lastRowClick;
+    this.#lastRowClick = { id: track.id, time: now };
+
+    if (last && last.id === track.id && now - last.time < 400) {
+      this.#lastRowClick = undefined;
+      this.playTrack(track);
+    }
   };
 
   toggleSortDirection = () => {
@@ -1948,6 +1976,71 @@ class Browser extends DiffuseElement {
   }
 
   /**
+   * Mobile (< 48rem): the shell is a horizontal pane scroller — Library
+   * (rail) → section list (catalog) → content (main). The visible pane
+   * follows the view: drill-ins open the main pane, overviews the
+   * catalog, and the root state (empty history) the Library.
+   */
+  #setupMobilePane() {
+    if (this.#mobileAbort) return;
+
+    this.#mobileAbort = new AbortController();
+    this.#mobileQuery = matchMedia("(max-width: 47.99rem)");
+    this.#mobileQuery.addEventListener(
+      "change",
+      () => this.#scrollMobilePane(false),
+      { signal: this.#mobileAbort.signal },
+    );
+
+    this.effect(() => {
+      const view = this.#view.value;
+      const depth = this.#history.value.length;
+      untracked(() => this.#scrollMobilePane(true));
+    });
+  }
+
+  /**
+   * Pane index for the current view: 0 = Library, 1 = section list,
+   * 2 = content.
+   * @returns {0 | 1 | 2}
+   */
+  #mobilePaneIndex() {
+    const view = this.#view.value;
+
+    // Detail views show the main pane
+    if (
+      view.type === "album" ||
+      view.type === "artist" ||
+      (view.type === "group-tracks" && view.value) ||
+      (view.type === "playlist-tracks" && !!this.$scope.value?.playlist())
+    ) {
+      return 2;
+    }
+
+    // The songs list is itself the content (no catalog for it)
+    if (view.type === "tracks") return 2;
+
+    // Overviews show the section list — except the root state, which is
+    // the Library home
+    return this.#history.value.length ? 1 : 0;
+  }
+
+  /**
+   * @param {boolean} smooth
+   */
+  #scrollMobilePane(smooth) {
+    const shell = this.root().querySelector(".da-shell");
+    if (!shell || !this.#mobileQuery?.matches) return;
+
+    const left = this.#mobilePaneIndex() * shell.clientWidth;
+    if (Math.abs(shell.scrollLeft - left) < 1) return;
+    shell.scrollTo({
+      left,
+      behavior: smooth ? "smooth" : "instant",
+    });
+  }
+
+  /**
    * Close the volume popover on pointer-down anywhere outside of it
    * (document-level, since clicks outside the element count too).
    * `composedPath()` is required because document-level listeners see
@@ -2075,6 +2168,11 @@ class Browser extends DiffuseElement {
       this.#syncViewportObserver();
       this.#measureCatalog();
       this.#measureTracks();
+      // Jump the mobile pane scroller to the restored view's pane once
+      if (!this.#mobilePaneSynced) {
+        this.#mobilePaneSynced = true;
+        this.#scrollMobilePane(false);
+      }
     });
 
     return html`
@@ -2091,6 +2189,7 @@ class Browser extends DiffuseElement {
           ${this.#renderCatalog(html)}
           ${this.#renderMain(html)}
         </div>
+        ${this.#renderMobileBar(html)}
         ${this.#renderPlaylistPalette(html)}
       </div>
     `;
@@ -2152,7 +2251,7 @@ class Browser extends DiffuseElement {
         </button>
 
         <button
-          class="da-titlebar__btn ${this.#catalogCollapsed.value
+          class="da-titlebar__btn da-titlebar__btn--sidebar ${this.#catalogCollapsed.value
           ? `da-titlebar__btn--active`
           : ""}"
           @click="${this.toggleCatalog}"
@@ -2623,6 +2722,80 @@ class Browser extends DiffuseElement {
       .map((p) => ({ name: p.name, count: p.items.length }))
       .sort((a, b) => collator.compare(a.name, b.name));
   });
+
+  /**
+   * Compact now-playing bar shown below the shell on mobile (the rail's
+   * mini player is hidden there). When the queue/history panel is open
+   * it renders in place of the track info, like on the rail.
+   * @param {Function} html
+   */
+  #renderMobileBar(html) {
+    const track = this.currentTrack();
+    const isPlaying = this.isPlaying();
+    const isShuffle = this.$repeatShuffle.value?.shuffle() ?? false;
+    const isRepeat = this.$repeatShuffle.value?.repeat() ?? false;
+    const isError = this.#audioError.value;
+    const albumKey = String(track?.tags?.album ?? "").toLowerCase();
+    const artUrl = track ? this.#coverArtCache.get(albumKey) : undefined;
+
+    if (track && this.#coverArtCache.get(albumKey) === undefined) {
+      this.#fetchAlbumArt(albumKey, track);
+    }
+
+    return html`
+      <div class="da-mobile-bar">
+        ${this.#playerPanel.value
+          ? this.#renderPlayerPanel(html)
+          : html`
+            <div class="da-mobile-bar__info">
+              <div class="da-mobile-bar__art">
+                ${artUrl
+                  ? html`<img src="${artUrl}" alt="" />`
+                  : html`
+                    <div class="da-mini__art-placeholder">
+                      <i class="ph-fill ph-music-notes"></i>
+                    </div>
+                  `}
+              </div>
+              <div class="da-mini__meta">
+                <span class="da-mini__title">${track?.tags?.title ?? "Not playing"}</span>
+                <span class="da-mini__artist">${track?.tags?.artist ?? "—"}</span>
+              </div>
+            </div>
+            <div class="da-mobile-bar__controls">
+              <button
+                data-enabled="${isShuffle ? `t` : `f`}"
+                @click="${this.toggleShuffle}"
+                title="Toggle shuffle"
+              >
+                <i class="ph-${isShuffle ? `fill` : `bold`} ph-shuffle"></i>
+              </button>
+              <button @click="${this.previous}" title="Previous track">
+                <i class="ph-bold ph-skip-back"></i>
+              </button>
+              <button
+                class="da-mini__play ${isError ? `da-mini__play--error` : ""}"
+                @click="${isError ? this.reload : this.playPause}"
+                title="${isError ? `Reload` : isPlaying ? `Pause` : `Play`}">
+                <i class="${isError
+                  ? `ph-fill ph-warning-circle`
+                  : `ph-bold ${isPlaying ? `ph-pause` : `ph-play`}`}"></i>
+              </button>
+              <button @click="${this.next}" title="Next track">
+                <i class="ph-bold ph-skip-forward"></i>
+              </button>
+              <button
+                data-enabled="${isRepeat ? `t` : `f`}"
+                @click="${this.toggleRepeat}"
+                title="Toggle repeat"
+              >
+                <i class="ph-${isRepeat ? `fill` : `bold`} ph-repeat"></i>
+              </button>
+            </div>
+          `}
+      </div>
+    `;
+  }
 
   /**
    * Command palette. Modes: add the selected tracks to a playlist
@@ -3539,7 +3712,7 @@ class Browser extends DiffuseElement {
       <div
         class="da-track-row ${isSelected ? `da-track-row--selected` : ""} ${isCurrent ? `da-track-row--current` : ""}"
         style="transform: translateY(${top}px);"
-        @dblclick="${() => this.playTrack(track)}"
+        @click="${() => this.onRowClick(track)}"
       >
         <div class="da-track__title">
           <button
