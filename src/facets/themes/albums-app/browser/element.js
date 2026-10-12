@@ -6,6 +6,7 @@ import {
   queryOptional,
   whenElementsDefined,
 } from "~/common/element.js";
+import * as TID from "@atcute/tid";
 import { batch, computed, signal, untracked } from "~/common/signal.js";
 import * as Playlist from "~/common/playlist.js";
 import { repeat } from "~/vendor/lit-html/directives/repeat.js";
@@ -309,6 +310,13 @@ class Browser extends DiffuseElement {
 
   #volumeOpen = signal(false);
 
+  /** Open command palette — add-to-playlist, or manage (rename/delete). */
+  #palette = signal(
+    /** @type {{ mode: "add"; tracks: Track[] } | { mode: "menu"; playlist: string } | { mode: "rename"; playlist: string } | { mode: "delete"; playlist: string } | null} */ (null),
+  );
+
+  #paletteQuery = signal("");
+
   // Cover art cache (albums, artists and playlist thumbnails share it)
   /** @type {Map<string, string | null | undefined>} */
   #coverArtCache = new Map();
@@ -505,6 +513,8 @@ class Browser extends DiffuseElement {
     const first = new Map();
     if (!col || col.state !== "loaded" || !tracks.length) return first;
 
+    // Ephemeral items stay in the sidebar (the user wants them visible
+    // there) — the palette is the only surface that filters them.
     const items = col.data;
     if (!items.length) return first;
 
@@ -984,6 +994,211 @@ class Browser extends DiffuseElement {
    */
   addToQueue = (track) => {
     this.$queue.value?.add({ trackIds: [track.id] });
+  };
+
+  /** Opens the add-to-playlist palette for the selected tracks. */
+  openPlaylistPalette = () => {
+    const selected = this.#selectedTracks.value;
+    const tracks = this.#currentViewTracks();
+    const picked = selected.size
+      ? tracks.filter((t) => selected.has(t.id))
+      : [];
+    if (!picked.length) return;
+
+    this.#paletteQuery.value = "";
+    this.#palette.value = { mode: "add", tracks: picked };
+  };
+
+  /** Opens the manage palette for the currently selected playlist. */
+  openManagePalette = () => {
+    const playlist = this.$scope.value?.playlist();
+    if (!playlist) return;
+    this.#palette.value = { mode: "menu", playlist };
+  };
+
+  openRenamePalette = () => {
+    const palette = this.#palette.value;
+    if (palette?.mode !== "menu") return;
+    this.#paletteQuery.value = palette.playlist;
+    this.#palette.value = { mode: "rename", playlist: palette.playlist };
+  };
+
+  openDeletePalette = () => {
+    const palette = this.#palette.value;
+    if (palette?.mode !== "menu") return;
+    // Entering delete mode IS the confirmation step — the row shows the
+    // destructive confirm immediately
+    this.#palette.value = { mode: "delete", playlist: palette.playlist };
+  };
+
+  closePlaylistPalette = () => {
+    this.#palette.value = null;
+  };
+
+  /**
+   * Renames a playlist by re-saving its items under the new name
+   * (ids and `positionedAfter` chains are preserved).
+   * @param {string} oldName
+   * @param {string} newName
+   */
+  renamePlaylist = async (oldName, newName) => {
+    const output = this.$output.value;
+    newName = newName.trim();
+    if (!output || !newName || newName === oldName) return;
+
+    const col = output.playlistItems.collection();
+    if (col.state !== "loaded") return;
+
+    const now = new Date().toISOString();
+    await output.playlistItems.save(
+      col.data.map((item) =>
+        item.playlist === oldName
+          ? { ...item, playlist: newName, updatedAt: now }
+          : item,
+      ),
+    );
+
+    // Keep the open view / scope filter pointed at the renamed playlist
+    if (this.$scope.value?.playlist() === oldName) {
+      this.$scope.value?.setPlaylist(newName);
+    }
+  };
+
+  /** Deletes a playlist by removing all of its items.
+   * @param {string} name
+   */
+  deletePlaylist = async (name) => {
+    const output = this.$output.value;
+    if (!output) return;
+
+    const col = output.playlistItems.collection();
+    if (col.state !== "loaded") return;
+
+    await output.playlistItems.save(
+      col.data.filter((item) => item.playlist !== name),
+    );
+
+    // The open view was the deleted playlist's track list
+    if (this.$scope.value?.playlist() === name) {
+      this.setSelectedPlaylist(undefined);
+    }
+  };
+
+  setPaletteQuery = () => {
+    /** @type {HTMLInputElement | null} */
+    const input = this.root().querySelector("#da-palette-input");
+    this.#paletteQuery.value = input?.value ?? "";
+  };
+
+  /**
+   * Appends tracks to a playlist as artist/title criteria, skipping
+   * tracks the playlist already contains (blur pattern).
+   * @param {string} playlistName
+   * @param {Track[]} tracks
+   */
+  addTracksToPlaylist = async (playlistName, tracks) => {
+    const output = this.$output.value;
+    if (!output || !tracks.length) return;
+
+    const col = output.playlistItems.collection();
+    const existing = col.state === "loaded" ? col.data : [];
+
+    const existingKeys = new Set(
+      existing
+        .filter((item) => item.playlist === playlistName)
+        .map((item) => {
+          const a = item.criteria.find((c) => c.field === "tags.artist")
+            ?.value ?? "";
+          const t = item.criteria.find((c) => c.field === "tags.title")
+            ?.value ?? "";
+          return `${String(a).toLowerCase()}.${String(t).toLowerCase()}`;
+        }),
+    );
+
+    const transformations = /** @type {string[]} */ (["toLowerCase"]);
+    const now = new Date().toISOString();
+
+    const newItems = tracks
+      .filter((track) => {
+        const key = `${String(track.tags?.artist ?? "").toLowerCase()}.${
+          String(track.tags?.title ?? "").toLowerCase()
+        }`;
+        return !existingKeys.has(key);
+      })
+      .map((track) =>
+        /** @type {import("~/definitions/types.d.ts").PlaylistItem} */ ({
+          $type: "sh.diffuse.output.playlistItem",
+          id: TID.now(),
+          playlist: playlistName,
+          criteria: [
+            {
+              field: "tags.artist",
+              value: /** @type {unknown} */ (track.tags?.artist),
+              transformations,
+            },
+            {
+              field: "tags.title",
+              value: /** @type {unknown} */ (track.tags?.title),
+              transformations,
+            },
+          ],
+          createdAt: now,
+          updatedAt: now,
+        }));
+
+    if (!newItems.length) return;
+    await output.playlistItems.save([...existing, ...newItems]);
+  };
+
+  /**
+   * Creates a playlist and fills it with tracks; `ordered` chains the
+   * items with `positionedAfter` so the playlist keeps this exact order.
+   * @param {string} playlistName
+   * @param {Track[]} tracks
+   * @param {boolean} ordered
+   */
+  createPlaylistWithTracks = async (playlistName, tracks, ordered) => {
+    const output = this.$output.value;
+    if (!output || !tracks.length) return;
+
+    const col = output.playlistItems.collection();
+    const existing = col.state === "loaded" ? col.data : [];
+
+    const transformations = /** @type {string[]} */ (["toLowerCase"]);
+    const now = new Date().toISOString();
+
+    /** @type {import("~/definitions/types.d.ts").PlaylistItem[]} */
+    const newItems = [];
+    let prevId = /** @type {string | undefined} */ (undefined);
+
+    for (const track of tracks) {
+      const id = TID.now();
+      newItems.push(
+        /** @type {import("~/definitions/types.d.ts").PlaylistItem} */ ({
+          $type: "sh.diffuse.output.playlistItem",
+          id,
+          playlist: playlistName,
+          criteria: [
+            {
+              field: "tags.artist",
+              value: /** @type {unknown} */ (track.tags?.artist),
+              transformations,
+            },
+            {
+              field: "tags.title",
+              value: /** @type {unknown} */ (track.tags?.title),
+              transformations,
+            },
+          ],
+          ...(ordered ? { positionedAfter: prevId } : {}),
+          createdAt: now,
+          updatedAt: now,
+        }),
+      );
+      if (ordered) prevId = id;
+    }
+
+    await output.playlistItems.save([...existing, ...newItems]);
   };
 
   /**
@@ -1748,6 +1963,7 @@ class Browser extends DiffuseElement {
           ${this.#renderCatalog(html)}
           ${this.#renderMain(html)}
         </div>
+        ${this.#renderPlaylistPalette(html)}
       </div>
     `;
   }
@@ -2188,6 +2404,242 @@ class Browser extends DiffuseElement {
   });
 
   /**
+   * Whether a playlist is auto-generated (ephemeral): it has items and
+   * every one of them is flagged. A mixed playlist (real + generated
+   * items under one name) stays editable.
+   * @param {string} name
+   * @returns {boolean}
+   */
+  #isEphemeralPlaylist(name) {
+    const col = this.$output.value?.playlistItems.collection();
+    if (col?.state !== "loaded") return false;
+    const items = col.data.filter((item) => item.playlist === name);
+    return items.length > 0 && items.every((item) => item.ephemeral);
+  }
+
+  /**
+   * All playlists with item counts, alphabetically — for the palette.
+   * Auto-generated (ephemeral) playlists are excluded here only; the
+   * sidebar shows them.
+   */
+  $palettePlaylists = computed(() => {
+    const col = this.$output.value?.playlistItems.collection();
+    if (col?.state !== "loaded") return [];
+    return [...Playlist.gather(
+      col.data.filter((item) => !item.ephemeral),
+    ).values()]
+      .map((p) => ({ name: p.name, count: p.items.length }))
+      .sort((a, b) => collator.compare(a.name, b.name));
+  });
+
+  /**
+   * Command palette. Modes: add the selected tracks to a playlist
+   * (filter existing or create from the query), or manage the playlist
+   * open in the main pane (rename / delete with confirmation).
+   * @param {Function} html
+   */
+  #renderPlaylistPalette(html) {
+    const palette = this.#palette.value;
+    if (!palette) return nothing;
+
+    const mode = palette.mode;
+
+    /** add/rename mode state */
+    const query = this.#paletteQuery.value.trim();
+    const queryKey = query.toLowerCase();
+    const playlists = this.$palettePlaylists();
+    const matches = queryKey
+      ? playlists.filter((p) => p.name.toLowerCase().includes(queryKey))
+      : playlists;
+    const canCreate = mode === "add" && queryKey.length > 0 &&
+      !playlists.some((p) => p.name.toLowerCase() === queryKey);
+
+    /** rename mode state */
+    const canRename = mode === "rename" && query.length > 0 &&
+      query !== palette.playlist &&
+      !playlists.some((p) => p.name.toLowerCase() === queryKey);
+
+    const finish = () => {
+      this.#selectedTracks.value = new Set();
+      this.closePlaylistPalette();
+    };
+
+    const create = async () => {
+      if (mode !== "add") return;
+      await this.createPlaylistWithTracks(query, palette.tracks, false);
+      finish();
+    };
+
+    const applyRename = async () => {
+      if (mode !== "rename" || !canRename) return;
+      await this.renamePlaylist(palette.playlist, query);
+      this.closePlaylistPalette();
+    };
+
+    const applyDelete = async () => {
+      if (mode !== "delete") return;
+      await this.deletePlaylist(palette.playlist);
+      this.closePlaylistPalette();
+    };
+
+    return html`
+      <div
+        class="da-palette-overlay"
+        @click="${(/** @type {MouseEvent} */ e) => {
+          if (e.target === e.currentTarget) this.closePlaylistPalette();
+        }}"
+      >
+        <div class="da-palette-panel">
+          ${mode === "add" || mode === "rename"
+            ? html`
+              <input
+                id="da-palette-input"
+                class="da-palette__input"
+                type="search"
+                placeholder="${mode === "add"
+                  ? `Add to playlist...`
+                  : `New name...`}"
+                autocomplete="off"
+                spellcheck="false"
+                autofocus
+                .value="${this.#paletteQuery.value}"
+                @input="${this.setPaletteQuery}"
+                @keydown="${(/** @type {KeyboardEvent} */ e) => {
+                  if (e.key === "Escape") {
+                    this.closePlaylistPalette();
+                  } else if (e.key === "Enter") {
+                    if (mode === "add") {
+                      if (canCreate) {
+                        create();
+                      } else if (matches[0]) {
+                        this.addTracksToPlaylist(matches[0].name, palette.tracks)
+                          .then(finish);
+                      }
+                    } else if (canRename) {
+                      applyRename();
+                    }
+                  }
+                }}"
+              />
+            `
+            : nothing}
+
+          ${mode === "add"
+            ? html`
+              <div class="da-palette__section">Playlists</div>
+              <div class="da-palette__list">
+                ${canCreate
+                  ? html`
+                    <button
+                      class="da-palette__row da-palette__row--create"
+                      @click="${create}"
+                    >
+                      <span class="da-palette__chip">
+                        <i class="ph-bold ph-plus"></i>
+                      </span>
+                      <span class="da-palette__row-label">Create Playlist</span>
+                      <span class="da-palette__row-secondary">“${query}”</span>
+                    </button>
+                  `
+                  : nothing}
+                ${matches.map(({ name, count }) =>
+                  html`
+                    <button
+                      class="da-palette__row"
+                      @click="${() =>
+                        this.addTracksToPlaylist(name, palette.tracks)
+                          .then(finish)}"
+                      title="${name}"
+                    >
+                      <span class="da-palette__chip">
+                        <i class="ph-bold ph-playlist"></i>
+                      </span>
+                      <span class="da-palette__row-label">${name}</span>
+                      <span
+                        class="da-palette__count"
+                        title="${count} ${count === 1 ? `track` : `tracks`}"
+                      >${count}</span>
+                    </button>
+                  `
+                )}
+                ${!matches.length && !canCreate
+                  ? html`<div class="da-palette__empty">No playlists yet</div>`
+                  : nothing}
+              </div>
+            `
+            : nothing}
+
+          ${mode === "menu"
+            ? html`
+              <div class="da-palette__section">Playlist “${palette.playlist}”</div>
+              <div class="da-palette__list">
+                <button
+                  class="da-palette__row"
+                  @click="${this.openRenamePalette}"
+                >
+                  <span class="da-palette__chip">
+                    <i class="ph-bold ph-pencil-simple"></i>
+                  </span>
+                  <span class="da-palette__row-label">Rename</span>
+                </button>
+                <button
+                  class="da-palette__row"
+                  @click="${this.openDeletePalette}"
+                >
+                  <span class="da-palette__chip">
+                    <i class="ph-bold ph-trash"></i>
+                  </span>
+                  <span class="da-palette__row-label">Delete</span>
+                </button>
+              </div>
+            `
+            : nothing}
+
+          ${mode === "rename"
+            ? html`
+              <div class="da-palette__section">Rename “${palette.playlist}”</div>
+              <div class="da-palette__list">
+                ${canRename
+                  ? html`
+                    <button
+                      class="da-palette__row da-palette__row--create"
+                      @click="${applyRename}"
+                    >
+                      <span class="da-palette__chip">
+                        <i class="ph-bold ph-check"></i>
+                      </span>
+                      <span class="da-palette__row-label">Rename Playlist</span>
+                      <span class="da-palette__row-secondary">“${query}”</span>
+                    </button>
+                  `
+                  : nothing}
+              </div>
+            `
+            : nothing}
+
+          ${mode === "delete"
+            ? html`
+              <div class="da-palette__section">Delete “${palette.playlist}”?</div>
+              <div class="da-palette__list">
+                <button
+                  class="da-palette__row da-palette__row--danger"
+                  @click="${applyDelete}"
+                >
+                  <span class="da-palette__chip">
+                    <i class="ph-bold ph-warning"></i>
+                  </span>
+                  <span class="da-palette__row-label">Confirm: delete playlist</span>
+                  <span class="da-palette__row-secondary">This cannot be undone</span>
+                </button>
+              </div>
+            `
+            : nothing}
+        </div>
+      </div>
+    `;
+  }
+
+  /**
    * @param {Function} html
    */
   #renderCatalog(html) {
@@ -2467,6 +2919,18 @@ class Browser extends DiffuseElement {
         <div class="da-header__row">
           <h1 class="da-header__title" title="${title}">${title}</h1>
           ${badge ? html`<span class="da-header__badge">${badge}</span>` : nothing}
+          ${view.type === "playlist-tracks" && playlist &&
+              !this.#isEphemeralPlaylist(playlist)
+            ? html`
+              <button
+                class="da-header__more"
+                @click="${this.openManagePalette}"
+                title="Playlist options"
+              >
+                <i class="ph-bold ph-dots-three"></i>
+              </button>
+            `
+            : nothing}
         </div>
         <div class="da-header__subtitle">${subtitle}</div>
 
@@ -2483,6 +2947,14 @@ class Browser extends DiffuseElement {
               ? ` (${this.#selectedTracks.value.size})`
               : ``}</span>
           </button>
+          ${this.#selectedTracks.value.size
+            ? html`
+              <button class="da-pill" @click="${this.openPlaylistPalette}">
+                <i class="ph-bold ph-playlist"></i>
+                <span>Add to Playlist</span>
+              </button>
+            `
+            : nothing}
           <button
             class="da-pill da-pill--icon"
             @click="${this.toggleSortDirection}"

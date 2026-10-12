@@ -8,6 +8,7 @@
   --da-text-dim: #98989e;
   --da-text-faint: #6e6e73;
   --da-accent: #f5931e;
+  --da-danger: #e5484d;
   --da-border: rgb(255 255 255 / 0.07);
   --da-hairline: rgb(255 255 255 / 0.06);
   --da-progress-track: rgb(255 255 255 / 0.28);
@@ -28,6 +29,7 @@
     --da-text-dim: #6e6e73;
     --da-text-faint: #98989e;
     --da-accent: #f5931e;
+    --da-danger: #e5484d;
     --da-border: rgb(0 0 0 / 0.10);
     --da-hairline: rgb(0 0 0 / 0.08);
     --da-progress-track: rgb(0 0 0 / 0.15);
