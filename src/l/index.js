@@ -21,7 +21,14 @@ if (!window.isSecureContext) {
 }
 
 // Output element
-const output = await foundation.orchestrator.output();
+// Without the orchestrator there's nothing to load, so surface the failure
+// instead of leaving the spinner bouncing forever on an unhandled rejection.
+const output = await foundation.orchestrator.output().catch((err) => {
+  renderError(container, "Failed to initialize the output orchestrator", {
+    context: err,
+  });
+  throw err;
+});
 
 // Preludes
 const facets = await Output.data(output.facets);

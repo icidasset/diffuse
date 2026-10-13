@@ -157,7 +157,18 @@ export function createLoader(config) {
     }).then(() => {
       if (loadable.id === loadedId) return;
       loadedId = loadable.id ?? null;
-      config.render(loadable);
+      // A throwing/rejecting `render` would otherwise escape as an unhandled
+      // rejection, leaving the spinner bouncing with no message.
+      return Promise.resolve()
+        .then(() => config.render(loadable))
+        .catch((err) => {
+          if (swControllerChanging) return;
+          renderError(
+            container,
+            `Failed to render ${config.label.toLowerCase()}`,
+            { context: err, throw: true },
+          );
+        });
     });
   });
 }
@@ -222,6 +233,11 @@ export async function ensureHTML(item) {
         blocks: tile.blocks,
       },
     });
+  } else if (item.uri?.endsWith(".tile") || item.resources) {
+    // A tile that resolved no root (missing `/` resource, CID, or block bytes)
+    // would otherwise fall through to loading the `.tile` binary as text and
+    // inject garbage.
+    throw new Error("Tile has no root resource");
   } else if (item.uri) {
     loaded = /** @type {T} */ ({ ...item, html: await loadURI(item.uri) });
   }
@@ -462,11 +478,34 @@ export function linkTileResources(container, resources, blocks) {
 }
 
 /**
+ * Loads the site font styles when an error is first rendered. The loader page
+ * doesn't include them upfront, so the woff2 is only fetched when the error
+ * message actually renders with the family (@font-face fonts are downloaded
+ * lazily, on first use).
+ */
+function loadErrorStyles() {
+  // `styles/base.css` already registers the font faces.
+  if (
+    document.querySelector(
+      `link[href="styles/loader-fonts.css"], link[href="styles/base.css"]`,
+    )
+  ) {
+    return;
+  }
+
+  const link = document.createElement("link");
+  link.rel = "stylesheet";
+  link.href = "styles/loader-fonts.css";
+  document.head.append(link);
+}
+
+/**
  * @param {HTMLElement} container
  * @param {string} error
  * @param {{ context?: Error; throw?: boolean }} [options]
  */
 export function renderError(container, error, options) {
+  loadErrorStyles();
   document.querySelector("#diffuse-loader")?.classList.add("loaded");
   container.classList.add("has-loaded");
   container.innerHTML = `

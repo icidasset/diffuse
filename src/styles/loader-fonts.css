@@ -1,0 +1,8 @@
+/*
+ * Fonts for pages that don't load `base.css` (e.g. the `/l/` loader), injected
+ * on demand when a loader error is rendered. Declared at this depth (not in
+ * `diffuse/`) because imports are inlined without rebasing URLs, so
+ * `font-faces.css`'s `../fonts/` only resolves from this directory.
+ */
+@import "./diffuse/font-faces.css" layer(diffuse.font-faces);
+@import "./diffuse/fonts.css" layer(diffuse.fonts);
