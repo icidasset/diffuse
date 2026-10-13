@@ -102,6 +102,19 @@ function restoreFilter(group) {
 }
 
 /**
+ * Restores the shuffle-add-order preference for a deck group.
+ * @param {string} group
+ * @returns {boolean}
+ */
+function restoreQueueShuffled(group) {
+  try {
+    return localStorage.getItem(`${STORAGE_PREFIX}/${group}/queueShuffled`) === "true";
+  } catch {
+    return false;
+  }
+}
+
+/**
  * @param {Track} track
  */
 function trackTitle(track) {
@@ -240,6 +253,7 @@ class Browser extends DiffuseElement {
         const view = restoreView(newValue);
         if (view) this.#view.value = view;
         this.#playlistFilter.value = restoreFilter(newValue);
+        this.#queueShuffled.value = restoreQueueShuffled(newValue);
       });
     }
 
@@ -323,6 +337,9 @@ class Browser extends DiffuseElement {
   );
 
   #paletteQuery = signal("");
+
+  /** Whether Play Next / Add to Queue add the tracks in shuffled order. */
+  #queueShuffled = signal(false);
 
   // Cover art cache (albums, artists and playlist thumbnails share it)
   /** @type {Map<string, string | null | undefined>} */
@@ -759,6 +776,19 @@ class Browser extends DiffuseElement {
       try {
         const key = `${STORAGE_PREFIX}/${this.group}/filter`;
         if (filter) localStorage.setItem(key, filter);
+        else localStorage.removeItem(key);
+      } catch {
+        // storage unavailable — non-fatal
+      }
+    });
+
+    // Remember the shuffle-add-order preference, keyed per deck group
+    this.effect(() => {
+      const on = this.#queueShuffled.value;
+      if (!this.hasAttribute("group")) return;
+      try {
+        const key = `${STORAGE_PREFIX}/${this.group}/queueShuffled`;
+        if (on) localStorage.setItem(key, "true");
         else localStorage.removeItem(key);
       } catch {
         // storage unavailable — non-fatal
@@ -1356,9 +1386,19 @@ class Browser extends DiffuseElement {
   #queueTargets() {
     const selected = this.#selectedTracks.value;
     const tracks = this.#currentViewTracks();
-    return selected.size
+    const picked = selected.size
       ? tracks.filter((t) => selected.has(t.id))
       : tracks;
+
+    if (!this.#queueShuffled.value) return picked;
+
+    // Fisher–Yates on a copy
+    const shuffled = [...picked];
+    for (let i = shuffled.length - 1; i > 0; i--) {
+      const j = Math.floor(Math.random() * (i + 1));
+      [shuffled[i], shuffled[j]] = [shuffled[j], shuffled[i]];
+    }
+    return shuffled;
   }
 
   /**
@@ -1414,6 +1454,11 @@ class Browser extends DiffuseElement {
     const scope = this.$scope.value;
     if (!scope) return;
     scope.setSortDirection(scope.sortDirection() === "desc" ? "asc" : "desc");
+  };
+
+  /** Toggles whether Play Next / Add to Queue add tracks shuffled. */
+  toggleQueueShuffled = () => {
+    this.#queueShuffled.value = !this.#queueShuffled.value;
   };
 
   /**
@@ -3349,6 +3394,17 @@ class Browser extends DiffuseElement {
               </button>
             `
             : nothing}
+          <button
+            class="da-pill da-pill--icon ${this.#queueShuffled.value
+              ? `da-pill--active`
+              : ""}"
+            @click="${this.toggleQueueShuffled}"
+            title="${this.#queueShuffled.value
+              ? `Add order: Shuffled`
+              : `Add order: Regular`}"
+          >
+            <i class="ph-${this.#queueShuffled.value ? `fill` : `bold`} ph-shuffle"></i>
+          </button>
           <button
             class="da-pill da-pill--icon"
             @click="${this.toggleSortDirection}"
