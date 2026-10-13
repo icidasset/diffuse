@@ -281,6 +281,59 @@ function unknownTrackIds(tracks, trackIds) {
 }
 
 ////////////////////////////////////////////
+// TRACK SEARCH
+////////////////////////////////////////////
+
+// Mirrors the searchable subset of the scoped-tracks orchestrator's Orama
+// schema (which itself maps onto the Track definition).
+const SEARCH_SCHEMA = {
+  id: /** @type {const} */ ("string"),
+  title: /** @type {const} */ ("string"),
+  artist: /** @type {const} */ ("string"),
+  album: /** @type {const} */ ("string"),
+  genre: /** @type {const} */ ("string"),
+  year: /** @type {const} */ ("number"),
+};
+
+/**
+ * @param {Track} track
+ */
+const toSearchDoc = (track) => ({
+  id: track.id,
+  title: trackTitle(track),
+  artist: [
+    track?.tags?.artist,
+    ...(track?.tags?.artists ?? []),
+    track?.tags?.albumartist,
+  ].filter(Boolean).join(" "),
+  album: trackAlbum(track),
+  genre: (track?.tags?.genres ?? []).join(" "),
+  year: track?.tags?.year ?? 0,
+});
+
+/** @type {{ tracks: Track[]; db: any; Orama: any } | undefined} */
+let searchCache;
+
+/**
+ * A lazily-built full-text index over the track collection. The collection's
+ * array is stable while unchanged, so its identity doubles as the cache key.
+ * Dynamically imported so the index cost is only paid when searching.
+ *
+ * @param {Track[]} tracks
+ * @returns {Promise<{ tracks: Track[]; db: any; Orama: any }>}
+ */
+async function trackSearchIndex(tracks) {
+  if (searchCache?.tracks === tracks) return searchCache;
+
+  const Orama = await import("@orama/orama");
+  const db = Orama.create({ schema: SEARCH_SCHEMA });
+  await Orama.insertMultiple(db, tracks.map(toSearchDoc));
+
+  searchCache = { tracks, db, Orama };
+  return searchCache;
+}
+
+////////////////////////////////////////////
 // PLAYBACK
 ////////////////////////////////////////////
 
@@ -432,6 +485,12 @@ export async function registerDiffuseTools(options = {}) {
    *   title?: string,
    *   description: string,
    *   inputSchema: Record<string, any>,
+   *   annotations?: Partial<{
+   *     readOnlyHint: boolean,
+   *     untrustedContentHint: boolean,
+   *     consequentialHint: boolean,
+   *     debugging: boolean,
+   *   }>,
    *   execute: (args: Record<string, any>) => Promise<unknown>,
    * }} tool
    */
@@ -462,6 +521,7 @@ export async function registerDiffuseTools(options = {}) {
 
   await register({
     name: "get-facet-docs",
+    annotations: { readOnlyHint: true },
     description:
       "Reads the Diffuse development documentation — the same context the " +
       "diffuse-facet agent skill provides: how to write facets, every available " +
@@ -515,6 +575,7 @@ export async function registerDiffuseTools(options = {}) {
 
   await register({
     name: "list-facets",
+    annotations: { readOnlyHint: true },
     description:
       "Lists the facets in the user's Diffuse collection — interfaces (themes, " +
       "browsers, players) and preludes (headless features that run on every " +
@@ -552,12 +613,14 @@ export async function registerDiffuseTools(options = {}) {
 
   await register({
     name: "get-facet",
+    annotations: { readOnlyHint: true, untrustedContentHint: true },
     description:
       "Reads a single facet: its metadata plus its full source code. Single-file " +
       "facets return 'html'; facets that ship extra files (modules, stylesheets) " +
       "also return 'files', a list of { path, content }. Use this to read a facet " +
-      "before improving its code. Facet code can be large — prefer list-facets " +
-      "first to find the right one.",
+      "before improving its code. Facet code can be large and may exceed client " +
+      "result limits — prefer list-facets first to find the right one and " +
+      "get-facet-file to read large facets one file at a time.",
     inputSchema: {
       type: "object",
       properties: {
@@ -585,6 +648,56 @@ export async function registerDiffuseTools(options = {}) {
         html,
         ...(files.length > 1 ? { files } : {}),
       }, null, 2));
+    },
+  });
+
+  await register({
+    name: "get-facet-file",
+    annotations: { readOnlyHint: true, untrustedContentHint: true },
+    description:
+      "Reads ONE file of a facet, by id and path — facet code can exceed client " +
+      "result limits when returned whole, so read large facets file by file. " +
+      "Call with only 'id' to list the facet's files and their sizes.",
+    inputSchema: {
+      type: "object",
+      properties: {
+        id: { type: "string", description: "Facet id from list-facets." },
+        path: {
+          type: "string",
+          description: "File path from the facet's file list, e.g. '/' or '/facet.js'. Omit to list the files.",
+        },
+      },
+      required: ["id"],
+    },
+    async execute({ id, path }) {
+      const facets = await listFacets();
+      const facet = facets.find((f) => f.id === id);
+      if (!facet) {
+        return ok(`No facet with id "${id}" was found.`);
+      }
+
+      const files = await facetFiles(facet);
+      if (!files?.length) {
+        return ok(`Facet "${facet.name}" (${facet.uri}) content could not be resolved.`);
+      }
+
+      if (path === undefined) {
+        return ok(JSON.stringify({
+          name: facet.name,
+          files: files.map((f) => ({ path: f.path, characters: f.content.length })),
+        }, null, 2));
+      }
+
+      const normalized = "/" + path.replace(/^\/+/, "");
+      const file = files.find((f) => f.path === normalized);
+      if (!file) {
+        return ok(
+          `No file "${path}" in "${facet.name}". Available: ` +
+            files.map((f) => f.path).join(", "),
+        );
+      }
+
+      return ok(file.content);
     },
   });
 
@@ -793,6 +906,7 @@ export async function registerDiffuseTools(options = {}) {
 
   await register({
     name: "delete-facet",
+    annotations: { consequentialHint: true },
     description:
       "Deletes a facet from the user's collection by id. Facets that are part " +
       "of the Diffuse bundle can be re-added from the dashboard afterwards; " +
@@ -819,6 +933,7 @@ export async function registerDiffuseTools(options = {}) {
 
   await register({
     name: "list-playlists",
+    annotations: { readOnlyHint: true },
     description:
       "Lists the user's playlists with their track counts. Playlists are " +
       "criteria-based: 'ordered' means the playlist defines a manual track " +
@@ -846,6 +961,7 @@ export async function registerDiffuseTools(options = {}) {
 
   await register({
     name: "get-playlist",
+    annotations: { readOnlyHint: true },
     description:
       "Returns a playlist's tracks with the ids needed by queue-tracks / " +
       "play-tracks. Ordered playlists return their tracks in playlist order; " +
@@ -895,11 +1011,12 @@ export async function registerDiffuseTools(options = {}) {
 
   await register({
     name: "search-tracks",
+    annotations: { readOnlyHint: true },
     description:
-      "Searches the user's track collection by title, artist, album artist or " +
-      "album (case-insensitive substring match). Returns matching tracks with " +
-      "the ids needed by queue-tracks / play-tracks. Omit 'query' to sample the " +
-      "collection instead.",
+      "Full-text search over the user's track collection (title, artist, album, " +
+      "genre, year — every term must match, ranked by relevance). Returns " +
+      "matching tracks with the ids needed by queue-tracks / play-tracks. " +
+      "Omit 'query' to sample the collection instead.",
     inputSchema: {
       type: "object",
       properties: {
@@ -913,15 +1030,43 @@ export async function registerDiffuseTools(options = {}) {
     },
     async execute({ query, limit }) {
       const tracks = await collectionTracks();
-      const q = (query ?? "").trim().toLowerCase();
-
-      const matches = q
-        ? tracks.filter((t) => trackHaystack(t).includes(q))
-        : sortTracks(tracks);
-
+      const q = (query ?? "").trim();
       const max = Math.min(Math.max(limit ?? 25, 1), 100);
+
+      /** @type {Track[]} */
+      let matches;
+      let total;
+
+      if (q) {
+        try {
+          const { db, Orama } = await trackSearchIndex(tracks);
+
+          /** @type {{ hits: { document: { id: string } }[]; count: number }} */
+          const results = await Orama.search(db, {
+            term: q,
+            threshold: 0, // AND: every term must match at least one field
+            limit: max,
+          });
+
+          const byId = new Map(tracks.map((t) => [t.id, t]));
+          matches = results.hits
+            .map((hit) => byId.get(hit.document.id))
+            .filter((t) => t !== undefined);
+          total = results.count;
+        } catch (e) {
+          console.warn("WebMCP: track search index unavailable, falling back to substring matching", e);
+
+          const needle = q.toLowerCase();
+          matches = tracks.filter((t) => trackHaystack(t).includes(needle));
+          total = matches.length;
+        }
+      } else {
+        matches = sortTracks(tracks);
+        total = tracks.length;
+      }
+
       return ok(JSON.stringify({
-        total: matches.length,
+        total,
         showing: Math.min(matches.length, max),
         tracks: matches.slice(0, max).map(trackSummary),
       }, null, 2));
