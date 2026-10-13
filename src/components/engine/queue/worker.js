@@ -34,7 +34,10 @@ export const $supplyFingerprint = signal(
  *
  * @example Adds tracks after the last manual entry, before any auto-filled items
  * ```js
- * import { add, $future } from "~/components/engine/queue/worker.js";
+ * import { add, $now, $future } from "~/components/engine/queue/worker.js";
+ *
+ * // A playing queue: adds go to the future
+ * $now.value = { id: "playing", key: "0", manualEntry: true };
  *
  * add({ trackIds: ["a", "b"] });
  *
@@ -46,8 +49,9 @@ export const $supplyFingerprint = signal(
  *
  * @example Inserts before auto-filled items when they are present
  * ```js
- * import { add, $future } from "~/components/engine/queue/worker.js";
+ * import { add, $now, $future } from "~/components/engine/queue/worker.js";
  *
+ * $now.value = { id: "playing", key: "0", manualEntry: true };
  * $future.value = [
  *   { id: "manual", key: "1", manualEntry: true },
  *   { id: "auto", key: "2", manualEntry: false },
@@ -62,7 +66,9 @@ export const $supplyFingerprint = signal(
  *
  * @example Prepends tracks to the front with inFront: true
  * ```js
- * import { add, $future } from "~/components/engine/queue/worker.js";
+ * import { add, $now, $future } from "~/components/engine/queue/worker.js";
+ *
+ * $now.value = { id: "playing", key: "0", manualEntry: true };
  *
  * add({ trackIds: ["c"] });
  * add({ inFront: true, trackIds: ["a", "b"] });
@@ -70,6 +76,31 @@ export const $supplyFingerprint = signal(
  * if ($future.value[0].id !== "a") throw new Error("expected 'a' first");
  * if ($future.value[1].id !== "b") throw new Error("expected 'b' second");
  * if ($future.value[2].id !== "c") throw new Error("expected 'c' last");
+ * ```
+ *
+ * @example Activates the first added item when the queue is idle
+ * ```js
+ * import { add, $now, $future } from "~/components/engine/queue/worker.js";
+ *
+ * $now.value = null;
+ *
+ * add({ trackIds: ["a", "b"] });
+ *
+ * // 'a' was consumed from the future and became active
+ * if ($future.value.length !== 1) throw new Error("expected 1 item remaining");
+ * if ($future.value[0].id !== "b") throw new Error("expected 'b' first in future");
+ * ```
+ *
+ * @example Does not activate from an empty add
+ * ```js
+ * import { add, $now, $future } from "~/components/engine/queue/worker.js";
+ *
+ * $now.value = null;
+ * $future.value = [{ id: "auto", key: "1", manualEntry: false }];
+ *
+ * add({ trackIds: [] });
+ *
+ * if ($now.value !== null) throw new Error("idle queue should stay idle");
  * ```
  */
 export function add({ inFront, trackIds }) {
@@ -90,6 +121,11 @@ export function add({ inFront, trackIds }) {
       ...$future.value.slice(lastManualIdx + 1),
     ];
   }
+
+  // Adding to an idle queue (nothing active) promotes the first added
+  // item, so an explicit "add" starts the queue. Auto-filled items
+  // alone never activate — only actual adds do.
+  if (items.length && !$now.value && $future.value.length) _shift();
 }
 
 /**
