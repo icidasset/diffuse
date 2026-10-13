@@ -1553,10 +1553,11 @@ a.da-titlebar__btn {
     padding: 0 1.25rem;
   }
 
+  /* Compound selector: must out-specificity `.da-tracks-header button` */
   .da-track__artist,
   .da-track__album,
-  .da-track-header__artist,
-  .da-track-header__album {
+  .da-tracks-header .da-track-header__artist,
+  .da-tracks-header .da-track-header__album {
     display: none;
   }
 }
