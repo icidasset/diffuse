@@ -6,7 +6,9 @@ import { resolveFacetTile } from "~/common/loader.js";
 import {
   filterByPlaylist,
   gather,
+  match as matchPlaylistItem,
   orderByPlaylist,
+  sort as sortPlaylistItems,
 } from "~/common/playlist.js";
 import {
   htmlFacetTile,
@@ -19,6 +21,7 @@ import {
  */
 
 const FACET_TYPE = "sh.diffuse.output.facet";
+const PLAYLIST_ITEM_TYPE = "sh.diffuse.output.playlistItem";
 
 /** The catalogue URI of the WebMCP facet itself. */
 export const WEBMCP_FACET_URI = "diffuse://facets/misc/webmcp/prelude/index.tile";
@@ -279,6 +282,76 @@ function sortTracks(tracks) {
 function unknownTrackIds(tracks, trackIds) {
   const known = new Set(tracks.map((t) => t.id));
   return [...new Set(trackIds)].filter((id) => !known.has(id));
+}
+
+/**
+ * Resolves track ids against the collection.
+ *
+ * @param {string[]} trackIds
+ * @returns {Promise<{ tracks: Track[]; unknown: string[] }>}
+ */
+async function resolveTrackIds(trackIds) {
+  const tracks = await collectionTracks();
+  const byId = new Map(tracks.map((t) => [t.id, t]));
+
+  const resolved = [...new Set(trackIds)]
+    .map((id) => byId.get(id))
+    .filter((t) => !!t);
+
+  return { tracks: resolved, unknown: unknownTrackIds(tracks, trackIds) };
+}
+
+/**
+ * Finds a playlist's items by name (exact first, then case-insensitive).
+ *
+ * @param {PlaylistItem[]} items
+ * @param {string} name
+ * @returns {PlaylistItem[]}
+ */
+function findPlaylistItems(items, name) {
+  let playlistItems = items.filter((i) => i.playlist === name);
+  if (!playlistItems.length) {
+    const lower = name.toLowerCase();
+    playlistItems = items.filter((i) => i.playlist.toLowerCase() === lower);
+  }
+  return playlistItems;
+}
+
+/**
+ * Builds a per-track playlist item — the same shape the favourites
+ * orchestrator uses (artist + title, lowercased, so matching is forgiving).
+ *
+ * @param {string} playlist
+ * @param {Track} track
+ * @param {string | undefined} positionedAfter
+ * @returns {PlaylistItem}
+ */
+function trackPlaylistItem(playlist, track, positionedAfter) {
+  const transformations = ["toLowerCase"];
+  const now = new Date().toISOString();
+
+  // The generated Criterion type types `value` narrowly (the favourites
+  // orchestrator's own builder casts for the same reason).
+  return /** @type {PlaylistItem} */ ({
+    $type: PLAYLIST_ITEM_TYPE,
+    id: TID.now(),
+    playlist,
+    criteria: [
+      {
+        field: "tags.artist",
+        value: /** @type {unknown} */ (track?.tags?.artist),
+        transformations,
+      },
+      {
+        field: "tags.title",
+        value: /** @type {unknown} */ (track?.tags?.title),
+        transformations,
+      },
+    ],
+    ...(positionedAfter ? { positionedAfter } : {}),
+    createdAt: now,
+    updatedAt: now,
+  });
 }
 
 ////////////////////////////////////////////
@@ -1447,6 +1520,315 @@ export async function registerDiffuseTools(options = {}) {
       queue.move({ key, to });
 
       return ok(`Moved the track to position ${Math.min(Math.round(position), future.length - 1)} of the upcoming queue.`);
+    },
+  });
+
+  // — PLAYLISTS & FAVOURITES ———————————————————
+
+  await register({
+    name: "set-favourite",
+    description:
+      "Adds tracks to, removes them from, or toggles the user's favourites. " +
+      "With 'favourited' omitted, tracks already in favourites are removed and " +
+      "the rest are added. The favourites live in a playlist named " +
+      "\"Favourites\" — list-playlists / get-playlist can read them back.",
+    inputSchema: {
+      type: "object",
+      properties: {
+        trackIds: {
+          type: "array",
+          items: { type: "string" },
+          description: "Track ids from search-tracks / get-playlist.",
+        },
+        favourited: {
+          type: "boolean",
+          description: "True to add to favourites, false to remove. Omit to toggle each track.",
+        },
+      },
+      required: ["trackIds"],
+    },
+    async execute({ trackIds, favourited }) {
+      if (!trackIds?.length) return ok("Provide at least one track id.");
+
+      const { tracks, unknown } = await resolveTrackIds(trackIds);
+      if (unknown.length) {
+        return ok(`No track(s) with id(s): ${unknown.join(", ")}. Use search-tracks to find ids.`);
+      }
+
+      const favourites = await foundation.orchestrator.favourites();
+
+      if (favourited === true) await favourites.include(tracks);
+      else if (favourited === false) await favourites.expel(tracks);
+      else await favourites.toggle(tracks);
+
+      return ok(
+        favourited === false
+          ? `Removed ${tracks.length} track(s) from favourites.`
+          : `Favourited ${tracks.length} track(s).`,
+      );
+    },
+  });
+
+  await register({
+    name: "create-playlist",
+    description:
+      "Creates a playlist, in one of three ways: with 'trackIds' (a playlist " +
+      "containing exactly those tracks, in order when 'ordered'), with " +
+      "'criteria' (a rule-based playlist that automatically matches tracks — " +
+      "e.g. field 'tags.artist' value 'Radiohead'), or with neither (an empty " +
+      "placeholder playlist). Rule-based playlists match tracks by exact value " +
+      "equality; they cannot do free-text or range matching.",
+    inputSchema: {
+      type: "object",
+      properties: {
+        name: { type: "string", description: "Playlist name." },
+        trackIds: {
+          type: "array",
+          items: { type: "string" },
+          description: "Track ids from search-tracks, in the order they should appear.",
+        },
+        ordered: {
+          type: "boolean",
+          description: "Keep the given track order (default true; ignored with 'criteria').",
+          default: true,
+        },
+        criteria: {
+          type: "array",
+          description: "Rule-based playlist: every criterion must match a track for it to belong.",
+          items: {
+            type: "object",
+            properties: {
+              field: {
+                type: "string",
+                description:
+                  "Track field path, e.g. tags.artist, tags.title, tags.album, tags.albumartist, tags.year, id, uri.",
+              },
+              value: { description: "Exact value the field must equal." },
+              transformations: {
+                type: "array",
+                items: { type: "string" },
+                description:
+                  "Applied to both values before comparing, e.g. [\"toLowerCase\"].",
+              },
+            },
+            required: ["field", "value"],
+          },
+        },
+      },
+      required: ["name"],
+    },
+    async execute({ name, trackIds, criteria, ordered = true }) {
+      const playlist = (name ?? "").trim();
+      if (!playlist) return ok("Provide a playlist 'name'.");
+
+      const out = await foundation.orchestrator.output();
+      const items = await Output.data(out.playlistItems);
+
+      if (findPlaylistItems(items, playlist).length) {
+        return ok(`A playlist named "${playlist}" already exists.`);
+      }
+
+      const now = new Date().toISOString();
+
+      /** @type {PlaylistItem[]} */
+      const created = [];
+
+      if (criteria?.length) {
+        if (
+          criteria.some((/** @type {any} */ c) => !c || typeof c.field !== "string" || !("value" in c))
+        ) {
+          return ok("Each criterion needs a 'field' (e.g. 'tags.artist') and a 'value'.");
+        }
+
+        created.push({
+          $type: PLAYLIST_ITEM_TYPE,
+          id: TID.now(),
+          playlist,
+          criteria,
+          createdAt: now,
+          updatedAt: now,
+        });
+      } else if (trackIds?.length) {
+        const { tracks, unknown } = await resolveTrackIds(trackIds);
+        if (unknown.length) {
+          return ok(`No track(s) with id(s): ${unknown.join(", ")}. Use search-tracks to find ids.`);
+        }
+
+        tracks.forEach((track, i) => {
+          created.push(
+            trackPlaylistItem(
+              playlist,
+              track,
+              ordered ? created[created.length - 1]?.id : undefined,
+            ),
+          );
+        });
+      } else {
+        // Anchor item so the empty playlist exists — same as the Playlists facet.
+        created.push({
+          $type: PLAYLIST_ITEM_TYPE,
+          id: TID.now(),
+          playlist,
+          criteria: [],
+          createdAt: now,
+          updatedAt: now,
+        });
+      }
+
+      await out.playlistItems.save([...items, ...created]);
+
+      return ok(JSON.stringify({
+        created: playlist,
+        items: created.length,
+        kind: criteria?.length ? "rule-based" : trackIds?.length ? "track list" : "empty",
+      }, null, 2));
+    },
+  });
+
+  await register({
+    name: "add-to-playlist",
+    description:
+      "Appends tracks to an existing playlist. Tracks already in the playlist " +
+      "are skipped. Ordered playlists keep their order: the new tracks line up " +
+      "at the end.",
+    inputSchema: {
+      type: "object",
+      properties: {
+        name: { type: "string", description: "Playlist name from list-playlists." },
+        trackIds: {
+          type: "array",
+          items: { type: "string" },
+          description: "Track ids from search-tracks / get-playlist.",
+        },
+      },
+      required: ["name", "trackIds"],
+    },
+    async execute({ name, trackIds }) {
+      if (!trackIds?.length) return ok("Provide at least one track id.");
+
+      const out = await foundation.orchestrator.output();
+      const items = await Output.data(out.playlistItems);
+      const playlistItems = findPlaylistItems(items, name);
+      if (!playlistItems.length) {
+        return ok(`No playlist named "${name}" was found.`);
+      }
+
+      const { tracks, unknown } = await resolveTrackIds(trackIds);
+      if (unknown.length) {
+        return ok(`No track(s) with id(s): ${unknown.join(", ")}. Use search-tracks to find ids.`);
+      }
+
+      // Skip tracks the playlist already contains.
+      const newTracks = tracks.filter((track) =>
+        !playlistItems.some((item) => matchPlaylistItem(track, item))
+      );
+      if (!newTracks.length) {
+        return ok(`All ${tracks.length} track(s) are already in "${name}".`);
+      }
+
+      const ordered = gather(playlistItems).get(playlistItems[0].playlist)
+        ?.unordered === false;
+
+      /** @type {string | undefined} */
+      let positionedAfter = undefined;
+      if (ordered) {
+        const chain = sortPlaylistItems(playlistItems);
+        positionedAfter = chain[chain.length - 1]?.id;
+      }
+
+      const now = new Date().toISOString();
+      const created = newTracks.map((track) => {
+        const item = trackPlaylistItem(playlistItems[0].playlist, track, positionedAfter);
+        positionedAfter = ordered ? item.id : undefined;
+        return item;
+      });
+
+      await out.playlistItems.save([...items, ...created]);
+
+      return ok(
+        `Added ${created.length} of ${tracks.length} track(s) to "${playlistItems[0].playlist}"` +
+          `${tracks.length - created.length ? ` (${tracks.length - created.length} already in it)` : ""}.`,
+      );
+    },
+  });
+
+  await register({
+    name: "remove-from-playlist",
+    description: "Removes tracks from an existing playlist, by track id.",
+    inputSchema: {
+      type: "object",
+      properties: {
+        name: { type: "string", description: "Playlist name from list-playlists." },
+        trackIds: {
+          type: "array",
+          items: { type: "string" },
+          description: "Track ids to remove.",
+        },
+      },
+      required: ["name", "trackIds"],
+    },
+    async execute({ name, trackIds }) {
+      if (!trackIds?.length) return ok("Provide at least one track id.");
+
+      const out = await foundation.orchestrator.output();
+      const items = await Output.data(out.playlistItems);
+      const playlistItems = findPlaylistItems(items, name);
+      if (!playlistItems.length) {
+        return ok(`No playlist named "${name}" was found.`);
+      }
+
+      const { tracks, unknown } = await resolveTrackIds(trackIds);
+      if (unknown.length) {
+        return ok(`No track(s) with id(s): ${unknown.join(", ")}. Use search-tracks to find ids.`);
+      }
+
+      const removedIds = new Set(
+        playlistItems
+          .filter((item) =>
+            tracks.some((track) => matchPlaylistItem(track, item))
+          )
+          .map((item) => item.id),
+      );
+
+      if (!removedIds.size) {
+        return ok(`None of the tracks are in "${playlistItems[0].playlist}".`);
+      }
+
+      await out.playlistItems.save(
+        items.filter((item) => !removedIds.has(item.id)),
+      );
+
+      return ok(`Removed ${removedIds.size} item(s) from "${playlistItems[0].playlist}".`);
+    },
+  });
+
+  await register({
+    name: "delete-playlist",
+    annotations: { consequentialHint: true },
+    description:
+      "Deletes a playlist by removing all of its items. The playlist's tracks " +
+      "in the library are not affected. This cannot be undone.",
+    inputSchema: {
+      type: "object",
+      properties: {
+        name: { type: "string", description: "Playlist name from list-playlists." },
+      },
+      required: ["name"],
+    },
+    async execute({ name }) {
+      const out = await foundation.orchestrator.output();
+      const items = await Output.data(out.playlistItems);
+      const playlistItems = findPlaylistItems(items, name);
+      if (!playlistItems.length) {
+        return ok(`No playlist named "${name}" was found.`);
+      }
+
+      const removedNames = new Set(playlistItems.map((i) => i.playlist));
+      await out.playlistItems.save(
+        items.filter((item) => !removedNames.has(item.playlist)),
+      );
+
+      return ok(`Deleted playlist "${[...removedNames][0]}" (${playlistItems.length} item(s)).`);
     },
   });
 
