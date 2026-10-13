@@ -10,6 +10,7 @@ import {
   orderByPlaylist,
   sort as sortPlaylistItems,
 } from "~/common/playlist.js";
+import { groupTracksPerScheme } from "~/common/utils.js";
 import {
   htmlFacetTile,
   tileFromFiles,
@@ -1829,6 +1830,197 @@ export async function registerDiffuseTools(options = {}) {
       );
 
       return ok(`Deleted playlist "${[...removedNames][0]}" (${playlistItems.length} item(s)).`);
+    },
+  });
+
+  // — LIBRARY ————————————————————————————————————————
+
+  await register({
+    name: "get-diffuse-state",
+    annotations: { readOnlyHint: true },
+    description:
+      "Orients you in the user's Diffuse setup: where their data is stored, " +
+      "how many tracks, playlists and facets they have, which audio sources " +
+      "are configured, and the queue / processing state when those engines are " +
+      "loaded. Call this first when you're unsure what the user's setup looks " +
+      "like.",
+    inputSchema: { type: "object", properties: {} },
+    async execute() {
+      const out = await foundation.orchestrator.output();
+      await customElements.whenDefined(out.localName);
+
+      const [facets, tracks, playlistItems, settings] = await Promise.all([
+        Output.data(out.facets),
+        Output.data(out.tracks),
+        Output.data(out.playlistItems),
+        Output.data(out.settings),
+      ]);
+
+      const selected = out.selected?.();
+      const storage = selected?.label ??
+        selected?.getAttribute?.("label") ?? "Local storage";
+
+      // Only report on engines that are already loaded — orientation
+      // shouldn't spin up the playback or processing stacks.
+      const queueEl = foundation.signals.engine.queue();
+      const playback = queueEl
+        ? {
+          active: queueEl.now()?.id ?? null,
+          upcoming: queueEl.future().length,
+          history: queueEl.past().length,
+        }
+        : undefined;
+
+      const sourcesEl = foundation.signals.orchestrator.sources();
+      const sources = sourcesEl
+        ? Object.entries(sourcesEl.sources()).map(([scheme, list]) => ({
+          scheme,
+          sources: list.length,
+          disabled: list.filter((s) => sourcesEl.isDisabled(s.uri)).length,
+        }))
+        : undefined;
+
+      const processEl = foundation.signals.orchestrator.processTracks();
+      const processing = processEl
+        ? { processing: processEl.isProcessing(), ...processEl.progress() }
+        : undefined;
+
+      return ok(JSON.stringify({
+        group: foundation.GROUP,
+        storage,
+        tracks: tracks.length,
+        playlists: gather(playlistItems).size,
+        facets: facets.length,
+        settings: settings.length,
+        sources,
+        playback,
+        processing,
+      }, null, 2));
+    },
+  });
+
+  await register({
+    name: "list-sources",
+    annotations: { readOnlyHint: true },
+    description:
+      "Lists the audio sources the user's tracks come from, grouped by scheme " +
+      "(dropbox, https, local, s3, webdav, …), with their disabled state. " +
+      "Disabling a source hides its tracks without deleting them.",
+    inputSchema: { type: "object", properties: {} },
+    async execute() {
+      const sourcesEl = await foundation.orchestrator.sources();
+      await customElements.whenDefined(sourcesEl.localName);
+
+      const groups = sourcesEl.sources();
+      const trackGroups = groupTracksPerScheme(await collectionTracks());
+
+      const sources = Object.entries(groups).map(([scheme, list]) => ({
+        scheme,
+        tracks: trackGroups[scheme]?.length ?? 0,
+        sources: list.map((source) => ({
+          label: source.label,
+          uri: source.uri,
+          disabled: sourcesEl.isDisabled(source.uri),
+        })),
+      }));
+
+      return ok(JSON.stringify({
+        total: sources.reduce((n, s) => n + s.sources.length, 0),
+        sources,
+      }, null, 2));
+    },
+  });
+
+  await register({
+    name: "set-source-enabled",
+    description:
+      "Enables or disables an audio source by its URI (from list-sources). " +
+      "Disabled sources' tracks stay saved but are hidden from interfaces and " +
+      "excluded from automatic queue filling and processing.",
+    inputSchema: {
+      type: "object",
+      properties: {
+        uri: { type: "string", description: "Source URI from list-sources." },
+        enabled: { type: "boolean", description: "True to enable, false to disable." },
+      },
+      required: ["uri", "enabled"],
+    },
+    async execute({ uri, enabled }) {
+      const sourcesEl = await foundation.orchestrator.sources();
+      await customElements.whenDefined(sourcesEl.localName);
+
+      const all = Object.values(sourcesEl.sources()).flat();
+      const source = all.find((s) => s.uri === uri) ??
+        all.find((s) => s.uri.split("?")[0] === uri.split("?")[0]);
+      if (!source) {
+        return ok(`No source with URI "${uri}" — use list-sources for the available sources.`);
+      }
+
+      if (sourcesEl.isDisabled(source.uri) === !enabled) {
+        return ok(`The source "${source.label}" is already ${enabled ? "enabled" : "disabled"}.`);
+      }
+
+      await sourcesEl.toggle(source.uri);
+      return ok(`Source "${source.label}" ${enabled ? "enabled" : "disabled"}.`);
+    },
+  });
+
+  await register({
+    name: "process-library",
+    description:
+      "Processes the user's audio sources into tracks — reads tags, stats and " +
+      "artwork metadata from the files. Runs in the background by default " +
+      "(large libraries take a while): call again without 'wait' to check " +
+      "progress. Only processes tracks whose sources changed; 'onlyUris' " +
+      "limits it to specific source URIs (matched by prefix).",
+    inputSchema: {
+      type: "object",
+      properties: {
+        wait: {
+          type: "boolean",
+          description: "Wait for processing to complete before responding.",
+          default: false,
+        },
+        onlyUris: {
+          type: "array",
+          items: { type: "string" },
+          description: "Only process tracks from these source URIs.",
+        },
+      },
+    },
+    async execute({ wait, onlyUris }) {
+      const orchestrator = await foundation.orchestrator.processTracks({
+        disableWhenReady: true,
+      });
+      await customElements.whenDefined(orchestrator.localName);
+
+      const status = () => JSON.stringify({
+        processing: orchestrator.isProcessing(),
+        ...orchestrator.progress(),
+      }, null, 2);
+
+      // Already running (e.g. by the prelude in another tab): report or wait.
+      if (orchestrator.isProcessing()) {
+        if (!wait) return ok(status());
+
+        for (let i = 0; i < 100 && orchestrator.isProcessing(); i++) {
+          await new Promise((resolve) => setTimeout(resolve, 500));
+        }
+        return ok(status());
+      }
+
+      if (!wait) {
+        // Fire and forget — processing continues in the page; the tool can be
+        // called again to check progress.
+        orchestrator
+          .process(onlyUris?.length ? onlyUris : undefined)
+          .catch((e) => console.warn("WebMCP: processing failed", e));
+
+        return ok(JSON.stringify({ started: true }, null, 2));
+      }
+
+      await orchestrator.process(onlyUris?.length ? onlyUris : undefined);
+      return ok(status());
     },
   });
 
