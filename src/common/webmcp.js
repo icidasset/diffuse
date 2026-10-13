@@ -11,6 +11,7 @@ import {
   sort as sortPlaylistItems,
 } from "~/common/playlist.js";
 import { groupTracksPerScheme } from "~/common/utils.js";
+import { isAudioFile } from "~/components/input/common.js";
 import {
   htmlFacetTile,
   tileFromFiles,
@@ -2021,6 +2022,125 @@ export async function registerDiffuseTools(options = {}) {
 
       await orchestrator.process(onlyUris?.length ? onlyUris : undefined);
       return ok(status());
+    },
+  });
+
+  await register({
+    name: "add-audio",
+    description:
+      "Adds an audio file to the user's library by downloading it from a URL " +
+      "and caching it locally — the same pipeline as the File Manager facet: "+
+      "the file shows up there and is processed into a playable track " +
+      "automatically. The URL must be fetchable from the page (public or " +
+      "CORS-enabled — e.g. a local file server with Access-Control-Allow-Origin).",
+    inputSchema: {
+      type: "object",
+      properties: {
+        url: { type: "string", description: "URL of the audio file to download." },
+        filename: {
+          type: "string",
+          description:
+            "Filename to store it as (with extension, e.g. \"Song.mp3\"). " +
+            "Derived from the URL when omitted.",
+        },
+      },
+      required: ["url"],
+    },
+    async execute({ url, filename }) {
+      if (typeof url !== "string" || !/^https?:\/\//.test(url)) {
+        return ok("Provide an 'http(s)://' URL.");
+      }
+
+      const name = (filename ?? decodeURIComponent(
+        new URL(url).pathname.split("/").pop() ?? "",
+      )).trim();
+      if (!name) return ok("Provide a 'filename' (the URL doesn't include one).");
+      if (!isAudioFile(name)) {
+        return ok(
+          `\"${name}\" doesn't look like an audio file. Supported extensions: ` +
+            ".flac .m4a .mp3 .mp4 .ogg .opus .wav .webm — provide 'filename' to set it.",
+        );
+      }
+
+      const inputConfigurator = await foundation.configurator.input();
+      await customElements.whenDefined(inputConfigurator.localName);
+
+      // Fetch in the page's context — subject to CORS.
+      let bytes;
+      try {
+        const res = await fetch(url);
+        if (!res.ok) {
+          return ok(`The URL responded ${res.status} ${res.statusText}.`);
+        }
+        bytes = await res.arrayBuffer();
+      } catch {
+        return ok(
+          `Could not fetch "${url}" from the page. The URL must be publicly ` +
+            "reachable or send CORS headers (Access-Control-Allow-Origin).",
+        );
+      }
+
+      if (bytes.byteLength === 0) return ok("The URL returned an empty file.");
+      if (bytes.byteLength > 250 * 1024 * 1024) {
+        return ok("The file is larger than the 250MB limit.");
+      }
+
+      const file = new File([bytes], name);
+      const existing = await collectionTracks();
+
+      // Cache locally (ephemeral cache), like the File Manager's dropzone.
+      let uri;
+      try {
+        uri = await inputConfigurator.cacheBlob(file);
+      } catch (err) {
+        // The input bundle prelude wires the cache asynchronously; retry once.
+        await new Promise((resolve) => setTimeout(resolve, 1500));
+        try {
+          uri = await inputConfigurator.cacheBlob(file);
+        } catch {
+          return ok(
+            `Caching failed: ${err instanceof Error ? err.message : "unknown error"}.`,
+          );
+        }
+      }
+
+      // Content-addressed: the same file is never added twice.
+      if (existing.some((t) => t.uri === uri)) {
+        return ok(`\"${name}\" is already in the library.`);
+      }
+
+      const now = new Date().toISOString();
+
+      /** @type {Track} */
+      const track = {
+        $type: "sh.diffuse.output.track",
+        id: TID.now(),
+        createdAt: now,
+        updatedAt: now,
+        ephemeral: true,
+        uri,
+      };
+
+      const out = await foundation.orchestrator.output();
+      await out.tracks.save([...existing, track]);
+
+      // Process the new track right away (tags, stats) so it becomes playable.
+      const orchestrator = await foundation.orchestrator.processTracks({
+        disableWhenReady: true,
+      });
+      if (!orchestrator.isProcessing()) {
+        orchestrator
+          .process([uri])
+          .catch((e) => console.warn("WebMCP: processing failed", e));
+      }
+
+      return ok(JSON.stringify({
+        added: name,
+        id: track.id,
+        uri,
+        sizeBytes: bytes.byteLength,
+        processing: "started — the track is playable once it's done; check with process-library",
+      }, null, 2));
     },
   });
 
