@@ -1,4 +1,5 @@
 import foundation from "~/common/foundation.js";
+import { effect } from "~/common/signal.js";
 import * as TID from "@atcute/tid";
 import * as Output from "~/common/output.js";
 import { resolveFacetTile } from "~/common/loader.js";
@@ -348,30 +349,65 @@ async function trackSearchIndex(tracks) {
  * @returns {Promise<{
  *   queue: import("~/components/engine/queue/element.js").CLASS,
  *   audio: import("~/components/engine/audio/element.js").CLASS,
+ *   repeatShuffle: import("~/components/engine/repeat-shuffle/element.js").CLASS,
  * }>} 
  */
 async function engines() {
   await foundation.orchestrator.queueAudio();
 
-  const [queue, audio] = await Promise.all([
+  const [queue, audio, repeatShuffle] = await Promise.all([
     foundation.engine.queue(),
     foundation.engine.audio(),
+    foundation.engine.repeatShuffle(),
   ]);
 
   await Promise.all([
     customElements.whenDefined(queue.localName),
     customElements.whenDefined(audio.localName),
+    customElements.whenDefined(repeatShuffle.localName),
   ]);
 
-  return { queue, audio };
+  return { queue, audio, repeatShuffle };
+}
+
+/**
+ * Waits for the queue-audio orchestrator to resolve & supply the given track —
+ * the engine's `play()` silently no-ops on an item it doesn't know yet — then
+ * starts playback. Reacts to the audio engine's item signal instead of
+ * polling, and gives up after `timeoutMs` (e.g. on sources that never
+ * resolve).
+ *
+ * @param {import("~/components/engine/audio/element.js").CLASS} audio
+ * @param {string} audioId
+ * @param {number} [timeoutMs]
+ * @returns {Promise<boolean>} whether the track was supplied in time
+ */
+async function startPlayback(audio, audioId, timeoutMs = 15_000) {
+  await new Promise((resolve) => {
+    const timer = setTimeout(() => {
+      stop();
+      resolve(undefined);
+    }, timeoutMs);
+
+    const stop = effect(() => {
+      if (audio.state(audioId)) {
+        clearTimeout(timer);
+        stop();
+        resolve(undefined);
+      }
+    });
+  });
+
+  if (!audio.state(audioId)) return false;
+
+  audio.play({ audioId });
+  return true;
 }
 
 /**
  * Plays tracks immediately: the first added track becomes the active one, the
- * rest line up behind it. The engine's `play()` silently no-ops on an item
- * that isn't supplied yet, so when audio isn't already playing (in which case
- * the queue-audio orchestrator continues playback on its own) we wait for the
- * orchestrator to resolve & supply the track before pressing play.
+ * rest line up behind it. When audio is already playing, the queue-audio
+ * orchestrator continues playback on its own.
  *
  * @param {import("~/components/engine/queue/element.js").CLASS} queue
  * @param {import("~/components/engine/audio/element.js").CLASS} audio
@@ -386,14 +422,7 @@ async function playNow(queue, audio, trackIds) {
 
   if (audio.isPlaying()) return true;
 
-  const audioId = trackIds[0];
-  for (let i = 0; i < 50; i++) {
-    if (audio.state(audioId)) break;
-    await new Promise((resolve) => setTimeout(resolve, 100));
-  }
-
-  audio.play({ audioId });
-  return !!audio.state(audioId);
+  return await startPlayback(audio, trackIds[0]);
 }
 
 ////////////////////////////////////////////
@@ -1152,6 +1181,272 @@ export async function registerDiffuseTools(options = {}) {
         started,
         queued: trackIds.length,
       }, null, 2));
+    },
+  });
+
+  await register({
+    name: "get-playback-state",
+    annotations: { readOnlyHint: true },
+    description:
+      "Returns the current playback state: what's playing (with position), the " +
+      "upcoming queue (with the keys used by remove-from-queue / move-in-queue), " +
+      "recent history, volume, repeat and shuffle. Audio positions are in " +
+      "seconds; track durations in milliseconds.",
+    inputSchema: { type: "object", properties: {} },
+    async execute() {
+      const { queue, audio, repeatShuffle } = await engines();
+      const tracks = await collectionTracks();
+      const byId = new Map(tracks.map((t) => [t.id, t]));
+
+      const now = queue.now();
+      const state = now ? audio.state(now.id) : undefined;
+      const past = queue.past();
+      const future = queue.future();
+
+      /**
+       * @param {{ id: string; key: string; manualEntry: boolean }} item
+       */
+      const itemSummary = (item) => ({
+        key: item.key,
+        manual: item.manualEntry,
+        track: byId.get(item.id) ? trackSummary(byId.get(item.id)) : { id: item.id },
+      });
+
+      return ok(JSON.stringify({
+        playing: audio.isPlaying(),
+        volume: audio.volume(),
+        repeat: repeatShuffle.repeat(),
+        shuffle: repeatShuffle.shuffle(),
+        now: now
+          ? {
+            ...itemSummary(now),
+            // Seconds, from the audio engine.
+            currentTime: state ? state.currentTime() : null,
+            duration: state ? state.duration() : null,
+            progress: state ? state.progress() : null,
+          }
+          : null,
+        // Most recent first.
+        history: past.slice(-10).reverse().map(itemSummary),
+        historyTotal: past.length,
+        queue: future.slice(0, 50).map(itemSummary),
+        queueTotal: future.length,
+      }, null, 2));
+    },
+  });
+
+  await register({
+    name: "control-playback",
+    description:
+      "Transport controls: pause, resume, skip to the next track, go back to " +
+      "the previous one, seek within the current track, or set the volume. " +
+      "Resuming an idle queue starts it with its first upcoming track.",
+    inputSchema: {
+      type: "object",
+      properties: {
+        action: {
+          type: "string",
+          enum: ["pause", "resume", "next", "previous", "seek", "set-volume"],
+          description: "The transport action to perform.",
+        },
+        percentage: {
+          type: "number",
+          description: "For 'seek': position in the track, 0–1.",
+        },
+        volume: {
+          type: "number",
+          description: "For 'set-volume': 0–1.",
+        },
+      },
+      required: ["action"],
+    },
+    async execute({ action, percentage, volume }) {
+      const { queue, audio } = await engines();
+      const now = queue.now();
+
+      switch (action) {
+        case "pause": {
+          if (!now) return ok("Nothing is playing.");
+          audio.pause({ audioId: now.id });
+          return ok("Paused.");
+        }
+
+        case "resume": {
+          if (now) {
+            audio.play({ audioId: now.id });
+            return ok("Resumed.");
+          }
+
+          // An idle queue: start it with its first upcoming track.
+          const future = queue.future();
+          if (!future.length) return ok("Nothing is queued to resume.");
+
+          queue.shift();
+          await startPlayback(audio, future[0].id);
+          return ok("Started the queue.");
+        }
+
+        case "next": {
+          if (!now && !queue.future().length) return ok("Nothing is queued.");
+          queue.shift();
+          return ok("Skipped to the next track.");
+        }
+
+        case "previous": {
+          if (!now && !queue.past().length) {
+            return ok("Nothing is playing and there is no history.");
+          }
+          queue.unshift();
+          return ok("Went back to the previous track.");
+        }
+
+        case "seek": {
+          if (!now) return ok("Nothing is playing.");
+          if (
+            typeof percentage !== "number" || percentage < 0 || percentage > 1
+          ) {
+            return ok("Provide a 'percentage' between 0 and 1.");
+          }
+          audio.seek({ audioId: now.id, percentage });
+          return ok(`Seeked to ${Math.round(percentage * 100)}%.`);
+        }
+
+        case "set-volume": {
+          if (
+            typeof volume !== "number" || volume < 0 || volume > 1
+          ) {
+            return ok("Provide a 'volume' between 0 and 1.");
+          }
+          audio.adjustVolume({ volume });
+          return ok(`Volume set to ${Math.round(volume * 100)}%.`);
+        }
+
+        default:
+          return ok(`Unknown action "${action}".`);
+      }
+    },
+  });
+
+  await register({
+    name: "set-repeat-shuffle",
+    description:
+      "Turns repeat and/or shuffle on or off. Turning shuffle on or off clears " +
+      "the automatically-filled part of the queue and refills it.",
+    inputSchema: {
+      type: "object",
+      properties: {
+        shuffle: { type: "boolean", description: "Shuffle the automatic queue filling." },
+        repeat: { type: "boolean", description: "Repeat the current track when it ends." },
+      },
+    },
+    async execute({ shuffle, repeat }) {
+      if (shuffle === undefined && repeat === undefined) {
+        return ok("Provide 'shuffle' and/or 'repeat'.");
+      }
+
+      const { repeatShuffle } = await engines();
+      if (shuffle !== undefined) await repeatShuffle.setShuffle(shuffle);
+      if (repeat !== undefined) await repeatShuffle.setRepeat(repeat);
+
+      return ok(JSON.stringify({
+        shuffle: repeatShuffle.shuffle(),
+        repeat: repeatShuffle.repeat(),
+      }, null, 2));
+    },
+  });
+
+  await register({
+    name: "clear-queue",
+    description:
+      "Removes the upcoming tracks from the queue. What's currently playing and " +
+      "the history are kept. With 'keepManual', automatically-filled tracks are " +
+      "cleared but manually queued ones are kept.",
+    inputSchema: {
+      type: "object",
+      properties: {
+        keepManual: {
+          type: "boolean",
+          description: "Keep manually queued tracks (only clear automatic ones).",
+          default: false,
+        },
+      },
+    },
+    async execute({ keepManual }) {
+      const { queue } = await engines();
+      const count = queue.future().length;
+
+      queue.clear({ keepManual: !!keepManual });
+
+      const remaining = queue.future().length;
+      return ok(
+        count === 0
+          ? "The queue was already empty."
+          : `Removed ${count - remaining} of ${count} upcoming track(s); ${remaining} left.`,
+      );
+    },
+  });
+
+  await register({
+    name: "remove-from-queue",
+    description:
+      "Removes one track from the queue (upcoming or history) by its key, as " +
+      "returned by get-playback-state. Cannot remove the track that's currently " +
+      "playing.",
+    inputSchema: {
+      type: "object",
+      properties: {
+        key: { type: "string", description: "Queue item key from get-playback-state." },
+      },
+      required: ["key"],
+    },
+    async execute({ key }) {
+      const { queue } = await engines();
+
+      const known = queue.future().some((i) => i.key === key) ||
+        queue.past().some((i) => i.key === key);
+      if (!known) {
+        return ok(`No queue item with key "${key}" — use get-playback-state for the current keys.`);
+      }
+
+      queue.expel({ key });
+      return ok("Removed the track from the queue.");
+    },
+  });
+
+  await register({
+    name: "move-in-queue",
+    description:
+      "Reorders an upcoming queue item. 'position' is the index within the " +
+      "upcoming queue after the move — 0 makes the track play next.",
+    inputSchema: {
+      type: "object",
+      properties: {
+        key: { type: "string", description: "Queue item key from get-playback-state." },
+        position: {
+          type: "integer",
+          description: "Index within the upcoming queue, 0 = play next.",
+        },
+      },
+      required: ["key", "position"],
+    },
+    async execute({ key, position }) {
+      const { queue } = await engines();
+      const future = queue.future();
+
+      const index = future.findIndex((i) => i.key === key);
+      if (index < 0) {
+        return ok(`No upcoming queue item with key "${key}" — use get-playback-state for the current keys.`);
+      }
+      if (typeof position !== "number" || position < 0) {
+        return ok("Provide a 'position' of 0 or higher (0 = play next).");
+      }
+
+      // `move` operates on the flat [history…, now, upcoming…] list.
+      const to = queue.past().length + (queue.now() ? 1 : 0) +
+        Math.min(Math.round(position), future.length - 1);
+      queue.move({ key, to });
+
+      return ok(`Moved the track to position ${Math.min(Math.round(position), future.length - 1)} of the upcoming queue.`);
     },
   });
 
