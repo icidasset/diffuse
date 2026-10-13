@@ -24,6 +24,7 @@ export const PRELUDE_BASE = [
   "facets/data/input-bundle/index.tile",
   "facets/data/output-bundle/index.tile",
   "facets/data/upload-bundle/index.tile",
+  "facets/misc/webmcp/prelude/index.tile",
   "facets/playback/preload/prelude/index.tile",
 ];
 

@@ -18,6 +18,11 @@ Use the read tool to read these files:
 - Any specific definition you need (e.g. `docs/definitions/output/track.json` for the track schema)
 - `docs/definitions/index.ts` — TypeScript types for all data structures
 
+If you're the browser's built-in agent (Diffuse's WebMCP facet is running and
+exposes its tools), read these through the `get-facet-docs` tool instead — same
+content, no filesystem needed. Start with the `SKILL.md` path; the elements
+document is large, so query it per element.
+
 ## Step 2 — Clarify intent
 
 If the user hasn't described what the facet should do, ask one plain-language question before proceeding.

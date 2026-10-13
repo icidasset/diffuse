@@ -349,11 +349,12 @@
     "desc": "Import data from Diffuse v3."
   },
   {
-    "url": "facets/misc/webmcp/index.tile",
+    "url": "facets/misc/webmcp/prelude/index.tile",
     "title": "WebMCP",
+    "kind": "prelude",
     "category": "Miscellaneous",
-    "incomplete": true,
-    "desc": "WebMCP experiment to interact with facets (create, edit, etc)."
+    "tags": ["base"],
+    "desc": "Expose Diffuse to your browser's built-in AI agent. It can list, read, create, edit, enable and delete your facets, and control playback: search your tracks and playlists, then queue or play them."
   },
   {
     "url": "facets/themes/winamp/facet/index.tile",
