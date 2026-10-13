@@ -286,14 +286,20 @@ function unknownTrackIds(tracks, trackIds) {
 
 /**
  * The queue and audio engines, created on first use (reused when the
- * interface facet already spun them up).
+ * interface facet already spun them up). Going through the queue-audio
+ * orchestrator pulls in the full playback stack — the input configurator,
+ * repeat & shuffle, and the glue that resolves the active queue item into
+ * audio — so playback also works from pages that render no player themselves
+ * (dashboard, editor, …).
  *
  * @returns {Promise<{
  *   queue: import("~/components/engine/queue/element.js").CLASS,
  *   audio: import("~/components/engine/audio/element.js").CLASS,
- * }>}
+ * }>} 
  */
 async function engines() {
+  await foundation.orchestrator.queueAudio();
+
   const [queue, audio] = await Promise.all([
     foundation.engine.queue(),
     foundation.engine.audio(),
