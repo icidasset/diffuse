@@ -374,7 +374,7 @@ export default {
       url: "components/upload/s3/element.js",
       title: "S3",
       desc:
-        "Uploads and deletes files in an S3-compatible bucket using the S3 HTTP API. Buckets are connected on the S3 connect page.",
+        "Uploads and deletes files in an S3-compatible bucket using the S3 HTTP API.",
     },
   ],
 
