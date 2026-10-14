@@ -11,6 +11,8 @@ import { isAudioFile } from "~/components/input/common.js";
 import { SCHEME as SCHEME_DROPBOX } from "~/components/input/dropbox/constants.js";
 import { buildURI } from "~/components/input/s3/common.js";
 import { SCHEME as SCHEME_S3 } from "~/components/input/s3/constants.js";
+import { buildURI as buildWebdavURI } from "~/components/input/webdav/common.js";
+import { SCHEME as SCHEME_WEBDAV } from "~/components/input/webdav/constants.js";
 import { effect, signal } from "~/common/signal.js";
 import { safeDecodeURIComponent } from "~/common/utils.js";
 import foundation from "~/common/foundation.js";
@@ -20,6 +22,7 @@ import foundation from "~/common/foundation.js";
  * @import {Track} from "~/definitions/types.d.ts"
  * @import {UploadElement} from "@specs/components/upload/types.d.ts"
  * @import {Bucket} from "@specs/components/input/s3/types.d.ts"
+ * @import {Server} from "@specs/components/input/webdav/types.d.ts"
  */
 
 /** Human-readable labels for upload component schemes. */
@@ -27,6 +30,7 @@ import foundation from "~/common/foundation.js";
 const SCHEME_LABELS = {
   [SCHEME_DROPBOX]: "Dropbox",
   [SCHEME_S3]: "S3",
+  [SCHEME_WEBDAV]: "WebDAV",
 };
 
 /** Directory in the cloud where uploaded files are stored. */
@@ -276,26 +280,21 @@ const { setLocalItems, setRemoteItems, setError } = setup({
         class="ph-bold ph-spinner animate-spin upload-indicator" hidden></i>
     </div>
 
-    <dialog id="s3-connect-dialog">
+    <dialog id="connect-source-dialog">
       <div class="dialog-header">
-        <strong>Connect an S3 bucket</strong>
+        <strong id="connect-source-title"></strong>
       </div>
-      <form id="s3-connect-form" class="dialog-body">
-        <div id="s3-connect-error" class="callout callout--danger" hidden
+      <form id="connect-source-form" class="dialog-body">
+        <div id="connect-source-error" class="callout callout--danger" hidden
           style="margin: 0"></div>
-        <label>Access key <input id="s3-connect-access-key" required autocomplete="off"></label>
-        <label>Secret key <input id="s3-connect-secret-key" type="password" required autocomplete="off"></label>
-        <label>Bucket name <input id="s3-connect-bucket-name" placeholder="my-bucket" required></label>
-        <label>Host <input id="s3-connect-host" placeholder="s3.amazonaws.com"></label>
-        <label>Region <input id="s3-connect-region" placeholder="us-east-1"></label>
-        <label>Path <input id="s3-connect-path" placeholder="/"></label>
-        <p class="caption"
-          style="margin: 0">Uploaded files are placed inside the bucket's path.</p>
+        <div id="connect-source-fields"></div>
+        <p id="connect-source-caption" class="caption" style="margin: 0"></p>
       </form>
       <div class="dialog-footer">
-        <button id="s3-connect-submit-btn" type="submit" form="s3-connect-form"
+        <button id="connect-source-submit-btn" type="submit"
+          form="connect-source-form"
           class="button--brand">Connect</button>
-        <button id="s3-connect-cancel-btn" type="button">Cancel</button>
+        <button id="connect-source-cancel-btn" type="button">Cancel</button>
       </div>
     </dialog>
   `,
@@ -387,90 +386,209 @@ dropzone?.addEventListener("drop", async (e) => {
 stopSyncBtn?.addEventListener("click", () => stopSyncing());
 
 ////////////////////////////////////////////
-// S3 CONNECT DIALOG
+// CONNECT SOURCE DIALOG
 ////////////////////////////////////////////
 
-const s3ConnectDialog = /** @type {HTMLDialogElement | null} */ (
-  document.querySelector("#s3-connect-dialog")
-);
-const s3ConnectForm = /** @type {HTMLFormElement | null} */ (
-  document.querySelector("#s3-connect-form")
-);
-const s3ConnectErrorEl =
-  /** @type {HTMLElement | null} */ (document.querySelector(
-    "#s3-connect-error",
-  ));
-const s3ConnectSubmitBtn = /** @type {HTMLButtonElement | null} */ (
-  document.querySelector("#s3-connect-submit-btn")
-);
+/**
+ * @typedef {{
+ *   id: string;
+ *   label: string;
+ *   required?: boolean;
+ *   placeholder?: string;
+ *   type?: "text" | "password";
+ * }} ConnectField
+ */
 
 /**
- * Shows the dialog-level error inside the S3 connect dialog.
+ * Describes how to connect a source for a scheme without an OAuth flow,
+ * so the file manager can host the connect form itself.
+ *
+ * @typedef {{
+ *   scheme: string;
+ *   title: string;
+ *   fields: ConnectField[];
+ *   build: (values: Record<string, string>) => string;
+ *   caption: string;
+ * }} ConnectConfig
+ */
+
+/** @type {Record<string, ConnectConfig>} */
+const CONNECT_CONFIGS = {
+  [SCHEME_S3]: {
+    scheme: SCHEME_S3,
+    title: "Connect an S3 bucket",
+
+    fields: [
+      { id: "access-key", label: "Access key", required: true },
+      {
+        id: "secret-key",
+        label: "Secret key",
+        required: true,
+        type: "password",
+      },
+      {
+        id: "bucket-name",
+        label: "Bucket name",
+        required: true,
+        placeholder: "my-bucket",
+      },
+      { id: "host", label: "Host", placeholder: "s3.amazonaws.com" },
+      { id: "region", label: "Region", placeholder: "us-east-1" },
+      { id: "path", label: "Path", placeholder: "/" },
+    ],
+
+    build: (values) => {
+      /** @type {Bucket} */
+      const bucket = {
+        accessKey: values["access-key"],
+        bucketName: values["bucket-name"],
+        host: values.host
+          ? values.host.replace(/^\w+:\/\//, "")
+          : "s3.amazonaws.com",
+        path: values.path || "/",
+        region: values.region || "us-east-1",
+        secretKey: values["secret-key"],
+      };
+      return buildURI(bucket);
+    },
+
+    caption: "Uploaded files are placed inside the bucket's path.",
+  },
+
+  [SCHEME_WEBDAV]: {
+    scheme: SCHEME_WEBDAV,
+    title: "Connect a WebDAV server",
+
+    fields: [
+      {
+        id: "host",
+        label: "Host",
+        required: true,
+        placeholder: "music.example.com",
+      },
+      { id: "dir", label: "Directory", placeholder: "/" },
+      { id: "username", label: "Username" },
+      { id: "password", label: "Password", type: "password" },
+    ],
+
+    build: (values) => {
+      /** @type {Server} */
+      const server = {
+        dir: values.dir || "/",
+        host: values.host,
+        password: values.password || "",
+        username: values.username || "",
+      };
+      return buildWebdavURI(server);
+    },
+
+    caption: "Uploaded files are placed inside the server's directory.",
+  },
+};
+
+const connectSourceDialog = /** @type {HTMLDialogElement | null} */ (
+  document.querySelector("#connect-source-dialog")
+);
+const connectSourceForm = /** @type {HTMLFormElement | null} */ (
+  document.querySelector("#connect-source-form")
+);
+const connectSourceErrorEl =
+  /** @type {HTMLElement | null} */ (document.querySelector(
+    "#connect-source-error",
+  ));
+const connectSourceFieldsEl =
+  /** @type {HTMLElement | null} */ (document.querySelector(
+    "#connect-source-fields",
+  ));
+const connectSourceCaptionEl =
+  /** @type {HTMLElement | null} */ (document.querySelector(
+    "#connect-source-caption",
+  ));
+const connectSourceTitleEl =
+  /** @type {HTMLElement | null} */ (document.querySelector(
+    "#connect-source-title",
+  ));
+const connectSourceSubmitBtn = /** @type {HTMLButtonElement | null} */ (
+  document.querySelector("#connect-source-submit-btn")
+);
+
+/** The config of the scheme the dialog is currently open for. */
+let currentConnectConfig = /** @type {ConnectConfig | null} */ (null);
+
+/**
+ * Shows the dialog-level error inside the connect source dialog.
  *
  * @param {string | null} message
  */
-const setS3ConnectError = (message) => {
-  if (!s3ConnectErrorEl) return;
-  s3ConnectErrorEl.hidden = message === null;
-  s3ConnectErrorEl.textContent = message;
+const setConnectSourceError = (message) => {
+  if (!connectSourceErrorEl) return;
+  connectSourceErrorEl.hidden = message === null;
+  connectSourceErrorEl.textContent = message;
 };
 
 /**
- * Opens the S3 connect dialog, resetting any previous input.
- */
-function openS3ConnectDialog() {
-  if (!s3ConnectDialog || !s3ConnectForm) return;
-  s3ConnectForm.reset();
-  setS3ConnectError(null);
-  s3ConnectDialog.showModal();
-}
-
-/**
- * Collects the bucket credentials from the dialog's form fields. Returns null
- * when a required field is empty (the inputs are also `required`, so this is
- * belt and suspenders for programmatic submissions).
+ * Opens the connect source dialog for the given scheme, resetting any
+ * previous input.
  *
- * @returns {Bucket | null}
+ * @param {ConnectConfig} config
  */
-function s3BucketFromForm() {
-  /** @param {string} id */
-  const value = (id) =>
-    /** @type {HTMLInputElement | null} */ (document.querySelector(id))?.value
-      ?.trim() ?? "";
+function openConnectSourceDialog(config) {
+  if (
+    !connectSourceDialog || !connectSourceForm || !connectSourceFieldsEl
+  ) return;
 
-  const accessKey = value("#s3-connect-access-key");
-  const secretKey = value("#s3-connect-secret-key");
-  const bucketName = value("#s3-connect-bucket-name");
-  if (!accessKey || !secretKey || !bucketName) return null;
+  currentConnectConfig = config;
 
-  const rawHost = value("#s3-connect-host");
-  return {
-    accessKey,
-    bucketName,
-    host: rawHost.length
-      ? rawHost.replace(/^\w+:\/\//, "")
-      : "s3.amazonaws.com",
-    path: value("#s3-connect-path") || "/",
-    region: value("#s3-connect-region") || "us-east-1",
-    secretKey,
-  };
+  if (connectSourceTitleEl) connectSourceTitleEl.textContent = config.title;
+  if (connectSourceCaptionEl) {
+    connectSourceCaptionEl.textContent = config.caption;
+  }
+
+  litRender(
+    config.fields.map((field) =>
+      html`<label>${field.label}
+        <input
+          id="connect-source-field-${field.id}"
+          type="${field.type ?? "text"}"
+          placeholder="${field.placeholder ?? ""}"
+          ?required="${field.required ?? false}"
+          autocomplete="off"
+        >
+      </label>`
+    ),
+    connectSourceFieldsEl,
+  );
+
+  connectSourceForm.reset();
+  setConnectSourceError(null);
+  connectSourceDialog.showModal();
 }
 
-s3ConnectForm?.addEventListener("submit", async (e) => {
+connectSourceForm?.addEventListener("submit", async (e) => {
   e.preventDefault();
-  if (!s3ConnectDialog) return;
+  const config = currentConnectConfig;
+  if (!connectSourceDialog || !config) return;
 
-  const bucket = s3BucketFromForm();
-  if (!bucket) return;
+  // Collect the field values.
+  const values = /** @type {Record<string, string>} */ ({});
+  for (const field of config.fields) {
+    values[field.id] = /** @type {HTMLInputElement | null} */ (
+      document.querySelector(`#connect-source-field-${field.id}`)
+    )?.value?.trim() ?? "";
+  }
 
-  setS3ConnectError(null);
-  if (s3ConnectSubmitBtn) {
-    s3ConnectSubmitBtn.setAttribute("disabled", "");
-    s3ConnectSubmitBtn.textContent = "Connecting …";
+  // Required fields are enforced by the browser as well — this covers
+  // programmatic submissions.
+  if (config.fields.some((f) => f.required && !values[f.id])) return;
+
+  setConnectSourceError(null);
+  if (connectSourceSubmitBtn) {
+    connectSourceSubmitBtn.setAttribute("disabled", "");
+    connectSourceSubmitBtn.textContent = "Connecting …";
   }
 
   try {
-    // Add the bucket as a source, the same way the Connect page does.
+    // Add the source, the same way the Connect page does.
     const now = new Date().toISOString();
     /** @type {Track} */
     const placeholderTrack = {
@@ -479,35 +597,35 @@ s3ConnectForm?.addEventListener("submit", async (e) => {
       createdAt: now,
       updatedAt: now,
       kind: "placeholder",
-      uri: buildURI(bucket),
+      uri: config.build(values),
     };
     const tracks = await Output.data(outputOrchestrator.tracks);
     await outputOrchestrator.tracks.save([...tracks, placeholderTrack]);
 
-    s3ConnectDialog.close();
+    connectSourceDialog.close();
 
-    // Kick off syncing against the new source — it consults the bucket and
-    // uploads any pending local tracks. If the bucket can't be reached, the
-    // (scheme-specific) error callout explains what to fix.
-    const uploadElement = uploadConfigurator.uploaders()[SCHEME_S3];
-    if (uploadElement) await startUpload(SCHEME_S3, uploadElement);
+    // Kick off syncing against the new source — it consults the source and
+    // uploads any pending local tracks. If the source can't be reached, the
+    // error callout explains what to fix.
+    const uploadElement = uploadConfigurator.uploaders()[config.scheme];
+    if (uploadElement) await startUpload(config.scheme, uploadElement);
   } catch (err) {
-    setS3ConnectError(
-      err instanceof Error ? err.message : "Failed to connect the bucket",
+    setConnectSourceError(
+      err instanceof Error ? err.message : "Failed to connect the source",
     );
   } finally {
-    if (s3ConnectSubmitBtn) {
-      s3ConnectSubmitBtn.removeAttribute("disabled");
-      s3ConnectSubmitBtn.textContent = "Connect";
+    if (connectSourceSubmitBtn) {
+      connectSourceSubmitBtn.removeAttribute("disabled");
+      connectSourceSubmitBtn.textContent = "Connect";
     }
   }
 });
 
-document.querySelector("#s3-connect-cancel-btn")?.addEventListener(
+document.querySelector("#connect-source-cancel-btn")?.addEventListener(
   "click",
   () => {
-    setS3ConnectError(null);
-    s3ConnectDialog?.close();
+    setConnectSourceError(null);
+    connectSourceDialog?.close();
   },
 );
 
@@ -1090,8 +1208,9 @@ async function startUpload(scheme, uploadElement) {
 
     // No source connected: let the user connect one right here instead of
     // sending them elsewhere.
-    if (scheme === SCHEME_S3 && allSources.length === 0) {
-      openS3ConnectDialog();
+    const connectConfig = CONNECT_CONFIGS[scheme];
+    if (connectConfig && allSources.length === 0) {
+      openConnectSourceDialog(connectConfig);
       return;
     }
 

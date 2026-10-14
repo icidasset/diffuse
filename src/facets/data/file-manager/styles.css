@@ -81,3 +81,9 @@
   color: var(--text-color);
   font-size: var(--fs-sm);
 }
+
+#connect-source-fields {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-sm);
+}

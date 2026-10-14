@@ -51,6 +51,7 @@ import * as _TransformerOutputRefinerPathCollections from "./transformer/output/
 import * as _TransformerOutputStringJson from "./transformer/output/string/json/element.js"
 import * as _UploadDropbox from "./upload/dropbox/element.js"
 import * as _UploadS3 from "./upload/s3/element.js"
+import * as _UploadWebdav from "./upload/webdav/element.js"
 
 export const artwork = {
   audioMetadata: _ArtworkAudioMetadata,
@@ -149,4 +150,5 @@ export const transformer = {
 export const upload = {
   dropbox: _UploadDropbox,
   s3: _UploadS3,
+  webdav: _UploadWebdav,
 }

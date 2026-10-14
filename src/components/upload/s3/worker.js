@@ -58,6 +58,7 @@ export async function deleteFn(uri) {
 /**
  * @type {Actions['createSource']}
  */
+// deno-lint-ignore require-await
 export async function createSource(_args) {
   // S3 buckets are connected (with their credentials) via the Connect page —
   // there's no OAuth flow that could mint a new source here.

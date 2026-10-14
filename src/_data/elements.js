@@ -303,12 +303,6 @@ export default {
 
   transformers: [
     {
-      url: "components/transformer/output/bytes/automerge/element.js",
-      title: "Output / Bytes / Automerge",
-      desc: "Translate data to and from an Automerge CRDT.",
-      todo: true,
-    },
-    {
       url: "components/transformer/output/bytes/dasl-sync/element.js",
       title: "Output / Bytes / DASL Sync",
       desc:
@@ -374,7 +368,13 @@ export default {
       url: "components/upload/s3/element.js",
       title: "S3",
       desc:
-        "Uploads and deletes files in an S3-compatible bucket using the S3 HTTP API.",
+        "Uploads and deletes files in an S3-compatible bucket using the S3 HTTP API. Buckets are connected on the S3 connect page.",
+    },
+    {
+      url: "components/upload/webdav/element.js",
+      title: "WebDAV",
+      desc:
+        "Uploads and deletes files on a WebDAV server using PUT and DELETE requests.",
     },
   ],
 
@@ -400,11 +400,6 @@ export default {
       url: "definitions/output/playlistItemBundle.json",
       title: "Output / Playlist Item Bundle",
       desc: "A bundle of playlist items.",
-    },
-    {
-      title: "Output / Progress",
-      desc: "Used to track progress of (long) audio playback.",
-      todo: true,
     },
     {
       url: "definitions/output/setting.json",

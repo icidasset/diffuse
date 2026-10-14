@@ -3,6 +3,7 @@ import { effect } from "~/common/signal.js";
 
 import { NAME as DROPBOX_NAME } from "~/components/upload/dropbox/element.js";
 import { NAME as S3_NAME } from "~/components/upload/s3/element.js";
+import { NAME as WEBDAV_NAME } from "~/components/upload/webdav/element.js";
 
 /**
  * @import UploadConfigurator from "~/components/configurator/upload/element.js"
@@ -17,6 +18,7 @@ effect(() => {
 
   dropbox(upload);
   s3(upload);
+  webdav(upload);
 });
 
 ////////////////////////////////////////////
@@ -35,4 +37,11 @@ export function dropbox(upload) {
  */
 export function s3(upload) {
   upload.append(document.createElement(S3_NAME));
+}
+
+/**
+ * @param {UploadConfigurator} upload
+ */
+export function webdav(upload) {
+  upload.append(document.createElement(WEBDAV_NAME));
 }
