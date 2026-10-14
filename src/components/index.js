@@ -50,6 +50,7 @@ import * as _TransformerOutputRefinerPasskeyEncryption from "./transformer/outpu
 import * as _TransformerOutputRefinerPathCollections from "./transformer/output/refiner/path-collections/element.js"
 import * as _TransformerOutputStringJson from "./transformer/output/string/json/element.js"
 import * as _UploadDropbox from "./upload/dropbox/element.js"
+import * as _UploadS3 from "./upload/s3/element.js"
 
 export const artwork = {
   audioMetadata: _ArtworkAudioMetadata,
@@ -147,4 +148,5 @@ export const transformer = {
 
 export const upload = {
   dropbox: _UploadDropbox,
+  s3: _UploadS3,
 }

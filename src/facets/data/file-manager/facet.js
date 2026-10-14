@@ -1,6 +1,6 @@
 import * as TID from "@atcute/tid";
 import * as IDB from "idb-keyval";
-import { html, render as litRender } from "lit-html";
+import { html, nothing, render as litRender } from "lit-html";
 
 import * as Output from "~/common/output.js";
 import {
@@ -9,6 +9,8 @@ import {
 } from "~/components/input/ephemeral-cache/constants.js";
 import { isAudioFile } from "~/components/input/common.js";
 import { SCHEME as SCHEME_DROPBOX } from "~/components/input/dropbox/constants.js";
+import { buildURI } from "~/components/input/s3/common.js";
+import { SCHEME as SCHEME_S3 } from "~/components/input/s3/constants.js";
 import { effect, signal } from "~/common/signal.js";
 import { safeDecodeURIComponent } from "~/common/utils.js";
 import foundation from "~/common/foundation.js";
@@ -17,12 +19,14 @@ import foundation from "~/common/foundation.js";
  * @import { TemplateResult } from "lit-html"
  * @import {Track} from "~/definitions/types.d.ts"
  * @import {UploadElement} from "@specs/components/upload/types.d.ts"
+ * @import {Bucket} from "@specs/components/input/s3/types.d.ts"
  */
 
 /** Human-readable labels for upload component schemes. */
 /** @type {Record<string, string>} */
 const SCHEME_LABELS = {
   [SCHEME_DROPBOX]: "Dropbox",
+  [SCHEME_S3]: "S3",
 };
 
 /** Directory in the cloud where uploaded files are stored. */
@@ -78,7 +82,9 @@ const cidNames = new Map();
 const namesVersion = signal(0);
 
 /** Tracks the upload button state: "idle", "caching", or "uploading". */
-const uploadState = signal(/** @type {"idle" | "caching" | "uploading"} */ ("idle"));
+const uploadState = signal(
+  /** @type {"idle" | "caching" | "uploading"} */ ("idle"),
+);
 
 /** The scheme currently being synced with (e.g. "dropbox"), or null. */
 const syncScheme = signal(/** @type {string | null} */ (null));
@@ -101,7 +107,7 @@ const syncScheme = signal(/** @type {string | null} */ (null));
  * @param {TemplateResult | string} config.description
  * @param {TemplateResult} [config.leftContent]
  * @param {TemplateResult} config.rightContent
- * @returns {{ setLocalItems: (items: FileItem[]) => void, setRemoteItems: (items: FileItem[]) => void, setError: (message: string | null) => void }}
+ * @returns {{ setLocalItems: (items: FileItem[]) => void, setRemoteItems: (items: FileItem[]) => void, setError: (message: string | TemplateResult | null) => void }}
  */
 function setup({ title, description, leftContent, rightContent }) {
   const main = document.querySelector("main");
@@ -152,10 +158,12 @@ function setup({ title, description, leftContent, rightContent }) {
   const remoteList =
     /** @type {HTMLElement} */ (main.querySelector("#remote-list"));
 
-  /** @param {string | null} message */
+  /**
+   * @param {string | TemplateResult | null} message
+   */
   const setError = (message) => {
     cardErrorEl.hidden = message === null;
-    cardErrorEl.textContent = message;
+    litRender(message ?? nothing, cardErrorEl);
   };
 
   /** @param {FileItem[]} items */
@@ -202,19 +210,25 @@ function renderFileList(listEl, items, prefix) {
               </button>
               <div id="${prefix}-menu-${index}" class="dropdown" popover>
                 ${subtitle
-                  ? html`<button
+                  ? html`
+                    <button
                       @click="${(/** @type {MouseEvent} */ e) => {
-                        /** @type {HTMLElement | null} */ (/** @type {HTMLElement} */ (e.currentTarget).closest("[popover]"))?.hidePopover();
-                        navigator.clipboard?.writeText(subtitle).catch(() => {});
+                        /** @type {HTMLElement | null} */ (/** @type {HTMLElement} */ (e
+                          .currentTarget).closest("[popover]"))?.hidePopover();
+                        navigator.clipboard?.writeText(subtitle).catch(
+                          () => {},
+                        );
                       }}"
                     >
-                      <i class="ph-fill ph-copy"></i>
-                      Copy CID
-                    </button>`
+                                          <i class="ph-fill ph-copy"></i>
+                                          Copy CID
+                                        </button>
+                  `
                   : null}
                 <button
                   @click="${(/** @type {MouseEvent} */ e) => {
-                    /** @type {HTMLElement | null} */ (/** @type {HTMLElement} */ (e.currentTarget).closest("[popover]"))?.hidePopover();
+                    /** @type {HTMLElement | null} */ (/** @type {HTMLElement} */ (e
+                      .currentTarget).closest("[popover]"))?.hidePopover();
                     onRemove();
                   }}"
                 >
@@ -236,34 +250,60 @@ const { setLocalItems, setRemoteItems, setError } = setup({
     <p>Upload audio files to play them and optionally sync them with your cloud storage. These are automatically added as inputs (aka. sources) and then processed into playable tracks.</p>
 
     <p>
-      <small>
+      <small style="display: block;">
         Got music stored elsewhere, or don't want Diffuse to manage your music? There's a bunch more options to <a href="l/?path=facets%2Fconnect%2Findex.tile">connect</a> to with just read-only access.
       </small>
     </p>
   `,
 
   leftContent: html`
-    <div class="button-row" style="align-items: center; margin-top: var(--space-md)">
+    <div class="button-row"
+      style="align-items: center; margin-top: var(--space-md)">
       <button id="upload-btn" popovertarget="upload-menu">
         <i id="upload-icon" class="ph-fill ph-cloud-arrow-up"></i>
         <span id="upload-label">Upload tracks</span>
       </button>
       <div id="upload-menu" class="dropdown" popover></div>
       <button id="stop-sync-btn" class="button--danger" hidden>
-      <i class="ph-fill ph-cloud-slash"></i>
+        <i class="ph-fill ph-cloud-slash"></i>
         <span id="stop-sync-label">Stop syncing</span>
       </button>
       <button id="process-btn">
         <i id="process-icon" class="ph-fill ph-arrows-clockwise"></i>
         <span id="process-label">Process</span>
       </button>
-      <i id="upload-indicator" class="ph-bold ph-spinner animate-spin upload-indicator" hidden></i>
+      <i id="upload-indicator"
+        class="ph-bold ph-spinner animate-spin upload-indicator" hidden></i>
     </div>
+
+    <dialog id="s3-connect-dialog">
+      <div class="dialog-header">
+        <strong>Connect an S3 bucket</strong>
+      </div>
+      <form id="s3-connect-form" class="dialog-body">
+        <div id="s3-connect-error" class="callout callout--danger" hidden
+          style="margin: 0"></div>
+        <label>Access key <input id="s3-connect-access-key" required autocomplete="off"></label>
+        <label>Secret key <input id="s3-connect-secret-key" type="password" required autocomplete="off"></label>
+        <label>Bucket name <input id="s3-connect-bucket-name" placeholder="my-bucket" required></label>
+        <label>Host <input id="s3-connect-host" placeholder="s3.amazonaws.com"></label>
+        <label>Region <input id="s3-connect-region" placeholder="us-east-1"></label>
+        <label>Path <input id="s3-connect-path" placeholder="/"></label>
+        <p class="caption"
+          style="margin: 0">Uploaded files are placed inside the bucket's path.</p>
+      </form>
+      <div class="dialog-footer">
+        <button id="s3-connect-submit-btn" type="submit" form="s3-connect-form"
+          class="button--brand">Connect</button>
+        <button id="s3-connect-cancel-btn" type="button">Cancel</button>
+      </div>
+    </dialog>
   `,
 
   rightContent: html`
     <label class="dropzone" id="local-dropzone">
-      <input id="local-dropzone-input" type="file" accept="audio/*" multiple hidden />
+      <input id="local-dropzone-input" type="file" accept="audio/*" multiple
+        hidden />
       <i class="ph-bold ph-upload-simple"></i>
       <span>Drop or click to select files</span>
     </label>
@@ -345,6 +385,131 @@ dropzone?.addEventListener("drop", async (e) => {
 });
 
 stopSyncBtn?.addEventListener("click", () => stopSyncing());
+
+////////////////////////////////////////////
+// S3 CONNECT DIALOG
+////////////////////////////////////////////
+
+const s3ConnectDialog = /** @type {HTMLDialogElement | null} */ (
+  document.querySelector("#s3-connect-dialog")
+);
+const s3ConnectForm = /** @type {HTMLFormElement | null} */ (
+  document.querySelector("#s3-connect-form")
+);
+const s3ConnectErrorEl =
+  /** @type {HTMLElement | null} */ (document.querySelector(
+    "#s3-connect-error",
+  ));
+const s3ConnectSubmitBtn = /** @type {HTMLButtonElement | null} */ (
+  document.querySelector("#s3-connect-submit-btn")
+);
+
+/**
+ * Shows the dialog-level error inside the S3 connect dialog.
+ *
+ * @param {string | null} message
+ */
+const setS3ConnectError = (message) => {
+  if (!s3ConnectErrorEl) return;
+  s3ConnectErrorEl.hidden = message === null;
+  s3ConnectErrorEl.textContent = message;
+};
+
+/**
+ * Opens the S3 connect dialog, resetting any previous input.
+ */
+function openS3ConnectDialog() {
+  if (!s3ConnectDialog || !s3ConnectForm) return;
+  s3ConnectForm.reset();
+  setS3ConnectError(null);
+  s3ConnectDialog.showModal();
+}
+
+/**
+ * Collects the bucket credentials from the dialog's form fields. Returns null
+ * when a required field is empty (the inputs are also `required`, so this is
+ * belt and suspenders for programmatic submissions).
+ *
+ * @returns {Bucket | null}
+ */
+function s3BucketFromForm() {
+  /** @param {string} id */
+  const value = (id) =>
+    /** @type {HTMLInputElement | null} */ (document.querySelector(id))?.value
+      ?.trim() ?? "";
+
+  const accessKey = value("#s3-connect-access-key");
+  const secretKey = value("#s3-connect-secret-key");
+  const bucketName = value("#s3-connect-bucket-name");
+  if (!accessKey || !secretKey || !bucketName) return null;
+
+  const rawHost = value("#s3-connect-host");
+  return {
+    accessKey,
+    bucketName,
+    host: rawHost.length
+      ? rawHost.replace(/^\w+:\/\//, "")
+      : "s3.amazonaws.com",
+    path: value("#s3-connect-path") || "/",
+    region: value("#s3-connect-region") || "us-east-1",
+    secretKey,
+  };
+}
+
+s3ConnectForm?.addEventListener("submit", async (e) => {
+  e.preventDefault();
+  if (!s3ConnectDialog) return;
+
+  const bucket = s3BucketFromForm();
+  if (!bucket) return;
+
+  setS3ConnectError(null);
+  if (s3ConnectSubmitBtn) {
+    s3ConnectSubmitBtn.setAttribute("disabled", "");
+    s3ConnectSubmitBtn.textContent = "Connecting …";
+  }
+
+  try {
+    // Add the bucket as a source, the same way the Connect page does.
+    const now = new Date().toISOString();
+    /** @type {Track} */
+    const placeholderTrack = {
+      $type: "sh.diffuse.output.track",
+      id: TID.now(),
+      createdAt: now,
+      updatedAt: now,
+      kind: "placeholder",
+      uri: buildURI(bucket),
+    };
+    const tracks = await Output.data(outputOrchestrator.tracks);
+    await outputOrchestrator.tracks.save([...tracks, placeholderTrack]);
+
+    s3ConnectDialog.close();
+
+    // Kick off syncing against the new source — it consults the bucket and
+    // uploads any pending local tracks. If the bucket can't be reached, the
+    // (scheme-specific) error callout explains what to fix.
+    const uploadElement = uploadConfigurator.uploaders()[SCHEME_S3];
+    if (uploadElement) await startUpload(SCHEME_S3, uploadElement);
+  } catch (err) {
+    setS3ConnectError(
+      err instanceof Error ? err.message : "Failed to connect the bucket",
+    );
+  } finally {
+    if (s3ConnectSubmitBtn) {
+      s3ConnectSubmitBtn.removeAttribute("disabled");
+      s3ConnectSubmitBtn.textContent = "Connect";
+    }
+  }
+});
+
+document.querySelector("#s3-connect-cancel-btn")?.addEventListener(
+  "click",
+  () => {
+    setS3ConnectError(null);
+    s3ConnectDialog?.close();
+  },
+);
 
 ////////////////////////////////////////////
 // OAUTH CALLBACK
@@ -461,23 +626,23 @@ effect(() => {
   const scheme = syncScheme.get();
   const remoteEntries = scheme
     ? tracks
-        .filter(
-          (t) =>
-            t.uri.startsWith(scheme + "://") &&
-            t.kind !== "placeholder",
-        )
-        .map((t) => {
-          const cid = cidFromUri(t.uri);
-          const original = cidNames.get(cid);
-          return {
-            label: original ? stemOf(original) : trackLabel(t.uri),
-            cid,
-            uri: t.uri,
-          };
-        })
-        .sort((a, b) =>
-          a.label.localeCompare(b.label, undefined, { sensitivity: "base" })
-        )
+      .filter(
+        (t) =>
+          t.uri.startsWith(scheme + "://") &&
+          t.kind !== "placeholder",
+      )
+      .map((t) => {
+        const cid = cidFromUri(t.uri);
+        const original = cidNames.get(cid);
+        return {
+          label: original ? stemOf(original) : trackLabel(t.uri),
+          cid,
+          uri: t.uri,
+        };
+      })
+      .sort((a, b) =>
+        a.label.localeCompare(b.label, undefined, { sensitivity: "base" })
+      )
     : [];
 
   setRemoteItems(
@@ -518,7 +683,9 @@ effect(() => {
     uploadBtn.hidden = true;
     uploadMenu.hidePopover?.();
     stopSyncBtn.hidden = false;
-    stopSyncLabel.textContent = `Stop syncing (${SCHEME_LABELS[syncing] ?? syncing})`;
+    stopSyncLabel.textContent = `Stop syncing (${
+      SCHEME_LABELS[syncing] ?? syncing
+    })`;
     return;
   }
 
@@ -534,9 +701,7 @@ effect(() => {
 
   uploadBtn.disabled = isBusy || !canUpload;
   uploadIcon.className = "ph-fill ph-cloud-arrow-up";
-  uploadLabel.textContent = isBusy
-    ? "Uploading ..."
-    : "Set up syncing";
+  uploadLabel.textContent = isBusy ? "Uploading ..." : "Set up syncing";
 
   litRender(
     html`
@@ -545,7 +710,9 @@ effect(() => {
           <button
             @click="${(/** @type {MouseEvent} */ e) => {
               /** @type {HTMLElement | null} */ (
-                /** @type {HTMLElement} */ (e.currentTarget).closest("[popover]")
+                /** @type {HTMLElement} */ (e.currentTarget).closest(
+                  "[popover]",
+                )
               )?.hidePopover();
               startUpload(scheme, element);
             }}"
@@ -853,11 +1020,27 @@ async function syncUpload() {
 }
 
 /**
- * Starts the sync flow for the selected upload component. Enters sync mode,
- * then uploads all ephemeral tracks. If an existing input source for this
- * scheme already exists (enabled or disabled), uploads directly to it
- * (re-enabling if necessary). Otherwise, triggers the OAuth flow (adding
- * `?uploading=<scheme>` to the URL so we can resume after the redirect).
+ * Enters sync mode for the given scheme: arms auto-uploading of new local
+ * tracks and persists the scheme so it survives reloads.
+ *
+ * Only called once `startUpload` is committed to a syncing path — entering
+ * sync mode earlier (before consult/authorize fails) would flash the
+ * "Stop syncing" button in the UI.
+ *
+ * @param {string} scheme
+ */
+async function enterSyncMode(scheme) {
+  syncScheme.value = scheme;
+  await IDB.set(SYNC_SCHEME_KEY, scheme);
+}
+
+/**
+ * Starts the sync flow for the selected upload component. If an existing
+ * input source for this scheme already exists (enabled or disabled), enters
+ * sync mode and uploads directly to it (re-enabling if necessary). Otherwise,
+ * triggers the OAuth flow (adding `?uploading=<scheme>` to the URL so we can
+ * resume after the redirect), or — for uploaders without OAuth — opens the
+ * connect dialog.
  *
  * @param {string} scheme
  * @param {UploadElement} uploadElement
@@ -865,17 +1048,13 @@ async function syncUpload() {
 async function startUpload(scheme, uploadElement) {
   setError(null);
 
-  // Enter sync mode.
-  syncScheme.value = scheme;
-  await IDB.set(SYNC_SCHEME_KEY, scheme);
-
   const sourcesRecord = sourcesOrchestrator.sources();
   const allSources = sourcesRecord[scheme] ?? [];
   const enabledSources = allSources.filter(
     (s) => !sourcesOrchestrator.isDisabled(s.uri),
   );
   const disabledSources = allSources.filter((s) =>
-    sourcesOrchestrator.isDisabled(s.uri),
+    sourcesOrchestrator.isDisabled(s.uri)
   );
 
   // Check if an existing source's token is still valid before re-using it.
@@ -885,6 +1064,7 @@ async function startUpload(scheme, uploadElement) {
     const result = await uploadConfigurator.consult(enabledSources[0].uri);
     if (result.supported && result.consult !== "no") {
       // Token is valid (or inconclusive — be optimistic): upload directly.
+      await enterSyncMode(scheme);
       await uploadTracks(enabledSources[0].uri);
       return;
     }
@@ -894,6 +1074,7 @@ async function startUpload(scheme, uploadElement) {
     const result = await uploadConfigurator.consult(disabledSources[0].uri);
     if (result.supported && result.consult !== "no") {
       // Token is valid — re-enable the source, then upload.
+      await enterSyncMode(scheme);
       await sourcesOrchestrator.toggle(disabledSources[0].uri);
       await uploadTracks(disabledSources[0].uri);
       return;
@@ -903,9 +1084,35 @@ async function startUpload(scheme, uploadElement) {
   // No existing source — authenticate first. Mark the URL so we can resume
   // the upload flow after the OAuth redirect.
   if (!uploadElement.authorize) {
-    setError(`Upload component "${SCHEME_LABELS[scheme] ?? scheme}" does not support authorization.`);
+    // Uploaders without an OAuth flow (e.g. S3) can't mint a source
+    // themselves — one must be connected first, and if one exists but is
+    // unreachable, re-authenticating can't help.
+
+    // No source connected: let the user connect one right here instead of
+    // sending them elsewhere.
+    if (scheme === SCHEME_S3 && allSources.length === 0) {
+      openS3ConnectDialog();
+      return;
+    }
+
+    const label = SCHEME_LABELS[scheme] ?? scheme;
+    const connectPath = uploadElement.CONNECT_PATH ??
+      "facets/connect/index.tile";
+    const connectLink = html`<a href="l/?path=${
+      encodeURIComponent(connectPath)
+    }">Connect page</a>`;
+
+    setError(
+      allSources.length === 0
+        ? html`No ${label} source is connected. Connect one on the ${connectLink} first, then set up syncing again.`
+        : html`The ${label} storage could not be reached. Check its credentials (and the bucket's CORS settings) on the ${connectLink}, then try again.`,
+    );
     return;
   }
+
+  // Enter sync mode before the redirect so it survives the page reload
+  // (resumeUpload sets it again as well).
+  await enterSyncMode(scheme);
 
   const url = new URL(location.href);
   url.searchParams.set("uploading", scheme);
@@ -966,7 +1173,8 @@ async function resumeUpload(scheme, refreshToken) {
       const files = await Promise.all(
         ephemeralTracks.map(async (track) => {
           const blob = await IDB.get(CACHE_KEY_PREFIX + track.uri);
-          const original = ephemeralNames.get(track.uri) ?? blob?.name ?? "audio";
+          const original = ephemeralNames.get(track.uri) ?? blob?.name ??
+            "audio";
           const cid = cidFromUri(track.uri);
           const ext = extOf(original);
           const name = ext ? `${cid}.${ext}` : cid;
@@ -1073,7 +1281,9 @@ function reconnectSync() {
   const uploadElement = uploadConfigurator.uploaders()[scheme];
   if (!uploadElement?.authorize) {
     setError(
-      `Upload component "${SCHEME_LABELS[scheme] ?? scheme}" does not support reconnection.`,
+      `Upload component "${
+        SCHEME_LABELS[scheme] ?? scheme
+      }" does not support reconnection.`,
     );
     return;
   }

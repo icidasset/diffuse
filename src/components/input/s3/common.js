@@ -177,17 +177,15 @@ export function parseURI(uriString) {
     accessKey,
     bucketName: typeof qs.bucketName === "string" ? qs.bucketName : "",
     host: uri.host,
-    path: qs.bucketPath === "string" ? qs.bucketPath : "/",
+    path: typeof qs.bucketPath === "string" ? qs.bucketPath : "/",
     region: typeof qs.region === "string" ? qs.region : "",
     secretKey,
   };
 
-  const path =
-    (bucket.path.replace(/\/$/, "") + safeDecodeURIComponent(uri.path || ""))
-      .replace(
-        /^\//,
-        "",
-      );
+  // The URI's path component is the object key (see `buildURI`). The bucket's
+  // configured path is only the prefix `list()` enumerates — it is not part
+  // of the URI path and must not be prepended here.
+  const path = safeDecodeURIComponent(uri.path || "").replace(/^\//, "");
 
   return { bucket, path };
 }

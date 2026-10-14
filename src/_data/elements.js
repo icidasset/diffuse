@@ -370,6 +370,12 @@ export default {
       desc:
         "Uploads and deletes files on Dropbox using the Dropbox v2 HTTP API.",
     },
+    {
+      url: "components/upload/s3/element.js",
+      title: "S3",
+      desc:
+        "Uploads and deletes files in an S3-compatible bucket using the S3 HTTP API. Buckets are connected on the S3 connect page.",
+    },
   ],
 
   definitions: [

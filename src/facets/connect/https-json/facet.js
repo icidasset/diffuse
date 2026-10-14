@@ -46,7 +46,7 @@ const { setItems, setError } = setup({
       (eg. static-web-server with <code>--directory-listing-format=json</code>).
     </p>
 
-    <p><small>Uses the format: <code>[{ "name": "Example folder", "type": "directory" }, { "name": "file.mp3", "type": "file" }]</code></small></p>
+    <p><small style="display: block;">Uses the format: <code>[{ "name": "Example folder", "type": "directory" }, { "name": "file.mp3", "type": "file" }]</code></small></p>
   `,
 
   formFields: html`

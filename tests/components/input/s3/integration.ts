@@ -59,8 +59,15 @@ function errorXml(code: string, message: string): string {
 </Error>`;
 }
 
-function registerMockBucket(bucket: Bucket, objects: StoredObject[]): MockBucket {
-  const mock: MockBucket = { bucketName: bucket.bucketName, host: bucket.host, objects };
+function registerMockBucket(
+  bucket: Bucket,
+  objects: StoredObject[],
+): MockBucket {
+  const mock: MockBucket = {
+    bucketName: bucket.bucketName,
+    host: bucket.host,
+    objects,
+  };
   mockBuckets.push(mock);
   return mock;
 }
@@ -84,48 +91,55 @@ let originalFetch: typeof globalThis.fetch;
 beforeAll(() => {
   originalFetch = globalThis.fetch;
 
-  globalThis.fetch = (async (input: string | URL | Request, _init?: RequestInit) => {
-    const url = new URL(
-      typeof input === "string" ? input : input instanceof URL ? input.href : input.url,
-    );
+  globalThis.fetch =
+    (async (input: string | URL | Request, _init?: RequestInit) => {
+      const url = new URL(
+        typeof input === "string"
+          ? input
+          : input instanceof URL
+          ? input.href
+          : input.url,
+      );
 
-    // The client uses virtual-host style requests: https://bucket.host/...
-    const mock = mockBuckets.find((b) => url.hostname === `${b.bucketName}.${b.host}`);
+      // The client uses virtual-host style requests: https://bucket.host/...
+      const mock = mockBuckets.find((b) =>
+        url.hostname === `${b.bucketName}.${b.host}`
+      );
 
-    if (!mock) {
+      if (!mock) {
+        return new Response(
+          errorXml("NoSuchBucket", "The specified bucket does not exist."),
+          { status: 404, headers: { "content-type": "application/xml" } },
+        );
+      }
+
+      if (mock.failRequests) {
+        throw new TypeError("fetch failed");
+      }
+
+      // ListObjectsV2 — used by list (no prefix) and artwork (directory prefix).
+      if (url.pathname === "/") {
+        const prefix = url.searchParams.get("prefix") ?? "";
+        const keys = mock.objects.filter((o) => o.key.startsWith(prefix))
+          .map((o) => o.key);
+        return new Response(listResultXml(mock.bucketName, keys), {
+          status: 200,
+          headers: { "content-type": "application/xml" },
+        });
+      }
+
+      // Object fetch through a presigned URL (artwork).
+      const key = url.pathname.replace(/^\//, "");
+      const object = mock.objects.find((o) => o.key === key);
+      if (object) {
+        return new Response(object.bytes, { status: 200 });
+      }
+
       return new Response(
-        errorXml("NoSuchBucket", "The specified bucket does not exist."),
+        errorXml("NoSuchKey", "The specified key does not exist."),
         { status: 404, headers: { "content-type": "application/xml" } },
       );
-    }
-
-    if (mock.failRequests) {
-      throw new TypeError("fetch failed");
-    }
-
-    // ListObjectsV2 — used by list (no prefix) and artwork (directory prefix).
-    if (url.pathname === "/") {
-      const prefix = url.searchParams.get("prefix") ?? "";
-      const keys = mock.objects.filter((o) => o.key.startsWith(prefix))
-        .map((o) => o.key);
-      return new Response(listResultXml(mock.bucketName, keys), {
-        status: 200,
-        headers: { "content-type": "application/xml" },
-      });
-    }
-
-    // Object fetch through a presigned URL (artwork).
-    const key = url.pathname.replace(/^\//, "");
-    const object = mock.objects.find((o) => o.key === key);
-    if (object) {
-      return new Response(object.bytes, { status: 200 });
-    }
-
-    return new Response(
-      errorXml("NoSuchKey", "The specified key does not exist."),
-      { status: 404, headers: { "content-type": "application/xml" } },
-    );
-  }) as typeof globalThis.fetch;
+    }) as typeof globalThis.fetch;
 });
 
 afterAll(() => {
@@ -171,7 +185,10 @@ describe("components/input/s3 (integration)", () => {
 
   it("list returns a placeholder track when the bucket has no audio objects", async () => {
     const bucket = makeBucket("empty.example.com");
-    registerMockBucket(bucket, [{ key: "readme.txt", bytes: new Uint8Array(1) }]);
+    registerMockBucket(bucket, [{
+      key: "readme.txt",
+      bytes: new Uint8Array(1),
+    }]);
 
     const tracks = await Worker.list([{
       $type: "sh.diffuse.output.track",
@@ -193,7 +210,9 @@ describe("components/input/s3 (integration)", () => {
 
     expect(resolved).not.toBe(undefined);
     if (resolved && "url" in resolved) {
-      expect(resolved.url).toContain(`https://${bucket.bucketName}.${bucket.host}`);
+      expect(resolved.url).toContain(
+        `https://${bucket.bucketName}.${bucket.host}`,
+      );
       expect(resolved.url).toContain("/albums-a/track1.mp3");
       expect(resolved.url).toContain("X-Amz-Expires=604800");
       expect(resolved.url).toContain("X-Amz-Credential=");
@@ -208,7 +227,8 @@ describe("components/input/s3 (integration)", () => {
 
   it("resolve returns undefined for an unparseable URI", async () => {
     const resolved = await Worker.resolve({
-      uri: "s3://no-credentials.example.com/track.mp3?bucketName=music&region=us-east-1",
+      uri:
+        "s3://no-credentials.example.com/track.mp3?bucketName=music&region=us-east-1",
     });
     expect(resolved).toBe(undefined);
   });
@@ -291,7 +311,10 @@ describe("components/input/s3 (integration)", () => {
     const bucket = makeBucket("artwork.example.com");
     registerMockBucket(bucket, [
       { key: "albums-a/track1.mp3", bytes: new Uint8Array(1) },
-      { key: "albums-a/cover.jpg", bytes: new TextEncoder().encode("fake-jpeg-bytes") },
+      {
+        key: "albums-a/cover.jpg",
+        bytes: new TextEncoder().encode("fake-jpeg-bytes"),
+      },
     ]);
 
     const art = await Worker.artwork(buildURI(bucket, "/albums-a/track1.mp3"));
@@ -306,7 +329,8 @@ describe("components/input/s3 (integration)", () => {
     registerMockBucket(noImages, [
       { key: "albums-a/track1.mp3", bytes: new Uint8Array(1) },
     ]);
-    expect(await Worker.artwork(buildURI(noImages, "/albums-a/track1.mp3"))).toBe(null);
+    expect(await Worker.artwork(buildURI(noImages, "/albums-a/track1.mp3")))
+      .toBe(null);
 
     // Images nested in subdirectories don't count — only the track's own directory.
     const nested = makeBucket("artwork-nested.example.com");
@@ -314,7 +338,9 @@ describe("components/input/s3 (integration)", () => {
       { key: "albums-a/track1.mp3", bytes: new Uint8Array(1) },
       { key: "albums-a/sub/cover.jpg", bytes: new Uint8Array(1) },
     ]);
-    expect(await Worker.artwork(buildURI(nested, "/albums-a/track1.mp3"))).toBe(null);
+    expect(await Worker.artwork(buildURI(nested, "/albums-a/track1.mp3"))).toBe(
+      null,
+    );
   });
 
   it("detach with a specific bucket URI removes only that bucket's tracks", async () => {
@@ -322,8 +348,16 @@ describe("components/input/s3 (integration)", () => {
     const bucketB = makeBucket("detach-b.example.com");
 
     const tracks: Track[] = [
-      { $type: "sh.diffuse.output.track", id: "1", uri: buildURI(bucketA, "/x/a.mp3") },
-      { $type: "sh.diffuse.output.track", id: "2", uri: buildURI(bucketB, "/x/b.mp3") },
+      {
+        $type: "sh.diffuse.output.track",
+        id: "1",
+        uri: buildURI(bucketA, "/x/a.mp3"),
+      },
+      {
+        $type: "sh.diffuse.output.track",
+        id: "2",
+        uri: buildURI(bucketB, "/x/b.mp3"),
+      },
     ];
     const remaining = await Worker.detach({
       fileUriOrScheme: buildURI(bucketA, "/x/a.mp3"),
@@ -337,10 +371,35 @@ describe("components/input/s3 (integration)", () => {
   it("detach with the s3 scheme removes all s3 tracks", async () => {
     const bucket = makeBucket("detach-scheme.example.com");
     const tracks: Track[] = [
-      { $type: "sh.diffuse.output.track", id: "1", uri: buildURI(bucket, "/a.mp3") },
-      { $type: "sh.diffuse.output.track", id: "2", uri: buildURI(bucket, "/b.mp3") },
+      {
+        $type: "sh.diffuse.output.track",
+        id: "1",
+        uri: buildURI(bucket, "/a.mp3"),
+      },
+      {
+        $type: "sh.diffuse.output.track",
+        id: "2",
+        uri: buildURI(bucket, "/b.mp3"),
+      },
     ];
     const remaining = await Worker.detach({ fileUriOrScheme: "s3", tracks });
     expect(remaining.length).toBe(0);
+  });
+
+  it("parseURI restores the bucket's configured path from the URI query", async () => {
+    // The bucket's path is carried in the `bucketPath` query param — it must
+    // round-trip so `list()` enumerates the configured prefix.
+    const bucket = { ...makeBucket("parse-path.example.com"), path: "/Music" };
+    const parsed = parseURI(buildURI(bucket));
+    expect(parsed?.bucket.path).toBe("/Music");
+  });
+
+  it("parseURI's path is the object key, without the bucket's path prefix", async () => {
+    // `buildURI` places the object key in the URI's path component — the key
+    // must come back untouched (no doubled prefix), so `resolve()`'s
+    // presigned URLs and deletes target the right object.
+    const bucket = { ...makeBucket("parse-key.example.com"), path: "/Music" };
+    const parsed = parseURI(buildURI(bucket, "Music/track1.mp3"));
+    expect(parsed?.path).toBe("Music/track1.mp3");
   });
 });

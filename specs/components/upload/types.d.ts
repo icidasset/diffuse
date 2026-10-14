@@ -44,6 +44,15 @@ export type UploadElement =
      * Not all upload components require OAuth.
      */
     authorize?(): void;
+
+    /**
+     * Path to the facet where a source for this scheme is connected,
+     * relative to the site root (e.g. "facets/connect/s3/index.tile").
+     * Lets facets link users to where a source can be connected — relevant
+     * for uploaders without an OAuth flow, which can't mint sources
+     * themselves. When absent, the Connect index is a reasonable fallback.
+     */
+    CONNECT_PATH?: string;
   };
 
 export type UploadSchemeProvider = { SCHEME: string };
