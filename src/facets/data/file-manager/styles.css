@@ -87,3 +87,13 @@
   flex-direction: column;
   gap: var(--space-sm);
 }
+
+.connect-source-option {
+  align-items: center;
+  cursor: pointer;
+  display: flex;
+  font-size: var(--fs-sm);
+  gap: var(--space-xs);
+  text-align: left;
+  width: 100%;
+}

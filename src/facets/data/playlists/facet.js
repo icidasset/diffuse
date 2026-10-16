@@ -348,7 +348,7 @@ function showCreatePlaylist() {
           }}"
         >
           <label>
-            <span class="create-form__label">Name</span>
+            <span class="label__name">Name</span>
             <input
               name="name"
               type="text"

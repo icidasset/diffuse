@@ -217,6 +217,15 @@ label {
   gap: var(--space-3xs);
 }
 
+label .label__name {
+  font-size: var(--fs-xs);
+  font-weight: 600;
+  letter-spacing: var(--tracking-wider);
+  margin-bottom: 0.05em;
+  opacity: 0.5;
+  text-transform: uppercase;
+}
+
 input,
 select {
   background: var(--form-color);
@@ -304,14 +313,6 @@ p,
   display: flex;
   flex-direction: column;
   gap: var(--space-sm);
-}
-
-.create-form__label {
-  font-size: var(--fs-xs);
-  font-weight: 600;
-  letter-spacing: var(--tracking-wider);
-  opacity: 0.5;
-  text-transform: uppercase;
 }
 
 .create-form__checkbox-row {

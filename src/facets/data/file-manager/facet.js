@@ -9,9 +9,15 @@ import {
 } from "~/components/input/ephemeral-cache/constants.js";
 import { isAudioFile } from "~/components/input/common.js";
 import { SCHEME as SCHEME_DROPBOX } from "~/components/input/dropbox/constants.js";
-import { buildURI } from "~/components/input/s3/common.js";
+import {
+  buildURI,
+  parseURI as parseS3URI,
+} from "~/components/input/s3/common.js";
 import { SCHEME as SCHEME_S3 } from "~/components/input/s3/constants.js";
-import { buildURI as buildWebdavURI } from "~/components/input/webdav/common.js";
+import {
+  buildURI as buildWebdavURI,
+  parseURI as parseWebdavURI,
+} from "~/components/input/webdav/common.js";
 import { SCHEME as SCHEME_WEBDAV } from "~/components/input/webdav/constants.js";
 import { effect, signal } from "~/common/signal.js";
 import { safeDecodeURIComponent } from "~/common/utils.js";
@@ -287,6 +293,7 @@ const { setLocalItems, setRemoteItems, setError } = setup({
       <form id="connect-source-form" class="dialog-body">
         <div id="connect-source-error" class="callout callout--danger" hidden
           style="margin: 0"></div>
+        <div id="connect-source-existing" hidden></div>
         <div id="connect-source-fields"></div>
         <p id="connect-source-caption" class="caption" style="margin: 0"></p>
       </form>
@@ -405,10 +412,10 @@ stopSyncBtn?.addEventListener("click", () => stopSyncing());
  *
  * @typedef {{
  *   scheme: string;
- *   title: string;
  *   fields: ConnectField[];
  *   build: (values: Record<string, string>) => string;
  *   caption: string;
+ *   sourceParts: (uri: string) => { name: string; detail: string };
  * }} ConnectConfig
  */
 
@@ -416,7 +423,6 @@ stopSyncBtn?.addEventListener("click", () => stopSyncing());
 const CONNECT_CONFIGS = {
   [SCHEME_S3]: {
     scheme: SCHEME_S3,
-    title: "Connect an S3 bucket",
 
     fields: [
       { id: "access-key", label: "Access key", required: true },
@@ -453,11 +459,19 @@ const CONNECT_CONFIGS = {
     },
 
     caption: "Uploaded files are placed inside the bucket's path.",
+
+    sourceParts: (uri) => {
+      const parsed = parseS3URI(uri);
+      if (!parsed) return { name: uri, detail: "" };
+      return {
+        name: parsed.bucket.bucketName || parsed.bucket.host,
+        detail: parsed.bucket.host,
+      };
+    },
   },
 
   [SCHEME_WEBDAV]: {
     scheme: SCHEME_WEBDAV,
-    title: "Connect a WebDAV server",
 
     fields: [
       {
@@ -483,6 +497,15 @@ const CONNECT_CONFIGS = {
     },
 
     caption: "Uploaded files are placed inside the server's directory.",
+
+    sourceParts: (uri) => {
+      const parsed = parseWebdavURI(uri);
+      if (!parsed) return { name: uri, detail: "" };
+      return {
+        name: parsed.server.host,
+        detail: parsed.server.dir,
+      };
+    },
   },
 };
 
@@ -499,6 +522,10 @@ const connectSourceErrorEl =
 const connectSourceFieldsEl =
   /** @type {HTMLElement | null} */ (document.querySelector(
     "#connect-source-fields",
+  ));
+const connectSourceExistingEl =
+  /** @type {HTMLElement | null} */ (document.querySelector(
+    "#connect-source-existing",
   ));
 const connectSourceCaptionEl =
   /** @type {HTMLElement | null} */ (document.querySelector(
@@ -527,26 +554,92 @@ const setConnectSourceError = (message) => {
 };
 
 /**
- * Opens the connect source dialog for the given scheme, resetting any
- * previous input.
+ * Enables/disables the dialog's interactive elements while an action
+ * (consulting a source, connecting a new one) is in flight.
+ *
+ * @param {boolean} busy
+ */
+const setConnectSourceBusy = (busy) => {
+  connectSourceSubmitBtn?.toggleAttribute("disabled", busy);
+  connectSourceExistingEl?.querySelectorAll("button").forEach((btn) => {
+    btn.toggleAttribute("disabled", busy);
+  });
+};
+
+/**
+ * Opens the connect source dialog for the given scheme: existing sources for
+ * the scheme are offered as destinations to sync with (the user chooses —
+ * none is silently preferred), plus a form to connect a new one.
  *
  * @param {ConnectConfig} config
  */
 function openConnectSourceDialog(config) {
   if (
-    !connectSourceDialog || !connectSourceForm || !connectSourceFieldsEl
+    !connectSourceDialog || !connectSourceForm || !connectSourceFieldsEl ||
+    !connectSourceExistingEl
   ) return;
 
   currentConnectConfig = config;
 
-  if (connectSourceTitleEl) connectSourceTitleEl.textContent = config.title;
+  const label = SCHEME_LABELS[config.scheme] ?? config.scheme;
+  if (connectSourceTitleEl) {
+    connectSourceTitleEl.textContent = `Set up syncing (${label})`;
+  }
   if (connectSourceCaptionEl) {
     connectSourceCaptionEl.textContent = config.caption;
   }
 
+  // Destinations already connected for this scheme.
+  const sources = sourcesOrchestrator.sources()[config.scheme] ?? [];
+  const existing = sources.map((source) => ({
+    ...source,
+    ...config.sourceParts(source.uri),
+    disabled: sourcesOrchestrator.isDisabled(source.uri),
+  }));
+
+  connectSourceExistingEl.hidden = existing.length === 0;
+  litRender(
+    existing.length === 0 ? nothing : html`
+      <p style="margin-bottom: var(--space-2xs); margin-top: 0;">
+        Sync with a connected source:
+      </p>
+      <ul class="file-list">
+        ${existing.map(({ uri, name, detail, disabled }) =>
+          html`
+            <li class="file-item">
+              <button
+                type="button"
+                class="button--plain connect-source-option"
+                title="${disabled
+                  ? "Enable and sync with"
+                  : "Sync with"} ${name}"
+                @click="${() => selectExistingSource(config, uri, disabled)}"
+              >
+                <i class="ph-fill ph-cloud-arrow-up"></i>
+                <div class="file-item__info">
+                  <span class="file-item__name">${name}${disabled
+                    ? " (disabled)"
+                    : ""}</span>
+                  ${detail
+                    ? html`<span class="file-item__subtitle">${detail}</span>`
+                    : null}
+                </div>
+              </button>
+            </li>
+          `
+        )}
+      </ul>
+      <p style="margin-top: var(--space-md);">
+        Or connect a new one:
+      </p>
+    `,
+    connectSourceExistingEl,
+  );
+
   litRender(
     config.fields.map((field) =>
-      html`<label>${field.label}
+      html`<label>
+        <span class="label__name">${field.label}</span>
         <input
           id="connect-source-field-${field.id}"
           type="${field.type ?? "text"}"
@@ -562,6 +655,42 @@ function openConnectSourceDialog(config) {
   connectSourceForm.reset();
   setConnectSourceError(null);
   connectSourceDialog.showModal();
+}
+
+/**
+ * Selects an existing source as the syncing destination. Consults it first —
+ * an unreachable source can't be synced with, so the dialog stays open with
+ * an error instead.
+ *
+ * @param {ConnectConfig} config
+ * @param {string} uri
+ * @param {boolean} disabled - Whether the source is currently disabled
+ *   (it is re-enabled when syncing starts).
+ */
+async function selectExistingSource(config, uri, disabled) {
+  setConnectSourceError(null);
+  setConnectSourceBusy(true);
+
+  try {
+    const result = await uploadConfigurator.consult(uri);
+    if (result.supported && result.consult === "no") {
+      setConnectSourceError(
+        "This source could not be reached right now. Check its credentials (and the server's CORS settings), then try again.",
+      );
+      return;
+    }
+
+    if (disabled) await sourcesOrchestrator.toggle(uri);
+
+    connectSourceDialog?.close();
+    await beginSync(config.scheme, uri);
+  } catch (err) {
+    setConnectSourceError(
+      err instanceof Error ? err.message : "Failed to start syncing",
+    );
+  } finally {
+    setConnectSourceBusy(false);
+  }
 }
 
 connectSourceForm?.addEventListener("submit", async (e) => {
@@ -582,12 +711,24 @@ connectSourceForm?.addEventListener("submit", async (e) => {
   if (config.fields.some((f) => f.required && !values[f.id])) return;
 
   setConnectSourceError(null);
+  setConnectSourceBusy(true);
   if (connectSourceSubmitBtn) {
-    connectSourceSubmitBtn.setAttribute("disabled", "");
     connectSourceSubmitBtn.textContent = "Connecting …";
   }
 
   try {
+    const uri = config.build(values);
+
+    // Verify the new source is reachable before saving it — a typo'd secret
+    // key or missing CORS config shouldn't create a junk source.
+    const result = await uploadConfigurator.consult(uri);
+    if (result.supported && result.consult === "no") {
+      setConnectSourceError(
+        "The source could not be reached. Check the values (and the server's CORS settings), then try again.",
+      );
+      return;
+    }
+
     // Add the source, the same way the Connect page does.
     const now = new Date().toISOString();
     /** @type {Track} */
@@ -597,25 +738,20 @@ connectSourceForm?.addEventListener("submit", async (e) => {
       createdAt: now,
       updatedAt: now,
       kind: "placeholder",
-      uri: config.build(values),
+      uri,
     };
     const tracks = await Output.data(outputOrchestrator.tracks);
     await outputOrchestrator.tracks.save([...tracks, placeholderTrack]);
 
     connectSourceDialog.close();
-
-    // Kick off syncing against the new source — it consults the source and
-    // uploads any pending local tracks. If the source can't be reached, the
-    // error callout explains what to fix.
-    const uploadElement = uploadConfigurator.uploaders()[config.scheme];
-    if (uploadElement) await startUpload(config.scheme, uploadElement);
+    await beginSync(config.scheme, uri);
   } catch (err) {
     setConnectSourceError(
       err instanceof Error ? err.message : "Failed to connect the source",
     );
   } finally {
+    setConnectSourceBusy(false);
     if (connectSourceSubmitBtn) {
-      connectSourceSubmitBtn.removeAttribute("disabled");
       connectSourceSubmitBtn.textContent = "Connect";
     }
   }
@@ -1141,9 +1277,9 @@ async function syncUpload() {
  * Enters sync mode for the given scheme: arms auto-uploading of new local
  * tracks and persists the scheme so it survives reloads.
  *
- * Only called once `startUpload` is committed to a syncing path — entering
- * sync mode earlier (before consult/authorize fails) would flash the
- * "Stop syncing" button in the UI.
+ * Only called once the syncing destination is chosen (and consulted) —
+ * entering sync mode earlier would flash the "Stop syncing" button in the
+ * UI.
  *
  * @param {string} scheme
  */
@@ -1153,18 +1289,38 @@ async function enterSyncMode(scheme) {
 }
 
 /**
- * Starts the sync flow for the selected upload component. If an existing
- * input source for this scheme already exists (enabled or disabled), enters
- * sync mode and uploads directly to it (re-enabling if necessary). Otherwise,
- * triggers the OAuth flow (adding `?uploading=<scheme>` to the URL so we can
- * resume after the redirect), or — for uploaders without OAuth — opens the
- * connect dialog.
+ * Arms syncing for the given source and uploads all pending local tracks to
+ * it. The destination must already be consulted (or have just been created).
+ *
+ * @param {string} scheme
+ * @param {string} sourceUri
+ */
+async function beginSync(scheme, sourceUri) {
+  await enterSyncMode(scheme);
+  await uploadTracks(sourceUri);
+}
+
+/**
+ * Starts the sync flow for the selected upload component. For uploaders
+ * without an OAuth flow this opens the connect dialog, where the user picks
+ * which existing source to sync with or connects a new one — no source is
+ * silently preferred, since the user may have several and only want to sync
+ * to one. OAuth uploaders reuse an existing source if its token is still
+ * valid (re-enabling if necessary), or trigger the OAuth flow (adding
+ * `?uploading=<scheme>` to the URL so we can resume after the redirect).
  *
  * @param {string} scheme
  * @param {UploadElement} uploadElement
  */
 async function startUpload(scheme, uploadElement) {
   setError(null);
+
+  // Non-OAuth uploaders with a connect form: always ask for the destination.
+  const connectConfig = CONNECT_CONFIGS[scheme];
+  if (connectConfig) {
+    openConnectSourceDialog(connectConfig);
+    return;
+  }
 
   const sourcesRecord = sourcesOrchestrator.sources();
   const allSources = sourcesRecord[scheme] ?? [];
@@ -1182,8 +1338,7 @@ async function startUpload(scheme, uploadElement) {
     const result = await uploadConfigurator.consult(enabledSources[0].uri);
     if (result.supported && result.consult !== "no") {
       // Token is valid (or inconclusive — be optimistic): upload directly.
-      await enterSyncMode(scheme);
-      await uploadTracks(enabledSources[0].uri);
+      await beginSync(scheme, enabledSources[0].uri);
       return;
     }
   }
@@ -1192,28 +1347,17 @@ async function startUpload(scheme, uploadElement) {
     const result = await uploadConfigurator.consult(disabledSources[0].uri);
     if (result.supported && result.consult !== "no") {
       // Token is valid — re-enable the source, then upload.
-      await enterSyncMode(scheme);
       await sourcesOrchestrator.toggle(disabledSources[0].uri);
-      await uploadTracks(disabledSources[0].uri);
+      await beginSync(scheme, disabledSources[0].uri);
       return;
     }
   }
 
-  // No existing source — authenticate first. Mark the URL so we can resume
-  // the upload flow after the OAuth redirect.
+  // No usable existing source — authenticate via OAuth.
   if (!uploadElement.authorize) {
-    // Uploaders without an OAuth flow (e.g. S3) can't mint a source
-    // themselves — one must be connected first, and if one exists but is
-    // unreachable, re-authenticating can't help.
-
-    // No source connected: let the user connect one right here instead of
-    // sending them elsewhere.
-    const connectConfig = CONNECT_CONFIGS[scheme];
-    if (connectConfig && allSources.length === 0) {
-      openConnectSourceDialog(connectConfig);
-      return;
-    }
-
+    // Fallback for uploaders without an OAuth flow or a connect form: they
+    // can't mint a source themselves — one must be connected first, and if
+    // one exists but is unreachable, re-authenticating can't help.
     const label = SCHEME_LABELS[scheme] ?? scheme;
     const connectPath = uploadElement.CONNECT_PATH ??
       "facets/connect/index.tile";
