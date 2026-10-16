@@ -638,16 +638,18 @@ function openConnectSourceDialog(config) {
 
   litRender(
     config.fields.map((field) =>
-      html`<label>
-        <span class="label__name">${field.label}</span>
-        <input
-          id="connect-source-field-${field.id}"
-          type="${field.type ?? "text"}"
-          placeholder="${field.placeholder ?? ""}"
-          ?required="${field.required ?? false}"
-          autocomplete="off"
-        >
-      </label>`
+      html`
+        <label>
+          <span class="label__name">${field.label}</span>
+          <input
+            id="connect-source-field-${field.id}"
+            type="${field.type ?? "text"}"
+            placeholder="${field.placeholder ?? ""}"
+            ?required="${field.required ?? false}"
+            autocomplete="off"
+          >
+        </label>
+      `
     ),
     connectSourceFieldsEl,
   );
@@ -1003,9 +1005,16 @@ effect(() => {
 
 processBtn?.addEventListener("click", async () => {
   await Output.data(outputOrchestrator.tracks);
-  // Only (re)process local files (the ephemeral cache); remote/cloud
-  // tracks are left untouched.
-  await processOrchestrator.process([`${SCHEME_EPHEMERAL_CACHE}://`]);
+  // (Re)process local files (the ephemeral cache) and — while syncing — the
+  // connected cloud source too, so freshly uploaded tracks get metadata.
+  // The orchestrator skips tracks that already have tags & stats (and
+  // placeholders), so this is incremental. When not syncing, only local
+  // files are processed: the file manager manages no cloud source then.
+  const scheme = syncScheme.value;
+  await processOrchestrator.process([
+    `${SCHEME_EPHEMERAL_CACHE}://`,
+    ...(scheme ? [`${scheme}://`] : []),
+  ]);
 });
 
 ////////////////////////////////////////////
