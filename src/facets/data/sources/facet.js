@@ -78,6 +78,11 @@ processBtn.addEventListener("click", async () => {
   await processOrchestrator.process();
 });
 
+// Source URIs explicitly queued via their own "Process source" button.
+// Global runs skip disabled sources, so a disabled source only runs — and
+// only shows its processing animation — when explicitly targeted.
+const explicitProcessUris = signal(/** @type {Set<string>} */ (new Set()));
+
 ////////////////////////////////////////////
 // UI
 ////////////////////////////////////////////
@@ -148,6 +153,23 @@ effect(() => {
     return "Status unknown";
   };
 
+  /**
+   * Whether this source's processing animation should run. Scoped runs only
+   * touch their target source, so while one is in flight only that source
+   * animates; otherwise (global run) enabled sources animate and disabled
+   * ones don't.
+   *
+   * @param {string} uri
+   * @param {boolean} isDisabled
+   */
+  const isSourceProcessing = (uri, isDisabled) => {
+    if (!isProcessing) return false;
+    const explicit = explicitProcessUris.get();
+    return explicit.size > 0
+      ? explicit.has(trackPrefix(uri))
+      : !isDisabled;
+  };
+
   const entries = Object.entries(sourcesRecord).filter(
     ([, sources]) => sources.length > 0,
   );
@@ -161,6 +183,7 @@ effect(() => {
         if (scheme === SCHEME_EPHEMERAL_CACHE) {
           const uri = `${SCHEME_EPHEMERAL_CACHE}://`;
           const isDisabled = sourcesOrchestrator.isDisabled(uri);
+          const isProcessingSource = isSourceProcessing(uri, isDisabled);
           const trackCount = tracks.filter((t) => t.uri.startsWith(uri)).length;
           return html`
             <li class="sources-scheme">${SCHEME_NAMES[scheme] ?? scheme}</li>
@@ -180,7 +203,7 @@ effect(() => {
                 ?disabled="${isProcessing}"
                 @click="${() => processSource(uri)}"
               >
-                <i class="ph-fill ${isProcessing
+                <i class="ph-fill ${isProcessingSource
                   ? "ph-arrows-clockwise animate-spin"
                   : "ph-arrows-clockwise"}"></i>
               </button>
@@ -208,6 +231,7 @@ effect(() => {
           <li class="sources-scheme">${SCHEME_NAMES[scheme] ?? scheme}</li>
           ${sources.map(({ label, uri }) => {
             const isDisabled = sourcesOrchestrator.isDisabled(uri);
+            const isProcessingSource = isSourceProcessing(uri, isDisabled);
             const trackCount = tracks.filter((t) =>
               t.uri.startsWith(trackPrefix(uri))
             ).length;
@@ -228,7 +252,7 @@ effect(() => {
                   ?disabled="${isProcessing}"
                   @click="${() => processSource(uri)}"
                 >
-                  <i class="ph-fill ${isProcessing
+                  <i class="ph-fill ${isProcessingSource
                     ? "ph-arrows-clockwise animate-spin"
                     : "ph-arrows-clockwise"}"></i>
                 </button>
@@ -268,13 +292,22 @@ async function removeEphemeralSources() {
 
 /**
  * Processes a single source into tracks, leaving every other source untouched.
+ * Explicitly processing a source overrides its disabled state.
  *
  * @param {string} uri
  */
 async function processSource(uri) {
-  const output = await foundation.orchestrator.output();
-  await Output.data(output.tracks);
-  await processOrchestrator.process([trackPrefix(uri)]);
+  const key = trackPrefix(uri);
+  explicitProcessUris.value = new Set([...explicitProcessUris.value, key]);
+
+  try {
+    const output = await foundation.orchestrator.output();
+    await Output.data(output.tracks);
+    await processOrchestrator.process([key]);
+  } finally {
+    explicitProcessUris.value =
+      new Set([...explicitProcessUris.value].filter((u) => u !== key));
+  }
 }
 
 /**

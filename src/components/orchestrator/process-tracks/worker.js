@@ -55,9 +55,13 @@ const process = (
     !onlyUris || onlyUris.length === 0 ||
       onlyUris.some((/** @type {string} */ uri) => t.uri.startsWith(uri));
 
-  // Split disabled tracks out — they are preserved as-is and skipped for listing/metadata
+  // Split disabled tracks out — they are preserved as-is and skipped for
+  // listing/metadata. Sources explicitly requested via `onlyUris` are
+  // processed regardless: an explicit per-source run overrides the
+  // source's disabled state.
   const isDisabled = (/** @type {Track} */ t) =>
-    disabledUris.some((/** @type {string} */ uri) => t.uri.startsWith(uri));
+    disabledUris.some((/** @type {string} */ uri) => t.uri.startsWith(uri)) &&
+    !(onlyUris ?? []).some((/** @type {string} */ uri) => t.uri.startsWith(uri));
 
   const scopedTracks = cachedTracks.filter(inScope);
   const otherTracks = cachedTracks.filter((t) => !inScope(t));

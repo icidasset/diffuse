@@ -9,7 +9,7 @@ export type Actions = {
   process: (args: {
     tracks: Track[];
     disabledUris: string[];
-    /** When provided, only tracks whose uri starts with one of these prefixes are processed. */
+    /** When provided, only tracks whose uri starts with one of these prefixes are processed. Explicitly listed sources are processed even if disabled. */
     onlyUris?: string[];
   }) => Promise<Track[] | null>;
   progress: () => Progress;
