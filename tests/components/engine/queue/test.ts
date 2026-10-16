@@ -6,7 +6,7 @@ import { tracks } from "~/testing/sample/tracks.js";
 
 describe("components/engine/queue", () => {
   it("adds tracks", async () => {
-    const items = await testWeb(async () => {
+    const result = await testWeb(async () => {
       const QueueEngine = await import("~/components/engine/queue/element.js");
       const engine = new QueueEngine.CLASS();
 
@@ -15,11 +15,15 @@ describe("components/engine/queue", () => {
       const { tracks } = await import("~/testing/sample/tracks.js");
 
       await engine.add({ trackIds: tracks.map((t) => t.id) });
-      return engine.future();
+      return { now: engine.now()?.id, future: engine.future() };
     });
 
-    const futureIds = items.map((i) => i.id).join("/");
-    const sampleIds = tracks.map((t) => t.id).join("/");
+    // The first added track is activated on an idle queue,
+    // the rest are queued up in the future.
+    expect(result.now).toBe(tracks[0].id);
+
+    const futureIds = result.future.map((i) => i.id).join("/");
+    const sampleIds = tracks.slice(1).map((t) => t.id).join("/");
 
     expect(futureIds).toEqual(sampleIds);
   });
@@ -54,14 +58,15 @@ describe("components/engine/queue", () => {
       const { tracks } = await import("~/testing/sample/tracks.js");
 
       await engine.add({ trackIds: tracks.map((t) => t.id) });
-      await engine.shift();
-      await engine.shift();
-      await engine.unshift();
+      // activates tracks[0] as now
+      await engine.shift(); // now = tracks[1]
+      await engine.shift(); // now = tracks[2]
+      await engine.unshift(); // rewind: now = tracks[1]
 
       return engine.now();
     });
 
-    expect(item?.id).toBe(tracks[0].id);
+    expect(item?.id).toBe(tracks[1].id);
   });
 
   it("adds tracks to the front with inFront: true", async () => {
@@ -73,6 +78,7 @@ describe("components/engine/queue", () => {
 
       const { tracks } = await import("~/testing/sample/tracks.js");
 
+      await engine.add({ trackIds: [tracks[2].id] }); // activates as now on an idle queue
       await engine.add({ trackIds: [tracks[1].id] });
       await engine.add({ inFront: true, trackIds: [tracks[0].id] });
       return engine.future();
@@ -92,7 +98,8 @@ describe("components/engine/queue", () => {
       const { tracks } = await import("~/testing/sample/tracks.js");
 
       await engine.supply({ trackIds: tracks.map((t) => t.id) });
-      await engine.add({ trackIds: [tracks[0].id] });
+      await engine.add({ trackIds: [tracks[0].id] }); // activates as now on an idle queue
+      await engine.add({ trackIds: [tracks[1].id] });
       await engine.fill({ amount: 2, shuffled: false });
       await engine.clear({ keepManual: true });
       return engine.future();
@@ -164,7 +171,7 @@ describe("components/engine/queue", () => {
   });
 
   it("moves a future item to a new position", async () => {
-    const ids = await testWeb(async () => {
+    const result = await testWeb(async () => {
       const QueueEngine = await import("~/components/engine/queue/element.js");
       const engine = new QueueEngine.CLASS();
 
@@ -173,13 +180,16 @@ describe("components/engine/queue", () => {
       const { tracks } = await import("~/testing/sample/tracks.js");
 
       await engine.add({ trackIds: tracks.slice(0, 3).map((t) => t.id) });
-      await engine.move({ key: "1", to: 2 });
-      return engine.future().map((i) => i.id);
+      // activates tracks[0] (key "1") as now; future = [tracks[1] (key "2"), tracks[2] (key "3")]
+      await engine.move({ key: "2", to: 2 });
+      return {
+        now: engine.now()?.id,
+        future: engine.future().map((i) => i.id),
+      };
     });
 
-    expect(ids[0]).toBe(tracks[1].id);
-    expect(ids[1]).toBe(tracks[2].id);
-    expect(ids[2]).toBe(tracks[0].id);
+    expect(result.now).toBe(tracks[0].id);
+    expect(result.future).toEqual([tracks[2].id, tracks[1].id]);
   });
 
   it("move preserves now when reordering around it", async () => {
@@ -192,9 +202,10 @@ describe("components/engine/queue", () => {
       const { tracks } = await import("~/testing/sample/tracks.js");
 
       await engine.add({ trackIds: tracks.slice(0, 3).map((t) => t.id) });
+      // activates tracks[0] as now
       await engine.shift();
       // flat list: [past[0]=tracks[0]], now=tracks[1], future=[tracks[2]]
-      // move future item (idx 2) before now (idx 1)
+      // move future item (key "3") before now
       await engine.move({ key: "3", to: 0 });
 
       return {
@@ -204,15 +215,15 @@ describe("components/engine/queue", () => {
       };
     });
 
-    // shift() moved tracks[0] to now; move({ from:2, to:0 }) put tracks[2]
-    // before now, so: past=[tracks[2]], now=tracks[0], future=[tracks[1]]
-    expect(result.now).toBe(tracks[0].id);
-    expect(result.past[0]).toBe(tracks[2].id);
-    expect(result.future[0]).toBe(tracks[1].id);
+    // shift() moved tracks[0] to past, tracks[1] became now; move({ key:"3", to:0 })
+    // put tracks[2] before now, so: past=[tracks[2], tracks[0]], now=tracks[1], future=[]
+    expect(result.now).toBe(tracks[1].id);
+    expect(result.past).toEqual([tracks[2].id, tracks[0].id]);
+    expect(result.future).toEqual([]);
   });
 
   it("move does nothing when from === to", async () => {
-    const ids = await testWeb(async () => {
+    const result = await testWeb(async () => {
       const QueueEngine = await import("~/components/engine/queue/element.js");
       const engine = new QueueEngine.CLASS();
 
@@ -221,17 +232,20 @@ describe("components/engine/queue", () => {
       const { tracks } = await import("~/testing/sample/tracks.js");
 
       await engine.add({ trackIds: tracks.slice(0, 3).map((t) => t.id) });
+      // activates tracks[0] (key "1") as now; future = [tracks[1] (key "2"), tracks[2] (key "3")]
       await engine.move({ key: "2", to: 1 });
-      return engine.future().map((i) => i.id);
+      return {
+        now: engine.now()?.id,
+        future: engine.future().map((i) => i.id),
+      };
     });
 
-    expect(ids[0]).toBe(tracks[0].id);
-    expect(ids[1]).toBe(tracks[1].id);
-    expect(ids[2]).toBe(tracks[2].id);
+    expect(result.now).toBe(tracks[0].id);
+    expect(result.future).toEqual([tracks[1].id, tracks[2].id]);
   });
 
   it("move does nothing for out-of-bounds indices", async () => {
-    const ids = await testWeb(async () => {
+    const result = await testWeb(async () => {
       const QueueEngine = await import("~/components/engine/queue/element.js");
       const engine = new QueueEngine.CLASS();
 
@@ -240,12 +254,16 @@ describe("components/engine/queue", () => {
       const { tracks } = await import("~/testing/sample/tracks.js");
 
       await engine.add({ trackIds: tracks.slice(0, 2).map((t) => t.id) });
-      await engine.move({ key: "1", to: 99 });
-      return engine.future().map((i) => i.id);
+      // activates tracks[0] (key "1") as now; future = [tracks[1] (key "2")]
+      await engine.move({ key: "2", to: 99 });
+      return {
+        now: engine.now()?.id,
+        future: engine.future().map((i) => i.id),
+      };
     });
 
-    expect(ids[0]).toBe(tracks[0].id);
-    expect(ids[1]).toBe(tracks[1].id);
+    expect(result.now).toBe(tracks[0].id);
+    expect(result.future).toEqual([tracks[1].id]);
   });
 
   it("[shared worker] has the correct past", async () => {
