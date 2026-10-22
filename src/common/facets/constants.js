@@ -13,7 +13,6 @@ export const INTERACTIVE = [
   "facets/data/file-manager/index.tile",
   "facets/data/userdata/index.tile",
   "facets/themes/albums-app/facet/index.tile",
-  "facets/themes/blur/artwork-controller/facet/index.tile",
   "facets/themes/blur/facet/index.tile",
   "facets/themes/winamp/facet/index.tile",
 ]
