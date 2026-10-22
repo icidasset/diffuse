@@ -38,8 +38,9 @@ main {
   margin: 0 auto;
   max-width: 150rem;
   overflow: hidden;
-  padding: 0.75rem;
   width: 100%;
+
+  /*padding: 0.75rem;
 
   @media (min-width: 47.5rem) and (min-height: 40rem) {
     padding: 1.25rem;
@@ -47,14 +48,14 @@ main {
 
   @media (min-width: 75rem) and (min-height: 42.5rem) {
     padding: 1.5rem;
-  }
+  }*/
 }
 
 da-browser {
-  border-radius: 0.75rem;
+  /*border-radius: 0.75rem;
   box-shadow:
     0 0 0 1px var(--da-window-ring),
-    var(--da-window-shadow);
+    var(--da-window-shadow);*/
   flex: 1;
   min-height: 0;
   min-width: 0;

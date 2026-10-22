@@ -1209,6 +1209,8 @@ a.da-titlebar__btn {
   min-height: 0;
   overflow-anchor: none;
   overflow-y: auto;
+  -webkit-user-select: none;
+  user-select: none;
 }
 
 .da-tracks-virtual {
