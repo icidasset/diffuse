@@ -3,7 +3,7 @@
     "url": "facets/themes/albums-app/facet/index.tile",
     "title": "Albums.app",
     "category": "Themes",
-    "featured": true,
+    "featured": false,
     "author": "A theme by [@tokono.ma](https://bsky.app/profile/tokono.ma)",
     "desc": "A theme based on the iPad version of the [Albums](https://www.albumstheapp.com/) app."
   },
@@ -11,6 +11,7 @@
     "url": "facets/playback/audio-output/index.tile",
     "title": "Audio Output",
     "category": "Playback",
+    "featured": true,
     "desc": "Pick which audio output device (speaker, headphones, …) each facet group plays through."
   },
   {
@@ -18,7 +19,7 @@
     "title": "Automatic Queue",
     "kind": "prelude",
     "category": "Playback",
-    "featured": true,
+    "featured": false,
     "desc": "Automatically put tracks into the queue. **Always on.** These tracks will always be located after the ones you've added manually."
   },
   {
@@ -31,7 +32,7 @@
     "url": "facets/themes/blur/facet/index.tile",
     "title": "Blur",
     "category": "Themes",
-    "featured": true,
+    "featured": false,
     "author": "A theme by [@tokono.ma](https://bsky.app/profile/tokono.ma)",
     "desc": "A combination of the classic Diffuse browser and the Apple Music iOS playback screen."
   },
@@ -158,6 +159,7 @@
     "title": "Deduplicate Tracks",
     "kind": "prelude",
     "category": "Browsing",
+    "featured": true,
     "desc": "Hide duplicate tracks (same artist and same title) from the presented tracks. Your saved data is not affected."
   },
   {
@@ -204,13 +206,14 @@
     "url": "facets/data/export-import/index.tile",
     "title": "Export & Import",
     "category": "Data",
+    "featured": true,
     "desc": "Export all data as a JSON snapshot, or restore from a previously exported file."
   },
   {
     "url": "facets/data/file-manager/index.tile",
     "title": "File Manager",
     "category": "Data",
-    "featured": true,
+    "featured": false,
     "desc": "Upload audio files to play them and optionally sync them with your cloud storage. These are automatically added as inputs (aka. sources)."
   },
   {
@@ -218,6 +221,7 @@
     "title": "iPod",
     "category": "Themes",
     "author": "A theme by [@tokono.ma](https://bsky.app/profile/tokono.ma)",
+    "featured": true,
     "desc": "A recreation of the click-wheel iPod UI. Spin the wheel to scroll, tap the ring for menu / prev / next / play, and press the centre button to select. Alternatively, use your keyboard arrow keys."
   },
   {
@@ -267,6 +271,7 @@
     "title": "Remember Playback Position",
     "kind": "prelude",
     "category": "Playback",
+    "featured": true,
     "desc": "Remember the playback position of long tracks (at least 30 minutes) so you can resume where you left off."
   },
   {
@@ -280,12 +285,14 @@
     "url": "facets/misc/scrobble/last.fm/index.tile",
     "title": "Scrobble / Last.fm",
     "category": "Miscellaneous",
+    "featured": true,
     "desc": "Connect to Last.fm to setup the Last.fm scrobbler."
   },
   {
     "url": "facets/misc/scrobble/listenbrainz/index.tile",
     "title": "Scrobble / ListenBrainz",
     "category": "Miscellaneous",
+    "featured": true,
     "desc": "Connect to ListenBrainz to setup the ListenBrainz scrobbler."
   },
   {
@@ -304,7 +311,7 @@
     "url": "facets/data/sources/index.tile",
     "title": "Sources",
     "category": "Data",
-    "featured": true,
+    "featured": false,
     "desc": "An overview of all audio inputs. Disable a source to hide its tracks without removing them."
   },
   {
@@ -360,7 +367,7 @@
     "url": "facets/themes/winamp/facet/index.tile",
     "title": "Winamp",
     "category": "Themes",
-    "featured": true,
+    "featured": false,
     "author": "A theme by [@tokono.ma](https://bsky.app/profile/tokono.ma) and [@captbaritone](https://github.com/captbaritone)",
     "desc": "Windows 98 inspired theme with a classic Winamp skin for the audio player. The Winamp playlist is a combination of the queue's history, the track that's currently playing and the future queue items."
   },
@@ -374,7 +381,7 @@
     "url": "facets/data/userdata/index.tile",
     "title": "Your data",
     "category": "Data",
-    "featured": true,
+    "featured": false,
     "desc": "Manage where your user-data is stored. See which storage method is active, switch between methods, and migrate data between them."
   }
 ]
