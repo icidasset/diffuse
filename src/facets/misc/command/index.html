@@ -2,6 +2,7 @@
   <div id="command-menu" class="panel">
     <div id="breadcrumbs" aria-label="Navigation path" role="navigation"></div>
     <label for="search" id="search-wrapper">
+      <i class="ph-bold ph-magnifying-glass" aria-hidden="true"></i>
       <input
         id="search"
         type="text"
@@ -12,9 +13,16 @@
         aria-autocomplete="list"
         aria-controls="kmenu-listbox"
         aria-expanded="true"
+        aria-haspopup="listbox"
       />
     </label>
     <ul id="kmenu-listbox" role="listbox" aria-label="Commands"></ul>
+    <div id="hints" aria-hidden="true">
+      <span><kbd>↑</kbd><kbd>↓</kbd> navigate</span>
+      <span><kbd>↵</kbd> select</span>
+      <span><kbd>esc</kbd> back</span>
+    </div>
+    <div id="status" class="sr-only" role="status" aria-live="polite"></div>
   </div>
 </main>
 

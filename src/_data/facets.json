@@ -84,7 +84,7 @@
     "url": "facets/misc/command/index.tile",
     "title": "Command Menu",
     "category": "Miscellaneous",
-    "desc": "A command palette for various actions."
+    "desc": "A command palette for playback, playlists, collection filters, search, and navigation."
   },
   {
     "url": "facets/connect/index.tile",

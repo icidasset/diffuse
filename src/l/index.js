@@ -34,6 +34,36 @@ const output = await foundation.orchestrator.output().catch((err) => {
 const facets = await Output.data(output.facets);
 let preludesInserted = false;
 
+// Remember which facets were opened so other facets (e.g. the command menu)
+// can return the user to the interface they were last using.
+const FACET_HISTORY_KEY = "diffuse/l/facet-history";
+const FACET_HISTORY_LIMIT = 10;
+
+/**
+ * @param {{ id?: string; name?: string }} facet
+ */
+function rememberFacet(facet) {
+  if (!facet.id || facet.name === "temporary") return;
+
+  try {
+    const stored = JSON.parse(
+      localStorage.getItem(FACET_HISTORY_KEY) ?? "[]",
+    );
+
+    const history = Array.isArray(stored)
+      ? stored.filter((id) => typeof id === "string" && id !== facet.id)
+      : [];
+
+    history.unshift(facet.id);
+    localStorage.setItem(
+      FACET_HISTORY_KEY,
+      JSON.stringify(history.slice(0, FACET_HISTORY_LIMIT)),
+    );
+  } catch {
+    // localStorage can be unavailable (private mode); history is optional.
+  }
+}
+
 // Reload when the prelude facets change after initial load.
 // initialPreludeKey is captured the first time the collection finishes loading
 // (not at startup when it's still pending), so the effect never fires on the
@@ -73,6 +103,8 @@ createLoader({
   label: "Facet",
   source: () => output.facets,
   async render(facet) {
+    rememberFacet(facet);
+
     // Tile facets are content addressed: `facet.cid` is resolved during loading
     // from the MASL `resources["/"].src` CID, so the loaded root HTML is
     // verified against it. Plain HTML facets carry no `cid`, so nothing to
