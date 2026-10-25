@@ -5,8 +5,9 @@ import {
   finalizeAuthorization,
   getSession,
   OAuthUserAgent,
+  TokenRefreshError,
 } from "@atcute/oauth-browser-client";
-import { withOAuthLock } from "~/oauth/lock.js";
+import { withOAuthContext } from "~/oauth/lock.js";
 
 import {
   CompositeDidDocumentResolver,
@@ -24,12 +25,13 @@ import metadata from "./oauth-client-metadata.json" with {
  * @import {Session} from "@atcute/oauth-browser-client"
  */
 
-export { getSession, OAuthUserAgent };
+export { OAuthUserAgent, TokenRefreshError };
 
 export const DID_STORAGE_KEY = "diffuse/supplement/rocksky/atproto/did";
 const CLIENT_KEY = "diffuse/supplement/rocksky";
 
 const SCOPE = metadata.scope;
+const OWNER = "diffuse/supplement/rocksky";
 
 // CONFIGURE
 // =========
@@ -65,7 +67,42 @@ const OAUTH_CONFIG = {
   }),
 };
 
-configureOAuth(OAUTH_CONFIG);
+/**
+ * Configure the atcute library for Rocksky.
+ *
+ * `@atcute/oauth-browser-client` keeps its database and client id in module
+ * globals, shared with every other module that imports it (notably the
+ * `atproto-passkey` output). Whichever module called `configureOAuth()` last
+ * owns the globals, and a token refresh reads and writes through them. Every
+ * operation below therefore runs under `withOAuthContext()`, which holds the
+ * shared lock and re-configures when this module doesn't already own them.
+ */
+function configure() {
+  configureOAuth(OAUTH_CONFIG);
+}
+
+/**
+ * Delete the stored session and the persisted DID.
+ *
+ * Must only be called while holding the OAuth lock, after `configure()`.
+ */
+function clearStoredSessionUnlocked() {
+  const did = localStorage.getItem(DID_STORAGE_KEY);
+
+  if (did) {
+    deleteStoredSession(/** @type {`did:${string}:${string}`} */ (did));
+  }
+
+  localStorage.removeItem(DID_STORAGE_KEY);
+}
+
+/**
+ * @param {string} did
+ * @returns {`did:${string}:${string}`}
+ */
+function asDid(did) {
+  return /** @type {`did:${string}:${string}`} */ (did);
+}
 
 // LOGIN
 // =====
@@ -77,8 +114,7 @@ configureOAuth(OAUTH_CONFIG);
  * @param {string} handle
  */
 export function login(handle) {
-  return withOAuthLock(async () => {
-    configureOAuth(OAUTH_CONFIG);
+  return withOAuthContext(OWNER, configure, async () => {
 
     localStorage.setItem(
       "oauth/callback/redirect_path",
@@ -101,13 +137,17 @@ export function login(handle) {
 
 /**
  * Attempt to restore an existing Rocksky session or finalize an OAuth callback.
- * Returns the session if successful, or null if no session is available.
+ *
+ * Returns the session if successful, or `null` if there is no session to
+ * restore. Transient failures (offline, timeouts, auth server errors) are
+ * re-thrown and leave the stored session untouched, so a later attempt can
+ * still refresh it. The stored session is only discarded when it is
+ * definitively unusable (revoked / expired refresh token).
  *
  * @returns {Promise<Session | null>}
  */
 export function restoreOrFinalize() {
-  return withOAuthLock(async () => {
-    configureOAuth(OAUTH_CONFIG);
+  return withOAuthContext(OWNER, configure, async () => {
 
     const loc = globalThis.location;
     const params = new URLSearchParams(loc.hash.slice(1));
@@ -116,9 +156,12 @@ export function restoreOrFinalize() {
       params.has("code") &&
       localStorage.getItem("oauth/pending-client") === CLIENT_KEY
     ) {
-      localStorage.removeItem("oauth/pending-client");
-
+      // Finalize first; only clear the pending marker once it succeeds. If the
+      // page reloads mid-exchange the marker survives so the reloaded page can
+      // retry instead of silently dropping the login.
       const result = await finalizeAuthorization(params);
+
+      localStorage.removeItem("oauth/pending-client");
 
       history.replaceState(null, "", loc.pathname + loc.search);
       localStorage.setItem(DID_STORAGE_KEY, result.session.info.sub);
@@ -130,11 +173,20 @@ export function restoreOrFinalize() {
 
     if (did) {
       try {
-        return await getSession(/** @type {`did:${string}:${string}`} */ (did));
+        return await getSession(asDid(did));
       } catch (err) {
-        console.warn(err);
-        clearStoredSession();
-        return null;
+        // A `TokenRefreshError` means the refresh token was rejected (revoked
+        // or expired): the session is gone and the user has to sign in again.
+        // Anything else is transient — keep the session, otherwise a flaky
+        // network at page load would permanently log the user out and every
+        // subsequent scrobble would fail silently.
+        if (err instanceof TokenRefreshError) {
+          console.warn("Rocksky: stored session is no longer valid", err);
+          clearStoredSessionUnlocked();
+          return null;
+        }
+
+        throw err;
       }
     }
 
@@ -145,32 +197,67 @@ export function restoreOrFinalize() {
 // CLEAR SESSION
 // =============
 
+/**
+ * Remove the stored session.
+ *
+ * @returns {Promise<void>}
+ */
 export function clearStoredSession() {
-  const did = localStorage.getItem(DID_STORAGE_KEY);
-
-  if (did) {
-    deleteStoredSession(/** @type {`did:${string}:${string}`} */ (did));
-  }
-
-  localStorage.removeItem(DID_STORAGE_KEY);
+  return withOAuthContext(OWNER, configure, () => {
+    clearStoredSessionUnlocked();
+  });
 }
 
 // LOGOUT
 // ======
 
 /**
- * @param {OAuthUserAgent} agent
+ * Revoke the stored session (best-effort) and remove it.
+ *
+ * @returns {Promise<void>}
  */
-export async function logout(agent) {
-  const did = localStorage.getItem(DID_STORAGE_KEY);
+export function logout() {
+  return withOAuthContext(OWNER, configure, async () => {
 
-  try {
-    await agent.signOut();
-  } catch {
-    if (did) {
-      deleteStoredSession(/** @type {`did:${string}:${string}`} */ (did));
+    const did = localStorage.getItem(DID_STORAGE_KEY);
+
+    try {
+      if (did) {
+        const session = await getSession(asDid(did), { allowStale: true });
+        await new OAuthUserAgent(session).signOut();
+      }
+    } catch {
+      // Revocation failed (e.g. already revoked or offline); make sure the
+      // local session is still removed below.
     }
-  }
 
-  localStorage.removeItem(DID_STORAGE_KEY);
+    clearStoredSessionUnlocked();
+  });
+}
+
+// AUTHORIZED REQUESTS
+// ===================
+
+/**
+ * Run `fn` with a valid Rocksky session. The whole operation holds the OAuth
+ * lock so the library keeps using the Rocksky database and client id while the
+ * session is refreshed, and so another module can't swap them mid-request.
+ *
+ * @template T
+ * @param {(session: Session) => Promise<T>} fn
+ * @returns {Promise<T>}
+ */
+export function withSession(fn) {
+  return withOAuthContext(OWNER, configure, async () => {
+
+    const did = localStorage.getItem(DID_STORAGE_KEY);
+
+    if (!did) {
+      throw new Error("Rocksky: no stored session");
+    }
+
+    const session = await getSession(asDid(did));
+
+    return await fn(session);
+  });
 }

@@ -72,6 +72,35 @@ describe("components/output/raw/atproto-passkey", () => {
     expect(result).toBe(true);
   });
 
+  // Session restore
+
+  it("clears a stored DID when the OAuth session is gone", async () => {
+    const result = await testWeb(async () => {
+      localStorage.setItem(
+        "diffuse/output/raw/atproto-passkey/did",
+        "did:plc:example",
+      );
+
+      const mod = await import("~/components/output/raw/atproto-passkey/element.js");
+      const output = new mod.CLASS();
+      document.body.append(output);
+
+      await output.whenRestored();
+
+      return {
+        did: output.did(),
+        ready: output.ready(),
+        stored: localStorage.getItem(
+          "diffuse/output/raw/atproto-passkey/did",
+        ),
+      };
+    });
+
+    expect(result.did).toBe(null);
+    expect(result.ready).toBe(false);
+    expect(result.stored).toBe(null);
+  });
+
   it("settings.collection is loading initially", async () => {
     const result = await testWeb(async () => {
       const mod = await import("~/components/output/raw/atproto-passkey/element.js");

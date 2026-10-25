@@ -14,6 +14,7 @@ import {
   OAuthUserAgent,
   restoreOrFinalize,
   TokenRefreshError,
+  withOAuth,
 } from "./oauth.js";
 
 /**
@@ -141,7 +142,13 @@ class ATProtoPasskeyOutput extends BroadcastedOutputElement {
   }
 
   #offline = () => this.#isOnline.set(false);
-  #online = () => this.#isOnline.set(true);
+  #online = () => {
+    this.#isOnline.set(true);
+
+    // A restore may have failed while offline; give it another chance instead
+    // of staying silently disconnected until the page is reloaded.
+    if (!this.#rpc) this.#tryRestore();
+  };
 
   // AUTH
 
@@ -191,7 +198,11 @@ class ATProtoPasskeyOutput extends BroadcastedOutputElement {
     this.#pdsUrl = null;
     this.#rpc = null;
 
-    clearStoredSession();
+    // Don't await: this may be called from inside an operation that holds the
+    // OAuth lock (e.g. a failed refresh). The queued clear runs afterwards.
+    clearStoredSession().catch((err) => {
+      console.warn("ATProto: Failed to clear stored session", err);
+    });
   }
 
   /**
@@ -211,22 +222,38 @@ class ATProtoPasskeyOutput extends BroadcastedOutputElement {
     return false;
   }
 
+  /** Whether a session restore is currently in flight. */
+  #restoring = false;
+
   async #tryRestore() {
-    await this.whenConnected();
+    if (this.#restoring) return;
+    this.#restoring = true;
 
     try {
-      const session = await restoreOrFinalize();
+      await this.whenConnected();
 
-      if (session) {
-        this.#setSession(session);
-      }
-    } catch (err) {
-      if (this.#isSessionError(err)) {
-        this.#clearSession();
-      } else {
-        throw err;
+      try {
+        const session = await restoreOrFinalize();
+
+        if (session) {
+          this.#setSession(session);
+        } else if (this.#rpc) {
+          // The stored session is gone (revoked); drop the local state as well
+          // instead of continuing to report a connection we can't use.
+          this.#clearSession();
+        }
+      } catch (err) {
+        if (this.#isSessionError(err)) {
+          this.#clearSession();
+        } else {
+          // Transient failure (offline, timeout, auth server hiccup). The
+          // stored session is intact, so keep the current state and retry on
+          // the next `online` event or the next sync.
+          console.warn("ATProto: Failed to restore/finalize session", err);
+        }
       }
     } finally {
+      this.#restoring = false;
       this.#restoreSettled.resolve();
     }
   }
@@ -236,6 +263,15 @@ class ATProtoPasskeyOutput extends BroadcastedOutputElement {
    */
   #setSession(session) {
     const agent = new OAuthUserAgent(session);
+
+    // All RPC goes through `agent.handle()`. Run it with the library configured
+    // for this module under the shared OAuth lock; otherwise another module
+    // (Rocksky) can leave the globals pointing at its own database/client id,
+    // and a token refresh here would read the wrong session and fail.
+    const originalHandle = agent.handle.bind(agent);
+    agent.handle = /** @type {typeof originalHandle} */ ((pathname, init) => {
+      return withOAuth(() => originalHandle(pathname, init));
+    });
 
     // Intercept token refresh to detect session revocation proactively.
     // OAuthUserAgent.handle() swallows TokenRefreshError silently,

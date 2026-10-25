@@ -1,5 +1,5 @@
 import { configureOAuth } from "@atcute/oauth-browser-client";
-import { withOAuthLock } from "~/oauth/lock.js";
+import { withOAuthContext } from "~/oauth/lock.js";
 
 import metadata from "./oauth-client-metadata.json" with {
   type: "json",
@@ -32,6 +32,7 @@ const STORAGE_KEY = "diffuse/output/raw/atproto-passkey/did";
 const SCOPE = metadata.scope;
 const STORAGE_NAME = "diffuse/output/raw/atproto-passkey/atcute/oauth";
 const CLIENT_KEY = "diffuse/output/raw/atproto-passkey";
+const OWNER = "diffuse/output/raw/atproto-passkey";
 
 // CONFIGURE
 // =========
@@ -70,7 +71,54 @@ const OAUTH_CONFIG = {
   }),
 };
 
-configureOAuth(OAUTH_CONFIG);
+/**
+ * Configure the atcute library for the public AT Protocol output.
+ *
+ * `@atcute/oauth-browser-client` keeps its database and client id in module
+ * globals shared with the Rocksky scrobbler. Whichever module called
+ * `configureOAuth()` last owns the globals, and token refresh reads and writes
+ * through them. Every operation must therefore re-configure while holding the
+ * shared lock, otherwise a Rocksky operation can make this output refresh the
+ * wrong session (or use the wrong client id) and stop syncing.
+ */
+function configure() {
+  configureOAuth(OAUTH_CONFIG);
+}
+
+/**
+ * Run `fn` with the library configured for this module, holding the shared
+ * OAuth lock for the whole operation.
+ *
+ * @template T
+ * @param {() => T | Promise<T>} fn
+ * @returns {Promise<T>}
+ */
+export function withOAuth(fn) {
+  return withOAuthContext(OWNER, configure, fn);
+}
+
+/**
+ * Delete the stored session and the persisted DID.
+ *
+ * Must only be called while holding the OAuth lock, after `configure()`.
+ */
+function clearStoredSessionUnlocked() {
+  const did = localStorage.getItem(STORAGE_KEY);
+
+  if (did) {
+    deleteStoredSession(asDid(did));
+  }
+
+  localStorage.removeItem(STORAGE_KEY);
+}
+
+/**
+ * @param {string} did
+ * @returns {`did:${string}:${string}`}
+ */
+function asDid(did) {
+  return /** @type {`did:${string}:${string}`} */ (did);
+}
 
 // LOGIN
 // =====
@@ -82,8 +130,7 @@ configureOAuth(OAUTH_CONFIG);
  * @param {string} handle
  */
 export function login(handle) {
-  return withOAuthLock(async () => {
-    configureOAuth(OAUTH_CONFIG);
+  return withOAuthContext(OWNER, configure, async () => {
 
     localStorage.setItem(
       "oauth/callback/redirect_path",
@@ -106,13 +153,16 @@ export function login(handle) {
 
 /**
  * Attempt to restore an existing session or finalize an OAuth callback.
- * Returns the session if successful, or null if no session is available.
+ * Returns the session if successful, or `null` if there is no session to
+ * restore. Transient failures (offline, timeouts, auth server errors) are
+ * re-thrown and leave the stored session untouched, so a later attempt can
+ * still refresh it. The stored session is only discarded when it is
+ * definitively unusable (revoked / expired refresh token).
  *
  * @returns {Promise<Session | null>}
  */
 export function restoreOrFinalize() {
-  return withOAuthLock(async () => {
-    configureOAuth(OAUTH_CONFIG);
+  return withOAuthContext(OWNER, configure, async () => {
 
     const loc = globalThis.location;
 
@@ -145,13 +195,19 @@ export function restoreOrFinalize() {
 
     if (did) {
       try {
-        return await getSession(
-          /** @type {`did:${string}:${string}`} */ (did),
-        );
+        return await getSession(asDid(did));
       } catch (err) {
-        console.warn(err);
-        clearStoredSession();
-        return null;
+        // A `TokenRefreshError` means the refresh token was rejected (revoked
+        // or expired). Anything else is transient: keep the stored session so
+        // a flaky network at page load doesn't permanently log the user out
+        // and leave the output looking connected while it syncs nothing.
+        if (err instanceof TokenRefreshError) {
+          console.warn("ATProto: stored session is no longer valid", err);
+          clearStoredSessionUnlocked();
+          return null;
+        }
+
+        throw err;
       }
     }
 
@@ -165,15 +221,13 @@ export function restoreOrFinalize() {
 /**
  * Remove stored session data without contacting the server.
  * Used when the session has already been revoked.
+ *
+ * @returns {Promise<void>}
  */
 export function clearStoredSession() {
-  const did = localStorage.getItem(STORAGE_KEY);
-
-  if (did) {
-    deleteStoredSession(/** @type {`did:${string}:${string}`} */ (did));
-  }
-
-  localStorage.removeItem(STORAGE_KEY);
+  return withOAuth(() => {
+    clearStoredSessionUnlocked();
+  });
 }
 
 // LOGOUT
@@ -184,18 +238,20 @@ export function clearStoredSession() {
  *
  * @param {OAuthUserAgent} agent
  */
-export async function logout(agent) {
-  const did = localStorage.getItem(STORAGE_KEY);
+export function logout(agent) {
+  return withOAuth(async () => {
+    const did = localStorage.getItem(STORAGE_KEY);
 
-  try {
-    await agent.signOut();
-  } catch {
-    if (did) {
-      deleteStoredSession(
-        /** @type {`did:${string}:${string}`} */ (did),
-      );
+    try {
+      await agent.signOut();
+    } catch {
+      // Revocation failed (e.g. already revoked or offline); the local session
+      // is still removed below.
+      if (did) {
+        deleteStoredSession(asDid(did));
+      }
     }
-  }
 
-  localStorage.removeItem(STORAGE_KEY);
+    localStorage.removeItem(STORAGE_KEY);
+  });
 }

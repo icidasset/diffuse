@@ -7,11 +7,12 @@ import { clearSession, readSession, saveSession } from "../session.js";
 import {
   clearStoredSession,
   DID_STORAGE_KEY,
-  getSession,
   login,
   logout,
   OAuthUserAgent,
   restoreOrFinalize,
+  TokenRefreshError,
+  withSession,
 } from "./oauth.js";
 
 /**
@@ -84,18 +85,19 @@ class RockskyScrobbler extends BroadcastableDiffuseElement {
       if (session) {
         const did = session.info.sub;
 
-        if (await this.isLeader()) {
-          this.#connected.set(true);
-          this.#handle.set(did);
-        } else {
-          this.#connected.value = true;
-          this.#handle.value = did;
-        }
-
+        await this.#setConnection(did);
         await saveSession(this, STORAGE_KEY, JSON.stringify({ did }));
         return;
       }
+
+      // There is no session on this device. Never advertise a connection we
+      // can't scrobble with; that mismatch is what made a dead session look
+      // connected while every scrobble was silently dropped.
+      await this.#setConnection(null);
+      return;
     } catch (err) {
+      // Transient failure (offline, timeout, auth server hiccup). The session
+      // is still stored, so keep the persisted state and retry later.
       console.warn("Rocksky: Failed to restore/finalize session", err);
     }
 
@@ -106,17 +108,53 @@ class RockskyScrobbler extends BroadcastableDiffuseElement {
       try {
         const { did } = JSON.parse(stored);
 
-        if (await this.isLeader()) {
-          this.#connected.set(true);
-          this.#handle.set(did);
-        } else {
-          this.#connected.value = true;
-          this.#handle.value = did;
-        }
+        if (typeof did !== "string") throw new Error("invalid stored session");
+
+        await this.#setConnection(did);
       } catch {
         await clearSession(this, STORAGE_KEY);
       }
     }
+  }
+
+  /**
+   * Update the connection state and broadcast it to the other instances.
+   *
+   * @param {string | null} did
+   */
+  async #setConnection(did) {
+    const connected = did !== null;
+
+    if (await this.isLeader()) {
+      this.#connected.set(connected);
+      this.#handle.set(did);
+    } else {
+      this.#connected.value = connected;
+      this.#handle.value = did;
+    }
+
+    if (!connected) {
+      await clearSession(this, STORAGE_KEY);
+    }
+  }
+
+  /**
+   * Drop a session that can no longer be refreshed and surface the
+   * disconnected state, so the user can reconnect instead of getting silent
+   * failures forever.
+   */
+  async #handleSessionLost() {
+    console.warn("Rocksky: session expired or revoked; sign-in required");
+
+    try {
+      await clearStoredSession();
+    } catch (err) {
+      console.warn("Rocksky: Failed to clear stored session", err);
+    }
+
+    this.#connected.set(false);
+    this.#handle.set(null);
+    await clearSession(this, STORAGE_KEY);
   }
 
   // AUTH
@@ -141,19 +179,16 @@ class RockskyScrobbler extends BroadcastableDiffuseElement {
    * Disconnect from Rocksky.
    */
   async signOut() {
-    const did = localStorage.getItem(DID_STORAGE_KEY);
-
-    if (did) {
-      getSession(/** @type {`did:${string}:${string}`} */ (did))
-        .then((session) => logout(new OAuthUserAgent(session)))
-        .catch(() => clearStoredSession());
-    } else {
-      clearStoredSession();
-    }
-
+    // Reflect the disconnect immediately; revocation is best-effort.
     this.#connected.set(false);
     this.#handle.set(null);
     await clearSession(this, STORAGE_KEY);
+
+    try {
+      await logout();
+    } catch (err) {
+      console.warn("Rocksky: Failed to sign out", err);
+    }
   }
 
   // SCROBBLE ACTIONS
@@ -161,7 +196,6 @@ class RockskyScrobbler extends BroadcastableDiffuseElement {
   /**
    * @param {Track} _track
    */
-  // deno-lint-ignore no-unused-vars
   async nowPlaying(_track) {
     // Rocksky has no now-playing PDS record type; scrobbles are the source of truth.
   }
@@ -176,9 +210,6 @@ class RockskyScrobbler extends BroadcastableDiffuseElement {
 
     const did = localStorage.getItem(DID_STORAGE_KEY);
     if (!did) return;
-
-    const session = await getSession(/** @type {`did:${string}:${string}`} */ (did));
-    const agent = new OAuthUserAgent(session);
 
     const tags = track.tags ?? {};
     const duration = track.stats?.duration ?? durationMs;
@@ -200,20 +231,43 @@ class RockskyScrobbler extends BroadcastableDiffuseElement {
     if (tags.track?.no != null) record.trackNumber = tags.track.no;
     if (tags.disc?.no != null) record.discNumber = tags.disc.no;
 
-    const response = await agent.handle("/xrpc/com.atproto.repo.putRecord", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        repo: did,
-        collection: "app.rocksky.scrobble",
-        rkey: tidNow(),
-        record,
-        validate: false,
-      }),
-    });
+    /** @type {Response} */
+    let response;
+
+    try {
+      response = await withSession((session) => {
+        const agent = new OAuthUserAgent(session);
+
+        return agent.handle("/xrpc/com.atproto.repo.putRecord", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            repo: did,
+            collection: "app.rocksky.scrobble",
+            rkey: tidNow(),
+            record,
+            validate: false,
+          }),
+        });
+      });
+    } catch (err) {
+      if (err instanceof TokenRefreshError) {
+        await this.#handleSessionLost();
+      }
+
+      throw err;
+    }
 
     if (!response.ok) {
       const error = await response.json().catch(() => ({}));
+
+      // `OAuthUserAgent.handle()` swallows a failed token refresh and returns
+      // the original 401, so this means the session is unusable rather than
+      // the scrobble itself being invalid.
+      if (response.status === 401) {
+        await this.#handleSessionLost();
+      }
+
       throw new Error(`rocksky: scrobble failed ${response.status}: ${error.message ?? ""}`);
     }
   }
