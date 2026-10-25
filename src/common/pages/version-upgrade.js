@@ -338,6 +338,22 @@ function updateUpgradeLink(status, { usesCid, isLatest }) {
   });
 }
 
+const VERSION_STORAGE_KEY = "diffuse/last-version-used";
+
+/**
+ * Record the version of Diffuse currently in use, so later visits (and other
+ * pages on the same origin) can tell which version the user last ran.
+ *
+ * @param {string} version
+ */
+function recordVersion(version) {
+  try {
+    localStorage.setItem(VERSION_STORAGE_KEY, version);
+  } catch {
+    // Storage can be unavailable (eg. private mode); recording is optional.
+  }
+}
+
 /**
  * Setup version upgrade (only works with `diffuse-artifacts` deployments)
  */
@@ -385,6 +401,8 @@ export async function versionUpgrade() {
   });
 
   const versionLabel = getVersionLabel(versionOrCid, artifacts);
+  if (versionOrCid) recordVersion(versionOrCid);
+
   document.querySelectorAll("#version").forEach((version) => {
     if (versionLabel) version.textContent = `v${versionLabel}`;
   });
