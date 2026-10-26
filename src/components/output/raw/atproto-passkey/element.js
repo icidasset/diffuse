@@ -26,6 +26,7 @@ import {
 
 /** @type {Set<string>} */
 const WATCHED_COLLECTIONS = new Set([
+  "sh.diffuse.output.collaboration",
   "sh.diffuse.output.facet",
   "sh.diffuse.output.playlistItemBundle",
   "sh.diffuse.output.setting",
@@ -69,6 +70,9 @@ class ATProtoPasskeyOutput extends BroadcastedOutputElement {
         return true;
       },
       facets: this.#recordCollection("sh.diffuse.output.facet"),
+      collaborations: this.#recordCollection(
+        "sh.diffuse.output.collaboration",
+      ),
       playlistItems: this.#blobCollection(
         "sh.diffuse.output.playlistItemBundle",
         { groupBy: "playlist" },
@@ -86,6 +90,7 @@ class ATProtoPasskeyOutput extends BroadcastedOutputElement {
       }),
     });
 
+    this.collaborations = this.#manager.collaborations;
     this.facets = this.#manager.facets;
     this.playlistItems = this.#manager.playlistItems;
     this.settings = this.#manager.settings;

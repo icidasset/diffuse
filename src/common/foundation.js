@@ -17,6 +17,9 @@ const signals = {
     artwork: signal(
       /** @type {import("~/components/configurator/artwork/element.js").CLASS | null} */ (null),
     ),
+    collaboration: signal(
+      /** @type {import("~/components/configurator/collaboration/element.js").CLASS | null} */ (null),
+    ),
     metadata: signal(
       /** @type {import("~/components/configurator/metadata/element.js").CLASS | null} */ (null),
     ),
@@ -52,6 +55,9 @@ const signals = {
     ),
     controller: signal(
       /** @type {import("~/components/orchestrator/controller/element.js").CLASS | null} */ (null),
+    ),
+    cooperativePlaylists: signal(
+      /** @type {import("~/components/orchestrator/cooperative-playlists/element.js").CLASS | null} */ (null),
     ),
     coverGroups: signal(
       /** @type {import("~/components/orchestrator/cover-groups/element.js").CLASS | null} */ (null),
@@ -98,6 +104,7 @@ export const config = {
   // Elements
   configurator: {
     artwork: configuratorArtwork,
+    collaboration: configuratorCollaboration,
     metadata: configuratorMetadata,
     input,
     scrobbles,
@@ -114,6 +121,7 @@ export const config = {
   orchestrator: {
     artwork,
     controller,
+    cooperativePlaylists,
     coverGroups,
     autoQueue,
     favourites,
@@ -133,6 +141,7 @@ export const config = {
   signals: {
     configurator: {
       artwork: signals.configurator.artwork.get,
+      collaboration: signals.configurator.collaboration.get,
       metadata: signals.configurator.metadata.get,
       input: signals.configurator.input.get,
       scrobbles: signals.configurator.scrobbles.get,
@@ -149,6 +158,7 @@ export const config = {
     orchestrator: {
       artwork: signals.orchestrator.artwork.get,
       controller: signals.orchestrator.controller.get,
+      cooperativePlaylists: signals.orchestrator.cooperativePlaylists.get,
       coverGroups: signals.orchestrator.coverGroups.get,
       autoQueue: signals.orchestrator.autoQueue.get,
       favourites: signals.orchestrator.favourites.get,
@@ -219,6 +229,17 @@ async function configuratorArtwork() {
   ac.setAttribute("group", GROUP);
 
   return findExistingOrAdd(ac, signals.configurator.artwork);
+}
+
+async function configuratorCollaboration() {
+  const { CLASS: CollaborationConfigurator } = await import(
+    "~/components/configurator/collaboration/element.js"
+  );
+
+  const cc = new CollaborationConfigurator();
+  cc.setAttribute("group", GROUP);
+
+  return findExistingOrAdd(cc, signals.configurator.collaboration);
 }
 
 async function configuratorMetadata() {
@@ -366,6 +387,38 @@ async function controller() {
   co.setAttribute("queue-engine-selector", q.selector);
 
   return findExistingOrAdd(co, signals.orchestrator.controller);
+}
+
+/**
+ * @param {{ depth?: number }} [options]
+ */
+async function cooperativePlaylists(options) {
+  const [
+    { CLASS: CooperativePlaylistsOrchestrator },
+    { NAME: ATPROTO_SOURCE_NAME },
+    o,
+    c,
+  ] = await Promise.all([
+    import("~/components/orchestrator/cooperative-playlists/element.js"),
+    import("~/components/collaboration/atproto/element.js"),
+    output(),
+    configuratorCollaboration(),
+  ]);
+
+  // Register the default source. Other sources can append to the same
+  // configurator before or after the orchestrator is created.
+  if (!c.querySelector(ATPROTO_SOURCE_NAME)) {
+    c.append(document.createElement(ATPROTO_SOURCE_NAME));
+  }
+
+  const cpo = new CooperativePlaylistsOrchestrator();
+  cpo.setAttribute("group", GROUP);
+  cpo.setAttribute("output-selector", o.selector);
+  cpo.setAttribute("collaboration-configurator-selector", c.selector);
+
+  if (options?.depth) cpo.setAttribute("depth", String(options.depth));
+
+  return findExistingOrAdd(cpo, signals.orchestrator.cooperativePlaylists);
 }
 
 async function coverGroups() {

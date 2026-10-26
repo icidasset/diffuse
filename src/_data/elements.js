@@ -42,12 +42,27 @@ export default {
     },
   ],
 
+  collaboration: [
+    {
+      url: "components/collaboration/atproto/element.js",
+      title: "AT Protocol",
+      desc:
+        "Resolves `atproto/handle` and `atproto/did` collaborators and reads their collaboration records and playlist bundles from their PDS.",
+    },
+  ],
+
   configurators: [
     {
       url: "components/configurator/artwork/element.js",
       title: "Artwork",
       desc:
         "Takes artwork components as children and tries each in sequence, returning the first non-null result.",
+    },
+    {
+      url: "components/configurator/collaboration/element.js",
+      title: "Collaboration",
+      desc:
+        "Holds collaboration sources as children. Each source declares the hint prefix it handles, so the cooperative-playlists orchestrator can resolve collaborators across protocols.",
     },
     {
       url: "components/configurator/input/element.js",
@@ -189,6 +204,12 @@ export default {
       title: "Controller",
       desc:
         "Provides commonly used computed signals derived from the audio engine, queue engine, and output. Exposes currentTrack(), isPlaying(), and references to the underlying engines.",
+    },
+    {
+      url: "components/orchestrator/cooperative-playlists/element.js",
+      title: "Cooperative Playlists",
+      desc:
+        "Exposes the cohesive view of playlists shared with collaborators. Reads collaboration records from the given output, resolves collaborators through registered collaboration sources, and provides merged `playlistItems` and `playlists` signals. An AT Protocol source is included. Collaborator items are never written back, so each account only edits its own items.",
     },
     {
       url: "components/orchestrator/cover-groups/element.js",

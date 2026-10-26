@@ -35,6 +35,11 @@ class S3Output extends BroadcastedOutputElement {
 
     /** @type {OutputManager<Uint8Array | undefined>} */
     this.#manager = outputManager({
+      collaborations: {
+        empty: () => undefined,
+        get: () => this.#get("collaborations"),
+        put: (data) => this.#put("collaborations", data),
+      },
       facets: {
         empty: () => undefined,
         get: () => this.#get("facets"),
@@ -58,6 +63,7 @@ class S3Output extends BroadcastedOutputElement {
       },
     });
 
+    this.collaborations = this.#manager.collaborations;
     this.facets = this.#manager.facets;
     this.playlistItems = this.#manager.playlistItems;
     this.settings = this.#manager.settings;

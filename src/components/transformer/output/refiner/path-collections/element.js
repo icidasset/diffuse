@@ -46,6 +46,7 @@ class PathCollectionsTransformer extends OutputTransformer {
     });
 
     this.facets = base.facets;
+    this.collaborations = base.collaborations;
     this.settings = base.settings;
     this.playlistItems = {
       ...base.playlistItems,

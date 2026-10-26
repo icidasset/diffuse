@@ -47,6 +47,7 @@ class PasskeyEncryptionTransformer extends OutputTransformer {
     const lockedTracks = this.#lockedTracks;
 
     this.facets = base.facets;
+    this.collaborations = base.collaborations;
     this.playlistItems = base.playlistItems;
     this.ready = this.#keyReady.get;
 

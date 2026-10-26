@@ -1,6 +1,7 @@
 export type { Main as Facet } from "./types/sh/diffuse/output/facet.ts";
 
 export type {
+  Collaborator,
   Main as Collaboration,
 } from "./types/sh/diffuse/output/collaboration.ts";
 

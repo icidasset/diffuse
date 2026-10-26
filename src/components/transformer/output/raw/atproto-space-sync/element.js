@@ -12,6 +12,7 @@ import * as Output from "~/common/output.js";
  */
 
 const COLLECTIONS = /** @type {const} */ ([
+  "collaborations",
   "facets",
   "playlistItems",
   "settings",

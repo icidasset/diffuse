@@ -13,6 +13,7 @@ import { OutputTransformer } from "../../base.js";
 import { collectionSchema } from "~/common/self-describing.js";
 import { defineElement } from "~/common/element.js";
 import {
+  INITIAL_COLLABORATIONS_DOCUMENT,
   INITIAL_FACETS_DOCUMENT,
   INITIAL_PLAYLIST_ITEMS_DOCUMENT,
   INITIAL_SETTINGS_DOCUMENT,
@@ -98,6 +99,14 @@ class AutomergeBytesOutputTransformer extends OutputTransformer {
       INITIAL_FACETS_DOCUMENT,
     );
 
+    const collaborations = state(
+      computed(() =>
+        local()?.collaborations?.collection() ?? { state: "loading" }
+      ),
+      remote.collaborations.collection,
+      INITIAL_COLLABORATIONS_DOCUMENT,
+    );
+
     const playlistItems = state(
       computed(() =>
         local()?.playlistItems?.collection() ?? { state: "loading" }
@@ -116,6 +125,14 @@ class AutomergeBytesOutputTransformer extends OutputTransformer {
       computed(() => local()?.tracks?.collection() ?? { state: "loading" }),
       remote.tracks.collection,
       INITIAL_TRACKS_DOCUMENT,
+    );
+
+    this.collaborations = automergeEntry(
+      computed(() => local()?.collaborations),
+      remote.collaborations,
+      computed(() => collaborations().doc),
+      undefined,
+      "collaborations",
     );
 
     this.facets = automergeEntry(
@@ -158,6 +175,16 @@ class AutomergeBytesOutputTransformer extends OutputTransformer {
     this.effect(() => {
       const l = local();
       if (!l) return;
+
+      this.effect(() => {
+        if (!collaborations().remoteLoaded) return;
+        const s = collaborations();
+        if (s.diverged) {
+          const bytes = Automerge.save(s.doc);
+          if (l && s.local) l.collaborations.save(bytes);
+          if (s.remote) remote.collaborations.save(bytes);
+        }
+      });
 
       this.effect(() => {
         if (!facets().remoteLoaded) return;

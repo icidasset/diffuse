@@ -11,7 +11,7 @@ const IDB_KEY_TRACKS =
 
 /**
  * @import { OutputManagerDeputy } from "@specs/components/output/types.d.ts"
- * @import { PlaylistItem, Track } from "~/definitions/types.d.ts"
+ * @import { Collaboration, Facet, PlaylistItem, Setting, Track } from "~/definitions/types.d.ts"
  */
 
 /**
@@ -34,6 +34,7 @@ class DefaultOutputRefinerTransformer extends OutputTransformer {
 
     /** @type {OutputManagerDeputy} */
     const manager = {
+      collaborations: base.collaborations,
       facets: {
         ...base.facets,
         collection: computed(() => {
@@ -108,6 +109,7 @@ class DefaultOutputRefinerTransformer extends OutputTransformer {
     };
 
     // Assign manager properties to class
+    this.collaborations = manager.collaborations;
     this.facets = manager.facets;
     this.playlistItems = manager.playlistItems;
     this.settings = manager.settings;

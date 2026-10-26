@@ -6,7 +6,7 @@ import { buildFacets } from "~/common/facets/utils.js";
 
 /**
  * @import {DiffuseElement} from "~/common/element.js"
- * @import {Facet, PlaylistItem, Setting, Track} from "~/definitions/types.d.ts"
+ * @import {Collaboration, Facet, PlaylistItem, Setting, Track} from "~/definitions/types.d.ts"
  * @import {OutputManagerDeputy, OutputElement} from "@specs/components/output/types.d.ts"
  *
  * @import {OutputConfiguratorElement} from "@specs/components/configurator/output/types.d.ts"
@@ -33,6 +33,38 @@ class OutputConfigurator extends BroadcastableDiffuseElement {
 
     /** @type {OutputManagerDeputy} */
     const manager = {
+      collaborations: {
+        collection: computed(() => {
+          const out = this.#selected.value;
+          if (out) return out.collaborations.collection();
+
+          const def = this.#defaultOutput.value;
+          if (def) return def.collaborations.collection();
+          if (this.hasDefault()) return { state: "loading" };
+
+          return this.#setupFinished.value
+            ? { state: "loaded", data: this.#memory.collaborations.value }
+            : { state: "loading" };
+        }),
+        reload: () => {
+          const def = this.#defaultOutput.value;
+          if (def) def.collaborations.reload();
+
+          const out = this.#selected.value;
+          if (out) return out.collaborations.reload();
+
+          return Promise.resolve();
+        },
+        save: async (newCollaborations) => {
+          const out = this.#selected.value;
+          if (out) return await out.collaborations.save(newCollaborations);
+
+          const def = this.#defaultOutput.value;
+          if (def) return await def.collaborations.save(newCollaborations);
+
+          this.#memory.collaborations.value = newCollaborations;
+        },
+      },
       facets: {
         collection: computed(() => {
           const out = this.#selected.value;
@@ -192,6 +224,7 @@ class OutputConfigurator extends BroadcastableDiffuseElement {
     };
 
     // Assign manager properties to class
+    this.collaborations = manager.collaborations;
     this.facets = manager.facets;
     this.playlistItems = manager.playlistItems;
     this.settings = manager.settings;
@@ -204,6 +237,18 @@ class OutputConfigurator extends BroadcastableDiffuseElement {
      * When there's a selected output and its collection changes,
      * save it to the default output or memory.
      */
+    this.effect(() => {
+      const out = this.#selected.value;
+      if (!out) return;
+
+      const col = out.collaborations.collection();
+      if (col.state !== "loaded") return;
+
+      const def = this.#defaultOutput.value;
+      if (def) def.collaborations.save(col.data);
+      else this.#memory.collaborations.set(col.data);
+    });
+
     this.effect(() => {
       const out = this.#selected.value;
       if (!out) return;
@@ -262,6 +307,7 @@ class OutputConfigurator extends BroadcastableDiffuseElement {
   );
 
   #memory = {
+    collaborations: signal(/** @type {Collaboration[]} */ ([])),
     facets: signal(/** @type {Facet[]} */ ([])),
     playlistItems: signal(/** @type {PlaylistItem[]} */ ([])),
     settings: signal(/** @type {Setting[]} */ ([])),

@@ -68,6 +68,9 @@ class ATProtoSpaceOutput extends BroadcastedOutputElement {
         return true;
       },
       facets: this.#recordCollection("sh.diffuse.output.facet"),
+      collaborations: this.#recordCollection(
+        "sh.diffuse.output.collaboration",
+      ),
       playlistItems: this.#blobCollection(
         "playlistItems",
         "sh.diffuse.output.playlistItemBundle",
@@ -90,6 +93,7 @@ class ATProtoSpaceOutput extends BroadcastedOutputElement {
       ),
     });
 
+    this.collaborations = this.#manager.collaborations;
     this.facets = this.#manager.facets;
     this.playlistItems = this.#manager.playlistItems;
     this.settings = this.#manager.settings;

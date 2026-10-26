@@ -2,7 +2,9 @@ import * as _ArtworkAudioMetadata from "./artwork/audio-metadata/element.js"
 import * as _ArtworkInput from "./artwork/input/element.js"
 import * as _ArtworkLastFm from "./artwork/last.fm/element.js"
 import * as _ArtworkMusicbrainz from "./artwork/musicbrainz/element.js"
+import * as _CollaborationAtproto from "./collaboration/atproto/element.js"
 import * as _ConfiguratorArtwork from "./configurator/artwork/element.js"
+import * as _ConfiguratorCollaboration from "./configurator/collaboration/element.js"
 import * as _ConfiguratorInput from "./configurator/input/element.js"
 import * as _ConfiguratorMetadata from "./configurator/metadata/element.js"
 import * as _ConfiguratorOutput from "./configurator/output/element.js"
@@ -25,6 +27,7 @@ import * as _MetadataAudioFile from "./metadata/audio-file/element.js"
 import * as _OrchestratorArtwork from "./orchestrator/artwork/element.js"
 import * as _OrchestratorAutoQueue from "./orchestrator/auto-queue/element.js"
 import * as _OrchestratorController from "./orchestrator/controller/element.js"
+import * as _OrchestratorCooperativePlaylists from "./orchestrator/cooperative-playlists/element.js"
 import * as _OrchestratorCoverGroups from "./orchestrator/cover-groups/element.js"
 import * as _OrchestratorFavourites from "./orchestrator/favourites/element.js"
 import * as _OrchestratorMediaSession from "./orchestrator/media-session/element.js"
@@ -60,8 +63,13 @@ export const artwork = {
   musicbrainz: _ArtworkMusicbrainz,
 }
 
+export const collaboration = {
+  atproto: _CollaborationAtproto,
+}
+
 export const configurator = {
   artwork: _ConfiguratorArtwork,
+  collaboration: _ConfiguratorCollaboration,
   input: _ConfiguratorInput,
   metadata: _ConfiguratorMetadata,
   output: _ConfiguratorOutput,
@@ -96,6 +104,7 @@ export const orchestrator = {
   artwork: _OrchestratorArtwork,
   autoQueue: _OrchestratorAutoQueue,
   controller: _OrchestratorController,
+  cooperativePlaylists: _OrchestratorCooperativePlaylists,
   coverGroups: _OrchestratorCoverGroups,
   favourites: _OrchestratorFavourites,
   mediaSession: _OrchestratorMediaSession,

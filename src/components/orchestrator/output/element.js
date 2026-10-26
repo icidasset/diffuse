@@ -61,6 +61,10 @@ class OutputOrchestrator extends DiffuseElement {
 
   // PROXY OUTPUT ACTIONS
 
+  get collaborations() {
+    return this.output.collaborations;
+  }
+
   get facets() {
     return this.output.facets;
   }

@@ -1,6 +1,7 @@
 import type { Signal, SignalReader } from "~/common/signal.d.ts";
 import type { DiffuseElement } from "~/common/element.js";
 import type {
+  Collaboration,
   Facet,
   PlaylistItem,
   Setting,
@@ -21,6 +22,15 @@ export type OutputManagerDeputy<Encoding = null> =
   & { ready: SignalReader<boolean> };
 
 export type OutputManager<Encoding = null> = {
+  collaborations: {
+    collection: SignalReader<
+      OutputCollectionState<Encoding extends null ? Collaboration[] : Encoding>
+    >;
+    reload: () => Promise<void>;
+    save: (
+      collaborations: Encoding extends null ? Collaboration[] : Encoding,
+    ) => Promise<void>;
+  };
   facets: {
     collection: SignalReader<
       OutputCollectionState<Encoding extends null ? Facet[] : Encoding>
@@ -49,6 +59,9 @@ export type OutputManager<Encoding = null> = {
     ) => Promise<void>;
   };
   signals: {
+    collaborations: Signal<
+      Encoding extends null ? Collaboration[] : Encoding
+    >;
     facets: Signal<Encoding extends null ? Facet[] : Encoding>;
     playlistItems: Signal<Encoding extends null ? PlaylistItem[] : Encoding>;
     settings: Signal<Encoding extends null ? Setting[] : Encoding>;
@@ -64,6 +77,13 @@ export type OutputManager<Encoding = null> = {
 };
 
 export type OutputManagerProperties<Encoding = null> = {
+  collaborations?: {
+    empty(): Encoding extends null ? Collaboration[] : Encoding;
+    get(): Promise<Encoding extends null ? Collaboration[] : Encoding>;
+    put(
+      collaborations: Encoding extends null ? Collaboration[] : Encoding,
+    ): Promise<void>;
+  };
   facets: {
     empty(): Encoding extends null ? Facet[] : Encoding;
     get(): Promise<Encoding extends null ? Facet[] : Encoding>;

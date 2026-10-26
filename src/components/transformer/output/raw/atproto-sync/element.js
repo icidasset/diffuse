@@ -14,6 +14,7 @@ import * as Output from "~/common/output.js";
  */
 
 const COLLECTIONS = /** @type {const} */ ([
+  "collaborations",
   "facets",
   "playlistItems",
   "settings",
@@ -22,6 +23,7 @@ const COLLECTIONS = /** @type {const} */ ([
 
 /** @type {Record<string, string>} */
 const NSID_TO_COLLECTION = {
+  "sh.diffuse.output.collaboration": "collaborations",
   "sh.diffuse.output.facet": "facets",
   "sh.diffuse.output.playlistItemBundle": "playlistItems",
   "sh.diffuse.output.setting": "settings",

@@ -1,15 +1,8 @@
 import * as URI from "fast-uri";
 import * as TID from "@atcute/tid";
-import { Client, ok, simpleFetchHandler } from "@atcute/client";
-import {
-  CompositeDidDocumentResolver,
-  LocalActorResolver,
-  PlcDidDocumentResolver,
-  WebDidDocumentResolver,
-  XrpcHandleResolver,
-} from "@atcute/identity-resolver";
 
 import { effect } from "~/common/signal.js";
+import { loadAtProtoRecord } from "~/common/atproto.js";
 import {
   decodeBlocks,
   parseCar,
@@ -534,43 +527,7 @@ export function renderError(container, error, options) {
  * @param {string} uri
  * @returns {Promise<any>}
  */
-export async function loadAtProtoRecord(uri) {
-  const parts = uri.replace(/at:\/\//, "").split("/");
-  const [repo, collection, rkey] = parts;
-
-  if (!repo || !collection || !rkey) {
-    throw new Error(`Invalid at:// URI: ${uri}`);
-  }
-
-  const resolver = new LocalActorResolver({
-    handleResolver: new XrpcHandleResolver({
-      serviceUrl: "https://public.api.bsky.app",
-    }),
-    didDocumentResolver: new CompositeDidDocumentResolver({
-      methods: {
-        plc: new PlcDidDocumentResolver(),
-        web: new WebDidDocumentResolver(),
-      },
-    }),
-  });
-
-  const identity = await resolver.resolve(
-    /** @type {import("@atcute/lexicons/syntax").ActorIdentifier} */ (repo),
-  );
-
-  const rpc = new Client({
-    handler: simpleFetchHandler({ service: identity.pds }),
-  });
-
-  /** @type {any} */
-  const { value } = await ok(
-    /** @type {any} */ (rpc).get("com.atproto.repo.getRecord", {
-      params: { repo: identity.did, collection, rkey },
-    }),
-  );
-
-  return value;
-}
+export { loadAtProtoRecord };
 
 /**
  * @param {string} uri

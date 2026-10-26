@@ -3,7 +3,7 @@ import { batch, computed, signal, untracked } from "~/common/signal.js";
 import { strictEquality } from "~/common/compare.js";
 
 /**
- * @import {Facet, PlaylistItem, Setting, Track} from "~/definitions/types.d.ts"
+ * @import {Collaboration, Facet, PlaylistItem, Setting, Track} from "~/definitions/types.d.ts"
  * @import {SignalWriter} from "~/common/signal.d.ts";
  * @import {OutputManager, OutputManagerProperties} from "@specs/components/output/types.d.ts"
  */
@@ -32,6 +32,7 @@ export class BroadcastedOutputElement extends BroadcastableDiffuseElement {
     };
 
     const ogFacetsSave = manager.facets.save.bind(this);
+    const ogCollaborationsSave = manager.collaborations.save.bind(this);
     const ogPlaylistItemsSave = manager.playlistItems.save.bind(this);
     const ogSettingsSave = manager.settings.save.bind(this);
     const ogTracksSave = manager.tracks.save.bind(this);
@@ -40,6 +41,13 @@ export class BroadcastedOutputElement extends BroadcastableDiffuseElement {
       saveFacets: {
         strategy: "replicate",
         fn: fn({ save: ogFacetsSave, set: manager.signals.facets.set }),
+      },
+      saveCollaborations: {
+        strategy: "replicate",
+        fn: fn({
+          save: ogCollaborationsSave,
+          set: manager.signals.collaborations.set,
+        }),
       },
       savePlaylistItems: {
         strategy: "replicate",
@@ -60,6 +68,7 @@ export class BroadcastedOutputElement extends BroadcastableDiffuseElement {
 
     if (actions) {
       manager.facets.save = actions.saveFacets;
+      manager.collaborations.save = actions.saveCollaborations;
       manager.playlistItems.save = actions.savePlaylistItems;
       manager.settings.save = actions.saveSettings;
       manager.tracks.save = actions.saveTracks;
@@ -73,8 +82,30 @@ export class BroadcastedOutputElement extends BroadcastableDiffuseElement {
  * @returns {OutputManager<Encoding>}
  */
 export function outputManager(
-  { init, facets, playlistItems, settings, tracks },
+  { init, collaborations, facets, playlistItems, settings, tracks },
 ) {
+  // Older/custom outputs may not implement collaborations yet. Expose an empty
+  // collection instead of failing, so adding the feature stays backwards
+  // compatible.
+  const collaborationStore = collaborations ?? {
+    /** @returns {any} */
+    empty: () => [],
+    /** @returns {Promise<any>} */
+    get: async () => [],
+    /** @returns {Promise<void>} */
+    put: async () => {},
+  };
+
+  const cl = signal(
+    /** @type {Encoding extends null ? Collaboration[] : Encoding} */ (
+      collaborationStore.empty()
+    ),
+  );
+  const cls = signal(
+    /** @type {"loading" | "loaded" | "sleeping" | "error"} */ ("sleeping"),
+    { compare: strictEquality },
+  );
+
   const c = signal(
     /** @type {Encoding extends null ? Facet[] : Encoding} */ (facets
       .empty()),
@@ -113,9 +144,24 @@ export function outputManager(
   // Revision counters so a racing load never overwrites a value that was just
   // saved (or a newer load was started) while it was awaiting `get()`.
   let cRev = 0;
+  let clRev = 0;
   let plRev = 0;
   let sRev = 0;
   let tRev = 0;
+
+  async function loadCollaborations() {
+    if (init && (await init()) === false) return;
+    const rev = clRev;
+    cls.value = "loading";
+    try {
+      const data = await collaborationStore.get();
+      if (clRev === rev) cl.value = data;
+      cls.value = "loaded";
+    } catch (err) {
+      console.error("Failed to load collaborations:", err);
+      cls.value = "error";
+    }
+  }
 
   async function loadFacets() {
     if (init && (await init()) === false) return;
@@ -174,6 +220,25 @@ export function outputManager(
   }
 
   return {
+    collaborations: {
+      collection: computed(() => {
+        if (untracked(() => cls.value === "sleeping")) loadCollaborations();
+        return cls.value === "loaded"
+          ? { state: "loaded", data: cl.value }
+          : cls.value === "error"
+          ? { state: "error" }
+          : { state: "loading" };
+      }),
+      reload: loadCollaborations,
+      save: async (newCollaborations) => {
+        batch(() => {
+          clRev++;
+          if (untracked(() => cls.value === "sleeping")) cls.value = "loaded";
+          cl.value = newCollaborations;
+        });
+        await collaborationStore.put(newCollaborations);
+      },
+    },
     facets: {
       collection: computed(() => {
         if (untracked(() => cs.value === "sleeping")) loadFacets();
@@ -251,6 +316,7 @@ export function outputManager(
       },
     },
     signals: {
+      collaborations: cl,
       facets: c,
       playlistItems: pl,
       settings: s,

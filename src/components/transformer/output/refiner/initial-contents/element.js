@@ -48,6 +48,7 @@ class InitialContentsTransformer extends OutputTransformer {
 
     /** @type {OutputManagerDeputy} */
     const manager = {
+      collaborations: base.collaborations,
       facets: {
         ...base.facets,
         collection: computed(() => {
@@ -85,6 +86,7 @@ class InitialContentsTransformer extends OutputTransformer {
       ready: base.ready,
     };
 
+    this.collaborations = manager.collaborations;
     this.facets = manager.facets;
     this.playlistItems = manager.playlistItems;
     this.settings = manager.settings;

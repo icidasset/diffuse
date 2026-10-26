@@ -183,6 +183,18 @@ class DaslBytesSyncOutputTransformer extends OutputTransformer {
     };
 
     // Container signals
+    const collaborations = state(
+      "collaborations",
+      computed(() =>
+        local()?.collaborations.collection() ?? { state: "loading" }
+      ),
+      remote.collaborations.collection,
+      {
+        saveLocal: async (v) => local()?.collaborations.save(v),
+        saveRemote: remote.collaborations.save,
+      },
+    );
+
     const facets = state(
       "facets",
       computed(() => local()?.facets.collection() ?? { state: "loading" }),
@@ -226,6 +238,14 @@ class DaslBytesSyncOutputTransformer extends OutputTransformer {
     );
 
     // Output manager
+    this.collaborations = this.managerProp(
+      { save: async (v) => local()?.collaborations.save(v) },
+      remote.collaborations,
+      remote.ready,
+      collaborations,
+      "collaborations",
+    );
+
     this.facets = this.managerProp(
       { save: async (v) => local()?.facets.save(v) },
       remote.facets,

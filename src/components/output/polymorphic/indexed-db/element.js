@@ -30,6 +30,11 @@ class IndexedDBOutput extends BroadcastedOutputElement {
 
     /** @type {OutputManager<SupportedDataTypes>} */
     this.#manager = outputManager({
+      collaborations: {
+        empty: () => undefined,
+        get: () => this.#get("collaborations"),
+        put: (data) => this.#put("collaborations", data),
+      },
       facets: {
         empty: () => undefined,
         get: () => this.#get("facets"),
@@ -53,6 +58,7 @@ class IndexedDBOutput extends BroadcastedOutputElement {
       },
     });
 
+    this.collaborations = this.#manager.collaborations;
     this.facets = this.#manager.facets;
     this.playlistItems = this.#manager.playlistItems;
     this.settings = this.#manager.settings;

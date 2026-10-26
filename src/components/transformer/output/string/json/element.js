@@ -8,7 +8,7 @@ import { defineElement } from "~/common/element.js";
 
 /**
  * @import { OutputManagerDeputy } from "@specs/components/output/types.d.ts"
- * @import { Facet, PlaylistItem, Setting, Track } from "~/definitions/types.d.ts"
+ * @import { Collaboration, Facet, PlaylistItem, Setting, Track } from "~/definitions/types.d.ts"
  * @import { CollectionName } from "~/common/self-describing.js"
  */
 
@@ -23,6 +23,23 @@ class JsonStringOutputTransformer extends OutputTransformer {
 
     /** @type {OutputManagerDeputy} */
     const manager = {
+      collaborations: {
+        ...base.collaborations,
+        collection: computed(() => {
+          const col = base.collaborations.collection();
+          if (col.state !== "loaded") return col;
+          /** @type {Collaboration[]} */
+          const data = decodeJsonCollection(col.data, "collaborations");
+          return { state: "loaded", data };
+        }),
+        save: async (newCollaborations) => {
+          await base.collaborations.save(
+            /** @type {string} */ (
+              await saveJsonCollection(newCollaborations, "collaborations", null)
+            ),
+          );
+        },
+      },
       facets: {
         ...base.facets,
         collection: computed(() => {
@@ -97,6 +114,7 @@ class JsonStringOutputTransformer extends OutputTransformer {
     };
 
     // Assign manager properties to class
+    this.collaborations = manager.collaborations;
     this.facets = manager.facets;
     this.playlistItems = manager.playlistItems;
     this.settings = manager.settings;

@@ -70,6 +70,20 @@ export class OutputTransformer extends BroadcastableDiffuseElement {
   base() {
     /** @type {OutputManagerDeputy<T>} */
     const m = {
+      collaborations: {
+        collection: computed(() => {
+          return this.output.signal()?.collaborations?.collection() ??
+            { state: "loading" };
+        }),
+        reload: () => {
+          return this.output.signal()?.collaborations?.reload() ??
+            Promise.resolve();
+        },
+        save: async (newCollaborations) => {
+          await this.output.whenDefined;
+          await this.output.signal()?.collaborations.save(newCollaborations);
+        },
+      },
       facets: {
         collection: computed(() => {
           return this.output.signal()?.facets?.collection() ??

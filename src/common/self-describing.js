@@ -181,11 +181,12 @@ export function isSelfDescribing(value) {
 /**
  * The name of one of the collections an output persists.
  *
- * @typedef {"facets" | "playlistItems" | "settings" | "tracks"} CollectionName
+ * @typedef {"collaborations" | "facets" | "playlistItems" | "settings" | "tracks"} CollectionName
  */
 
 /** @type {Record<CollectionName, string>} */
 const COLLECTION_SCHEMAS = {
+  collaborations: "sh.diffuse.output.collaboration",
   facets: "sh.diffuse.output.facet",
   playlistItems: "sh.diffuse.output.playlistItem",
   settings: "sh.diffuse.output.setting",

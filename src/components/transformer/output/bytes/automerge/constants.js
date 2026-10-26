@@ -2,8 +2,13 @@ import * as Automerge from "@automerge/automerge";
 import { base64 } from "iso-base/rfc4648";
 
 /**
- * @import { FacetsDocument, PlaylistItemsDocument, SettingsDocument, TracksDocument } from "@specs/components/transformer/output/bytes/automerge/types.d.ts";
+ * @import { CollaborationsDocument, FacetsDocument, PlaylistItemsDocument, SettingsDocument, TracksDocument } from "@specs/components/transformer/output/bytes/automerge/types.d.ts";
  */
+
+/** @type {Automerge.Doc<CollaborationsDocument>} */
+export const INITIAL_COLLABORATIONS_DOCUMENT = Automerge.from({
+  collection: [],
+});
 
 /** @type {Automerge.Doc<FacetsDocument>} */
 export const INITIAL_FACETS_DOCUMENT = Automerge.load(

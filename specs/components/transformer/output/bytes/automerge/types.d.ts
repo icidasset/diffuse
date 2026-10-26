@@ -1,4 +1,5 @@
 import type {
+  Collaboration,
   Facet,
   PlaylistItem,
   Setting,
@@ -14,6 +15,7 @@ export type DocumentSchema = {
   $schema?: string;
 };
 
+export type CollaborationsDocument = { collection: Collaboration[] } & DocumentSchema;
 export type FacetsDocument = { collection: Facet[] } & DocumentSchema;
 export type PlaylistItemsDocument = { collection: PlaylistItem[] } & DocumentSchema;
 export type SettingsDocument = { collection: Setting[] } & DocumentSchema;
