@@ -158,7 +158,7 @@ export function groupKey(scheme, groupId) {
  * ```js
  * import { isAudioFile } from "~/components/input/common.js";
  *
- * const audioExts = ["track.mp3", "track.flac", "track.ogg", "track.opus", "track.wav", "track.m4a", "track.webm"];
+ * const audioExts = ["track.mp3", "track.flac", "track.ogg", "track.opus", "track.wav", "track.m4a", "track.webm", "TRACK.MP3", "track.aiff"];
  * for (const f of audioExts) {
  *   if (!isAudioFile(f)) throw new Error(`${f} should be recognised as audio`);
  * }
@@ -170,7 +170,9 @@ export function groupKey(scheme, groupId) {
  * ```
  */
 export function isAudioFile(filename) {
-  return filename.match(/\.(flac|m4a|mp3|mp4|ogg|opus|wav|webm)$/);
+  return /\.(aac|aiff?|alac|flac|m4a|m4b|mp3|mp4|oga|ogg|opus|wav|webm|wma)$/i.test(
+    filename,
+  );
 }
 
 /**
