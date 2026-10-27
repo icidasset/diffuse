@@ -491,6 +491,34 @@ a.da-titlebar__btn {
   width: 100%;
 }
 
+.da-mini__fav {
+  align-items: center;
+  background: rgb(0 0 0 / 0.45);
+  border: 0;
+  bottom: 0;
+  color: #fff;
+  cursor: pointer;
+  display: flex;
+  font-size: 1rem;
+  justify-content: center;
+  left: 0;
+  opacity: 0;
+  padding: 0;
+  position: absolute;
+  right: 0;
+  top: 0;
+  transition: opacity 150ms;
+}
+
+.da-mini__art:hover .da-mini__fav,
+.da-mini__fav:focus-visible {
+  opacity: 1;
+}
+
+.da-mini__fav--active {
+  color: var(--da-accent);
+}
+
 .da-mini__meta {
   display: flex;
   flex-direction: column;
@@ -1528,6 +1556,10 @@ a.da-titlebar__btn {
 
   .da-mobile-bar__controls button[data-enabled="f"] {
     opacity: 0.4;
+  }
+
+  .da-mobile-bar__controls .da-mobile-bar__fav[data-enabled="t"] {
+    color: var(--da-accent);
   }
 
   .da-mobile-bar__controls .da-mini__play {

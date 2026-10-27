@@ -1494,6 +1494,20 @@ class Browser extends DiffuseElement {
   };
 
   /**
+   * Whether a track is in the favourites playlist.
+   * @param {Track | null | undefined} track
+   * @returns {boolean}
+   */
+  #isFavourite(track) {
+    if (!track) return false;
+
+    const key = `${String(track.tags?.artist ?? "").toLowerCase()}|${
+      String(track.tags?.title ?? "").toLowerCase()
+    }`;
+    return this.$favouritesSet().has(key);
+  }
+
+  /**
    * Tracks picked via their cover in the current list view, in list
    * order. Falls back to every track of the view when nothing is
    * selected.
@@ -2578,6 +2592,7 @@ class Browser extends DiffuseElement {
 
     const isLoading = this.#isLoading.value;
     const isError = this.#audioError.value;
+    const isFav = this.#isFavourite(track);
 
     return html`
       <div class="da-mini">
@@ -2595,6 +2610,25 @@ class Browser extends DiffuseElement {
                 <div class="da-mini__art-loading" title="Loading ...">
                   <i class="ph-bold ph-spinner-gap"></i>
                 </div>
+              `
+              : nothing}
+            ${track
+              ? html`
+                <button
+                  class="da-mini__fav ${isFav ? `da-mini__fav--active` : ""}"
+                  @click="${(/** @type {Event} */ e) => {
+                    e.stopPropagation();
+                    this.toggleFavourite(track);
+                  }}"
+                  title="${isFav
+                    ? `Remove from favourites`
+                    : `Add to favourites`}"
+                  aria-pressed="${isFav ? `true` : `false`}"
+                >
+                  <i class="${isFav
+                    ? `ph-fill ph-heart`
+                    : `ph-bold ph-heart`}"></i>
+                </button>
               `
               : nothing}
           </div>
@@ -2895,6 +2929,7 @@ class Browser extends DiffuseElement {
     const isPlaying = this.isPlaying();
     const isShuffle = this.$repeatShuffle.value?.shuffle() ?? false;
     const isRepeat = this.$repeatShuffle.value?.repeat() ?? false;
+    const isFav = this.#isFavourite(track);
     const isError = this.#audioError.value;
     const albumKey = String(track?.tags?.album ?? "").toLowerCase();
     const artUrl = track ? this.#coverArtCache.get(albumKey) : undefined;
@@ -2951,6 +2986,21 @@ class Browser extends DiffuseElement {
                 title="Toggle repeat"
               >
                 <i class="ph-${isRepeat ? `fill` : `bold`} ph-repeat"></i>
+              </button>
+              <button
+                class="da-mobile-bar__fav"
+                data-enabled="${isFav ? `t` : `f`}"
+                @click="${() => {
+                  if (track) this.toggleFavourite(track);
+                }}"
+                title="${isFav
+                  ? `Remove from favourites`
+                  : `Add to favourites`}"
+                aria-pressed="${isFav ? `true` : `false`}"
+              >
+                <i class="${isFav
+                  ? `ph-fill ph-heart`
+                  : `ph-bold ph-heart`}"></i>
               </button>
             </div>
           `}
@@ -3871,10 +3921,7 @@ class Browser extends DiffuseElement {
     this.#fetchAlbumArt(albumKey, track);
     const artUrl = this.#coverArtCache.get(albumKey);
 
-    const favKey = `${String(track.tags?.artist ?? "").toLowerCase()}|${
-      String(track.tags?.title ?? "").toLowerCase()
-    }`;
-    const isFav = this.$favouritesSet().has(favKey);
+    const isFav = this.#isFavourite(track);
 
     const currentId = this.currentTrack()?.id;
     const isCurrent = currentId === track.id;
