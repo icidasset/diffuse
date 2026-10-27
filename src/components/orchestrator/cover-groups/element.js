@@ -4,6 +4,7 @@ import { computed, signal } from "~/common/signal.js";
 /**
  * @import {SignalReader} from "~/common/signal.d.ts"
  * @import {Track} from "~/definitions/types.d.ts"
+ * @import {TrackPools} from "@specs/components/orchestrator/scoped-tracks/types.d.ts"
  */
 
 ////////////////////////////////////////////
@@ -16,70 +17,37 @@ class CoverGroupsOrchestrator extends DiffuseElement {
   // SIGNALS
 
   #provider = signal(
-    /** @type {DiffuseElement & { tracks: SignalReader<Track[]> } | null} */ (null),
+    /** @type {DiffuseElement & { tracks: SignalReader<TrackPools> } | null} */ (null),
   );
 
   // STATE
 
   artistGroups = computed(() => {
     const provider = this.#provider.value;
-    const groups = /** @type {any} */ (provider)?.groups?.();
-
-    /** @type {{ label: string; groups: ArtistGroup[] }[]} */
-    const result = [];
-
-    if (groups?.length) {
-      const allTracks = provider?.tracks() ?? [];
-
-      // Total track counts per artist across all groups
-      /** @type {Map<string, number>} */
-      const totalCounts = new Map();
-      for (const track of allTracks) {
-        const key = String(track.tags?.artist ?? "").toLowerCase();
-        totalCounts.set(key, (totalCounts.get(key) ?? 0) + 1);
-      }
-
-      for (
-        const group
-          of /** @type {{ label: string; tracks: Track[] }[]} */ (groups)
-      ) {
-        const artists = deduplicateArtists(group.tracks).map((a) => ({
-          ...a,
-          trackCount: totalCounts.get(a.artistKey) ?? a.trackCount,
-        }));
-        if (artists.length) result.push({ label: group.label, groups: artists });
-      }
-    } else {
-      const allTracks = provider?.tracks() ?? [];
-      const artists = deduplicateArtists(allTracks);
-      if (artists.length) result.push({ label: "", groups: artists });
-    }
-
-    return result;
+    return buildArtistGroups(groupsOf(provider), scopedTracksOf(provider));
   });
 
   coverGroups = computed(() => {
     const provider = this.#provider.value;
-    const groups = /** @type {any} */ (provider)?.groups?.();
+    return buildCoverGroups(groupsOf(provider), scopedTracksOf(provider));
+  });
 
-    /** @type {{ label: string; groups: CoverGroup[] }[]} */
-    const result = [];
+  /**
+   * Artist groups from the full pool — the catalog a browser shows while
+   * its track pool is narrowed by sort / playlist / selection / search.
+   */
+  catalogArtistGroups = computed(() => {
+    const provider = this.#provider.value;
+    // Catalogs are ungrouped: the full pool has no scope group-by.
+    return buildArtistGroups(undefined, availableTracksOf(provider));
+  });
 
-    if (groups?.length) {
-      for (
-        const group
-          of /** @type {{ label: string; tracks: Track[] }[]} */ (groups)
-      ) {
-        const albums = deduplicateAlbums(group.tracks);
-        if (albums.length) result.push({ label: group.label, groups: albums });
-      }
-    } else {
-      const tracks = provider?.tracks() ?? [];
-      const albums = deduplicateAlbums(tracks);
-      if (albums.length) result.push({ label: "", groups: albums });
-    }
-
-    return result;
+  /**
+   * Album groups from the full pool.
+   */
+  catalogCoverGroups = computed(() => {
+    const provider = this.#provider.value;
+    return buildCoverGroups(undefined, availableTracksOf(provider));
   });
 
   // LIFECYCLE
@@ -90,7 +58,7 @@ class CoverGroupsOrchestrator extends DiffuseElement {
   async connectedCallback() {
     super.connectedCallback();
 
-    /** @type {DiffuseElement & { tracks: SignalReader<Track[]> }} */
+    /** @type {DiffuseElement & { tracks: SignalReader<TrackPools> }} */
     const provider = query(this, "tracks-selector");
 
     await customElements.whenDefined(provider.localName);
@@ -103,6 +71,87 @@ export default CoverGroupsOrchestrator;
 ////////////////////////////////////////////
 // HELPERS
 ////////////////////////////////////////////
+
+/**
+ * The scoped provider's groups (narrowed by playlist / selection / search).
+ *
+ * @param {any} provider
+ * @returns {{ label: string; tracks: Track[] }[] | undefined}
+ */
+function groupsOf(provider) {
+  return provider?.groups?.();
+}
+
+/**
+ * @param {any} provider
+ * @returns {Track[]}
+ */
+function scopedTracksOf(provider) {
+  return provider?.tracks?.()?.scoped ?? [];
+}
+
+/**
+ * @param {any} provider
+ * @returns {Track[]}
+ */
+function availableTracksOf(provider) {
+  return provider?.tracks?.()?.available ?? [];
+}
+
+/**
+ * @param {{ label: string; tracks: Track[] }[] | undefined} groups
+ * @param {Track[]} allTracks
+ * @returns {{ label: string; groups: ArtistGroup[] }[]}
+ */
+function buildArtistGroups(groups, allTracks) {
+  /** @type {{ label: string; groups: ArtistGroup[] }[]} */
+  const result = [];
+
+  if (groups?.length) {
+    // Total track counts per artist across all groups
+    /** @type {Map<string, number>} */
+    const totalCounts = new Map();
+    for (const track of allTracks) {
+      const key = String(track.tags?.artist ?? "").toLowerCase();
+      totalCounts.set(key, (totalCounts.get(key) ?? 0) + 1);
+    }
+
+    for (const group of groups) {
+      const artists = deduplicateArtists(group.tracks).map((a) => ({
+        ...a,
+        trackCount: totalCounts.get(a.artistKey) ?? a.trackCount,
+      }));
+      if (artists.length) result.push({ label: group.label, groups: artists });
+    }
+  } else {
+    const artists = deduplicateArtists(allTracks);
+    if (artists.length) result.push({ label: "", groups: artists });
+  }
+
+  return result;
+}
+
+/**
+ * @param {{ label: string; tracks: Track[] }[] | undefined} groups
+ * @param {Track[]} tracks
+ * @returns {{ label: string; groups: CoverGroup[] }[]}
+ */
+function buildCoverGroups(groups, tracks) {
+  /** @type {{ label: string; groups: CoverGroup[] }[]} */
+  const result = [];
+
+  if (groups?.length) {
+    for (const group of groups) {
+      const albums = deduplicateAlbums(group.tracks);
+      if (albums.length) result.push({ label: group.label, groups: albums });
+    }
+  } else {
+    const albums = deduplicateAlbums(tracks);
+    if (albums.length) result.push({ label: "", groups: albums });
+  }
+
+  return result;
+}
 
 /**
  * @typedef {{ albumKey: string; albumName: string; artist: string; track: Track }} CoverGroup

@@ -81,7 +81,7 @@ document.body.querySelector("#desktop-batch")?.addEventListener(
   "dblclick",
   () => {
     if (!queue.supplyFingerprint()) {
-      queue.supply({ trackIds: scopedTracks.tracks().map((t) => t.id) });
+      queue.supply({ trackIds: scopedTracks.tracks().scoped.map((t) => t.id) });
     }
 
     tracksPromise.promise.then(() => {

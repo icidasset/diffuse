@@ -364,6 +364,7 @@ function showSearch(term) {
 
   scope.setPlaylist(undefined);
   scope.setSearchTerm(term);
+  scope.setSelection(undefined);
   revealCollection();
 }
 
@@ -923,6 +924,7 @@ function buildCommands() {
     action: () => {
       scope.setPlaylist(undefined);
       scope.setSearchTerm(undefined);
+      scope.setSelection(undefined);
       scope.setGroupBy(undefined);
       scope.revertToDefaultSort();
     },

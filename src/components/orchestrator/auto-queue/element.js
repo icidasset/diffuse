@@ -3,7 +3,7 @@ import { BroadcastableDiffuseElement, defineElement, query } from "~/common/elem
 /**
  * @import {DiffuseElement} from "~/common/element.js";
  * @import {SignalReader} from "~/common/signal.d.ts";
- * @import {Track} from "~/definitions/types.d.ts"
+ * @import {TrackPools} from "@specs/components/orchestrator/scoped-tracks/types.d.ts"
  * @import RepeatShuffleEngine from "~/components/engine/repeat-shuffle/element.js"
  */
 
@@ -38,7 +38,7 @@ class AutoTracksOrchestrator extends BroadcastableDiffuseElement {
     /** @type {RepeatShuffleEngine} */
     const repeatShuffle = query(this, "repeat-shuffle-engine-selector");
 
-    /** @type {DiffuseElement & { tracks: SignalReader<Track[]> }} */
+    /** @type {DiffuseElement & { tracks: SignalReader<TrackPools> }} */
     const tracksElement = query(this, "tracks-selector");
 
     // When defined
@@ -48,7 +48,7 @@ class AutoTracksOrchestrator extends BroadcastableDiffuseElement {
 
     // Watch tracks
     this.effect(() => {
-      const tracks = tracksElement.tracks();
+      const tracks = tracksElement.tracks().scoped;
 
       this.isLeader().then(async (isLeader) => {
         if (!isLeader) return;

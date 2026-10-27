@@ -5,7 +5,12 @@ import {
   queryOptional,
 } from "~/common/element.js";
 import { batch, computed, signal } from "~/common/signal.js";
-import { filterByPlaylist, gather, orderByPlaylist } from "~/common/playlist.js";
+import {
+  filterByPlaylist,
+  gather,
+  orderByPlaylist,
+  transform,
+} from "~/common/playlist.js";
 import { safeDecodeURIComponent } from "~/common/utils.js";
 import { listen } from "~/common/worker.js";
 
@@ -14,7 +19,7 @@ import { listen } from "~/common/worker.js";
  * @import {Track} from "~/definitions/types.d.ts"
  * @import {InputElement} from "@specs/components/input/types.d.ts"
  * @import {OutputElement} from "@specs/components/output/types.d.ts"
- * @import {Actions, State} from "@specs/components/orchestrator/scoped-tracks/types.d.ts"
+ * @import {Actions, State, TrackPools} from "@specs/components/orchestrator/scoped-tracks/types.d.ts"
  */
 
 ////////////////////////////////////////////
@@ -72,8 +77,27 @@ class ScopedTracksOrchestrator extends BroadcastableDiffuseElement {
   });
 
   #tracksAvailable = signal(/** @type {Track[]} */ ([]));
-  #tracksSearch = signal(/** @type {Track[]} */ ([]));
+
+  /** `undefined` when no search is active; `[]` means an active search with no hits. */
+  #tracksSearch = signal(/** @type {Track[] | undefined} */ (undefined));
   #tracksFinal = signal(/** @type {Track[]} */ ([]));
+
+  /**
+   * The full available pool minus disabled sources — the base both the
+   * catalog and the scoped pipeline start from. Because it derives from
+   * signals that are already replicated (`#tracksAvailable`) and shared
+   * (`#disabledSources`), it doesn't need its own broadcast channel.
+   */
+  #tracksBase = computed(() => {
+    const available = this.#tracksAvailable.value;
+    const disabledSources = this.#disabledSources();
+
+    return disabledSources.length
+      ? available.filter((t) =>
+        !disabledSources.some((source) => t.uri.startsWith(source))
+      )
+      : available;
+  });
 
   #tracksGrouped = computed(() => {
     const tracks = this.#tracksFinal.value;
@@ -85,8 +109,13 @@ class ScopedTracksOrchestrator extends BroadcastableDiffuseElement {
   // STATE
 
   supplyFingerprint = this.#supplyFingerprint.get;
-  tracks = this.#tracksFinal.get;
   groups = this.#tracksGrouped;
+
+  /** @returns {TrackPools} */
+  tracks = computed(() => ({
+    available: this.#tracksBase(),
+    scoped: this.#tracksFinal.value,
+  }));
 
   /**
    * Whether the currently selected playlist should be rendered in its own
@@ -234,78 +263,66 @@ class ScopedTracksOrchestrator extends BroadcastableDiffuseElement {
       this.#tracksAvailable.set(availableTracks);
     });
 
-    // Watch search supply
+    // Watch the search term + supplied index
+    let searchX = 0;
+
     this.effect(async () => {
       const _trigger = this.#supplyFingerprint.value;
-      const availableTracks = this.#tracksAvailable.value;
       const searchTerm = this.#scope.value?.searchTerm();
 
+      const y = ++searchX;
+
       if ((await this.isLeader()) === false) return;
+      if (y !== searchX) return;
 
       if (searchTerm?.length) {
         const searchResults = await this.#proxy.search({
           term: searchTerm,
         });
+        if (y !== searchX) return;
         this.#tracksSearch.set(searchResults);
       } else {
-        this.#tracksSearch.set(availableTracks);
+        this.#tracksSearch.set(undefined);
       }
     });
 
-    // Watch `#tracksSearch` + Playlist + Sort
+    // Watch `#tracksAvailable` + search + Playlist + Sort + Selection.
+    //
+    // Pipeline order (deliberate): the catalog is always the full pool;
+    // the scoped list is sort → playlist → selection → search.
     let x = 0;
 
     this.effect(async () => {
-      const tracks = this.#tracksSearch.value;
+      // Read every dependency before the await so reactivity is registered.
+      // Disabled sources are a library-level preference, so `#tracksBase`
+      // narrows both the catalog and the final list.
+      const base = this.#tracksBase();
+      const searchResults = this.#tracksSearch.value;
       const playlistItems = this.#selectedPlaylistItems();
-      const disabledSources = this.#disabledSources();
       const sortBy = this.#scope.value?.sortBy();
       const sortDirection = this.#scope.value?.sortDirection();
       const groupBy = this.#scope.value?.groupBy();
+      const selection = this.#scope.value?.selection();
 
       const y = ++x;
 
       if ((await this.isLeader()) === false) return;
       if (y !== x) return;
 
-      let final = playlistItems?.length
-        ? filterByPlaylist(tracks, playlistItems)
-        : tracks;
-
-      if (disabledSources.length) {
-        final = final.filter((t) =>
-          !disabledSources.some((source) => t.uri.startsWith(source))
-        );
-      }
-
-      // When an ordered playlist is selected, reorder the filtered tracks by
-      // the playlist's `positionedAfter` chain. The user's `sortBy` is then
-      // ignored so playlist order is preserved — but `groupBy` still applies:
-      // tracks are grouped by the group key, and because `Array.sort` is
-      // stable, playlist order is retained within each group.
-      const playlistOrdered = this.playlistIsOrdered();
-
-      if (playlistOrdered) {
-        final = orderByPlaylist(
-          final,
-          /** @type {import("~/definitions/types.d.ts").PlaylistItem[]} */ (playlistItems),
-        );
-      }
-
-      // When groupBy is active, sort by group key first using the group's
-      // canonical direction (from GROUP_BY_SORT_OVERRIDES, or user's direction
-      // for firstLetter). Within each group, sort by the user's sortBy and
-      // sortDirection as normal — unless an ordered playlist is active, in
-      // which case sortBy is skipped (playlist order wins within groups).
+      // 1. Sort. When groupBy is active, sort by group key first using
+      // the group's canonical direction (from GROUP_BY_SORT_OVERRIDES, or
+      // the user's direction for firstLetter), then by the user's sortBy.
       //
       // Schwartzian transform: precompute all keys once (O(N)) so the
       // comparator never re-parses URLs or re-splits dot-paths (O(N log N)).
+      let final = base;
+
       const groupOverride = groupBy
         ? GROUP_BY_SORT_OVERRIDES[groupBy]
         : undefined;
       const groupDir =
         (groupOverride?.sortDirection ?? sortDirection) === "desc" ? -1 : 1;
-      const userFields = playlistOrdered ? [] : (sortBy ?? []);
+      const userFields = sortBy ?? [];
       const userDir = sortDirection === "desc" ? -1 : 1;
       const splitPaths = userFields.map((f) => f.split("."));
 
@@ -340,6 +357,30 @@ class ScopedTracksOrchestrator extends BroadcastableDiffuseElement {
         });
 
         final = decorated.map((d) => d.track);
+      }
+
+      // 2. Playlist. Filtering preserves the sorted order; an ordered
+      // playlist then re-applies its own `positionedAfter` chain.
+      if (playlistItems?.length) {
+        final = filterByPlaylist(final, playlistItems);
+
+        if (this.playlistIsOrdered()) {
+          final = orderByPlaylist(
+            final,
+            /** @type {import("~/definitions/types.d.ts").PlaylistItem[]} */ (playlistItems),
+          );
+        }
+      }
+
+      // 3. Selection
+      if (selection?.length) {
+        final = final.filter((track) => inSelection(track, selection));
+      }
+
+      // 4. Search
+      if (searchResults) {
+        const ids = new Set(searchResults.map((t) => t.id));
+        final = final.filter((t) => ids.has(t.id));
       }
 
       this.#tracksFinal.set(final);
@@ -379,30 +420,68 @@ const GROUP_BY_SORT_OVERRIDES = {
 };
 
 /**
+ * Whether a track passes every criterion of the scope's selection filter.
+ * Values are compared as strings for `eq`, so tag fields that are stored as
+ * numbers (years) still match string criteria. Missing values compare as the
+ * empty string, mirroring how album/artist groupings bucket untagged tracks.
+ *
+ * @param {Track} track
+ * @param {import("~/components/engine/scope/element.js").SelectionCriterion[]} selection
+ * @returns {boolean}
+ */
+function inSelection(track, selection) {
+  for (const criterion of selection) {
+    let value = /** @type {any} */ (track);
+    for (const part of criterion.field.split(".")) value = value?.[part];
+
+    const actual = transform(value, criterion.transformations);
+    const expected = transform(criterion.value, criterion.transformations);
+
+    switch (criterion.op ?? "eq") {
+      case "prefix":
+        if (!String(actual ?? "").startsWith(String(expected ?? ""))) {
+          return false;
+        }
+        break;
+      case "gte":
+        if (!(Number(actual) >= Number(expected))) return false;
+        break;
+      case "lt":
+        if (!(Number(actual) < Number(expected))) return false;
+        break;
+      default:
+        if (String(actual ?? "") !== String(expected ?? "")) return false;
+    }
+  }
+
+  return true;
+}
+
+/**
  * @param {Track[]} tracks
  * @param {string} groupBy  dot-path field, e.g. "createdAt" or "tags.artist"
  * @returns {{ label: string; tracks: Track[] }[]}
  */
 function buildGroups(tracks, groupBy) {
-  /** @type {{ label: string; tracks: Track[] }[]} */
-  const groups = [];
-  let lastKey = /** @type {string | undefined} */ (undefined);
-  let current =
-    /** @type {{ label: string; tracks: Track[] } | undefined} */ (undefined);
+  // Bucket by key rather than relying on consecutive runs: the scope list
+  // is usually sorted by group, but an ordered playlist can reorder it
+  // after the sort, and grouping should still produce one bucket per key.
+  /** @type {Map<string, { label: string; tracks: Track[] }>} */
+  const groups = new Map();
 
   for (const track of tracks) {
     const { key, label } = groupKeyLabel(track, groupBy);
 
-    if (key !== lastKey) {
-      current = { label, tracks: [] };
-      groups.push(current);
-      lastKey = key;
+    let group = groups.get(key);
+    if (!group) {
+      group = { label, tracks: [] };
+      groups.set(key, group);
     }
 
-    current?.tracks.push(track);
+    group.tracks.push(track);
   }
 
-  return groups;
+  return [...groups.values()];
 }
 
 /**

@@ -17,6 +17,7 @@ import { repeat } from "~/vendor/lit-html/directives/repeat.js";
  * @import {Track} from "~/definitions/types.d.ts"
  * @import {OutputElement} from "@specs/components/output/types.d.ts"
  * @import {ArtworkElement} from "@specs/components/artwork/types.d.ts"
+ * @import {TrackPools} from "@specs/components/orchestrator/scoped-tracks/types.d.ts"
  */
 
 const TRACK_ROW_HEIGHT = 48;
@@ -212,6 +213,68 @@ function monthLabel(key) {
   return `${MONTHS[month - 1] ?? ""} ${key.slice(0, 4)}`.trim();
 }
 
+/**
+ * The ISO month key (`2025-03`) for an `$addedGroups` label (`March
+ * 2025`). Selecting a month reduces the scope with a prefix match on
+ * `createdAt`, since that field carries the full timestamp.
+ * @param {string} label
+ * @returns {string | undefined}
+ */
+function monthKey(label) {
+  const [month, year] = label.split(" ");
+  const index = MONTHS.indexOf(month) + 1;
+  if (!index || !year) return undefined;
+  return `${year}-${String(index).padStart(2, "0")}`;
+}
+
+/**
+ * Scope criteria that reduce the deck's track pool to the current view.
+ * Overviews return `undefined`, leaving the whole (search-filtered)
+ * library in scope.
+ * @param {View} view
+ * @returns {import("~/components/engine/scope/element.js").SelectionCriterion[] | undefined}
+ */
+function selectionFor(view) {
+  if (view.type === "album") {
+    return [{
+      field: "tags.album",
+      value: view.albumKey,
+      transformations: ["toLowerCase"],
+    }];
+  }
+
+  if (view.type === "artist") {
+    return [{
+      field: "tags.artist",
+      value: view.artistKey,
+      transformations: ["toLowerCase"],
+    }];
+  }
+
+  if (view.type === "group-tracks" && view.value) {
+    if (view.groupBy === "tags.year") {
+      return [{ field: "tags.year", value: view.value }];
+    }
+
+    if (view.groupBy === "createdAt") {
+      const key = monthKey(view.value);
+      if (key) return [{ field: "createdAt", value: key, op: "prefix" }];
+    }
+
+    if (view.groupBy === "decades") {
+      const start = Number(view.value.replace(/s$/, ""));
+      if (Number.isFinite(start)) {
+        return [
+          { field: "tags.year", value: start, op: "gte" },
+          { field: "tags.year", value: start + 10, op: "lt" },
+        ];
+      }
+    }
+  }
+
+  return undefined;
+}
+
 /** Which library item a view belongs to (drives rail + catalog state). */
 const RAIL_FOR_VIEW = /** @type {const} */ ({
   albums: "albums",
@@ -283,7 +346,7 @@ class Browser extends DiffuseElement {
   );
 
   $provider = signal(
-    /** @type {DiffuseElement & { tracks: SignalReader<Track[]> } | undefined} */ (undefined),
+    /** @type {DiffuseElement & { tracks: SignalReader<TrackPools> } | undefined} */ (undefined),
   );
 
   $queue = signal(
@@ -415,6 +478,16 @@ class Browser extends DiffuseElement {
 
   // COMPUTED
 
+  /**
+   * The provider's full pool — before sort, playlist, selection and
+   * search. The catalog sidebar reads from this so narrowing the scope
+   * never collapses the list the selection was made from.
+   */
+  $availableTracks = computed(() => {
+    const provider = this.$provider.value;
+    return provider?.tracks().available ?? [];
+  });
+
   $currentTracks = computed(() => {
     const view = this.#view.value;
     if (view.type === "album") {
@@ -426,28 +499,41 @@ class Browser extends DiffuseElement {
     if (view.type === "group-tracks") {
       return this.#groupTracks(view);
     }
-    return this.$provider.value?.tracks() ?? [];
+    return this.$provider.value?.tracks().scoped ?? [];
   });
 
   /**
    * Tracks belonging to the selected year / month / decade of a group view.
+   * Reads the scoped pool, so an active search narrows the list.
    * @param {{ groupBy: "tags.year" | "createdAt" | "decades"; value: string | undefined }} view
    * @returns {Track[]}
    */
   #groupTracks(view) {
     if (!view.value) return [];
-    const groups = view.groupBy === "createdAt"
-      ? this.$addedGroups()
-      : view.groupBy === "decades"
-      ? this.$decadeGroups()
-      : this.$yearGroups();
-    return groups.find((g) => g.label === view.value)?.tracks ?? [];
+    const tracks = this.$provider.value?.tracks().scoped ?? [];
+
+    if (view.groupBy === "tags.year") {
+      const year = String(Number(view.value));
+      return tracks.filter((t) => String(Number(t.tags?.year)) === year);
+    }
+
+    if (view.groupBy === "createdAt") {
+      const key = monthKey(view.value);
+      return key ? tracks.filter((t) => t.createdAt?.startsWith(key)) : [];
+    }
+
+    const start = Number(view.value.replace(/s$/, ""));
+    if (view.groupBy !== "decades" || !Number.isFinite(start)) return [];
+    return tracks.filter((t) => {
+      const year = Number(t.tags?.year);
+      return year >= start && year < start + 10;
+    });
   }
 
   $tracksByAlbum = computed(() => {
     /** @type {Map<string, Track[]>} */
     const map = new Map();
-    for (const t of this.$provider.value?.tracks() ?? []) {
+    for (const t of this.$provider.value?.tracks().scoped ?? []) {
       const key = String(t.tags?.album ?? "").toLowerCase();
       if (!map.has(key)) map.set(key, []);
       map.get(key)?.push(t);
@@ -458,7 +544,7 @@ class Browser extends DiffuseElement {
   $tracksByArtist = computed(() => {
     /** @type {Map<string, Track[]>} */
     const map = new Map();
-    for (const t of this.$provider.value?.tracks() ?? []) {
+    for (const t of this.$provider.value?.tracks().scoped ?? []) {
       const key = String(t.tags?.artist ?? "").toLowerCase();
       if (!map.has(key)) map.set(key, []);
       map.get(key)?.push(t);
@@ -469,7 +555,7 @@ class Browser extends DiffuseElement {
   $albumDurations = computed(() => {
     /** @type {Map<string, { ms: number; count: number }>} */
     const map = new Map();
-    for (const t of this.$provider.value?.tracks() ?? []) {
+    for (const t of this.$provider.value?.tracks().scoped ?? []) {
       const key = String(t.tags?.album ?? "").toLowerCase();
       const entry = map.get(key) ?? { ms: 0, count: 0 };
       entry.ms += t.stats?.duration ?? 0;
@@ -489,22 +575,28 @@ class Browser extends DiffuseElement {
     return this.#sortGroups(groups);
   });
 
-  // Catalog rows read the RAW groups — the dedupe helpers order entries
+  // Catalog rows read the full pool — the dedupe helpers order entries
   // alphabetically, and the column must not re-order when the scope's
   // sort direction / sort-by changes (that's the cover grid's business).
 
   /** Flattened album rows for the catalog column. */
   $albumRows = computed(() =>
-    (this.$coverGroups.value?.coverGroups() ?? []).flatMap((g) => g.groups));
+    (this.$coverGroups.value?.catalogCoverGroups() ?? []).flatMap((g) =>
+      g.groups
+    )
+  );
 
   /** Flattened artist rows for the catalog column. */
   $artistRows = computed(() =>
-    (this.$coverGroups.value?.artistGroups() ?? []).flatMap((g) => g.groups));
+    (this.$coverGroups.value?.catalogArtistGroups() ?? []).flatMap((g) =>
+      g.groups
+    )
+  );
 
   /** Tracks grouped by release year, newest first. */
   $yearGroups = computed(() => {
     const map = new Map();
-    for (const t of this.$provider.value?.tracks() ?? []) {
+    for (const t of this.$availableTracks()) {
       const year = Number(t.tags?.year);
       // Ignore missing / implausible years (e.g. a mistyped "200") so
       // garbage tags don't produce nonsense buckets
@@ -521,7 +613,7 @@ class Browser extends DiffuseElement {
   /** Tracks grouped by the release decade, newest first. */
   $decadeGroups = computed(() => {
     const map = new Map();
-    for (const t of this.$provider.value?.tracks() ?? []) {
+    for (const t of this.$availableTracks()) {
       const year = Number(t.tags?.year);
       if (!year || year < 1000) continue;
       const key = `${Math.floor(year / 10) * 10}s`;
@@ -536,7 +628,7 @@ class Browser extends DiffuseElement {
   /** Tracks grouped by the month they were processed, newest first. */
   $addedGroups = computed(() => {
     const map = new Map();
-    for (const t of this.$provider.value?.tracks() ?? []) {
+    for (const t of this.$availableTracks()) {
       const iso = t.createdAt;
       if (!iso) continue;
       const key = `${iso.slice(0, 4)}-${iso.slice(5, 7)}`;
@@ -558,7 +650,7 @@ class Browser extends DiffuseElement {
    */
   $playlistFirstTracks = computed(() => {
     const col = this.$output.value?.playlistItems.collection();
-    const tracks = this.$provider.value?.tracks() ?? [];
+    const tracks = this.$availableTracks();
 
     /** @type {Map<string, Track | undefined>} */
     const first = new Map();
@@ -673,7 +765,7 @@ class Browser extends DiffuseElement {
     /** @type {OutputElement} */
     const output = query(this, "output-selector");
 
-    /** @type {DiffuseElement & { tracks: SignalReader<Track[]> }} */
+    /** @type {DiffuseElement & { tracks: SignalReader<TrackPools> }} */
     const provider = query(this, "tracks-selector");
 
     /** @type {import("~/components/engine/queue/element.js").CLASS} */
@@ -814,6 +906,18 @@ class Browser extends DiffuseElement {
       });
     });
 
+    // Keep the scope engine's selection in lockstep with the view: detail
+    // views narrow the deck's track pool to the album / artist / group
+    // they show, and every overview clears it. The catalog keeps reading
+    // `tracks().available`, so this doesn't collapse the sidebar the
+    // selection was made from.
+    this.effect(() => {
+      const scope = this.$scope.value;
+      const view = this.#view.value;
+      const selection = selectionFor(view);
+      untracked(() => scope?.setSelection(selection));
+    });
+
     // Mini player loading / error state. The loading spinner only
     // surfaces after a short delay so fast track switches don't flash
     // it; errors surface immediately (pattern from blur / winamp).
@@ -842,7 +946,7 @@ class Browser extends DiffuseElement {
     // the library is available; fall back to the overview when the
     // album / artist no longer exists
     this.effect(() => {
-      const tracks = this.$provider.value?.tracks() ?? [];
+      const tracks = this.$provider.value?.tracks().scoped ?? [];
       if (!tracks.length) return;
 
       const view = this.#view.value;
@@ -921,7 +1025,7 @@ class Browser extends DiffuseElement {
     if (view.type === "group-tracks" && view.value) {
       return this.#groupTracks(view);
     }
-    return this.$provider.value?.tracks() ?? [];
+    return this.$provider.value?.tracks().scoped ?? [];
   }
 
   /**
@@ -1041,7 +1145,19 @@ class Browser extends DiffuseElement {
    */
   #browse(type) {
     const current = this.#view.value;
-    if (this.#railItemFor(current) === type) return;
+
+    if (this.#railItemFor(current) === type) {
+      // Clicking the active section at its root is a no-op. From a detail
+      // view (album, artist, selected group/playlist), reset to the root.
+      const playlist = this.$scope.value?.playlist();
+      const atRoot = current.type === "group-tracks"
+        ? !current.value
+        : current.type === "playlist-tracks"
+        ? !playlist
+        : current.type === type;
+
+      if (atRoot) return;
+    }
 
     // Library navigation means the whole collection, so lift any
     // playlist filter that was active.
@@ -1857,7 +1973,7 @@ class Browser extends DiffuseElement {
         // Negative-cache only when the library is actually loaded — an
         // empty library means the tracks haven't arrived yet, in which
         // case the re-render on their arrival retries this
-        if (this.$provider.value?.tracks().length) {
+        if (this.$availableTracks().length) {
           this.#coverArtCache.set(key, null);
           this.#scheduleArtRender();
         }

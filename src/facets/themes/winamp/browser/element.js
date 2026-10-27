@@ -16,6 +16,7 @@ import { repeat } from "~/vendor/lit-html/directives/repeat.js";
  * @import {SignalReader} from "~/common/signal.d.ts";
  * @import {Track} from "~/definitions/types.d.ts"
  * @import {OutputElement} from "@specs/components/output/types.d.ts"
+ * @import {TrackPools} from "@specs/components/orchestrator/scoped-tracks/types.d.ts"
  */
 
 const ROW_HEIGHT = 14;
@@ -54,7 +55,7 @@ class Browser extends DiffuseElement {
   );
 
   $provider = signal(
-    /** @type {DiffuseElement & { tracks: SignalReader<Track[]> } | undefined} */ (undefined),
+    /** @type {DiffuseElement & { tracks: SignalReader<TrackPools> } | undefined} */ (undefined),
   );
 
   $queue = signal(
@@ -80,7 +81,7 @@ class Browser extends DiffuseElement {
   #cachedUris = signal(/** @type {Set<string>} */ (new Set()));
 
   #selectedTracks = computed(() => {
-    const tracks = this.$provider.value?.tracks() ?? [];
+    const tracks = this.$provider.value?.tracks().scoped ?? [];
     const highlightedTracks = this.$highlightedTracks.value;
     if (highlightedTracks.size === 0) return [];
     return tracks.filter((t) => highlightedTracks.has(t.id));
@@ -149,7 +150,7 @@ class Browser extends DiffuseElement {
     /** @type {OutputElement} */
     const output = query(this, "output-selector");
 
-    /** @type {DiffuseElement & { tracks: SignalReader<Track[]> }} */
+    /** @type {DiffuseElement & { tracks: SignalReader<TrackPools> }} */
     const provider = query(this, "tracks-selector");
 
     /** @type {import("~/components/engine/queue/element.js").CLASS} */
@@ -185,7 +186,7 @@ class Browser extends DiffuseElement {
 
     // Effects
     this.effect(() => {
-      const _results = this.$provider.value?.tracks();
+      const _results = this.$provider.value?.tracks().scoped;
 
       untracked(() => {
         const panel = this.root().querySelector(".sunken-panel");
@@ -613,7 +614,7 @@ this.#renderIfWindowChanged();
     const isLoading =
       this.$output.value?.tracks?.collection().state !== "loaded";
 
-    const tracks = this.$provider.value?.tracks() ?? [];
+    const tracks = this.$provider.value?.tracks().scoped ?? [];
     const groups = /** @type {{ label: string; tracks: Track[] }[] | undefined} */ (
       /** @type {any} */ (this.$provider.value)?.groups?.()
     );
@@ -720,7 +721,7 @@ this.#renderIfWindowChanged();
         @keydown="${(/** @type {KeyboardEvent} */ e) => {
           if (e.key !== `ArrowUp` && e.key !== `ArrowDown`) return;
           e.preventDefault();
-          const allTracks = this.$provider.value?.tracks() ?? [];
+          const allTracks = this.$provider.value?.tracks().scoped ?? [];
           if (allTracks.length === 0) return;
           const current = this.$highlightedTrack.value;
           const currentIdx = current

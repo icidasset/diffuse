@@ -135,7 +135,7 @@ const allTracks = computed(() => {
 });
 
 /** Scoped + filtered tracks. */
-const tracks = computed(() => scopedTracks.tracks() ?? []);
+const tracks = computed(() => scopedTracks.tracks().scoped);
 
 /** Playlists grouped by name. */
 const playlists = computed(() => {
@@ -1317,7 +1317,7 @@ effect(() => {
   if (now !== null || future.length > 0) return;
   if (autoFilled) return;
 
-  const all = scopedTracks.tracks();
+  const all = scopedTracks.tracks().scoped;
   if (all.length === 0) return;
 
   autoFilled = true;

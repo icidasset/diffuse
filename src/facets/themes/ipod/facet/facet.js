@@ -1036,7 +1036,7 @@ effect(() => {
   if (now !== null || future.length > 0) return;
   if (autoFilled) return;
 
-  const all = scopedTracks.tracks();
+  const all = scopedTracks.tracks().scoped;
   if (all.length === 0) return;
 
   autoFilled = true;

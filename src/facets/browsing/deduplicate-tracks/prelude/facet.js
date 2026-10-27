@@ -55,10 +55,12 @@ function deduplicate(tracks, seen = new Set()) {
 /**
  * The `do-scoped-tracks` orchestrator is the single source that all theme
  * browsers read their "presented tracks" from, via its `tracks()` and
- * `groups()` signal readers. This feature facet replaces those two signals
- * with derived computed signals that deduplicate at runtime — it never
- * modifies the underlying data or any component source. Only the tracks shown
- * in the UI are affected; the saved `tracks` collection stays intact.
+ * `groups()` signal readers. `tracks()` returns both pools (`available`
+ * for catalogs and `scoped` for the filtered list), so both are patched.
+ * This feature facet replaces those readers with derived computed signals
+ * that deduplicate at runtime — it never modifies the underlying data or
+ * any component source. Only the tracks shown in the UI are affected; the
+ * saved `tracks` collection stays intact.
  */
 effect(() => {
   const element = foundation.signals.orchestrator.scopedTracks();
@@ -76,7 +78,13 @@ effect(() => {
   // original reader inside the computed keeps the dependency graph intact there.
   if (typeof target.tracks === "function") {
     const originalTracks = target.tracks;
-    target.tracks = computed(() => deduplicate(originalTracks()));
+    target.tracks = computed(() => {
+      const { available, scoped } = originalTracks();
+      return {
+        available: deduplicate(available),
+        scoped: deduplicate(scoped),
+      };
+    });
   }
 
   if (typeof target.groups === "function") {

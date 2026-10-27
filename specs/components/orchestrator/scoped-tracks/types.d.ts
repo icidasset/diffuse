@@ -14,6 +14,18 @@ export type Actions = {
 
 export type Schema = Orama<typeof SCHEMA>;
 
+/**
+ * The two track pools exposed by `tracks()`.
+ *
+ * `available` is the full pool after source-availability and disabled-source
+ * filtering, before sort / playlist / selection / search. `scoped` is the
+ * sorted, playlist-, selection- and search-filtered list.
+ */
+export type TrackPools = {
+  available: Track[];
+  scoped: Track[];
+};
+
 export type State = {
   /**
    * Initially this is set to `undefined`, but whenever the cache is changed afterwards this will be the hash of the items in the supply.

@@ -17,6 +17,7 @@ import { repeat } from "~/vendor/lit-html/directives/repeat.js";
  * @import {Track} from "~/definitions/types.d.ts"
  * @import {OutputElement} from "@specs/components/output/types.d.ts"
  * @import {ArtworkElement} from "@specs/components/artwork/types.d.ts"
+ * @import {TrackPools} from "@specs/components/orchestrator/scoped-tracks/types.d.ts"
  */
 
 /**
@@ -84,7 +85,7 @@ class Browser extends DiffuseElement {
   );
 
   $provider = signal(
-    /** @type {DiffuseElement & { tracks: SignalReader<Track[]> } | undefined} */ (undefined),
+    /** @type {DiffuseElement & { tracks: SignalReader<TrackPools> } | undefined} */ (undefined),
   );
 
   $queue = signal(
@@ -144,7 +145,7 @@ class Browser extends DiffuseElement {
   $tracksByAlbum = computed(() => {
     /** @type {Map<string, Track[]>} */
     const map = new Map();
-    for (const t of this.$provider.value?.tracks() ?? []) {
+    for (const t of this.$provider.value?.tracks().scoped ?? []) {
       const key = String(t.tags?.album ?? "").toLowerCase();
       if (!map.has(key)) map.set(key, []);
       map.get(key)?.push(t);
@@ -155,7 +156,7 @@ class Browser extends DiffuseElement {
   $tracksByArtist = computed(() => {
     /** @type {Map<string, Track[]>} */
     const map = new Map();
-    for (const t of this.$provider.value?.tracks() ?? []) {
+    for (const t of this.$provider.value?.tracks().scoped ?? []) {
       const key = String(t.tags?.artist ?? "").toLowerCase();
       if (!map.has(key)) map.set(key, []);
       map.get(key)?.push(t);
@@ -299,7 +300,7 @@ class Browser extends DiffuseElement {
     /** @type {OutputElement} */
     const output = query(this, "output-selector");
 
-    /** @type {DiffuseElement & { tracks: SignalReader<Track[]> }} */
+    /** @type {DiffuseElement & { tracks: SignalReader<TrackPools> }} */
     const provider = query(this, "tracks-selector");
 
     /** @type {import("~/components/engine/queue/element.js").CLASS} */
@@ -348,7 +349,7 @@ class Browser extends DiffuseElement {
 
     // Reset scroll when track list changes (skip the initial population)
     this.effect(() => {
-      const tracks = this.$provider.value?.tracks();
+      const tracks = this.$provider.value?.tracks().scoped;
 
       untracked(() => {
         if (this.#previousTracks === undefined) {
@@ -1370,7 +1371,7 @@ class Browser extends DiffuseElement {
    * @param {string[]} sortBy
    */
   #renderListView(html, isLoading, sortBy) {
-    const tracks = this.$provider.value?.tracks() ?? [];
+    const tracks = this.$provider.value?.tracks().scoped ?? [];
     const groups = /** @type {any} */ (this.$provider.value)?.groups?.();
     const sortDirection = this.$scope.value?.sortDirection();
     const playlistOrdered = /** @type {any} */ (this.$provider.value)

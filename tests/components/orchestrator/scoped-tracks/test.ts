@@ -251,11 +251,11 @@ describe("components/orchestrator/scoped-tracks – disabled sources", () => {
 
       const deadline = Date.now() + 2000;
       while (Date.now() < deadline) {
-        if (el.tracks().length === 3) break;
+        if (el.tracks().scoped.length === 3) break;
         await new Promise((r) => setTimeout(r, 20));
       }
 
-      return el.tracks().map((t: { id: string }) => t.id).sort();
+      return el.tracks().scoped.map((t: { id: string }) => t.id).sort();
     });
 
     expect(ids).toEqual(["ds-alpha-1", "ds-alpha-2", "ds-beta-1"]);
@@ -303,11 +303,11 @@ describe("components/orchestrator/scoped-tracks – disabled sources", () => {
 
       const deadline = Date.now() + 2000;
       while (Date.now() < deadline) {
-        if (el.tracks().length === 1) break;
+        if (el.tracks().scoped.length === 1) break;
         await new Promise((r) => setTimeout(r, 20));
       }
 
-      return el.tracks().map((t: { id: string }) => t.id);
+      return el.tracks().scoped.map((t: { id: string }) => t.id);
     });
 
     expect(ids).toEqual(["ds-beta-1"]);
@@ -355,11 +355,11 @@ describe("components/orchestrator/scoped-tracks – disabled sources", () => {
 
       const deadline = Date.now() + 2000;
       while (Date.now() < deadline) {
-        if (el.tracks().length === 1) break;
+        if (el.tracks().scoped.length === 1) break;
         await new Promise((r) => setTimeout(r, 20));
       }
 
-      return el.tracks().map((t: { id: string }) => t.id);
+      return el.tracks().scoped.map((t: { id: string }) => t.id);
     });
 
     expect(ids).toEqual(["ds-gamma-1"]);
@@ -407,11 +407,11 @@ describe("components/orchestrator/scoped-tracks – disabled sources", () => {
 
       const deadline = Date.now() + 2000;
       while (Date.now() < deadline) {
-        if (el.tracks().length === 3) break;
+        if (el.tracks().scoped.length === 3) break;
         await new Promise((r) => setTimeout(r, 20));
       }
 
-      return el.tracks().map((t: { id: string }) => t.id).sort();
+      return el.tracks().scoped.map((t: { id: string }) => t.id).sort();
     });
 
     expect(ids).toEqual(["ds-alpha-1", "ds-alpha-2", "ds-beta-1"]);
@@ -459,13 +459,181 @@ describe("components/orchestrator/scoped-tracks – disabled sources", () => {
 
       const deadline = Date.now() + 2000;
       while (Date.now() < deadline) {
-        if (el.tracks().length === 3) break;
+        if (el.tracks().scoped.length === 3) break;
         await new Promise((r) => setTimeout(r, 20));
       }
 
-      return el.tracks().map((t: { id: string }) => t.id).sort();
+      return el.tracks().scoped.map((t: { id: string }) => t.id).sort();
     });
 
     expect(ids).toEqual(["ds-alpha-1", "ds-alpha-2", "ds-beta-1"]);
+  });
+});
+
+describe("components/orchestrator/scoped-tracks – selection", () => {
+  it("narrows tracks but keeps the catalog pool intact", async () => {
+    const result = await testWeb(async () => {
+      const Output = await import(
+        "~/components/output/polymorphic/indexed-db/element.js"
+      );
+      const ScopedTracks = await import(
+        "~/components/orchestrator/scoped-tracks/element.js"
+      );
+      const Scope = await import("~/components/engine/scope/element.js");
+
+      class TestInput extends HTMLElement {
+        SCHEME = "test";
+        sources() { return []; }
+        async groupConsult(uris: string[]) {
+          return { all: { available: "yes", scheme: "test", uris } };
+        }
+      }
+      if (!customElements.get("di-test-input-selection")) {
+        customElements.define("di-test-input-selection", TestInput);
+      }
+
+      const output = new Output.CLASS();
+      output.id = "test-output-selection";
+      document.body.append(output);
+
+      await output.tracks.save([
+        { $type: "sh.diffuse.output.track", id: "sel-blue-1", uri: "https://x.example/blue-1.mp3", tags: { album: "Blue", artist: "A", year: 1999 } },
+        { $type: "sh.diffuse.output.track", id: "sel-blue-2", uri: "https://x.example/blue-2.mp3", tags: { album: "Blue", artist: "A", year: 1999 } },
+        { $type: "sh.diffuse.output.track", id: "sel-red-1", uri: "https://x.example/red-1.mp3", tags: { album: "Red", artist: "B", year: 2005 } },
+      ]);
+
+      const input = new TestInput();
+      input.id = "test-input-selection";
+      document.body.append(input);
+
+      const scope = new Scope.CLASS();
+      scope.id = "test-scope-selection";
+      document.body.append(scope);
+
+      const el = new ScopedTracks.CLASS();
+      el.id = "test-scoped-tracks-selection";
+      el.setAttribute("output-selector", "#test-output-selection");
+      el.setAttribute("input-selector", "#test-input-selection");
+      el.setAttribute("scope-engine-selector", "#test-scope-selection");
+      document.body.append(el);
+
+      const waitFor = async (predicate: () => boolean) => {
+        const deadline = Date.now() + 2000;
+        while (Date.now() < deadline) {
+          if (predicate()) return true;
+          await new Promise((r) => setTimeout(r, 20));
+        }
+        return false;
+      };
+
+      await waitFor(() => el.tracks().scoped.length === 3);
+
+      await scope.setSelection([
+        {
+          field: "tags.album",
+          value: "blue",
+          transformations: ["toLowerCase"],
+        },
+      ]);
+
+      await waitFor(() => el.tracks().scoped.length === 2);
+
+      return {
+        tracks: el.tracks().scoped.map((t: { id: string }) => t.id).sort(),
+        catalog: el.tracks().available.map((t: { id: string }) => t.id).sort(),
+      };
+    });
+
+    expect(result.tracks).toEqual(["sel-blue-1", "sel-blue-2"]);
+    expect(result.catalog).toEqual([
+      "sel-blue-1",
+      "sel-blue-2",
+      "sel-red-1",
+    ]);
+  });
+
+  it("applies selection before search and keeps the catalog full", async () => {
+    const result = await testWeb(async () => {
+      const Output = await import(
+        "~/components/output/polymorphic/indexed-db/element.js"
+      );
+      const ScopedTracks = await import(
+        "~/components/orchestrator/scoped-tracks/element.js"
+      );
+      const Scope = await import("~/components/engine/scope/element.js");
+
+      class TestInput extends HTMLElement {
+        SCHEME = "test";
+        sources() { return []; }
+        async groupConsult(uris: string[]) {
+          return { all: { available: "yes", scheme: "test", uris } };
+        }
+      }
+      if (!customElements.get("di-test-input-selection-search")) {
+        customElements.define("di-test-input-selection-search", TestInput);
+      }
+
+      const output = new Output.CLASS();
+      output.id = "test-output-selection-search";
+      document.body.append(output);
+
+      await output.tracks.save([
+        { $type: "sh.diffuse.output.track", id: "sel-blue-1", uri: "https://x.example/blue-1.mp3", tags: { album: "Blue", artist: "A", title: "One" } },
+        { $type: "sh.diffuse.output.track", id: "sel-blue-2", uri: "https://x.example/blue-2.mp3", tags: { album: "Blue", artist: "A", title: "Two" } },
+        { $type: "sh.diffuse.output.track", id: "sel-red-1", uri: "https://x.example/red-1.mp3", tags: { album: "Red", artist: "B", title: "Three" } },
+      ]);
+
+      const input = new TestInput();
+      input.id = "test-input-selection-search";
+      document.body.append(input);
+
+      const scope = new Scope.CLASS();
+      scope.id = "test-scope-selection-search";
+      document.body.append(scope);
+
+      const el = new ScopedTracks.CLASS();
+      el.id = "test-scoped-tracks-selection-search";
+      el.setAttribute("output-selector", "#test-output-selection-search");
+      el.setAttribute("input-selector", "#test-input-selection-search");
+      el.setAttribute("scope-engine-selector", "#test-scope-selection-search");
+      document.body.append(el);
+
+      const waitFor = async (predicate: () => boolean) => {
+        const deadline = Date.now() + 2000;
+        while (Date.now() < deadline) {
+          if (predicate()) return true;
+          await new Promise((r) => setTimeout(r, 20));
+        }
+        return false;
+      };
+
+      await waitFor(() => el.tracks().scoped.length === 3);
+
+      await scope.setSelection([
+        {
+          field: "tags.album",
+          value: "blue",
+          transformations: ["toLowerCase"],
+        },
+      ]);
+      await waitFor(() => el.tracks().scoped.length === 2);
+
+      // Search is applied after the selection, so a Red search against a
+      // Blue selection yields nothing — but the catalog stays complete.
+      await scope.setSearchTerm("Red");
+      await waitFor(() => el.tracks().scoped.length === 0);
+
+      return {
+        tracks: el.tracks().scoped.map((t: { id: string }) => t.id),
+        catalog: el.tracks().available.map((t: { id: string }) => t.id).sort(),
+      };
+    });
+
+    expect(result.tracks).toEqual([]);
+    expect(result.catalog).toEqual([
+      "sel-blue-1",
+      "sel-blue-2",
+      "sel-red-1",
+    ]);
   });
 });

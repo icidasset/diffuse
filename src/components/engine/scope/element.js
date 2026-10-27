@@ -8,6 +8,24 @@ import { batch, signal } from "~/common/signal.js";
 // ELEMENT
 ////////////////////////////////////////////
 
+/**
+ * A criterion that narrows the track pool on top of the other scope
+ * filters (playlist, search). This is what lets a browser reduce the
+ * scope to the item currently selected in its own UI (album, artist,
+ * year, ...) without having to invent a playlist for it.
+ *
+ * `eq` (the default) compares stringified values, `prefix` matches a
+ * string prefix, and `gte` / `lt` compare numerically — the two range
+ * operators together express things like a decade.
+ *
+ * @typedef {{
+ *   field: string;
+ *   value: string | number;
+ *   op?: "eq" | "prefix" | "gte" | "lt";
+ *   transformations?: string[];
+ * }} SelectionCriterion
+ */
+
 class ScopeEngine extends BroadcastableDiffuseElement {
   static NAME = "diffuse/engine/scope";
 
@@ -16,6 +34,9 @@ class ScopeEngine extends BroadcastableDiffuseElement {
   #groupBy = signal(/** @type {string | undefined} */ (undefined));
   #playlist = signal(/** @type {string | undefined} */ (undefined));
   #searchTerm = signal(/** @type {string | undefined} */ (undefined));
+  #selection = signal(
+    /** @type {SelectionCriterion[] | undefined} */ (undefined),
+  );
   #sortBy = signal(
     /** @type {string[]} */ ([
       "tags.artist",
@@ -29,6 +50,7 @@ class ScopeEngine extends BroadcastableDiffuseElement {
   groupBy = this.#groupBy.get;
   playlist = this.#playlist.get;
   searchTerm = this.#searchTerm.get;
+  selection = this.#selection.get;
   sortBy = this.#sortBy.get;
   sortDirection = this.#sortDirection.get;
 
@@ -48,6 +70,7 @@ class ScopeEngine extends BroadcastableDiffuseElement {
         setGroupBy: { strategy: "replicate", fn: this.setGroupBy },
         setPlaylist: { strategy: "replicate", fn: this.setPlaylist },
         setSearchTerm: { strategy: "replicate", fn: this.setSearchTerm },
+        setSelection: { strategy: "replicate", fn: this.setSelection },
         setSortBy: { strategy: "replicate", fn: this.setSortBy },
         setSortDirection: { strategy: "replicate", fn: this.setSortDirection },
       });
@@ -57,6 +80,7 @@ class ScopeEngine extends BroadcastableDiffuseElement {
         this.setGroupBy = actions.setGroupBy;
         this.setPlaylist = actions.setPlaylist;
         this.setSearchTerm = actions.setSearchTerm;
+        this.setSelection = actions.setSelection;
         this.setSortBy = actions.setSortBy;
         this.setSortDirection = actions.setSortDirection;
       }
@@ -76,6 +100,16 @@ class ScopeEngine extends BroadcastableDiffuseElement {
         localStorage.getItem(`${storagePrefix}/playlistId`) ?? undefined;
       this.#searchTerm.value =
         localStorage.getItem(`${storagePrefix}/searchTerm`) ?? undefined;
+      try {
+        const rawSelection = localStorage.getItem(
+          `${storagePrefix}/selection`,
+        );
+        this.#selection.value = rawSelection
+          ? JSON.parse(rawSelection)
+          : undefined;
+      } catch {
+        this.#selection.value = undefined;
+      }
       this.#sortBy.value = JSON.parse(
         localStorage.getItem(`${storagePrefix}/sortBy`) ??
           `["tags.artist", "tags.album", "tags.disc.no", "tags.track.no"]`,
@@ -108,6 +142,14 @@ class ScopeEngine extends BroadcastableDiffuseElement {
       const val = this.#searchTerm.value;
 
       if (val) localStorage.setItem(key, val);
+      else localStorage.removeItem(key);
+    });
+
+    this.effect(() => {
+      const key = `${storagePrefix}/selection`;
+      const val = this.#selection.value;
+
+      if (val?.length) localStorage.setItem(key, JSON.stringify(val));
       else localStorage.removeItem(key);
     });
 
@@ -148,6 +190,9 @@ class ScopeEngine extends BroadcastableDiffuseElement {
 
   /** @param {string | undefined} val */
   setSearchTerm = async (val) => this.#searchTerm.value = val;
+
+  /** @param {SelectionCriterion[] | undefined} val */
+  setSelection = async (val) => this.#selection.value = val;
 
   /** @param {string[]} val */
   setSortBy = async (val) => this.#sortBy.value = val;
