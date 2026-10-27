@@ -101,7 +101,16 @@ self.addEventListener("fetch", (_event) => {
   // Only cache GET requests.
   if (request.method !== "GET") return;
 
-  // Skip audio/video and partial content
+  // Media elements use their own resource loader, which issues range requests
+  // and keeps the response open for the lifetime of playback. Let the browser
+  // own those requests instead of routing them through this worker: an
+  // intercepted media request would be fetched and buffered again here,
+  // holding a second connection to the audio server.
+  if (request.destination === "audio" || request.destination === "video") {
+    return;
+  }
+
+  // Skip partial content and anything that looks like an audio/video file.
   const pathname = new URL(request.url).pathname;
 
   if (request.headers.get("range")) return;
