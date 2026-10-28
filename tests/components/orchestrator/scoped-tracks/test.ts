@@ -61,6 +61,108 @@ describe("components/orchestrator/scoped-tracks", () => {
     expect(results).toEqual([]);
   });
 
+  it("requires every search term to match across fields", async () => {
+    const ids = await testWeb(async () => {
+      const { supply, search } = await import(
+        "~/components/orchestrator/scoped-tracks/worker.js"
+      );
+
+      await supply({
+        tracks: [
+          {
+            $type: "sh.diffuse.output.track" as const,
+            id: "and-artist-title",
+            uri: "diffuse://and-artist-title",
+            tags: { artist: "Nina", title: "Sinnerman" },
+          },
+          {
+            $type: "sh.diffuse.output.track" as const,
+            id: "and-artist-only",
+            uri: "diffuse://and-artist-only",
+            tags: { artist: "Nina", title: "Feeling Good" },
+          },
+        ],
+      });
+
+      const results = await search({ term: "nina sinnerman" });
+      return results.map((t) => t.id);
+    });
+
+    expect(ids).toEqual(["and-artist-title"]);
+  });
+
+  it("does not count prefix matches as several matched terms", async () => {
+    const ids = await testWeb(async () => {
+      const { supply, search } = await import(
+        "~/components/orchestrator/scoped-tracks/worker.js"
+      );
+
+      await supply({
+        tracks: [
+          {
+            $type: "sh.diffuse.output.track" as const,
+            id: "or-prefix-only",
+            uri: "diffuse://or-prefix-only",
+            tags: { title: "Love Lovely" },
+          },
+          {
+            $type: "sh.diffuse.output.track" as const,
+            id: "or-other-term-only",
+            uri: "diffuse://or-other-term-only",
+            tags: { title: "Hate" },
+          },
+          {
+            $type: "sh.diffuse.output.track" as const,
+            id: "and-both-terms",
+            uri: "diffuse://and-both-terms",
+            tags: { title: "Love and Hate" },
+          },
+        ],
+      });
+
+      const results = await search({ term: "love hate" });
+      return results.map((t) => t.id);
+    });
+
+    expect(ids).toEqual(["and-both-terms"]);
+  });
+
+  it("requires repeated terms to match distinct words", async () => {
+    const ids = await testWeb(async () => {
+      const { supply, search } = await import(
+        "~/components/orchestrator/scoped-tracks/worker.js"
+      );
+
+      await supply({
+        tracks: [
+          {
+            $type: "sh.diffuse.output.track" as const,
+            id: "repeat-one-word",
+            uri: "diffuse://repeat-one-word",
+            tags: { artist: "Someone", title: "Goodbye" },
+          },
+          {
+            $type: "sh.diffuse.output.track" as const,
+            id: "repeat-two-words",
+            uri: "diffuse://repeat-two-words",
+            tags: { artist: "Goo Goo Dolls", title: "Iris" },
+          },
+          {
+            $type: "sh.diffuse.output.track" as const,
+            id: "repeat-once-only",
+            uri: "diffuse://repeat-once-only",
+            tags: { artist: "Goo", title: "Something" },
+          },
+        ],
+      });
+
+      const results = await search({ term: "goo goo" });
+      return results.map((t) => t.id);
+    });
+
+    expect(ids).toEqual(["repeat-two-words"]);
+  });
+
   it("supplyFingerprint is undefined before first supply", async () => {
     const fp = await testWeb(async () => {
       const { $supplyFingerprint } = await import(

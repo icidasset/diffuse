@@ -11,6 +11,7 @@ import {
   sort as sortPlaylistItems,
 } from "~/common/playlist.js";
 import { groupTracksPerScheme } from "~/common/utils.js";
+import { countWords, matchesWords, searchablePaths } from "~/common/search.js";
 import { isAudioFile } from "~/components/input/common.js";
 import {
   htmlFacetTile,
@@ -371,6 +372,9 @@ const SEARCH_SCHEMA = {
   year: /** @type {const} */ ("number"),
 };
 
+/** String fields of the schema, i.e. what the index searches. */
+const SEARCHABLE_PATHS = searchablePaths(SEARCH_SCHEMA);
+
 /**
  * @param {Track} track
  */
@@ -387,7 +391,7 @@ const toSearchDoc = (track) => ({
   year: track?.tags?.year ?? 0,
 });
 
-/** @type {{ tracks: Track[]; db: any; Orama: any } | undefined} */
+/** @type {{ tracks: Track[]; db: any; Orama: any; tokenizer: any } | undefined} */
 let searchCache;
 
 /**
@@ -396,7 +400,7 @@ let searchCache;
  * Dynamically imported so the index cost is only paid when searching.
  *
  * @param {Track[]} tracks
- * @returns {Promise<{ tracks: Track[]; db: any; Orama: any }>}
+ * @returns {Promise<{ tracks: Track[]; db: any; Orama: any; tokenizer: any }>}
  */
 async function trackSearchIndex(tracks) {
   if (searchCache?.tracks === tracks) return searchCache;
@@ -405,7 +409,14 @@ async function trackSearchIndex(tracks) {
   const db = Orama.create({ schema: SEARCH_SCHEMA });
   await Orama.insertMultiple(db, tracks.map(toSearchDoc));
 
-  searchCache = { tracks, db, Orama };
+  // Keep duplicate tokens: the index tokenizer would collapse `goo goo` into
+  // `goo`, losing the fact that the term was repeated.
+  const tokenizer = Orama.components.tokenizer.createTokenizer({
+    language: db.tokenizer.language,
+    allowDuplicates: true,
+  });
+
+  searchCache = { tracks, db, Orama, tokenizer };
   return searchCache;
 }
 
@@ -1134,6 +1145,7 @@ export async function registerDiffuseTools(options = {}) {
     },
     async execute({ query, limit }) {
       const tracks = await collectionTracks();
+      /** @type {string} */
       const q = (query ?? "").trim();
       const max = Math.min(Math.max(limit ?? 25, 1), 100);
 
@@ -1143,25 +1155,64 @@ export async function registerDiffuseTools(options = {}) {
 
       if (q) {
         try {
-          const { db, Orama } = await trackSearchIndex(tracks);
+          const { db, Orama, tokenizer } = await trackSearchIndex(tracks);
 
-          /** @type {{ hits: { document: { id: string } }[]; count: number }} */
-          const results = await Orama.search(db, {
-            term: q,
-            threshold: 0, // AND: every term must match at least one field
-            limit: max,
-          });
+          // AND: every distinct keyword must match somewhere in the document.
+          // Orama's `threshold: 0` claims that, but it counts *matched index
+          // words* rather than distinct keywords, so a prefix match ("love"
+          // matching both "love" and "lovely") can leak documents that only
+          // match one keyword — i.e. OR behaviour. Search each keyword
+          // separately and intersect the hits instead.
+          const keywords = tokenizer.tokenize(q);
+          const distinct = [...new Set(keywords)];
+
+          /** @type {Set<string>[]} */
+          const matched = [];
+
+          /** @type {{ document: { id: string } }[]} */
+          let hits = [];
+
+          for (const [i, keyword] of distinct.entries()) {
+            /** @type {{ hits: { document: { id: string } }[] }} */
+            const results = await Orama.search(db, {
+              term: keyword,
+              threshold: 0,
+              limit: 10000,
+            });
+
+            matched.push(
+              new Set(results.hits.map((hit) => hit.document.id)),
+            );
+
+            if (i === 0) hits = results.hits;
+          }
+
+          // Intersecting cannot tell one word satisfying a keyword twice from
+          // two separate occurrences, so repeated terms are checked against
+          // the words actually present.
+          const repeated = keywords.length !== distinct.length;
 
           const byId = new Map(tracks.map((t) => [t.id, t]));
-          matches = results.hits
+          matches = hits
+            .filter((hit) => matched.every((set) => set.has(hit.document.id)))
+            .filter((hit) =>
+              !repeated ||
+              matchesWords(
+                countWords(tokenizer, SEARCHABLE_PATHS, hit.document),
+                keywords,
+              )
+            )
             .map((hit) => byId.get(hit.document.id))
             .filter((t) => t !== undefined);
-          total = results.count;
+          total = matches.length;
         } catch (e) {
           console.warn("WebMCP: track search index unavailable, falling back to substring matching", e);
 
-          const needle = q.toLowerCase();
-          matches = tracks.filter((t) => trackHaystack(t).includes(needle));
+          const terms = q.toLowerCase().split(/\s+/).filter(Boolean);
+          matches = tracks.filter((t) => {
+            const haystack = trackHaystack(t);
+            return terms.every((term) => haystack.includes(term));
+          });
           total = matches.length;
         }
       } else {

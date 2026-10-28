@@ -2,6 +2,7 @@ import * as Orama from "@orama/orama";
 import { xxh32 } from "xxh32";
 
 import { SCHEMA } from "./constants.js";
+import { countWords, matchesWords, searchablePaths } from "~/common/search.js";
 import { announce, ostiary, rpc } from "~/common/worker.js";
 import { effect, signal } from "~/common/signal.js";
 
@@ -39,6 +40,19 @@ const db = Orama.create({
   plugins: PLUGINS,
 });
 
+/**
+ * The index tokenizer drops duplicate tokens, which makes `goo goo` behave
+ * like `goo`. This one keeps them so repeated terms can each require their own
+ * matching word.
+ */
+const tokenizer = Orama.components.tokenizer.createTokenizer({
+  language: db.tokenizer.language,
+  allowDuplicates: true,
+});
+
+/** String fields of the schema, i.e. what the index searches. */
+const SEARCHABLE_PATHS = searchablePaths(SCHEMA);
+
 ////////////////////////////////////////////
 // ACTIONS
 ////////////////////////////////////////////
@@ -47,11 +61,47 @@ const db = Orama.create({
  * @type {Actions['search']}
  */
 export async function search(params) {
-  return await _search(
-    "term" in params && typeof params.term === "string"
-      ? { ...params, term: params.term.trim() }
-      : params,
-    [],
+  const term = "term" in params && typeof params.term === "string"
+    ? params.term.trim()
+    : undefined;
+
+  if (!term) return await _search(params, []);
+
+  const keywords = tokenizer.tokenize(term);
+  const distinct = [...new Set(keywords)];
+
+  if (!distinct.length) return [];
+
+  // AND: every distinct keyword must match somewhere in the document.
+  //
+  // Orama's `threshold: 0` is meant to express this, but it counts *matched
+  // index words* per property rather than distinct keywords: with prefix
+  // matching ("love" also matching "lovely") one keyword can satisfy the
+  // count and leak documents that don't contain the others — i.e. OR
+  // behaviour. Searching each keyword separately and intersecting the hits
+  // enforces a real AND, and also lets keywords match in different
+  // properties (artist + album, for example).
+  const hits = await Promise.all(
+    distinct.map((keyword) => _search({ ...params, term: keyword }, [])),
+  );
+
+  const [first = [], ...rest] = hits;
+  const matched = rest.map((tracks) => new Set(tracks.map((t) => t.id)));
+
+  const results = first.filter((track) =>
+    matched.every((set) => set.has(track.id))
+  );
+
+  // Intersecting cannot tell one word satisfying a keyword twice from two
+  // separate occurrences, so repeated terms are checked against the words
+  // actually present.
+  if (keywords.length === distinct.length) return results;
+
+  return results.filter((track) =>
+    matchesWords(
+      countWords(tokenizer, SEARCHABLE_PATHS, track),
+      keywords,
+    )
   );
 }
 
@@ -134,7 +184,7 @@ async function _search(params, tracks) {
     // @ts-ignore: No clue what the correct type is for this one
     sortBy,
     ...params,
-    threshold: 0, // AND operator: all search terms must match in at least one property
+    threshold: 0, // One keyword per call; ANDing across keywords is done in `search`
     limit: 10000,
     offset: tracks.length,
   });
