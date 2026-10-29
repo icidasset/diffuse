@@ -26,6 +26,7 @@ const recommended = new Set([
   "facets/connect/dropbox/index.tile",
   "facets/connect/local/index.tile",
   "facets/connect/s3/index.tile",
+  "facets/connect/opensubsonic/index.tile",
 ]);
 
 const facets = facetsData

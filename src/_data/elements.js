@@ -242,7 +242,7 @@ export default {
     },
     {
       url: "components/orchestrator/queue-audio/element.js",
-      title: "Queue ⭤ Audio",
+      title: "Queue + Audio",
       desc: "Connects the given queue engine to the given audio engine.",
     },
     {
@@ -253,7 +253,7 @@ export default {
     },
     {
       url: "components/orchestrator/scrobble-audio/element.js",
-      title: "Scrobble ⭤ Audio",
+      title: "Scrobble + Audio",
       desc:
         "Connects the audio engine with a scrobbler element. Calls nowPlaying when a track starts playing and scrobble once the user has listened long enough.",
     },
@@ -265,7 +265,7 @@ export default {
     },
     {
       url: "components/orchestrator/spectrogram-audio/element.js",
-      title: "Spectrogram ⭤ Audio",
+      title: "Spectrogram + Audio",
       desc:
         "When a track starts playing and is missing spectrogram-derived stats, analyses it via the spectrogram metadata element and persists the result to the output. Only the leader tab performs the analysis.",
     },

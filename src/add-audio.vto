@@ -1,0 +1,118 @@
+---
+layout: layouts/kitchen.vto
+base: ../
+title: Add audio | Diffuse
+---
+
+<style>
+  .add-audio__intro {
+    font-size: var(--fs-md);
+    max-width: var(--container-2xl);
+    opacity: 0.6;
+  }
+
+  .choice-grid {
+    display: grid;
+    gap: var(--space-md);
+    margin: var(--space-xl) 0;
+  }
+
+  @media (min-width: 48rem) {
+    .choice-grid {
+      gap: var(--space-lg);
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+  }
+
+  .choice {
+    --choice-accent: var(--accent-twist-2);
+
+    background:
+      linear-gradient(
+        oklch(from var(--choice-accent) l c h / 0.2),
+        transparent 70%
+      ),
+      var(--form-color);
+    border-radius: var(--radius-2xl);
+    color: inherit;
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-sm);
+    min-height: 18rem;
+    padding: var(--space-lg);
+    text-decoration: none;
+    transition:
+      border-color 200ms,
+      transform 200ms;
+  }
+
+  .choice--own {
+    --choice-accent: var(--accent-twist-1);
+  }
+
+  .choice__icon {
+    font-size: var(--fs-2xl);
+    opacity: 0.2;
+  }
+
+  .choice__title {
+    display: block;
+    font-size: var(--fs-md);
+    font-weight: 700;
+    letter-spacing: -0.0125em;
+    line-height: var(--leading-tight);
+  }
+
+  .choice__desc {
+    display: block;
+    flex: 1;
+    opacity: 0.6;
+  }
+
+  .choice__action {
+    align-items: center;
+    color: var(--choice-accent);
+    display: flex;
+    font-weight: 600;
+    gap: var(--space-2xs);
+  }
+
+  .add-audio__note {
+    font-size: var(--fs-sm);
+    opacity: 0.5;
+  }
+</style>
+
+<section class="add-audio">
+  <div class="choice-grid">
+    <a class="choice" href="{{ ('facets/data/file-manager/index.tile') |> facetLoaderURL }}">
+      <i class="ph-fill ph-file-audio choice__icon"></i>
+      <span class="choice__title">Let Diffuse manage your files</span>
+      <span class="choice__desc">
+        Upload audio and Diffuse keeps it in your browser, optionally syncing it
+        with your own cloud storage.
+      </span>
+      <span class="choice__action">
+        Upload audio
+        <i class="ph-fill ph-arrow-circle-right"></i>
+      </span>
+    </a>
+
+    <a class="choice choice--own" href="{{ ('facets/connect/index.tile') |> facetLoaderURL }}">
+      <i class="ph-fill ph-cloud-arrow-down choice__icon"></i>
+      <span class="choice__title">Bring your own storage</span>
+      <span class="choice__desc">
+        Connect your cloud storage, subsonic server, s3 bucket, and many others. Play directly from the source, read only.
+      </span>
+      <span class="choice__action">
+        Connect a source
+        <i class="ph-fill ph-arrow-circle-right"></i>
+      </span>
+    </a>
+  </div>
+
+  <p class="add-audio__note">
+    Not sure? Pick the first option if you just want to listen to your own files
+    right away. The second option is for audio you keep elsewhere.
+  </p>
+</section>

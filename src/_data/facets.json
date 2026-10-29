@@ -32,7 +32,7 @@
     "url": "facets/themes/blur/facet/index.tile",
     "title": "Blur",
     "category": "Themes",
-    "featured": false,
+    "featured": true,
     "author": "A theme by [@tokono.ma](https://bsky.app/profile/tokono.ma)",
     "desc": "A combination of the classic Diffuse browser and the Apple Music iOS playback screen."
   },
@@ -62,7 +62,7 @@
     "title": "Blur Pocket",
     "category": "Themes",
     "author": "A theme by [@tokono.ma](https://bsky.app/profile/tokono.ma)",
-    "featured": true,
+    "featured": false,
     "desc": "A mobile-optimised and minimalised version of the Blur theme. Does not include the background images and has a slightly different color palette."
   },
   {
@@ -90,7 +90,7 @@
     "url": "facets/connect/index.tile",
     "title": "Connect",
     "category": "Data",
-    "featured": true,
+    "featured": false,
     "desc": "A listing of some of the options available to use as an audio source, or as a user-data storage method."
   },
   {
@@ -110,6 +110,7 @@
     "url": "facets/connect/dropbox/index.tile",
     "title": "Connect / Dropbox",
     "category": "Data",
+    "featured": true,
     "desc": "Add Dropbox as an audio source or use it as user-data storage."
   },
   {

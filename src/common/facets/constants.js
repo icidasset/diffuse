@@ -9,11 +9,13 @@
 export const TYPE = /** @type {const} */ ("sh.diffuse.output.facet");
 
 export const INTERACTIVE = [
-  "facets/data/sources/index.tile",
+  "facets/connect/index.tile",
   "facets/data/file-manager/index.tile",
+  "facets/data/sources/index.tile",
   "facets/data/userdata/index.tile",
   "facets/themes/albums-app/facet/index.tile",
-  "facets/themes/blur/facet/index.tile",
+  "facets/themes/blur/browser/facet/index.tile",
+  "facets/themes/blur-pocket/facet/index.tile",
   "facets/themes/winamp/facet/index.tile",
 ]
 
