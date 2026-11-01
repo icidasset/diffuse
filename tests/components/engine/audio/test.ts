@@ -692,4 +692,137 @@ describe("components/engine/audio", () => {
     expect(result.isPlayingBefore).toBe(false);
     expect(result.isPlayingAfter).toBe(true);
   });
+
+  it("supply with an empty list removes all items", async () => {
+    const result = await testWeb(async () => {
+      const mod = await import("~/components/engine/audio/element.js");
+      const { trackA } = await import("~/testing/sample/tracks.js");
+      const engine = new mod.CLASS();
+      document.body.append(engine);
+
+      engine.supply({
+        audio: [{
+          id: "audio-a",
+          url: "/testing/sample/audio.mp3",
+          isPreload: false,
+          track: trackA,
+        }],
+      });
+
+      const hadItem = engine.querySelector('de-audio-item[id="audio-a"]') !== null;
+
+      engine.supply({ audio: [] });
+
+      return {
+        hadItem,
+        items: engine.items().length,
+        rendered: engine.querySelectorAll("de-audio-item").length,
+      };
+    });
+
+    expect(result.hadItem).toBe(true);
+    expect(result.items).toBe(0);
+    expect(result.rendered).toBe(0);
+  });
+
+  it("keeps a preloaded item's audio element when it becomes active", async () => {
+    const result = await testWeb(async () => {
+      const mod = await import("~/components/engine/audio/element.js");
+      const { trackA, trackB } = await import("~/testing/sample/tracks.js");
+      const engine = new mod.CLASS();
+      document.body.append(engine);
+
+      engine.supply({
+        audio: [
+          {
+            id: "audio-a",
+            url: "/testing/sample/audio.mp3",
+            isPreload: false,
+            track: trackA,
+          },
+          {
+            id: "audio-b",
+            url: "/testing/sample/audio.mp3",
+            isPreload: true,
+            track: trackB,
+          },
+        ],
+      });
+
+      const before = engine.querySelector(
+        'de-audio-item[id="audio-b"] audio',
+      ) as HTMLAudioElement;
+
+      // The preloaded track is promoted to the active one. This used to
+      // recreate its <audio> element (restarting the download) while dropping
+      // the preloading element without unloading it — leaving that element's
+      // network request (and connection) behind.
+      engine.supply({
+        audio: [{
+          id: "audio-b",
+          url: "/testing/sample/audio.mp3",
+          isPreload: false,
+          track: trackB,
+        }],
+      });
+
+      const after = engine.querySelector(
+        'de-audio-item[id="audio-b"] audio',
+      ) as HTMLAudioElement;
+
+      return {
+        sameElement: before === after,
+        rendered: engine.querySelectorAll("de-audio-item").length,
+        ids: engine.items().map((item: { id: string }) => item.id),
+      };
+    });
+
+    expect(result.sameElement).toBe(true);
+    expect(result.rendered).toBe(1);
+    expect(result.ids).toEqual(["audio-b"]);
+  });
+
+  it("releases the media resource when an item is removed", async () => {
+    const result = await testWeb(async () => {
+      const mod = await import("~/components/engine/audio/element.js");
+      const { trackA } = await import("~/testing/sample/tracks.js");
+      const engine = new mod.CLASS();
+      document.body.append(engine);
+
+      engine.supply({
+        audio: [{
+          id: "audio-a",
+          url: "/testing/sample/audio.mp3",
+          isPreload: false,
+          track: trackA,
+        }],
+      });
+
+      const itemEl = engine.querySelector(
+        'de-audio-item[id="audio-a"]',
+      ) as HTMLElement;
+      const audioEl = itemEl.querySelector("audio") as HTMLAudioElement;
+
+      itemEl.remove();
+
+      // The unload is scheduled on a microtask so a plain DOM move (disconnect
+      // + reconnect in the same task) doesn't interrupt playback.
+      await Promise.resolve();
+
+      const src = audioEl.getAttribute("src");
+      const sources = Array.from(audioEl.querySelectorAll("source"));
+
+      return {
+        connected: audioEl.isConnected,
+        paused: audioEl.paused,
+        usesNetworkSource: !!src && !src.startsWith("data:"),
+        sourceSrcs: sources.map((s) => s.getAttribute("src")),
+      };
+    });
+
+    expect(result.connected).toBe(false);
+    expect(result.paused).toBe(true);
+    expect(result.usesNetworkSource).toBe(false);
+    expect(result.sourceSrcs).toEqual([null]);
+  });
 });

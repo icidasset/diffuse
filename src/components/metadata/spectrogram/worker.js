@@ -37,6 +37,16 @@ const SPECTRAL_KEYS = [
 ];
 
 /**
+ * In-flight analysis per track id, so the download can be cancelled when the
+ * track is skipped. A whole-file analysis that outlives its track keeps a
+ * connection to the audio server occupied (and decodes data nobody is waiting
+ * for); skipping a few tracks would otherwise stack several of them up.
+ *
+ * @type {Map<string, AbortController>}
+ */
+const inFlight = new Map();
+
+/**
  * @param {TrackStats | undefined} stats
  * @returns {boolean}
  */
@@ -135,6 +145,19 @@ async function decodeToMono(arrayBuffer) {
 }
 
 /**
+ * Cancels an in-flight analysis for a track, if any.
+ *
+ * @type {NonNullable<ActionsWithTunnel<Actions>['abort']>}
+ */
+export function abort({ data: trackId }) {
+  const controller = inFlight.get(trackId);
+  if (!controller) return;
+
+  inFlight.delete(trackId);
+  controller.abort();
+}
+
+/**
  * @type {ActionsWithTunnel<Actions>['patch']}
  */
 export async function patch({ data: track, ports }) {
@@ -157,7 +180,11 @@ export async function patch({ data: track, ports }) {
   if (!resGet) return track;
 
   // Turn whatever `resolve` gave us into an ArrayBuffer.
+  inFlight.get(track.id)?.abort();
+
   const controller = new AbortController();
+  inFlight.set(track.id, controller);
+
   const timeoutId = setTimeout(() => controller.abort(), FETCH_TIMEOUT_MS);
 
   try {
@@ -198,6 +225,7 @@ export async function patch({ data: track, ports }) {
     return track;
   } finally {
     clearTimeout(timeoutId);
+    if (inFlight.get(track.id) === controller) inFlight.delete(track.id);
   }
 }
 
@@ -206,5 +234,5 @@ export async function patch({ data: track, ports }) {
 ////////////////////////////////////////////
 
 ostiary((context) => {
-  rpc(context, { patch });
+  rpc(context, { abort, patch });
 });

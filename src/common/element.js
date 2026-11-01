@@ -275,6 +275,9 @@ export class BroadcastableDiffuseElement extends DiffuseElement {
   /** @type {{ assumeLeadership?: boolean }} */
   #broadcastingOptions = {};
 
+  /** Whether the leadership election has already been started for this element. */
+  #leadershipRequested = false;
+
   #broadcastingStatus;
   broadcastingStatus;
 
@@ -425,6 +428,13 @@ export class BroadcastableDiffuseElement extends DiffuseElement {
     super.connectedCallback();
 
     if (!this.broadcasted) return;
+
+    // A reconnect (e.g. lit-html moving an element to another position in a
+    // keyed list) must not run the election again: the lock is still held — or
+    // the request to wait for it is still queued — from the first connection.
+    // Re-requesting it would steal the lock from ourselves on every move.
+    if (this.#leadershipRequested) return;
+    this.#leadershipRequested = true;
 
     // Grab a lock if it isn't acquired yet and if needed,
     // and hold it until `this.lock.promise` resolves.

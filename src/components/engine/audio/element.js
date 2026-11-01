@@ -1,4 +1,4 @@
-import { keyed } from "lit-html/directives/keyed.js";
+import { repeat } from "lit-html/directives/repeat.js";
 
 import {
   BroadcastableDiffuseElement,
@@ -24,6 +24,19 @@ import { computed, signal, untracked } from "~/common/signal.js";
  */
 const IS_IOS = /iPhone|iPad|iPod/.test(navigator.userAgent) ||
   (navigator.platform === "MacIntel" && navigator.maxTouchPoints > 1);
+
+/**
+ * A valid, silent WAV. Assigned to a media element that is being torn down to
+ * force resource selection away from its network source.
+ *
+ * Removing `src` and calling `load()` is not enough everywhere: Firefox keeps
+ * an in-flight media request (and its socket) alive until the element is
+ * garbage collected, which may never happen while the tab lives. Selecting a
+ * local data URL makes the element drop the network resource immediately.
+ * (Also documented in `specs/components/engine/audio/SPEC.md`.)
+ */
+const SILENT_AUDIO_SRC =
+  "data:audio/wav;base64,UklGRiQAAABXQVZFZm10IBAAAAABAAEAQB8AAIA+AAACABAAZGF0YQAAAAA=";
 
 /**
  * Module-internal Web Audio routing hooks. Accessed only by {@link AudioEngine}
@@ -350,10 +363,7 @@ class AudioEngine extends BroadcastableDiffuseElement {
       } catch {
         return;
       }
-      audio.pause();
-      audio.removeAttribute("src");
-      item.querySelectorAll("source").forEach((s) => s.removeAttribute("src"));
-      audio.load();
+      releaseAudioElement(audio);
     });
 
     // NOTE: The shared Web Audio graph is intentionally left untouched here.
@@ -524,7 +534,8 @@ class AudioEngine extends BroadcastableDiffuseElement {
    * @type {Actions["supply"]}
    */
   supply(args) {
-    const existingMap = new Map(this.#items.value.map((a) => [a.id, a]));
+    const previous = this.#items.value;
+    const existingMap = new Map(previous.map((a) => [a.id, a]));
 
     // Start loading new streams
     for (const item of args.audio) {
@@ -585,20 +596,32 @@ class AudioEngine extends BroadcastableDiffuseElement {
     });
 
     const hasNewIds = resolvedAudio.some((a) => !existingMap.has(a.id));
-    const hasPreloadChanges = resolvedAudio.some(
-      (a) => existingMap.get(a.id)?.isPreload !== a.isPreload,
-    );
 
     const hasUrlChanges = resolvedAudio.some(
       (a) => existingMap.get(a.id)?.url !== a.url,
     );
 
-    if (hasNewIds || hasPreloadChanges || hasUrlChanges) {
+    // Recompose the item list whenever it differs from what is rendered,
+    // including *removals* and reordering. Comparing only additions/preload/url
+    // changes left dropped items (e.g. a preload whose track is no longer next)
+    // rendered forever — with its <audio> element still holding a network
+    // request open.
+    const hasCompositionChanges = previous.length !== resolvedAudio.length ||
+      resolvedAudio.some((a, i) => {
+        const prev = previous[i];
+        return prev.id !== a.id ||
+          prev.url !== a.url ||
+          prev.isPreload !== a.isPreload ||
+          prev.mimeType !== a.mimeType ||
+          prev.progress !== a.progress;
+      });
+
+    if (hasNewIds || hasCompositionChanges) {
       this.#items.value = resolvedAudio;
     }
 
     // When only the URL changed for an existing item (e.g. tab leadership handoff invalidated
-    // a blob URL), the same <de-audio-item> element is reused via `keyed`. lit-html will
+    // a blob URL), the same <de-audio-item> element is reused via `repeat`. lit-html will
     // update <source src> but the browser won't reload on its own — call audio.load() if the
     // element hasn't successfully loaded yet so it picks up the fresh URL.
     if (hasUrlChanges && !hasNewIds) {
@@ -832,8 +855,9 @@ class AudioEngine extends BroadcastableDiffuseElement {
       if (ids.includes(element.id)) return;
 
       // Detached media elements can keep playing (notorious on iOS, but
-      // possible elsewhere too). Updating <source src> alone doesn't stop
-      // that — resource selection only re-runs on load() — so fully unload
+      // possible elsewhere too) and, in Firefox, keep their in-flight network
+      // request (and socket) open. Updating <source src> alone doesn't stop
+      // that — resource selection only re-runs on load() — so fully release
       // the node before lit-html drops it.
       const audio = element.querySelector("audio");
       if (!audio) return;
@@ -843,21 +867,29 @@ class AudioEngine extends BroadcastableDiffuseElement {
       // dropped, so the source node must be released).
       this[UNROUTE_AUDIO](audio);
 
-      audio.pause();
-      audio.removeAttribute("src");
-      audio.querySelectorAll("source").forEach((s) => s.removeAttribute("src"));
-      audio.load();
+      releaseAudioElement(audio);
     });
 
     const group = this.group;
-    const nodes = items.map((audio) => {
-      const ip = audio.progress === undefined
-        ? "0"
-        : JSON.stringify(audio.progress);
 
-      return keyed(
-        audio.id,
-        html`
+    // Reconcile by track id instead of by list position. Rendering the items
+    // as a plain array made lit-html reuse the child parts positionally: when
+    // the preloaded next track moved from second to first place, the part in
+    // first place was re-created for it (restarting the download) while the
+    // preloaded element was dropped from second place *without* being unloaded
+    // (its id was still in `ids`, so the cleanup above skipped it). That
+    // abandoned element keeps its media request alive — the connection leak.
+    // `repeat` moves the existing parts (and their <audio> elements) with the
+    // key instead, so a preloaded track is promoted in place.
+    const nodes = repeat(
+      items,
+      (audio) => audio.id,
+      (audio) => {
+        const ip = audio.progress === undefined
+          ? "0"
+          : JSON.stringify(audio.progress);
+
+        return html`
           <de-audio-item
             group="${this.broadcasted ? `${group}/${audio.id}` : nothing}"
             id="${audio.id}"
@@ -880,9 +912,9 @@ class AudioEngine extends BroadcastableDiffuseElement {
                 : nothing}
             </audio>
           </de-audio-item>
-        `,
-      );
-    });
+        `;
+      },
+    );
 
     return html`
       <section id="audio-nodes">
@@ -1285,6 +1317,13 @@ class AudioEngineItem extends BroadcastableDiffuseElement {
   async connectedCallback() {
     const audio = this.audio;
 
+    // If this item was released while detached (e.g. the engine moved in the
+    // DOM), re-select its source so it can load again.
+    if (audio.getAttribute("src") === SILENT_AUDIO_SRC) {
+      audio.removeAttribute("src");
+      audio.load();
+    }
+
     audio.addEventListener("canplay", this.canplayEvent);
     audio.addEventListener("durationchange", this.durationchangeEvent);
     audio.addEventListener("ended", this.endedEvent);
@@ -1297,8 +1336,15 @@ class AudioEngineItem extends BroadcastableDiffuseElement {
     audio.addEventListener("progress", this.progressEvent);
     audio.addEventListener("waiting", this.waitingEvent);
 
-    // Transition from initialisation to loading for non-preload items
-    if (!this.hasAttribute("preload")) {
+    // Transition from initialisation to loading for non-preload items. Only
+    // on the first connection: the engine's keyed rendering may move a live
+    // item to another position (disconnect + reconnect), and resetting a
+    // buffered item back to "loading" would strand the UI there — no new
+    // `canplay` fires for a resource that is already loaded.
+    if (
+      !this.hasAttribute("preload") &&
+      this.$state.loadingState.get() === "initialisation"
+    ) {
       this.$state.loadingState.set("loading");
     }
 
@@ -1425,6 +1471,23 @@ class AudioEngineItem extends BroadcastableDiffuseElement {
       globalThis.removeEventListener("online", this.#rearmListener);
       this.#rearmListener = undefined;
     }
+
+    // A media element removed from the document keeps its network request (and
+    // socket) alive; Firefox in particular can hold it until the element is
+    // garbage collected, which may be never while the tab lives. lit-html
+    // removes nodes during a render and doesn't always route through the
+    // engine's id-based cleanup, so release the resource here too — on a
+    // microtask, so a pure DOM move (disconnect + reconnect in the same task)
+    // doesn't interrupt playback.
+    queueMicrotask(() => {
+      if (this.isConnected) return;
+
+      try {
+        releaseAudioElement(this.audio);
+      } catch {
+        // No child <audio> anymore — nothing to release.
+      }
+    });
 
     // NOTE: the Web Audio source node is intentionally NOT detached here. A
     // `createMediaElementSource` node can only be made once per element, so
@@ -2026,6 +2089,28 @@ export { AudioEngineItem };
 ////////////////////////////////////////////
 // 🛠️
 ////////////////////////////////////////////
+
+/**
+ * Stops an <audio> element and releases its network resource.
+ *
+ * `pause()` alone doesn't abort a fetch; `removeAttribute("src")` + `load()`
+ * aborts it in most browsers but not reliably in Firefox, where a detached
+ * media element can keep the request (and its socket) until it is garbage
+ * collected. Assigning the silent data URL forces resource selection onto a
+ * local resource immediately.
+ *
+ * @param {HTMLAudioElement} audio
+ */
+function releaseAudioElement(audio) {
+  audio.pause();
+  audio.removeAttribute("src");
+  audio.srcObject = null;
+  audio.querySelectorAll("source").forEach((source) => {
+    source.removeAttribute("src");
+  });
+  audio.src = SILENT_AUDIO_SRC;
+  audio.load();
+}
 
 /**
  * Whether a media error is worth retrying automatically. `MEDIA_ERR_NETWORK`

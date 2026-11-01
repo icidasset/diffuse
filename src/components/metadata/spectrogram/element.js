@@ -30,6 +30,7 @@ class SpectrogramMetadata extends DiffuseElement {
     /** @type {ProxiedActions<Actions>} */
     const p = this.workerProxy();
 
+    this.abort = p.abort;
     this.patch = p.patch;
   }
 

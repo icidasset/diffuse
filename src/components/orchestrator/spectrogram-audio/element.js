@@ -57,6 +57,12 @@ class SpectrogramAudioOrchestrator extends BroadcastableDiffuseElement {
     this.effect(() => this.#monitorAudio());
   }
 
+  /** @override */
+  disconnectedCallback() {
+    if (this.#trackId) this.spectrogram?.abort?.(this.#trackId);
+    super.disconnectedCallback();
+  }
+
   // TRACK STATE
   // Resets whenever the active (non-preload) audio item changes.
 
@@ -88,6 +94,10 @@ class SpectrogramAudioOrchestrator extends BroadcastableDiffuseElement {
 
     // Detect track change
     if (id !== this.#trackId) {
+      // The previous track's full-file download is now pointless: cancel it
+      // instead of letting it keep a connection to the audio server busy.
+      if (this.#trackId) this.spectrogram?.abort?.(this.#trackId);
+
       this.#trackId = id;
       this.#analysed = false;
     }
