@@ -12,6 +12,7 @@ const loaderHref = (path) => `l/?path=${encodeURIComponent(path)}`;
 const icons = {
   "facets/connect/atproto-passkey/index.tile": "at",
   "facets/connect/atproto-space/index.tile": "at",
+  "facets/connect/diffuse-storage/index.tile": "cloud",
   "facets/connect/dropbox/index.tile": "cloud",
   "facets/connect/https/index.tile": "globe",
   "facets/connect/https-json/index.tile": "list-bullets",

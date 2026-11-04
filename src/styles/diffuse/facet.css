@@ -285,6 +285,7 @@ dialog {
   border-top: 1px solid var(--border-color);
   display: flex;
   flex-shrink: 0;
+  flex-wrap: wrap;
   gap: var(--space-2xs);
   padding: var(--space-xs) var(--space-sm);
 }

@@ -35,6 +35,16 @@ export const PRELUDE_OTHER = [
   "facets/playback/auto-queue/prelude/index.tile",
 ]
 
+/**
+ * Preludes seeded when a non-default output is selected but the local bucket
+ * has no preludes. The Diffuse storage prelude must be present even when its
+ * own remote facets are empty, otherwise the output cannot register itself.
+ */
+export const PRELUDE_RECOVERY = [
+  ...PRELUDE_BASE,
+  "facets/data/diffuse-storage/prelude/index.tile",
+];
+
 export const STARTING_SET_DISABLED = [
   "facets/misc/scrobble/index.tile",
 ];

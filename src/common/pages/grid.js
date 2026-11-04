@@ -260,6 +260,7 @@ export async function setupOutputIndicator() {
     const selected = out.selected();
     const label = selected?.label ?? selected?.getAttribute?.("label") ??
       "Local storage";
-    indicator.textContent = label;
+    const ready = selected?.ready?.() ?? true;
+    indicator.textContent = ready ? label : `${label} (not connected)`;
   });
 }

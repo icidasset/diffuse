@@ -107,6 +107,13 @@
     "desc": "Use your AT Protocol account for user-data storage. Your data is stored in your own repo and is not broadcast publicly."
   },
   {
+    "url": "facets/connect/diffuse-storage/index.tile",
+    "title": "Connect / Diffuse storage",
+    "category": "Data",
+    "incomplete": true,
+    "desc": "Store your userdata encrypted on a [Firkin](https://tangled.org/tokono.ma/firkin) instance. Depends on the Diffuse storage feature. Uses passkey authentication and no email."
+  },
+  {
     "url": "facets/connect/dropbox/index.tile",
     "title": "Connect / Dropbox",
     "category": "Data",
@@ -202,6 +209,14 @@
     "category": "Data",
     "tags": ["base"],
     "desc": "The default setup for uploading audio files to cloud storage. Adds support for: Dropbox."
+  },
+  {
+    "url": "facets/data/diffuse-storage/prelude/index.tile",
+    "title": "Diffuse storage",
+    "kind": "prelude",
+    "category": "Data",
+    "incomplete": true,
+    "desc": "Enable the ability to use Diffuse storage. Adds input, output and uploader capabilities. Uses [WNFS](https://github.com/wnfs-wg/) and [Firkin](https://tangled.org/tokono.ma/firkin)."
   },
   {
     "url": "facets/data/export-import/index.tile",

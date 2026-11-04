@@ -43,7 +43,7 @@ export function relyingParty() {
  * Register a new passkey with the PRF extension.
  *
  * @param {string} namespace
- * @returns {Promise<{ supported: true, credentialId: Uint8Array, prfSecond: ArrayBuffer } | { supported: false, reason: string }>}
+ * @returns {Promise<{ supported: true, credentialId: Uint8Array, prfFirst?: ArrayBuffer, prfSecond: ArrayBuffer } | { supported: false, reason: string }>}
  */
 export async function createPasskey(namespace) {
   const rp = relyingParty();
@@ -110,6 +110,8 @@ export async function createPasskey(namespace) {
   }
 
   // @ts-ignore — PRF is not yet in the TS DOM types
+  const prfFirst = extensions.prf?.results?.first;
+  // @ts-ignore — PRF is not yet in the TS DOM types
   const prfSecond = extensions.prf?.results?.second;
 
   if (!prfSecond) {
@@ -127,6 +129,9 @@ export async function createPasskey(namespace) {
   return {
     supported: true,
     credentialId,
+    prfFirst: prfFirst
+      ? /** @type {ArrayBuffer} */ (prfFirst)
+      : undefined,
     prfSecond: /** @type {ArrayBuffer} */ (prfSecond),
   };
 }
@@ -137,7 +142,7 @@ export async function createPasskey(namespace) {
  * credential ID yet. Saves the credential ID to IDB and returns PRF material.
  *
  * @param {string} namespace
- * @returns {Promise<{ supported: true, credentialId: Uint8Array, prfSecond: ArrayBuffer } | { supported: false, reason: string }>}
+ * @returns {Promise<{ supported: true, credentialId: Uint8Array, prfFirst?: ArrayBuffer, prfSecond: ArrayBuffer } | { supported: false, reason: string }>}
  */
 export async function adoptPasskeyPrfResult(namespace) {
   const rp = relyingParty();
@@ -181,6 +186,8 @@ export async function adoptPasskeyPrfResult(namespace) {
   const extensions = assertion.getClientExtensionResults();
 
   // @ts-ignore — PRF is not yet in the TS DOM types
+  const prfFirst = extensions.prf?.results?.first;
+  // @ts-ignore — PRF is not yet in the TS DOM types
   const prfSecond = extensions.prf?.results?.second;
 
   if (!prfSecond) {
@@ -199,6 +206,9 @@ export async function adoptPasskeyPrfResult(namespace) {
   return {
     supported: true,
     credentialId,
+    prfFirst: prfFirst
+      ? /** @type {ArrayBuffer} */ (prfFirst)
+      : undefined,
     prfSecond: /** @type {ArrayBuffer} */ (prfSecond),
   };
 }

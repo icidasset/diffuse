@@ -1,7 +1,7 @@
 import { BroadcastableDiffuseElement, defineElement } from "~/common/element.js";
 import { batch, computed, signal } from "~/common/signal.js";
 
-import { PRELUDE_BASE } from "~/common/facets/constants.js";
+import { PRELUDE_RECOVERY } from "~/common/facets/constants.js";
 import { buildFacets } from "~/common/facets/utils.js";
 
 /**
@@ -17,6 +17,14 @@ import { buildFacets } from "~/common/facets/utils.js";
  */
 
 const STORAGE_PREFIX = "diffuse/configurator/output";
+
+/**
+ * How long to wait for a selected output's custom element to be defined.
+ * Outputs are usually appended only after their module has loaded, but a stale
+ * service-worker cache or a failed chunk could leave an undefined element in
+ * the DOM; without a timeout the whole app would wait forever.
+ */
+const WHEN_DEFINED_TIMEOUT_MS = 10_000;
 
 ////////////////////////////////////////////
 // ELEMENT
@@ -82,7 +90,7 @@ class OutputConfigurator extends BroadcastableDiffuseElement {
             if (col.state === "loaded" && this.#needsPreludeRecovery(col.data)) {
               return {
                 state: "loaded",
-                data: [...col.data, ...buildFacets(PRELUDE_BASE)],
+                data: [...col.data, ...buildFacets(PRELUDE_RECOVERY)],
               };
             }
 
@@ -240,6 +248,7 @@ class OutputConfigurator extends BroadcastableDiffuseElement {
     this.effect(() => {
       const out = this.#selected.value;
       if (!out) return;
+      if (/** @type {any} */ (out).localFallback) return;
 
       const col = out.collaborations.collection();
       if (col.state !== "loaded") return;
@@ -264,6 +273,7 @@ class OutputConfigurator extends BroadcastableDiffuseElement {
     this.effect(() => {
       const out = this.#selected.value;
       if (!out) return;
+      if (/** @type {any} */ (out).localFallback) return;
 
       const col = out.playlistItems.collection();
       if (col.state !== "loaded") return;
@@ -276,6 +286,7 @@ class OutputConfigurator extends BroadcastableDiffuseElement {
     this.effect(() => {
       const out = this.#selected.value;
       if (!out) return;
+      if (/** @type {any} */ (out).localFallback) return;
 
       const col = out.settings.collection();
       if (col.state !== "loaded") return;
@@ -288,6 +299,7 @@ class OutputConfigurator extends BroadcastableDiffuseElement {
     this.effect(() => {
       const out = this.#selected.value;
       if (!out) return;
+      if (/** @type {any} */ (out).localFallback) return;
 
       const col = out.tracks.collection();
       if (col.state !== "loaded") return;
@@ -387,7 +399,14 @@ class OutputConfigurator extends BroadcastableDiffuseElement {
     const el = id ? this.root().querySelector(`#${id}`) : null;
     if (!el) return null;
 
-    await customElements.whenDefined(el.localName);
+    await Promise.race([
+      customElements.whenDefined(el.localName),
+      new Promise((resolve) => setTimeout(resolve, WHEN_DEFINED_TIMEOUT_MS)),
+    ]);
+
+    // The element never upgraded (e.g. its module failed to load). Treat it as
+    // absent so the configurator falls back to the default/local output.
+    if (!customElements.get(el.localName)) return null;
 
     if (
       "identifier" in el === false ||

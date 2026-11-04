@@ -74,6 +74,27 @@ site.use(esbuild({
           );
         },
       },
+      // The Firkin SDK depends on @noble/hashes v1, whose `./crypto` export
+      // resolves to the Node `cryptoNode.js` under @deno/loader's default
+      // "node" condition. That module imports `node:crypto`, which the Node
+      // polyfill replaces with a shim that has no `getRandomValues`. Use the
+      // browser module (`globalThis.crypto`) instead.
+      {
+        name: "noble-hashes-browser-crypto",
+        setup(build) {
+          build.onLoad(
+            { filter: /@noble\+hashes@1\.[^/]+\/.*\/cryptoNode\.js$/ },
+            async (args) => {
+              const browserPath = args.path.replace(
+                "cryptoNode.js",
+                "crypto.js",
+              );
+              const contents = await Deno.readTextFile(browserPath);
+              return { contents, loader: "js" };
+            },
+          );
+        },
+      },
       {
         name: "atcute-tid-browser",
         setup(build) {
@@ -124,10 +145,95 @@ site.use(esbuild({
           );
         },
       },
+      // `multiformats` has browser variants for its hash implementations
+      // (`sha2-browser.js` etc.). The Deno loader's Node platform selects the
+      // Node entries (`crypto.createHash`), so swap in the browser sibling.
+      {
+        name: "multiformats-browser-hashes",
+        setup(build) {
+          build.onLoad(
+            {
+              filter:
+                /multiformats.*dist[\\/]src[\\/]hashes[\\/](sha1|sha2)\.js$/,
+            },
+            async (args) => {
+              const browserPath = args.path.replace(/\.js$/, "-browser.js");
+              const contents = await Deno.readTextFile(browserPath);
+              return { contents, loader: "js" };
+            },
+          );
+        },
+      },
+      // `uint8arrays` has Node-specific `*.node.js` variants for its
+      // `#alloc`/`#compare`/`#concat`/… internal imports. `@deno/loader`
+      // resolves with the Node condition by default, which pulls in
+      // `node:buffer` and crashes in the browser (`Buffer.allocUnsafe`).
+      // Load the browser sibling for any resolved `.node.js` file.
+      {
+        name: "uint8arrays-browser",
+        setup(build) {
+          build.onLoad(
+            { filter: /uint8arrays.*\.node\.js$/ },
+            async (args) => {
+              const browserPath = args.path.replace(/\.node\.js$/, ".js");
+              const contents = await Deno.readTextFile(browserPath);
+              return { contents, loader: "js" };
+            },
+          );
+        },
+      },
+      // `hash-wasm` (used by the SDK's Bloom filters) ships a UMD `main` and an
+      // ESM `module` build. Deno's Node resolution picks the UMD entry, so
+      // force the ESM build (which inlines its WASM as base64).
+      {
+        name: "hash-wasm-esm",
+        setup(build) {
+          build.onResolve({ filter: /^hash-wasm$/ }, () => ({
+            path: path.fromFileUrl(
+              import.meta.resolve(
+                "./node_modules/hash-wasm/dist/index.esm.js",
+              ),
+            ),
+            namespace: "file",
+          }));
+        },
+      },
+      // WNFS (`@wnfs-wg/nest`) resolves through `@deno/loader`'s default Node
+      // platform, so force the browser/WASM bundler target. The package also
+      // imports a Node `crypto` shim internally; swap in the browser module.
+      {
+        name: "wnfs-browser-target",
+        setup(build) {
+          build.onResolve({ filter: /^wnfs$/ }, () => ({
+            path: path.fromFileUrl(
+              import.meta.resolve(
+                "./node_modules/wnfs/dist/bundler/wnfs_wasm.js",
+              ),
+            ),
+            namespace: "file",
+          }));
+
+          build.onLoad(
+            { filter: /@wnfs-wg[+/]nest.*crypto\.js$/ },
+            async (args) => {
+              const browserPath = args.path.replace(
+                /crypto\.js$/,
+                "crypto-browser.js",
+              );
+              const contents = await Deno.readTextFile(browserPath);
+              return { contents, loader: "js" };
+            },
+          );
+        },
+      },
       nodeModulesPolyfillPlugin({
         fallback: "empty",
         modules: [],
       }),
+      // `esbuild-plugin-wasm` emits the WNFS WASM as a separate hashed file.
+      // Lume's esbuild integration writes binary output files through `.text`,
+      // which corrupts them; `fixWnfsWasm` restores the original bytes after
+      // the build.
       wasmLoader(),
     ],
     splitting: true,
@@ -480,6 +586,47 @@ async function writeFileTree() {
   const swStamped = `${swSource}\n// @build ${buildId}\n`;
   Deno.writeTextFileSync(swDist, swStamped);
 }
+
+////////////////////////////////////////////
+// WNFS WASM
+////////////////////////////////////////////
+
+// Lume's esbuild integration writes binary outputs through `outputFile.text`,
+// which decodes (and therefore corrupts) `.wasm` bytes. `esbuild-plugin-wasm`
+// emits the WNFS WASM as a separate hashed file, so restore the original bytes
+// (and refresh its brotli sidecar) before the service-worker file tree is
+// hashed below.
+function fixWnfsWasm() {
+  let source: string;
+  try {
+    source = path.fromFileUrl(
+      import.meta.resolve("./node_modules/wnfs/dist/bundler/wnfs_wasm_bg.wasm"),
+    );
+  } catch {
+    return;
+  }
+
+  const bytes = Deno.readFileSync(source);
+
+  for (const entry of walkSync("./dist", { includeDirs: false })) {
+    if (
+      !entry.path.endsWith(".wasm") ||
+      !path.basename(entry.path).startsWith("wnfs_wasm_bg-")
+    ) {
+      continue;
+    }
+
+    Deno.writeFileSync(entry.path, bytes);
+
+    const brPath = `${entry.path}.br`;
+    if (existsSync(brPath)) {
+      Deno.writeFileSync(brPath, compressBrotli(bytes, undefined, 6));
+    }
+  }
+}
+
+site.addEventListener("afterBuild", fixWnfsWasm);
+site.addEventListener("afterUpdate", fixWnfsWasm);
 
 site.addEventListener("afterBuild", writeFileTree);
 site.addEventListener("afterUpdate", writeFileTree);

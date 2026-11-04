@@ -58,7 +58,7 @@ A lot of the elements are written so that when the `group` attribute is set, it 
 
 - `src/common`: Common Javascript code shared by various components and/or pages.
 - `src/styles`: Common CSS shared by pages or facets.
-- `src/vendor`: Vendored Javascript to be used in facets.
+- `src/vendor`: Re-exports of Deno dependencies, one module per entry point, so facets can import them through a stable path. Do not copy third-party source here.
 - `src/oauth/callback`: Generic callback page to handle OAuth redirects.
 - `src/favicons`, `src/fonts`, `src/images` are binary assets for facets and pages.
 - `src/_components` and `src/_includes` are templates used in `.vto` templates. Part of the static Lume site.

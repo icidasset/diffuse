@@ -1,0 +1,313 @@
+import { html, render as litRender } from "lit-html";
+
+import { NAME as WNFS_OUTPUT_NAME } from "~/components/output/bytes/wnfs/element.js";
+import { DEFAULT_API_BASE } from "~/components/output/bytes/wnfs/constants.js";
+import { effect } from "~/common/signal.js";
+import foundation from "~/common/foundation.js";
+
+import { setup, waitForOutputOption } from "~/facets/connect/common.js";
+
+foundation.setup({ title: "Connect Diffuse storage" });
+
+/**
+ * @import { DiffuseStorageOutputElement } from "@specs/components/output/bytes/wnfs/types.d.ts"
+ */
+
+////////////////////////////////////////////
+// SETUP
+////////////////////////////////////////////
+
+const outputOrchestrator = await foundation.orchestrator.output();
+await customElements.whenDefined(outputOrchestrator.localName);
+await customElements.whenDefined(WNFS_OUTPUT_NAME);
+
+const wnfsEl = /** @type {DiffuseStorageOutputElement | undefined} */ (
+  outputOrchestrator.root().querySelector(WNFS_OUTPUT_NAME)
+);
+
+let outputOption;
+
+try {
+  outputOption = await waitForOutputOption(
+    outputOrchestrator,
+    "Diffuse storage",
+    5_000,
+  );
+} catch {
+  const main = document.querySelector("main");
+  if (main) {
+    litRender(
+      html`
+        <div class="facet__left">
+          <h1>Diffuse storage</h1>
+        </div>
+        <div class="facet__right">
+          <div class="callout callout--danger">
+            The <strong>Diffuse storage</strong> feature is not enabled.
+            Enable it from the
+            <a href="./catalogue/?filter=prelude">features page</a> first.
+          </div>
+        </div>
+      `,
+      main,
+    );
+  }
+
+  foundation.ready();
+  throw new Error("The Diffuse storage feature facet is not enabled");
+}
+
+const OUTPUT_ID = outputOption.id;
+
+////////////////////////////////////////////
+// RESTORE
+////////////////////////////////////////////
+
+// Wait for a previously configured session/WNFS so the list shows the
+// account instead of an empty state while the restore is still running.
+await wnfsEl?.whenRestored();
+
+// The output configurator can't find custom outputs during its initial
+// connectedCallback, so it re-loads the selected output asynchronously.
+if (outputOrchestrator.hasSelected() && !outputOrchestrator.selected()) {
+  await new Promise((resolve) => {
+    const stop = effect(() => {
+      if (outputOrchestrator.selected()) {
+        stop();
+        resolve(undefined);
+      }
+    });
+  });
+}
+
+////////////////////////////////////////////
+// UI
+////////////////////////////////////////////
+
+const { setItems, setError, setDialogError } = setup({
+  title: "Diffuse storage",
+  hasInput: false,
+
+  description: html`
+    <p>
+      Store your userdata encrypted on a <a href="https://github.com/wnfs-wg/" target="_blank">Firkin</a> instance using just a passkey (no email or password).
+    </p>
+  `,
+
+  formFields: html`
+    <label>
+      API endpoint
+      <input
+        id="rb-api"
+        placeholder="${DEFAULT_API_BASE}"
+        value="${wnfsEl?.apiBase() ?? DEFAULT_API_BASE}"
+      >
+    </label>
+    <label>
+      Admin seed
+      <input
+        id="rb-admin-seed"
+        type="password"
+        autocomplete="off"
+        placeholder="Only needed to register a new account"
+      >
+    </label>
+    <p class="caption">
+      Not registered yet? Use <strong>Show DID</strong> to find the DID for an
+      existing passkey and register it with the instance, or paste an admin seed
+      to register automatically when signing in.
+    </p>
+    <div id="rb-did-result" hidden>
+      <p class="caption" style="font-weight: 700; margin-top: 0;">Account DID</p>
+      <div class="rb-did-row">
+        <code id="rb-did-value"></code>
+        <button
+          id="rb-copy-did-btn"
+          type="button"
+          class="button--plain button--icon"
+          aria-label="Copy DID"
+          title="Copy DID"
+        >
+          <i class="ph-fill ph-copy"></i>
+        </button>
+      </div>
+      <p class="caption">
+        Register this DID with the instance, then sign in.
+      </p>
+    </div>
+  `,
+
+  footerActions: html`
+    <button id="rb-show-did-btn" type="button">
+      <i class="ph-fill ph-identification-card"></i>
+      Show DID
+    </button>
+    <button id="rb-create-passkey-btn" type="button">
+      <i class="ph-fill ph-fingerprint"></i>
+      Create a new passkey
+    </button>
+  `,
+
+  onSubmit: () => connect(false),
+
+  onOutputActivate: async () => {
+    await outputOrchestrator.select(OUTPUT_ID);
+  },
+});
+
+const dialog =
+  /** @type {HTMLDialogElement | null} */ (
+    document.querySelector("#connect-dialog")
+  );
+
+const apiInput =
+  /** @type {HTMLInputElement} */ (document.querySelector("#rb-api"));
+const adminSeedInput =
+  /** @type {HTMLInputElement} */ (document.querySelector("#rb-admin-seed"));
+
+const showDidBtn =
+  /** @type {HTMLButtonElement | null} */ (
+    document.querySelector("#rb-show-did-btn")
+  );
+const didResult =
+  /** @type {HTMLElement | null} */ (document.querySelector("#rb-did-result"));
+const didValue =
+  /** @type {HTMLElement | null} */ (document.querySelector("#rb-did-value"));
+const copyDidBtn =
+  /** @type {HTMLButtonElement | null} */ (
+    document.querySelector("#rb-copy-did-btn")
+  );
+
+// Do not carry a previously shown DID into the next dialog session.
+dialog?.addEventListener("close", () => {
+  if (didResult) didResult.hidden = true;
+  if (didValue) didValue.textContent = "";
+});
+
+////////////////////////////////////////////
+// REACTIVE LIST
+////////////////////////////////////////////
+
+effect(() => {
+  const did = wnfsEl?.did();
+  const root = wnfsEl?.dataRoot();
+  const configured = Boolean(root);
+  const isSelectedOutput =
+    outputOrchestrator.selected()?.id === OUTPUT_ID;
+
+  setItems(
+    did
+      ? [
+        {
+          name: did,
+          detail: root
+            ? `Diffuse storage · ${root.slice(0, 14)}…`
+            : "Not set up",
+          isInput: false,
+          // Without a WNFS root there is no storage yet, so leave the
+          // "Use as userdata storage" button able to open the sign-in dialog.
+          isOutput: configured,
+          isSelectedOutput: configured && isSelectedOutput,
+          onRemove: () => disconnect(),
+        },
+      ]
+      : [],
+  );
+});
+
+////////////////////////////////////////////
+// ACTIONS
+////////////////////////////////////////////
+
+/** @param {boolean} create */
+async function connect(create) {
+  if (!wnfsEl) throw new Error("Diffuse storage output is not available");
+
+  const apiBase = apiInput.value.trim() || undefined;
+  const adminSeed = adminSeedInput.value.trim() || undefined;
+
+  await wnfsEl.signIn({ apiBase, adminSeed, create });
+  await outputOrchestrator.select(OUTPUT_ID);
+}
+
+async function disconnect() {
+  setError(null);
+  try {
+    await outputOrchestrator.deselect();
+    await wnfsEl?.signOut();
+  } catch (err) {
+    setError(
+      err instanceof Error ? err.message : "Failed to disconnect Diffuse storage",
+    );
+  }
+}
+
+/**
+ * Derive the DID for an existing passkey, so it can be registered with the
+ * Firkin instance before signing in.
+ */
+showDidBtn?.addEventListener("click", async () => {
+  if (!wnfsEl) return;
+
+  showDidBtn.disabled = true;
+  setDialogError(null);
+  if (didResult) didResult.hidden = true;
+
+  try {
+    const did = await wnfsEl.passkeyDid();
+
+    if (didValue) didValue.textContent = did;
+    if (didResult) didResult.hidden = false;
+  } catch (err) {
+    setDialogError(
+      err instanceof Error ? err.message : "Could not derive the DID",
+    );
+  } finally {
+    showDidBtn.disabled = false;
+  }
+});
+
+copyDidBtn?.addEventListener("click", async () => {
+  const did = didValue?.textContent?.trim();
+  if (!did) return;
+
+  try {
+    await navigator.clipboard.writeText(did);
+
+    copyDidBtn.innerHTML = '<i class="ph-fill ph-check"></i>';
+    copyDidBtn.setAttribute("aria-label", "Copied");
+
+    setTimeout(() => {
+      copyDidBtn.innerHTML = '<i class="ph-fill ph-copy"></i>';
+      copyDidBtn.setAttribute("aria-label", "Copy DID");
+    }, 1_500);
+  } catch {
+    setDialogError("Could not copy the DID to the clipboard");
+  }
+});
+
+document
+  .querySelector("#rb-create-passkey-btn")
+  ?.addEventListener("click", async (event) => {
+    const button = /** @type {HTMLButtonElement} */ (event.currentTarget);
+
+    button.disabled = true;
+    setDialogError(null);
+
+    try {
+      await connect(true);
+      dialog?.close();
+    } catch (err) {
+      setDialogError(
+        err instanceof Error ? err.message : "Passkey setup failed",
+      );
+    } finally {
+      button.disabled = false;
+    }
+  });
+
+////////////////////////////////////////////
+// 🚀
+////////////////////////////////////////////
+
+foundation.ready();
