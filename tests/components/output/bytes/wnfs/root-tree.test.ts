@@ -5,7 +5,7 @@ import { CID } from "multiformats/cid";
 import { base64url } from "iso-base/rfc4648";
 import { FileSystem, Path } from "@wnfs-wg/nest";
 
-import { DiffuseStorageRootTree } from "~/components/output/bytes/wnfs/root-tree.js";
+import { WnfsFirkinRootTree } from "~/components/output/bytes/wnfs/root-tree.js";
 
 import type { Pair } from "interface-blockstore";
 
@@ -66,7 +66,7 @@ describe("components/output/bytes/wnfs/root-tree", () => {
 
     const fs = await FileSystem.create({
       blockstore: blockstore as never,
-      rootTreeClass: DiffuseStorageRootTree as never,
+      rootTreeClass: WnfsFirkinRootTree as never,
     });
 
     await fs.assignIdentifier("did:key:z6MktestAccount");
@@ -86,7 +86,7 @@ describe("components/output/bytes/wnfs/root-tree", () => {
     if (!publicJwk.n) throw new Error("Expected an RSA modulus");
     const publicKey = base64url.decode(publicJwk.n);
 
-    await fs.registerExchangeKey("diffuse-storage", publicKey);
+    await fs.registerExchangeKey("wnfs-firkin", publicKey);
 
     const { shareId } = await fs.createPrivateNode({
       path: Path.root(),
@@ -107,7 +107,7 @@ describe("components/output/bytes/wnfs/root-tree", () => {
 
     const fs2 = await FileSystem.fromCID(CID.parse(dataRoot.toString()), {
       blockstore: blockstore as never,
-      rootTreeClass: DiffuseStorageRootTree as never,
+      rootTreeClass: WnfsFirkinRootTree as never,
     });
 
     await fs2.mountPrivateNode({

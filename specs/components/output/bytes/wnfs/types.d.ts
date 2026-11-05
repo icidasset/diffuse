@@ -1,7 +1,7 @@
 import type { SignalReader } from "~/common/signal.d.ts";
 import type { OutputElement } from "@specs/components/output/types.d.ts";
 
-export type DiffuseStorageOutputElement =
+export type WnfsFirkinOutputElement =
   & OutputElement
   & {
     did: SignalReader<string | undefined>;
@@ -15,7 +15,6 @@ export type DiffuseStorageOutputElement =
      */
     signIn(options?: {
       apiBase?: string;
-      adminSeed?: string;
       create?: boolean;
     }): Promise<{ did: string; root: string; created: boolean }>;
 

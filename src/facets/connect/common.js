@@ -48,9 +48,9 @@ export async function waitForOutputOption(
 }
 
 /**
- * Sets up a connect facet UI: a card with "Add audio input" and
- * "Use as userdata storage" buttons, a dialog with a form, and a
- * reactive list of configured items below a divider.
+ * Sets up a connect facet UI: a card with "Add audio input" and an output
+ * button, a dialog with a form, and a reactive list of configured items below
+ * a divider.
  *
  * @param {Object} config
  * @param {string} config.title - Card header title
@@ -59,7 +59,10 @@ export async function waitForOutputOption(
  * @param {TemplateResult} config.formFields - Form body content (inputs, footnotes, etc.)
  * @param {(mode: 'input' | 'output') => Promise<void>} config.onSubmit
  * @param {boolean} [config.hasInput] - Whether to show the "Add audio input" button (default: true)
- * @param {boolean} [config.hasOutput] - Whether to show the "Use as userdata storage" button (default: true)
+ * @param {boolean} [config.hasOutput] - Whether to show the output button (default: true)
+ * @param {string} [config.outputLabel] - Label of the output button (default: "Use as userdata storage")
+ * @param {string} [config.outputIcon] - Phosphor icon class of the output button (default: `ph-fill ph-person`)
+ * @param {string} [config.outputTitle] - Dialog title for the output mode (default: `outputLabel`)
  * @param {TemplateResult | typeof nothing} [config.footerActions] - Extra buttons rendered in the dialog footer
  * @param {() => Promise<void>} [config.onOutputActivate] - Called instead of opening the dialog when output is already configured but inactive
  *
@@ -75,6 +78,9 @@ export function setup(
     onSubmit,
     hasInput = true,
     hasOutput = true,
+    outputLabel = "Use as userdata storage",
+    outputIcon = "ph-fill ph-person",
+    outputTitle = outputLabel,
     onOutputActivate,
   },
 ) {
@@ -114,8 +120,8 @@ export function setup(
           ${hasOutput
             ? html`
               <button id="connect-add-output-btn" class="button--brand">
-                <i class="ph-fill ph-person"></i>
-                Use as userdata storage
+                <i class="${outputIcon}"></i>
+                ${outputLabel}
               </button>
             `
             : nothing}
@@ -192,7 +198,7 @@ export function setup(
     mode = m;
     dialogTitleEl.textContent = m === "input"
       ? "Add audio input"
-      : "Use as userdata storage";
+      : outputTitle;
     form.reset();
     setDialogError(null);
     dialog.showModal();

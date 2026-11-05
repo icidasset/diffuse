@@ -18,16 +18,14 @@ import {
 
 import {
   Firkin,
-  Signer,
   WebCryptoSigner,
   delegate,
   invocation,
-  signerToken,
 } from "~/vendor/firkin/index.js";
 
 import { FirkinBlockstore } from "./blockstore.js";
 import {
-  DiffuseStorageRootTree,
+  WnfsFirkinRootTree,
 } from "./root-tree.js";
 import {
   accountSignerFromPrf,
@@ -37,6 +35,8 @@ import {
   generateExchangeKeyPair,
   importExchangePrivateKey,
 } from "./passkey.js";
+import { STORAGE_DIR } from "./files.js";
+import { readLocalCollection } from "./local.js";
 import {
   DEFAULT_API_BASE,
   IDB_LOCAL_PREFIX,
@@ -55,7 +55,7 @@ import {
 
 /**
  * @import { OutputElement, OutputManager } from "@specs/components/output/types.d.ts"
- * @import { DiffuseStorageOutputElement } from "@specs/components/output/bytes/wnfs/types.d.ts"
+ * @import { WnfsFirkinOutputElement } from "@specs/components/output/bytes/wnfs/types.d.ts"
  * @import { CollectionName } from "~/common/self-describing.js"
  *
  * @typedef {Object} Session
@@ -87,6 +87,19 @@ import {
 ////////////////////////////////////////////
 
 /**
+ * Collections copied from the local output when their WNFS file is missing.
+ *
+ * @type {readonly CollectionName[]}
+ */
+const SEED_COLLECTIONS = [
+  "collaborations",
+  "facets",
+  "playlistItems",
+  "settings",
+  "tracks",
+];
+
+/**
  * Stores user-data in a private WNFS (via `@wnfs-wg/nest`) with all blocks
  * held by a Firkin instance.
  *
@@ -97,9 +110,9 @@ import {
  * with a symmetric key derived from the passkey's PRF "encryption" output.
  *
  * @implements {OutputElement}
- * @implements {DiffuseStorageOutputElement}
+ * @implements {WnfsFirkinOutputElement}
  */
-class DiffuseStorageOutput extends BroadcastedOutputElement {
+class WnfsFirkinOutput extends BroadcastedOutputElement {
   static NAME = "diffuse/output/bytes/wnfs";
 
   /** @type {OutputManager} */
@@ -194,13 +207,6 @@ class DiffuseStorageOutput extends BroadcastedOutputElement {
 
   // SIGNALS
 
-  /**
-   * This output maintains its own local read cache (see `IDB_LOCAL_PREFIX`),
-   * so the configurator does not need to eagerly read every collection just to
-   * mirror it. That matters for large tracks/playlist collections.
-   */
-  localFallback = true;
-
   did = computed(() => this.#session.value?.did);
   apiBase = computed(() =>
     this.#session.value?.apiBase ?? this.#storage.value?.apiBase
@@ -212,7 +218,28 @@ class DiffuseStorageOutput extends BroadcastedOutputElement {
 
   /** @override */
   connectedCallback() {
-    this.replicateSavedData(this.#manager);
+    this.replicateSavedData(this.#manager, {
+      storageStatus: {
+        strategy: "leaderOnly",
+        fn: () => this.#filesStatus(),
+      },
+      storageList: {
+        strategy: "leaderOnly",
+        fn: () => this.#listFiles(),
+      },
+      storageRead: {
+        strategy: "leaderOnly",
+        fn: (name) => this.#readFile(name),
+      },
+      storageWrite: {
+        strategy: "leaderOnly",
+        fn: (name, bytes) => this.#writeFile(name, bytes),
+      },
+      storageDelete: {
+        strategy: "leaderOnly",
+        fn: (name) => this.#deleteFile(name),
+      },
+    });
 
     super.connectedCallback();
 
@@ -220,7 +247,7 @@ class DiffuseStorageOutput extends BroadcastedOutputElement {
     globalThis.addEventListener("offline", this.#offline);
 
     this.#restorePromise = this.#restore().catch((err) => {
-      console.error("Failed to restore Diffuse storage:", err);
+      console.error("Failed to restore Firkin + WNFS:", err);
     });
   }
 
@@ -239,7 +266,7 @@ class DiffuseStorageOutput extends BroadcastedOutputElement {
     // reachable) should be retried once connectivity returns.
     if (!this.#ready.value) {
       this.#restorePromise = this.#restore().catch((err) => {
-        console.error("Failed to restore Diffuse storage:", err);
+        console.error("Failed to restore Firkin + WNFS:", err);
       });
     }
   };
@@ -267,7 +294,6 @@ class DiffuseStorageOutput extends BroadcastedOutputElement {
    *
    * @param {{
    *   apiBase?: string
-   *   adminSeed?: string
    *   create?: boolean
    * }} [options]
    */
@@ -284,15 +310,6 @@ class DiffuseStorageOutput extends BroadcastedOutputElement {
 
     const accountSigner = await accountSignerFromPrf(prf.prfFirst);
     const accountDid = accountSigner.did();
-
-    // First-time registration. The admin seed is only needed on instances
-    // that do not allow self-registration.
-    if (options.adminSeed?.trim()) {
-      const admin = await Signer.fromSeedHex(options.adminSeed.trim());
-      await new Firkin(apiBase, signerToken(admin)).register(
-        accountDid,
-      );
-    }
 
     const session = await this.#createSession(
       apiBase,
@@ -316,7 +333,7 @@ class DiffuseStorageOutput extends BroadcastedOutputElement {
       const status = /** @type {any} */ (err)?.status;
       if (status === 401 || status === 403) {
         throw new Error(
-          `This account (${accountDid}) is not registered with the Firkin instance. Provide an admin seed, or register the DID in the instance's admin console.`,
+          `This account (${accountDid}) is not registered with the Firkin instance. Register the DID in the instance's admin console, then sign in.`,
         );
       }
       throw err;
@@ -345,17 +362,19 @@ class DiffuseStorageOutput extends BroadcastedOutputElement {
         await this.#mountStorage(storage, rootCid);
       } else {
         throw new Error(
-          "Diffuse storage exists, but its private key is missing from the registry and this browser.",
+          "Firkin + WNFS exists, but its private key is missing from the registry and this browser.",
         );
       }
     } else {
       storage = await this.#createStorage(storageKey, apiBase, accountDid);
     }
 
-    // A brand-new WNFS starts with an empty facets file. Seed it from the
-    // local output so the enabled preludes (including this feature's own
-    // prelude) survive the switch to Diffuse storage.
-    await this.#seedFacetsFromLocal(storage);
+    // A new WNFS starts without collection files. Copy the local output's
+    // collections over before selecting it: the local output has the user's
+    // current data (including the preludes that register this output), and the
+    // output configurator mirrors the selected output back into the local
+    // fallback — mirroring an empty, freshly created output would erase it.
+    await this.#seedFromLocal(storage);
     await this.#setLocalFreshness(
       storage.root,
       rootCid ? storage.root : undefined,
@@ -377,7 +396,7 @@ class DiffuseStorageOutput extends BroadcastedOutputElement {
    *
    * This touches neither the session nor the WNFS: it is useful to find out
    * which DID has to be registered with a Firkin instance before the first
-   * sign-in (and before any admin seed is available here).
+   * sign-in.
    *
    * @returns {Promise<string>}
    */
@@ -481,7 +500,7 @@ class DiffuseStorageOutput extends BroadcastedOutputElement {
 
     const fs = await FileSystem.fromCID(CID.parse(rootCid), {
       blockstore,
-      rootTreeClass: /** @type {any} */ (DiffuseStorageRootTree),
+      rootTreeClass: /** @type {any} */ (WnfsFirkinRootTree),
     });
 
     await fs.mountPrivateNode({
@@ -514,7 +533,7 @@ class DiffuseStorageOutput extends BroadcastedOutputElement {
 
     const fs = await FileSystem.create({
       blockstore,
-      rootTreeClass: /** @type {any} */ (DiffuseStorageRootTree),
+      rootTreeClass: /** @type {any} */ (WnfsFirkinRootTree),
     });
 
     await fs.assignIdentifier(did);
@@ -590,12 +609,12 @@ class DiffuseStorageOutput extends BroadcastedOutputElement {
       );
     } catch {
       throw new Error(
-        "Could not decrypt the Diffuse storage key. Sign in with the passkey that created this storage.",
+        "Could not decrypt the Firkin + WNFS key. Sign in with the passkey that created this storage.",
       );
     }
 
     if (payload.v !== 1) {
-      throw new Error(`Unsupported Diffuse storage key version: ${payload.v}`);
+      throw new Error(`Unsupported Firkin + WNFS key version: ${payload.v}`);
     }
 
     const publicKey = base64url.decode(payload.publicKey);
@@ -616,70 +635,58 @@ class DiffuseStorageOutput extends BroadcastedOutputElement {
   }
 
   /**
-   * Seed the WNFS facets file from the local output when it is missing.
+   * Seed missing collection files from the local (default) output.
    *
-   * A new WNFS starts without a facets file. The local output still has the
-   * user's enabled preludes (including this feature's prelude), so copy them
-   * over before selecting the output. Otherwise the next page load would have
-   * no prelude available to register this output.
+   * A new WNFS starts without collection files, while the local output still
+   * has the user's current data. Copy it over before the output is selected:
+   * the output configurator mirrors the selected output back into the local
+   * fallback, so mirroring an empty new output would erase the user's data.
+   *
+   * Collections that already have a file are left untouched: the file existing
+   * means the WNFS has been written to (possibly deliberately emptied).
    *
    * @param {Storage} storage
    */
-  async #seedFacetsFromLocal(storage) {
+  async #seedFromLocal(storage) {
     const fs = this.#fs;
     const blockstore = this.#blockstore;
     const rb = this.#rb;
     if (!fs || !blockstore || !rb) return;
-
-    const path = Path.priv(WNFS_OUTPUT_DIR, "facets");
-    if (await fs.exists(path)) return;
-
-    const facets = await this.#readLocalOutputFacets();
-    if (facets.length === 0) return;
 
     const dir = Path.priv(WNFS_OUTPUT_DIR);
     if (!(await fs.exists(dir))) {
       await fs.ensureDirectory(dir);
     }
 
-    const bytes = /** @type {Uint8Array} */ (
-      encodeJsonCollection(facets, "facets", true)
-    );
+    let seeded = false;
 
-    const result = await fs.write(path, "bytes", bytes);
-    const root = result.dataRoot.toString();
+    for (const name of SEED_COLLECTIONS) {
+      const path = Path.priv(WNFS_OUTPUT_DIR, name);
+      if (await fs.exists(path)) continue;
+
+      const data = await readLocalCollection(name);
+      if (data.length === 0) continue;
+
+      const bytes = /** @type {Uint8Array} */ (
+        encodeJsonCollection(data, name, true)
+      );
+
+      await fs.write(path, "bytes", bytes);
+      await this.#writeLocalCache(name, bytes);
+      seeded = true;
+    }
+
+    if (!seeded) return;
+
+    const root = (await fs.calculateDataRoot()).toString();
     await blockstore.flush(root);
     blockstore.setRoot(root);
 
     await rb.registrySet(REGISTRY_ROOT, root);
     storage.root = root;
 
-    await this.#writeLocalCache("facets", bytes);
     await IDB.set(IDB_LOCAL_ROOT, root);
     this.#localFresh = true;
-  }
-
-  /**
-   * Read the default/local output's facets, waiting briefly for it to load.
-   * @returns {Promise<any[]>}
-   */
-  async #readLocalOutputFacets() {
-    const local = /** @type {any} */ (
-      document.querySelector("#do-output__dop-indexed-db__json")
-    );
-    if (!local?.facets) return [];
-
-    const deadline = Date.now() + 5_000;
-    while (Date.now() < deadline) {
-      const col = local.facets.collection();
-      if (col.state === "loaded") {
-        return Array.isArray(col.data) ? col.data : [];
-      }
-      if (col.state === "error") return [];
-      await new Promise((resolve) => setTimeout(resolve, 100));
-    }
-
-    return [];
   }
 
   // SESSION
@@ -786,7 +793,7 @@ class DiffuseStorageOutput extends BroadcastedOutputElement {
     if (this.#mountPromise) return await this.#mountPromise;
 
     const storage = this.#storage.value;
-    if (!storage) throw new Error("Diffuse storage is not configured");
+    if (!storage) throw new Error("Firkin + WNFS is not configured");
 
     this.#mountPromise = this.#mountStorage(storage, storage.root).finally(
       () => {
@@ -828,7 +835,7 @@ class DiffuseStorageOutput extends BroadcastedOutputElement {
         await this.#writeLocalCache(name, bytes);
         this.#manager.signals[name].value = decodeJsonCollection(bytes, name);
       } catch (err) {
-        console.error(`Failed to refresh Diffuse storage file '${name}':`, err);
+        console.error(`Failed to refresh Firkin + WNFS file '${name}':`, err);
       } finally {
         this.#refreshing.delete(name);
       }
@@ -836,6 +843,145 @@ class DiffuseStorageOutput extends BroadcastedOutputElement {
 
     this.#refreshing.set(name, pending);
     return pending;
+  }
+
+  // FILES
+
+  /** @returns {import("./files.js").StorageStatus} */
+  #filesStatus() {
+    return {
+      // Report the session (restored from IndexedDB immediately) rather than
+      // `#ready`, so a consult during the initial registry restore stays
+      // optimistic. Mounting/writing still wait for `#ready`.
+      connected: Boolean(this.#session.value),
+      did: this.did(),
+      root: this.dataRoot(),
+    };
+  }
+
+  /** @returns {Promise<FileSystem>} */
+  async #filesFs() {
+    await this.#waitForRestore();
+
+    if (!this.#ready.value) {
+      throw new Error("Firkin + WNFS is not connected");
+    }
+
+    await this.#ensureMounted();
+
+    const fs = this.#fs;
+    if (!fs) throw new Error("Firkin + WNFS could not be mounted");
+    return fs;
+  }
+
+  /** @returns {Promise<import("./files.js").StorageFile[]>} */
+  async #listFiles() {
+    const fs = await this.#filesFs();
+    const dir = Path.priv(STORAGE_DIR);
+
+    if (!(await fs.exists(dir))) return [];
+
+    const items = await fs.listDirectory(dir, { withItemKind: true });
+
+    return items
+      .filter((item) => item.kind === "file")
+      .map((item) => ({ name: item.name, modified: item.metadata.modified }));
+  }
+
+  /**
+   * @param {string} name
+   * @returns {Promise<Uint8Array>}
+   */
+  async #readFile(name) {
+    const fs = await this.#filesFs();
+    const path = Path.priv(STORAGE_DIR, name);
+
+    if (!(await fs.exists(path))) {
+      throw new Error(`File not found in Firkin + WNFS: ${name}`);
+    }
+
+    return await fs.read(path, "bytes");
+  }
+
+  /**
+   * @param {string} name
+   * @param {Uint8Array} bytes
+   * @returns {Promise<string>} The new data root.
+   */
+  #writeFile(name, bytes) {
+    const write = async () => {
+      await this.whenConnected();
+      await this.#restorePromise;
+
+      const storage = this.#storage.value;
+      if (!this.#ready.value || !storage) {
+        throw new Error("Firkin + WNFS is not connected");
+      }
+
+      await this.#ensureMounted();
+
+      const fs = this.#fs;
+      if (!fs) throw new Error("Firkin + WNFS could not be mounted");
+
+      const dir = Path.priv(STORAGE_DIR);
+      if (!(await fs.exists(dir))) {
+        await fs.ensureDirectory(dir);
+      }
+
+      const result = await fs.write(
+        Path.priv(STORAGE_DIR, name),
+        "bytes",
+        bytes,
+      );
+
+      return result.dataRoot.toString();
+    };
+
+    const written = this.#writeQueue.then(write, write);
+    this.#writeQueue = written.then(() => {}, () => {});
+
+    return written.then(async (root) => {
+      await this.#enqueueUpload(root);
+      return root;
+    });
+  }
+
+  /**
+   * @param {string} name
+   * @returns {Promise<string | null>} The new data root, or null when the file
+   *   did not exist.
+   */
+  #deleteFile(name) {
+    const remove = async () => {
+      await this.whenConnected();
+      await this.#restorePromise;
+
+      const storage = this.#storage.value;
+      if (!this.#ready.value || !storage) {
+        throw new Error("Firkin + WNFS is not connected");
+      }
+
+      await this.#ensureMounted();
+
+      const fs = this.#fs;
+      if (!fs) throw new Error("Firkin + WNFS could not be mounted");
+
+      const path = Path.priv(STORAGE_DIR, name);
+      if (!(await fs.exists(path))) return null;
+
+      const result = await fs.remove(path);
+      return result && typeof result === "object" && "dataRoot" in result
+        ? result.dataRoot.toString()
+        : null;
+    };
+
+    const removed = this.#writeQueue.then(remove, remove);
+    this.#writeQueue = removed.then(() => {}, () => {});
+
+    return removed.then(async (root) => {
+      if (root) await this.#enqueueUpload(root);
+      return root;
+    });
   }
 
   // GET & PUT
@@ -890,7 +1036,7 @@ class DiffuseStorageOutput extends BroadcastedOutputElement {
       await this.#writeLocalCache(name, bytes);
       return decodeJsonCollection(bytes, name);
     } catch (err) {
-      console.error(`Failed to read Diffuse storage file '${name}':`, err);
+      console.error(`Failed to read Firkin + WNFS file '${name}':`, err);
       return await this.#readLocalCache(name);
     }
   };
@@ -908,7 +1054,7 @@ class DiffuseStorageOutput extends BroadcastedOutputElement {
       const storage = this.#storage.value;
 
       if (!this.#ready.value || !rb || !storage) {
-        throw new Error("Diffuse storage is not connected");
+        throw new Error("Firkin + WNFS is not connected");
       }
 
       await this.#ensureMounted();
@@ -916,7 +1062,7 @@ class DiffuseStorageOutput extends BroadcastedOutputElement {
       const fs = this.#fs;
       const blockstore = this.#blockstore;
       if (!fs || !blockstore) {
-        throw new Error("Diffuse storage could not be mounted");
+        throw new Error("Firkin + WNFS could not be mounted");
       }
 
       const bytes = /** @type {Uint8Array} */ (
@@ -981,7 +1127,7 @@ class DiffuseStorageOutput extends BroadcastedOutputElement {
       const rb = this.#rb;
       const storage = this.#storage.value;
       if (!blockstore || !rb || !storage) {
-        throw new Error("Diffuse storage is not connected");
+        throw new Error("Firkin + WNFS is not connected");
       }
 
       await blockstore.flush(root);
@@ -996,7 +1142,7 @@ class DiffuseStorageOutput extends BroadcastedOutputElement {
 
       for (const item of batch) item.resolve();
     } catch (err) {
-      console.error("Failed to upload Diffuse storage blocks:", err);
+      console.error("Failed to upload Firkin + WNFS blocks:", err);
       for (const item of batch) item.reject(err);
     } finally {
       this.#uploading = false;
@@ -1042,7 +1188,7 @@ class DiffuseStorageOutput extends BroadcastedOutputElement {
       return decodeJsonCollection(cached, name);
     } catch (err) {
       console.error(
-        `Failed to read the local Diffuse storage cache for '${name}':`,
+        `Failed to read the local Firkin + WNFS cache for '${name}':`,
         err,
       );
       return [];
@@ -1057,18 +1203,18 @@ class DiffuseStorageOutput extends BroadcastedOutputElement {
     try {
       await IDB.set(this.#localCacheKey(name), bytes);
     } catch (err) {
-      console.error(`Failed to cache Diffuse storage file '${name}':`, err);
+      console.error(`Failed to cache Firkin + WNFS file '${name}':`, err);
     }
   }
 }
 
-export default DiffuseStorageOutput;
+export default WnfsFirkinOutput;
 
 ////////////////////////////////////////////
 // REGISTER
 ////////////////////////////////////////////
 
-export const CLASS = DiffuseStorageOutput;
-export const NAME = "dob-diffuse-storage";
+export const CLASS = WnfsFirkinOutput;
+export const NAME = "dob-wnfs-firkin";
 
 defineElement(NAME, CLASS);

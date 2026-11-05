@@ -10,9 +10,13 @@ import { strictEquality } from "~/common/compare.js";
 
 export class BroadcastedOutputElement extends BroadcastableDiffuseElement {
   /**
+   * Broadcast the collection save actions (and any output-specific actions) to
+   * the other tabs in the group. The leader is the only writer.
+   *
    * @param {OutputManager<any>} manager
+   * @param {Record<string, { strategy: "leaderOnly" | "replicate", fn: (...args: any[]) => any }>} [extraActions]
    */
-  replicateSavedData(manager) {
+  replicateSavedData(manager, extraActions = {}) {
     // Broadcast if needed
     if (!this.hasAttribute("group")) return;
 
@@ -64,6 +68,7 @@ export class BroadcastedOutputElement extends BroadcastableDiffuseElement {
         strategy: "replicate",
         fn: fn({ save: ogTracksSave, set: manager.signals.tracks.set }),
       },
+      ...extraActions,
     });
 
     if (actions) {

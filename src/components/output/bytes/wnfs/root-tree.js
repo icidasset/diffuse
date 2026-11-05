@@ -27,7 +27,7 @@ export { FileSystem, Path } from "@wnfs-wg/nest";
  * every root this class writes (which is what `mountPrivateNode` relies on
  * internally when it loads a share to self).
  */
-export class DiffuseStorageRootTree extends BasicRootTree {
+export class WnfsFirkinRootTree extends BasicRootTree {
   /** @type {Blockstore} */
   #blockstore;
 
@@ -78,7 +78,7 @@ export class DiffuseStorageRootTree extends BasicRootTree {
    * }} overrides
    */
   #with(overrides) {
-    return new DiffuseStorageRootTree({
+    return new WnfsFirkinRootTree({
       blockstore: this.#blockstore,
       did: "did" in overrides ? overrides.did : this.did(),
       exchangeRoot: "exchangeRoot" in overrides
@@ -188,7 +188,7 @@ export class DiffuseStorageRootTree extends BasicRootTree {
  * @param {Blockstore} blockstore
  */
 function fromBase(base, blockstore) {
-  return new DiffuseStorageRootTree({
+  return new WnfsFirkinRootTree({
     blockstore,
     did: base.did(),
     exchangeRoot: base.exchangeRoot(),

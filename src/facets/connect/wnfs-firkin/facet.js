@@ -7,10 +7,10 @@ import foundation from "~/common/foundation.js";
 
 import { setup, waitForOutputOption } from "~/facets/connect/common.js";
 
-foundation.setup({ title: "Connect Diffuse storage" });
+foundation.setup({ title: "Connect Firkin + WNFS" });
 
 /**
- * @import { DiffuseStorageOutputElement } from "@specs/components/output/bytes/wnfs/types.d.ts"
+ * @import { WnfsFirkinOutputElement } from "@specs/components/output/bytes/wnfs/types.d.ts"
  */
 
 ////////////////////////////////////////////
@@ -21,7 +21,7 @@ const outputOrchestrator = await foundation.orchestrator.output();
 await customElements.whenDefined(outputOrchestrator.localName);
 await customElements.whenDefined(WNFS_OUTPUT_NAME);
 
-const wnfsEl = /** @type {DiffuseStorageOutputElement | undefined} */ (
+const wnfsEl = /** @type {WnfsFirkinOutputElement | undefined} */ (
   outputOrchestrator.root().querySelector(WNFS_OUTPUT_NAME)
 );
 
@@ -30,7 +30,7 @@ let outputOption;
 try {
   outputOption = await waitForOutputOption(
     outputOrchestrator,
-    "Diffuse storage",
+    "Firkin + WNFS",
     5_000,
   );
 } catch {
@@ -39,13 +39,13 @@ try {
     litRender(
       html`
         <div class="facet__left">
-          <h1>Diffuse storage</h1>
+          <h1>Firkin + WNFS</h1>
         </div>
         <div class="facet__right">
           <div class="callout callout--danger">
-            The <strong>Diffuse storage</strong> feature is not enabled.
+            The <strong>Firkin + WNFS</strong> feature is not enabled.
             Enable it from the
-            <a href="./catalogue/?filter=prelude">features page</a> first.
+            <a href="./catalogue/?filter=prelude" target="_blank">features page</a> first.
           </div>
         </div>
       `,
@@ -54,7 +54,7 @@ try {
   }
 
   foundation.ready();
-  throw new Error("The Diffuse storage feature facet is not enabled");
+  throw new Error("The Firkin + WNFS feature facet is not enabled");
 }
 
 const OUTPUT_ID = outputOption.id;
@@ -85,8 +85,11 @@ if (outputOrchestrator.hasSelected() && !outputOrchestrator.selected()) {
 ////////////////////////////////////////////
 
 const { setItems, setError, setDialogError } = setup({
-  title: "Diffuse storage",
+  title: "Firkin + WNFS",
   hasInput: false,
+  outputLabel: "Set up",
+  outputIcon: "ph-fill ph-lightning",
+  outputTitle: "Set up Firkin + WNFS",
 
   description: html`
     <p>
@@ -103,19 +106,9 @@ const { setItems, setError, setDialogError } = setup({
         value="${wnfsEl?.apiBase() ?? DEFAULT_API_BASE}"
       >
     </label>
-    <label>
-      Admin seed
-      <input
-        id="rb-admin-seed"
-        type="password"
-        autocomplete="off"
-        placeholder="Only needed to register a new account"
-      >
-    </label>
     <p class="caption">
       Not registered yet? Use <strong>Show DID</strong> to find the DID for an
-      existing passkey and register it with the instance, or paste an admin seed
-      to register automatically when signing in.
+      existing passkey and register it with the instance, then sign in.
     </p>
     <div id="rb-did-result" hidden>
       <p class="caption" style="font-weight: 700; margin-top: 0;">Account DID</p>
@@ -162,8 +155,6 @@ const dialog =
 
 const apiInput =
   /** @type {HTMLInputElement} */ (document.querySelector("#rb-api"));
-const adminSeedInput =
-  /** @type {HTMLInputElement} */ (document.querySelector("#rb-admin-seed"));
 
 const showDidBtn =
   /** @type {HTMLButtonElement | null} */ (
@@ -201,7 +192,7 @@ effect(() => {
         {
           name: did,
           detail: root
-            ? `Diffuse storage · ${root.slice(0, 14)}…`
+            ? `Firkin + WNFS · ${root.slice(0, 14)}…`
             : "Not set up",
           isInput: false,
           // Without a WNFS root there is no storage yet, so leave the
@@ -221,12 +212,11 @@ effect(() => {
 
 /** @param {boolean} create */
 async function connect(create) {
-  if (!wnfsEl) throw new Error("Diffuse storage output is not available");
+  if (!wnfsEl) throw new Error("Firkin + WNFS output is not available");
 
   const apiBase = apiInput.value.trim() || undefined;
-  const adminSeed = adminSeedInput.value.trim() || undefined;
 
-  await wnfsEl.signIn({ apiBase, adminSeed, create });
+  await wnfsEl.signIn({ apiBase, create });
   await outputOrchestrator.select(OUTPUT_ID);
 }
 
@@ -237,7 +227,7 @@ async function disconnect() {
     await wnfsEl?.signOut();
   } catch (err) {
     setError(
-      err instanceof Error ? err.message : "Failed to disconnect Diffuse storage",
+      err instanceof Error ? err.message : "Failed to disconnect Firkin + WNFS",
     );
   }
 }

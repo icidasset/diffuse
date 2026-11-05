@@ -8,7 +8,7 @@ import { testWeb } from "@tests/common/index.ts";
 describe("components/output/bytes/wnfs/browser bundle", () => {
   it("creates, writes and reloads a WNFS", async () => {
     const result = await testWeb(async () => {
-      const { FileSystem, Path, DiffuseStorageRootTree } = await import(
+      const { FileSystem, Path, WnfsFirkinRootTree } = await import(
         "~/components/output/bytes/wnfs/root-tree.js"
       );
 
@@ -41,7 +41,7 @@ describe("components/output/bytes/wnfs/browser bundle", () => {
 
       const fs = await FileSystem.create({
         blockstore,
-        rootTreeClass: DiffuseStorageRootTree,
+        rootTreeClass: WnfsFirkinRootTree,
       });
 
       await fs.assignIdentifier("did:key:z6MktestAccount");
@@ -61,7 +61,7 @@ describe("components/output/bytes/wnfs/browser bundle", () => {
       const binary = atob(publicJwk.n.replace(/-/g, "+").replace(/_/g, "/"));
       const publicKey = Uint8Array.from(binary, (char) => char.charCodeAt(0));
 
-      await fs.registerExchangeKey("diffuse-storage", publicKey);
+      await fs.registerExchangeKey("wnfs-firkin", publicKey);
 
       const { shareId } = await fs.createPrivateNode({
         path: Path.root(),
@@ -82,7 +82,7 @@ describe("components/output/bytes/wnfs/browser bundle", () => {
 
       const fs2 = await FileSystem.fromCID(dataRoot, {
         blockstore,
-        rootTreeClass: DiffuseStorageRootTree,
+        rootTreeClass: WnfsFirkinRootTree,
       });
 
       await fs2.mountPrivateNode({

@@ -7,6 +7,10 @@ import {
   CACHE_KEY_PREFIX,
   SCHEME as SCHEME_EPHEMERAL_CACHE,
 } from "~/components/input/ephemeral-cache/constants.js";
+import {
+  SCHEME as SCHEME_WNFS_FIRKIN,
+  SOURCE_URI as WNFS_FIRKIN_SOURCE_URI,
+} from "~/components/output/bytes/wnfs/files.js";
 import { isAudioFile } from "~/components/input/common.js";
 import { SCHEME as SCHEME_DROPBOX } from "~/components/input/dropbox/constants.js";
 import {
@@ -35,6 +39,7 @@ import foundation from "~/common/foundation.js";
 /** @type {Record<string, string>} */
 const SCHEME_LABELS = {
   [SCHEME_DROPBOX]: "Dropbox",
+  [SCHEME_WNFS_FIRKIN]: "Firkin + WNFS",
   [SCHEME_S3]: "S3",
   [SCHEME_WEBDAV]: "WebDAV",
 };
@@ -415,6 +420,7 @@ stopSyncBtn?.addEventListener("click", () => stopSyncing());
  *   fields: ConnectField[];
  *   build: (values: Record<string, string>) => string;
  *   caption: string;
+ *   unavailable?: string | TemplateResult;
  *   sourceParts: (uri: string) => { name: string; detail: string };
  * }} ConnectConfig
  */
@@ -507,6 +513,27 @@ const CONNECT_CONFIGS = {
       };
     },
   },
+
+  [SCHEME_WNFS_FIRKIN]: {
+    scheme: SCHEME_WNFS_FIRKIN,
+
+    fields: [],
+
+    build: () => WNFS_FIRKIN_SOURCE_URI,
+
+    caption:
+      "Uploaded files are encrypted and then uploaded to Firkin.",
+
+    unavailable: html`
+      Not connected to a Firkin instance. Sign in on the
+      <a href="l/?path=${
+        encodeURIComponent("facets/connect/wnfs-firkin/index.tile")
+      }">Connect → Firkin + WNFS</a>
+      interface first, then set up syncing again.
+    `,
+
+    sourceParts: () => ({ name: "Firkin + WNFS", detail: "Encrypted WNFS" }),
+  },
 };
 
 const connectSourceDialog = /** @type {HTMLDialogElement | null} */ (
@@ -545,12 +572,12 @@ let currentConnectConfig = /** @type {ConnectConfig | null} */ (null);
 /**
  * Shows the dialog-level error inside the connect source dialog.
  *
- * @param {string | null} message
+ * @param {string | TemplateResult | null} message
  */
 const setConnectSourceError = (message) => {
   if (!connectSourceErrorEl) return;
   connectSourceErrorEl.hidden = message === null;
-  connectSourceErrorEl.textContent = message;
+  litRender(message ?? nothing, connectSourceErrorEl);
 };
 
 /**
@@ -636,21 +663,26 @@ function openConnectSourceDialog(config) {
     connectSourceExistingEl,
   );
 
+  const hasFields = config.fields.length > 0;
+
+  connectSourceFieldsEl.hidden = !hasFields;
   litRender(
-    config.fields.map((field) =>
-      html`
-        <label>
-          <span class="label__name">${field.label}</span>
-          <input
-            id="connect-source-field-${field.id}"
-            type="${field.type ?? "text"}"
-            placeholder="${field.placeholder ?? ""}"
-            ?required="${field.required ?? false}"
-            autocomplete="off"
-          >
-        </label>
-      `
-    ),
+    hasFields
+      ? config.fields.map((field) =>
+        html`
+          <label>
+            <span class="label__name">${field.label}</span>
+            <input
+              id="connect-source-field-${field.id}"
+              type="${field.type ?? "text"}"
+              placeholder="${field.placeholder ?? ""}"
+              ?required="${field.required ?? false}"
+              autocomplete="off"
+            >
+          </label>
+        `
+      )
+      : nothing,
     connectSourceFieldsEl,
   );
 
@@ -677,7 +709,8 @@ async function selectExistingSource(config, uri, disabled) {
     const result = await uploadConfigurator.consult(uri);
     if (result.supported && result.consult === "no") {
       setConnectSourceError(
-        "This source could not be reached right now. Check its credentials (and the server's CORS settings), then try again.",
+        config.unavailable ??
+          "This source could not be reached right now. Check its credentials (and the server's CORS settings), then try again.",
       );
       return;
     }
@@ -726,7 +759,8 @@ connectSourceForm?.addEventListener("submit", async (e) => {
     const result = await uploadConfigurator.consult(uri);
     if (result.supported && result.consult === "no") {
       setConnectSourceError(
-        "The source could not be reached. Check the values (and the server's CORS settings), then try again.",
+        config.unavailable ??
+          "The source could not be reached. Check the values (and the server's CORS settings), then try again.",
       );
       return;
     }
@@ -951,7 +985,15 @@ effect(() => {
   stopSyncBtn.hidden = true;
 
   const uploadComponents = uploadConfigurator.uploaders();
-  const uploadEntries = Object.entries(uploadComponents);
+  const uploadEntries = Object.entries(uploadComponents)
+    .map(([scheme, element]) => ({
+      scheme,
+      element,
+      label: SCHEME_LABELS[scheme] ?? scheme,
+    }))
+    .sort((a, b) =>
+      a.label.localeCompare(b.label, undefined, { sensitivity: "base" })
+    );
 
   const canUpload = uploadEntries.length > 0;
 
@@ -961,7 +1003,7 @@ effect(() => {
 
   litRender(
     html`
-      ${uploadEntries.map(([scheme, element]) =>
+      ${uploadEntries.map(({ scheme, element, label }) =>
         html`
           <button
             @click="${(/** @type {MouseEvent} */ e) => {
@@ -974,7 +1016,7 @@ effect(() => {
             }}"
           >
             <i class="ph-fill ph-cloud-arrow-up"></i>
-            ${SCHEME_LABELS[scheme] ?? scheme}
+            ${label}
           </button>
         `
       )}

@@ -75,12 +75,12 @@ export const WNFS_OUTPUT_DIR = "diffuse-output";
  * Passkey namespace (the PRF salt strings are shared with the existing
  * Diffuse passkey helper, so this only scopes the stored credential ID).
  */
-export const PASSKEY_NAMESPACE = "diffuse-storage";
+export const PASSKEY_NAMESPACE = "wnfs-firkin";
 
 /**
  * HKDF salt/info for the symmetric key that protects the WNFS private key
  * blob stored in the Firkin registry.
  */
-export const KEY_DERIVATION_SALT = "diffuse-storage-private-key-salt";
+export const KEY_DERIVATION_SALT = "wnfs-firkin-private-key-salt";
 /** HKDF info string for the private-key encryption key. */
-export const KEY_DERIVATION_INFO = "diffuse-storage-private-key";
+export const KEY_DERIVATION_INFO = "wnfs-firkin-private-key";
