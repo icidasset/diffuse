@@ -55,14 +55,15 @@ class ScopedTracksOrchestrator extends BroadcastableDiffuseElement {
 
     const col = this.#output.value?.playlistItems.collection();
     if (!col || col.state !== "loaded") return undefined;
-    return col.data.filter((p) => p.playlist === playlist);
+    return (col.data ?? []).filter((p) => p.playlist === playlist);
   });
 
   #disabledSources = computed(() => {
     const col = this.#output.value?.settings.collection();
     if (!col || col.state !== "loaded") return [];
 
-    const setting = col.data.find((s) =>
+    // `data` is `undefined` when the output has nothing stored yet.
+    const setting = (col.data ?? []).find((s) =>
       s.key === "sh.diffuse.input.disabled.uris"
     );
 
