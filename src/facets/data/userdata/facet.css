@@ -58,13 +58,8 @@
   text-box: trim-both cap alphabetic;
   text-transform: uppercase;
 }
-.migrate-heading {
-  font-size: var(--fs-2xs);
-  font-weight: 600;
-  letter-spacing: var(--tracking-wider);
-  margin: 0 0 var(--space-xs);
-  opacity: 0.4;
-  text-transform: uppercase;
+.userdata-migrate {
+  margin-top: var(--space-md);
 }
 .migrate-row {
   align-items: flex-end;

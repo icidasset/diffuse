@@ -29,10 +29,23 @@
     <ul id="userdata-list" class="userdata-list" hidden></ul>
     <p id="userdata-empty" class="caption">No storage methods available.</p>
 
-    <hr id="migrate-divider" hidden />
+    <div id="migrate-actions" class="button-row userdata-migrate" hidden>
+      <button id="migrate-open-btn" class="button--outlined">
+        <i class="ph-fill ph-arrows-clockwise"></i>
+        Migrate data
+      </button>
+    </div>
+  </div>
 
-    <div id="migrate-section" hidden>
-      <p class="migrate-heading">Migrate data</p>
+  <dialog id="migrate-dialog">
+    <div class="dialog-header">
+      <strong>Migrate data</strong>
+    </div>
+    <div class="dialog-body">
+      <p class="caption">
+        Copy your tracks, playlists, settings and facets from one storage method
+        to another. This replaces the data in the destination method.
+      </p>
       <div class="migrate-row">
         <label>
           From
@@ -43,14 +56,17 @@
           To
           <select id="migrate-to" disabled></select>
         </label>
-        <button id="migrate-btn" disabled>
-          <i class="ph-fill ph-arrows-clockwise"></i>
-          <span>Migrate</span>
-        </button>
       </div>
       <div id="migrate-status" class="status" hidden></div>
     </div>
-  </div>
+    <div class="dialog-footer">
+      <button id="migrate-btn" class="button--brand" disabled>
+        <i class="ph-fill ph-arrows-clockwise"></i>
+        <span>Migrate</span>
+      </button>
+      <button id="migrate-close-btn" type="button">Close</button>
+    </div>
+  </dialog>
 </main>
 
 <script type="module" src="/facet.js"></script>

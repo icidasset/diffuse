@@ -73,7 +73,20 @@ const options = signal(/** @type {OutputOption[]} */ ([]));
  */
 const refresh = signal(0);
 
-options.value = await outputOrchestrator.options();
+/**
+ * Sort storage methods alphabetically, keeping Local pinned to the top.
+ *
+ * @param {OutputOption} a
+ * @param {OutputOption} b
+ */
+function compareOptions(a, b) {
+  const aIsLocal = a.label === "Local";
+  const bIsLocal = b.label === "Local";
+  if (aIsLocal !== bIsLocal) return aIsLocal ? -1 : 1;
+  return a.label.localeCompare(b.label);
+}
+
+options.value = (await outputOrchestrator.options()).sort(compareOptions);
 
 const defaultId = outputOrchestrator.outputConfigurator.getAttribute(
   "default",
@@ -87,10 +100,18 @@ const list =
   /** @type {HTMLElement} */ (document.querySelector("#userdata-list"));
 const emptyEl =
   /** @type {HTMLElement} */ (document.querySelector("#userdata-empty"));
-const migrateDivider =
-  /** @type {HTMLElement} */ (document.querySelector("#migrate-divider"));
-const migrateSection =
-  /** @type {HTMLElement} */ (document.querySelector("#migrate-section"));
+const migrateActions =
+  /** @type {HTMLElement} */ (document.querySelector("#migrate-actions"));
+const migrateDialog =
+  /** @type {HTMLDialogElement} */ (document.querySelector("#migrate-dialog"));
+const migrateOpenBtn =
+  /** @type {HTMLButtonElement} */ (document.querySelector(
+    "#migrate-open-btn",
+  ));
+const migrateCloseBtn =
+  /** @type {HTMLButtonElement} */ (document.querySelector(
+    "#migrate-close-btn",
+  ));
 const migrateFrom =
   /** @type {HTMLSelectElement} */ (document.querySelector("#migrate-from"));
 const migrateTo =
@@ -221,7 +242,18 @@ effect(() => {
               <span class="userdata-item__detail">${detail}</span>
             </div>
             ${isActive
-              ? nothing
+              ? connectUrl
+                ? html`
+                  <a
+                    class="button button--outlined button--small"
+                    title="Configure this method"
+                    href="./l/?path=${connectUrl}"
+                  >
+                    <i class="ph-fill ph-gear"></i>
+                    Configure
+                  </a>
+                `
+                : nothing
               : isActivated
               ? html`
                 <button
@@ -292,10 +324,12 @@ effect(() => {
   );
 
   const showMigrate = activatedOpts.length >= 2;
-  migrateDivider.hidden = !showMigrate;
-  migrateSection.hidden = !showMigrate;
+  migrateActions.hidden = !showMigrate;
 
-  if (!showMigrate) return;
+  if (!showMigrate) {
+    if (migrateDialog.open) migrateDialog.close();
+    return;
+  }
 
   const prevFrom = migrateFrom.value;
   const prevTo = migrateTo.value;
@@ -311,6 +345,14 @@ function updateMigrateBtn() {
   const toId = migrateTo.value;
   migrateBtn.disabled = !fromId || !toId || fromId === toId;
 }
+
+migrateOpenBtn.addEventListener("click", () => {
+  migrateStatus.hidden = true;
+  migrateStatus.textContent = "";
+  migrateDialog.showModal();
+});
+
+migrateCloseBtn.addEventListener("click", () => migrateDialog.close());
 
 migrateFrom.addEventListener("change", updateMigrateBtn);
 migrateTo.addEventListener("change", updateMigrateBtn);
