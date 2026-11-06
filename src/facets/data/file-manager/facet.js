@@ -522,7 +522,7 @@ const CONNECT_CONFIGS = {
     build: () => WNFS_FIRKIN_SOURCE_URI,
 
     caption:
-      "Uploaded files are encrypted and then uploaded to Firkin.",
+      "Uploaded files are stored as Firkin blobs; only their pointers are kept in your encrypted WNFS.",
 
     unavailable: html`
       Not connected to a Firkin instance. Sign in on the
@@ -532,7 +532,10 @@ const CONNECT_CONFIGS = {
       interface first, then set up syncing again.
     `,
 
-    sourceParts: () => ({ name: "Firkin + WNFS", detail: "Encrypted WNFS" }),
+    sourceParts: () => ({
+      name: "Firkin + WNFS",
+      detail: "Firkin blobs + encrypted pointers",
+    }),
   },
 };
 

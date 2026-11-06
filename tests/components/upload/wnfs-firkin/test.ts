@@ -27,15 +27,15 @@ describe("components/upload/wnfs-firkin", () => {
 
       const channel = rpc(server, {
         storageStatus: () => ({ connected: true }),
-        storageList: () => [],
+        storageListFiles: () => [],
         storageRead: () => undefined,
-        storageWrite: (name, bytes) => {
-          writes.push({ name, bytes: [...bytes] });
-          return "root";
+        storageFileURL: () => null,
+        storageUploadFile: (name, bytes, mime) => {
+          writes.push({ name, bytes: [...bytes], mime });
+          return { cid: "bafkreiuploaded" };
         },
-        storageDelete: (name) => {
+        storageDeleteFile: (name) => {
           deletes.push(name);
-          return "root";
         },
       });
 
@@ -59,7 +59,9 @@ describe("components/upload/wnfs-firkin", () => {
 
     expect(result.consult).toEqual({ supported: true, consult: "yes" });
     expect(result.uri).toBe("wnfs+firkin://me/files/bafktest.mp3");
-    expect(result.writes).toEqual([{ name: "bafktest.mp3", bytes: [7, 8] }]);
+    expect(result.writes).toEqual([
+      { name: "bafktest.mp3", bytes: [7, 8], mime: "audio/mpeg" },
+    ]);
     expect(result.deletes).toEqual(["bafktest.mp3"]);
   });
 });

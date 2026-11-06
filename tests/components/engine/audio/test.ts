@@ -107,6 +107,90 @@ describe("components/engine/audio", () => {
     expect(result).toBe(true);
   });
 
+  it("supply keeps the URL expiry so callers can refresh ahead of it", async () => {
+    const result = await testWeb(async () => {
+      const mod = await import("~/components/engine/audio/element.js");
+      const { trackA } = await import("~/testing/sample/tracks.js");
+      const engine = new mod.CLASS();
+      document.body.append(engine);
+
+      engine.supply({
+        audio: [{
+          id: "audio-a",
+          url: "/testing/sample/audio.mp3",
+          expiresAt: 1_234_567,
+          isPreload: true,
+          track: trackA,
+        }],
+      });
+
+      const item = engine.items()[0];
+      return { expiresAt: item.expiresAt, url: item.url };
+    });
+
+    expect(result.url).toBe("/testing/sample/audio.mp3");
+    expect(result.expiresAt).toBe(1_234_567);
+  });
+
+  it("reload only reloads a healthy element when forced", async () => {
+    const result = await testWeb(async () => {
+      const mod = await import("~/components/engine/audio/element.js");
+      const { trackA } = await import("~/testing/sample/tracks.js");
+      const engine = new mod.CLASS();
+      document.body.append(engine);
+
+      engine.supply({
+        audio: [{
+          id: "audio-a",
+          url: "/testing/sample/audio.mp3",
+          isPreload: false,
+          track: trackA,
+        }],
+      });
+
+      const itemEl = engine.querySelector(
+        'de-audio-item[id="audio-a"]',
+      ) as HTMLElement;
+      const audio = itemEl.querySelector("audio") as HTMLAudioElement;
+
+      // The state a refreshed presigned URL finds: loaded and healthy.
+      Object.defineProperty(audio, "readyState", {
+        value: 4,
+        configurable: true,
+      });
+      let loads = 0;
+      // deno-lint-ignore no-explicit-any
+      (audio as any).load = () => {
+        loads += 1;
+      };
+
+      // The initial render already writes a progress of 0.
+      itemEl.removeAttribute("initial-progress");
+
+      engine.reload({ audioId: "audio-a", play: false, progress: 0.25 });
+      const withoutForce = {
+        loads,
+        progress: itemEl.getAttribute("initial-progress"),
+      };
+
+      engine.reload({
+        audioId: "audio-a",
+        play: false,
+        progress: 0.5,
+        force: true,
+      });
+      const withForce = {
+        loads,
+        progress: itemEl.getAttribute("initial-progress"),
+      };
+
+      return { withoutForce, withForce };
+    });
+
+    expect(result.withoutForce).toEqual({ loads: 0, progress: null });
+    expect(result.withForce).toEqual({ loads: 1, progress: "0.5" });
+  });
+
   it("supply replaces items when IDs change", async () => {
     const result = await testWeb(async () => {
       const mod = await import("~/components/engine/audio/element.js");

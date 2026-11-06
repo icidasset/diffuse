@@ -134,7 +134,7 @@ export default {
       url: "components/input/wnfs-firkin/element.js",
       title: "Firkin + WNFS",
       desc:
-        "Audio files stored in an encrypted WNFS, hosted on an Firkin instance.",
+        "Firkin-hosted audio files, referenced from an encrypted WNFS pointer map.",
     },
     {
       url: "components/input/https/element.js",
@@ -395,7 +395,7 @@ export default {
       url: "components/upload/wnfs-firkin/element.js",
       title: "Firkin + WNFS",
       desc:
-        "Uploads and deletes files in an encrypted WNFS hosted on a Firkin instance.",
+        "Uploads files to Firkin and records them in an encrypted WNFS pointer map.",
     },
     {
       url: "components/upload/s3/element.js",

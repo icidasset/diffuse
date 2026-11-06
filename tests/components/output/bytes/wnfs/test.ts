@@ -55,9 +55,9 @@ describe("components/output/bytes/wnfs", () => {
         expireIn: 60,
       });
 
-      const token = await sdk.invocation(session, {
+      const token = await sdk.inlineInvocation(session, {
         command: "/firkin/blob/read",
-        proofs: [delegation.proof],
+        proofs: [delegation],
         expireIn: 60,
       });
 

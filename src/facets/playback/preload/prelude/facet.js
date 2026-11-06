@@ -42,10 +42,9 @@ async function setup() {
         uri: nextTrack.uri,
       });
 
-      const nextUrl = resolvedNextUri && !("stream" in resolvedNextUri)
-        ? resolvedNextUri.url
-        : undefined;
+      if (!resolvedNextUri || "stream" in resolvedNextUri) return;
 
+      const nextUrl = resolvedNextUri.url;
       if (!nextUrl) return;
 
       const activeItems = audio.items().filter((i) => !i.isPreload);
@@ -55,6 +54,9 @@ async function setup() {
           id: nextItem.id,
           isPreload: true,
           url: nextUrl,
+          // Carry the expiry: the queue orchestrator must know when this URL
+          // lapses without resolving the track again.
+          expiresAt: resolvedNextUri.expiresAt,
           track: nextTrack,
         }],
       });

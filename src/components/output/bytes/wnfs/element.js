@@ -20,6 +20,7 @@ import {
   Firkin,
   WebCryptoSigner,
   delegate,
+  inlineInvocation,
   invocation,
 } from "~/vendor/firkin/index.js";
 
@@ -35,7 +36,12 @@ import {
   generateExchangeKeyPair,
   importExchangePrivateKey,
 } from "./passkey.js";
-import { STORAGE_DIR } from "./files.js";
+import {
+  FILES_MANIFEST,
+  FILE_URL_TTL_SECONDS,
+  decodeManifest,
+  encodeManifest,
+} from "./files.js";
 import { readLocalCollection } from "./local.js";
 import {
   DEFAULT_API_BASE,
@@ -66,6 +72,9 @@ import {
  * @property {Uint8Array} proof
  * @property {string} proofCid
  * @property {number} expiresAt
+ * @property {boolean} [inlineProofs] - The server rejected delegation publishing
+ *   (or it failed), so tokens carry their proof inline instead of by CID.
+ * @property {boolean} [published] - The delegation is in the server's store.
  *
  * @typedef {Object} Storage
  * @property {string} apiBase
@@ -223,7 +232,7 @@ class WnfsFirkinOutput extends BroadcastedOutputElement {
         strategy: "leaderOnly",
         fn: () => this.#filesStatus(),
       },
-      storageList: {
+      storageListFiles: {
         strategy: "leaderOnly",
         fn: () => this.#listFiles(),
       },
@@ -231,11 +240,15 @@ class WnfsFirkinOutput extends BroadcastedOutputElement {
         strategy: "leaderOnly",
         fn: (name) => this.#readFile(name),
       },
-      storageWrite: {
+      storageFileURL: {
         strategy: "leaderOnly",
-        fn: (name, bytes) => this.#writeFile(name, bytes),
+        fn: (name, expireIn) => this.#fileURL(name, expireIn),
       },
-      storageDelete: {
+      storageUploadFile: {
+        strategy: "leaderOnly",
+        fn: (name, bytes, mime) => this.#uploadFile(name, bytes, mime),
+      },
+      storageDeleteFile: {
         strategy: "leaderOnly",
         fn: (name) => this.#deleteFile(name),
       },
@@ -316,6 +329,7 @@ class WnfsFirkinOutput extends BroadcastedOutputElement {
       accountDid,
       accountSigner,
     );
+    await this.#publishSessionDelegation(session);
     this.#session.value = session;
     this.#rb = this.#clientFor(session);
 
@@ -459,6 +473,8 @@ class WnfsFirkinOutput extends BroadcastedOutputElement {
     if (!session) return;
     if (session.expiresAt <= Date.now()) return;
     if (!(session.privateKey instanceof CryptoKey)) return;
+
+    await this.#publishSessionDelegation(session);
 
     this.#session.value = session;
     this.#rb = this.#clientFor(session);
@@ -757,16 +773,81 @@ class WnfsFirkinOutput extends BroadcastedOutputElement {
 
     return new Firkin(
       session.apiBase,
-      async (/** @type {string} */ command) => {
+      async (/** @type {string} */ command, options) => {
+        const expireIn = options?.expireIn ?? 600;
+
+        // Reference the delegation by CID when it has been published (the
+        // SDK's default; smaller tokens). Servers without a delegation store
+        // get the bootstrap shape with the proof inline.
+        if (session.inlineProofs) {
+          return await inlineInvocation(sessionSigner, {
+            command,
+            proofs: [{ proof: session.proof, cid: session.proofCid }],
+            expireIn,
+          });
+        }
+
         return await invocation(sessionSigner, {
           command,
-          proofs: [session.proof],
-          expireIn: 600,
+          // The bytes are used locally to discover/narrow the chain; only the
+          // CID goes on the wire.
+          proofs: [{ proof: session.proof, cid: session.proofCid }],
+          subject: session.did,
+          expireIn,
         });
       },
       undefined,
       /** @type {any} */ (blockCache),
     );
+  }
+
+  /**
+   * Publish the session delegation to the server's delegation store so tokens
+   * can reference it by CID. Idempotent; publishing is skipped once done.
+   *
+   * Falls back to inline proofs on servers that have no delegation store
+   * (the token still works there, it is just larger).
+   *
+   * @param {Session} session
+   */
+  async #publishSessionDelegation(session) {
+    if (session.published || session.inlineProofs) return;
+
+    const sessionSigner = WebCryptoSigner.fromPersisted(
+      session.privateKey,
+      session.publicKey,
+    );
+
+    // The explicit token below is used instead of this client's token source,
+    // so `inlineProofs` here is irrelevant; it avoids minting a reference
+    // proof for a delegation that is not published yet.
+    const rb = this.#clientFor({ ...session, inlineProofs: true });
+
+    try {
+      // Bootstrap token: the delegation is not stored yet, so its proof has to
+      // travel inline for this one call.
+      const token = await inlineInvocation(sessionSigner, {
+        command: "/firkin/blob/upload",
+        proofs: [{ proof: session.proof, cid: session.proofCid }],
+        expireIn: 60,
+      });
+
+      await rb.publishDelegation(
+        { proof: session.proof, cid: session.proofCid },
+        { token },
+      );
+      session.published = true;
+      session.inlineProofs = false;
+    } catch (err) {
+      console.warn(
+        "Could not publish the Firkin session delegation; falling back to inline proofs:",
+        err,
+      );
+      session.published = false;
+      session.inlineProofs = true;
+    }
+
+    await IDB.set(IDB_SESSION, session);
   }
 
   // COLLECTIONS
@@ -877,102 +958,165 @@ class WnfsFirkinOutput extends BroadcastedOutputElement {
   /** @returns {Promise<import("./files.js").StorageFile[]>} */
   async #listFiles() {
     const fs = await this.#filesFs();
-    const dir = Path.priv(STORAGE_DIR);
+    const manifest = await this.#readManifest(fs);
 
-    if (!(await fs.exists(dir))) return [];
-
-    const items = await fs.listDirectory(dir, { withItemKind: true });
-
-    return items
-      .filter((item) => item.kind === "file")
-      .map((item) => ({ name: item.name, modified: item.metadata.modified }));
+    return Object.entries(manifest.files).map(([name, file]) => ({
+      name,
+      ...file,
+    }));
   }
 
   /**
+   * Read the manifest from the WNFS. A missing or corrupt manifest is treated
+   * as empty (there is no migration of pre-pointer file layouts).
+   *
+   * @param {FileSystem} fs
+   * @returns {Promise<import("./files.js").FilesManifest>}
+   */
+  async #readManifest(fs) {
+    const path = Path.priv(FILES_MANIFEST);
+    if (!(await fs.exists(path))) return { version: 1, files: {} };
+
+    return decodeManifest(await fs.read(path, "bytes"));
+  }
+
+  /**
+   * @param {FileSystem} fs
+   * @param {import("./files.js").FilesManifest} manifest
+   * @returns {Promise<string>} The new data root.
+   */
+  async #writeManifest(fs, manifest) {
+    const result = await fs.write(
+      Path.priv(FILES_MANIFEST),
+      "bytes",
+      encodeManifest(manifest),
+    );
+
+    return result.dataRoot.toString();
+  }
+
+  /** @returns {Promise<{ fs: FileSystem; rb: Firkin }>} */
+  async #filesContext() {
+    const fs = await this.#filesFs();
+    const rb = this.#rb;
+
+    if (!rb) throw new Error("Firkin + WNFS is not connected");
+    return { fs, rb };
+  }
+
+  /**
+   * Fallback byte read for playback/metadata, resolving the pointer's CID
+   * directly against Firkin.
+   *
    * @param {string} name
    * @returns {Promise<Uint8Array>}
    */
   async #readFile(name) {
-    const fs = await this.#filesFs();
-    const path = Path.priv(STORAGE_DIR, name);
+    const { fs, rb } = await this.#filesContext();
+    const manifest = await this.#readManifest(fs);
+    const entry = manifest.files[name];
 
-    if (!(await fs.exists(path))) {
+    if (!entry) {
       throw new Error(`File not found in Firkin + WNFS: ${name}`);
     }
 
-    return await fs.read(path, "bytes");
+    return await rb.get(entry.cid);
   }
 
   /**
+   * A presigned, range-capable Firkin URL for a file — what media elements and
+   * the metadata workers use.
+   *
+   * @param {string} name
+   * @param {number} [expireIn]
+   * @returns {Promise<string>}
+   */
+  async #fileURL(name, expireIn) {
+    const { fs, rb } = await this.#filesContext();
+    const manifest = await this.#readManifest(fs);
+    const entry = manifest.files[name];
+
+    if (!entry) {
+      throw new Error(`File not found in Firkin + WNFS: ${name}`);
+    }
+
+    return await rb.readUrl(entry.cid, {
+      expireIn: expireIn ?? FILE_URL_TTL_SECONDS,
+    });
+  }
+
+  /**
+   * Upload the bytes as a raw Firkin blob, then record the pointer in the WNFS.
+   *
    * @param {string} name
    * @param {Uint8Array} bytes
-   * @returns {Promise<string>} The new data root.
+   * @param {string} mime
+   * @returns {Promise<{ cid: string }>}
    */
-  #writeFile(name, bytes) {
+  #uploadFile(name, bytes, mime) {
     const write = async () => {
-      await this.whenConnected();
-      await this.#restorePromise;
+      const { fs, rb } = await this.#filesContext();
+      const manifest = await this.#readManifest(fs);
+      const previous = manifest.files[name];
 
-      const storage = this.#storage.value;
-      if (!this.#ready.value || !storage) {
-        throw new Error("Firkin + WNFS is not connected");
+      // Audio bytes stay in Firkin; only this pointer goes into the WNFS.
+      const { cid } = await rb.upload(bytes, { codec: 0x55 });
+
+      manifest.files[name] = {
+        cid,
+        size: bytes.byteLength,
+        mime,
+        modified: Date.now(),
+      };
+
+      const root = await this.#writeManifest(fs, manifest);
+
+      // Drop the replaced blob when nothing else points at it.
+      if (
+        previous && previous.cid !== cid &&
+        !Object.values(manifest.files).some((file) =>
+          file.cid === previous.cid
+        )
+      ) {
+        await rb.delete(previous.cid).catch(() => {});
       }
 
-      await this.#ensureMounted();
-
-      const fs = this.#fs;
-      if (!fs) throw new Error("Firkin + WNFS could not be mounted");
-
-      const dir = Path.priv(STORAGE_DIR);
-      if (!(await fs.exists(dir))) {
-        await fs.ensureDirectory(dir);
-      }
-
-      const result = await fs.write(
-        Path.priv(STORAGE_DIR, name),
-        "bytes",
-        bytes,
-      );
-
-      return result.dataRoot.toString();
+      return { cid, root };
     };
 
     const written = this.#writeQueue.then(write, write);
     this.#writeQueue = written.then(() => {}, () => {});
 
-    return written.then(async (root) => {
+    return written.then(async ({ cid, root }) => {
       await this.#enqueueUpload(root);
-      return root;
+      return { cid };
     });
   }
 
   /**
+   * Remove a pointer from the WNFS and detach the blob's account claim when no
+   * other pointer references it.
+   *
    * @param {string} name
-   * @returns {Promise<string | null>} The new data root, or null when the file
-   *   did not exist.
    */
   #deleteFile(name) {
     const remove = async () => {
-      await this.whenConnected();
-      await this.#restorePromise;
+      const { fs, rb } = await this.#filesContext();
+      const manifest = await this.#readManifest(fs);
+      const entry = manifest.files[name];
 
-      const storage = this.#storage.value;
-      if (!this.#ready.value || !storage) {
-        throw new Error("Firkin + WNFS is not connected");
+      if (!entry) return null;
+
+      delete manifest.files[name];
+      const root = await this.#writeManifest(fs, manifest);
+
+      if (
+        !Object.values(manifest.files).some((file) => file.cid === entry.cid)
+      ) {
+        await rb.delete(entry.cid).catch(() => {});
       }
 
-      await this.#ensureMounted();
-
-      const fs = this.#fs;
-      if (!fs) throw new Error("Firkin + WNFS could not be mounted");
-
-      const path = Path.priv(STORAGE_DIR, name);
-      if (!(await fs.exists(path))) return null;
-
-      const result = await fs.remove(path);
-      return result && typeof result === "object" && "dataRoot" in result
-        ? result.dataRoot.toString()
-        : null;
+      return root;
     };
 
     const removed = this.#writeQueue.then(remove, remove);
@@ -980,7 +1124,6 @@ class WnfsFirkinOutput extends BroadcastedOutputElement {
 
     return removed.then(async (root) => {
       if (root) await this.#enqueueUpload(root);
-      return root;
     });
   }
 

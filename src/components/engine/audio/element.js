@@ -479,13 +479,16 @@ class AudioEngine extends BroadcastableDiffuseElement {
   }
 
   /**
-   * Use this function to reload the audio after an error occurred.
+   * Reload the audio after an error occurred — or unconditionally when
+   * `force`d, which is what a refreshed source URL needs: `supply` only swaps
+   * the `<source>` and never interrupts a healthy element. `progress` restores
+   * the playback position across the reload.
    *
    * @type {Actions["reload"]}
    */
   reload(args) {
     this.#withAudioNode(args.audioId, (audio, item) => {
-      if (audio.readyState === 0 || audio.error?.code === 2) {
+      if (args.force || audio.readyState === 0 || audio.error?.code === 2) {
         audio.load();
 
         if (args.progress !== undefined) {
@@ -592,6 +595,7 @@ class AudioEngine extends BroadcastableDiffuseElement {
         progress: a.progress,
         track: a.track,
         url,
+        expiresAt: "url" in a ? a.expiresAt : undefined,
       };
     });
 

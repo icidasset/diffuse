@@ -1,6 +1,7 @@
 import { ostiary, rpc } from "~/common/worker.js";
 import {
   buildURI,
+  mimeType,
   parseURI,
   StorageClient,
 } from "~/components/output/bytes/wnfs/files.js";
@@ -46,9 +47,10 @@ export async function consult(uriOrScheme) {
 export async function upload({ file, uri }) {
   const target = parseURI(uri);
   const name = target?.name ?? safeFileName(file.name);
+  const mime = file.type || mimeType(name);
 
   const bytes = new Uint8Array(await file.arrayBuffer());
-  await client.write(name, bytes);
+  await client.uploadFile(name, bytes, mime);
 
   return buildURI(name);
 }
@@ -60,7 +62,7 @@ export async function deleteFn(uri) {
   const parsed = parseURI(uri);
   if (!parsed) return;
 
-  await client.remove(parsed.name);
+  await client.deleteFile(parsed.name);
 }
 
 /**

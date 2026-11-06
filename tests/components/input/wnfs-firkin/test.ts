@@ -26,11 +26,19 @@ describe("components/input/wnfs-firkin", () => {
 
       const channel = rpc(server, {
         storageStatus: () => ({ connected: true, did: "did:key:test" }),
-        storageList: () =>
-          [...files.keys()].map((name) => ({ name, modified: 0 })),
+        storageListFiles: () =>
+          [...files.keys()].map((name) => ({
+            name,
+            cid: "bafkreitest",
+            size: 3,
+            mime: "audio/mpeg",
+            modified: 0,
+          })),
         storageRead: (name) => files.get(name),
-        storageWrite: () => "root",
-        storageDelete: () => null,
+        storageFileURL: (name) =>
+          `https://firkin.test/blob/bafkreitest?token=x&name=${name}`,
+        storageUploadFile: () => ({ cid: "bafkreitest" }),
+        storageDeleteFile: () => undefined,
       });
 
       const input = new mod.CLASS();
@@ -60,9 +68,7 @@ describe("components/input/wnfs-firkin", () => {
           hasId: typeof track.id === "string" && track.id.length > 0,
           uri: track.uri,
         })),
-        resolved: Boolean(
-          resolved && "url" in resolved && resolved.url.startsWith("blob:"),
-        ),
+        resolvedUrl: resolved && "url" in resolved ? resolved.url : null,
         artwork,
         sources,
       };
@@ -72,7 +78,9 @@ describe("components/input/wnfs-firkin", () => {
     expect(result.tracks).toEqual([
       { hasId: true, uri: "wnfs+firkin://me/files/a.mp3" },
     ]);
-    expect(result.resolved).toBe(true);
+    expect(result.resolvedUrl).toBe(
+      "https://firkin.test/blob/bafkreitest?token=x&name=a.mp3",
+    );
     expect(result.artwork).toBe(null);
     expect(result.sources).toEqual([
       { label: "Firkin + WNFS", uri: "wnfs+firkin://me" },
@@ -98,10 +106,11 @@ describe("components/input/wnfs-firkin", () => {
 
       const channel = rpc(server, {
         storageStatus: () => ({ connected: true }),
-        storageList: () => [],
+        storageListFiles: () => [],
         storageRead: () => undefined,
-        storageWrite: () => null,
-        storageDelete: () => null,
+        storageFileURL: () => null,
+        storageUploadFile: () => null,
+        storageDeleteFile: () => undefined,
       });
 
       const input = new mod.CLASS();

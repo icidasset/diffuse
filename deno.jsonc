@@ -82,7 +82,7 @@
     "music-metadata": "npm:music-metadata@^11.15.0",
 
     // Firkin SDK (browser-first client for the Firkin storage API)
-    "@tokono.ma/firkin": "npm:@tokono.ma/firkin@0.1.1",
+    "@tokono.ma/firkin": "npm:@tokono.ma/firkin@0.2.0",
 
     // Build
     "@atcute/lex-cli": "npm:@atcute/lex-cli@^3.3.0",

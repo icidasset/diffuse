@@ -11,7 +11,7 @@ import { SCHEME } from "~/components/output/bytes/wnfs/files.js";
 ////////////////////////////////////////////
 
 /**
- * Uploader that stores files in the Firkin + WNFS WNFS.
+ * Uploader that stores audio in Firkin and records pointers in the WNFS.
  *
  * @implements {ProxiedActions<UploadActions>}
  * @implements {UploadSchemeProvider}

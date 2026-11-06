@@ -4,6 +4,7 @@ import { ostiary, rpc } from "~/common/worker.js";
 import { isAudioFile } from "~/components/input/common.js";
 import {
   buildURI,
+  FILE_URL_TTL_SECONDS,
   mimeType,
   parseURI,
   SCHEME,
@@ -122,7 +123,7 @@ export async function list(cachedTracks = []) {
 
   let files;
   try {
-    files = (await client.list()).filter((file) => isAudioFile(file.name));
+    files = (await client.listFiles()).filter((file) => isAudioFile(file.name));
   } catch {
     // The storage became unreachable (tab closed, session lost). Keep the
     // cached tracks rather than dropping the user's library.
@@ -178,6 +179,21 @@ export async function list(cachedTracks = []) {
 export async function resolve({ uri }) {
   const parsed = parseURI(uri);
   if (!parsed) return undefined;
+
+  // Stream directly from Firkin with a presigned, CID-scoped URL: the media
+  // element and metadata workers get HTTP range support without WNFS or blob
+  // buffering in between.
+  try {
+    const url = await client.fileURL(parsed.name, FILE_URL_TTL_SECONDS);
+    if (url) {
+      return {
+        url,
+        expiresAt: Math.round(Date.now() / 1000) + FILE_URL_TTL_SECONDS,
+      };
+    }
+  } catch {
+    // Presigned URLs unavailable — fall back to a blob.
+  }
 
   let url = blobUrls.get(uri);
 

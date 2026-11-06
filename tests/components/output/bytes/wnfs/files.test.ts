@@ -3,6 +3,10 @@ import { expect } from "@std/expect";
 
 import {
   buildURI,
+  decodeManifest,
+  encodeManifest,
+  FILE_URL_TTL_SECONDS,
+  FILES_MANIFEST,
   mimeType,
   outputChannelName,
   parseURI,
@@ -44,5 +48,31 @@ describe("components/output/bytes/wnfs/files", () => {
     expect(mimeType("track.flac")).toBe("audio/flac");
     expect(mimeType("track.unknown")).toBe("application/octet-stream");
     expect(mimeType("track")).toBe("application/octet-stream");
+  });
+
+  it("round-trips the pointer manifest", () => {
+    expect(FILES_MANIFEST).toBe("diffuse-files.json");
+    expect(FILE_URL_TTL_SECONDS).toBe(6 * 60 * 60);
+
+    const manifest = {
+      version: 1,
+      files: {
+        "a.mp3": {
+          cid: "bafkreitest",
+          size: 3,
+          mime: "audio/mpeg",
+          modified: 123,
+        },
+      },
+    };
+
+    expect(decodeManifest(encodeManifest(manifest))).toEqual(manifest);
+  });
+
+  it("treats a corrupt manifest as empty", () => {
+    expect(decodeManifest(new TextEncoder().encode("not json"))).toEqual({
+      version: 1,
+      files: {},
+    });
   });
 });

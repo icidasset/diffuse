@@ -12,7 +12,7 @@ import { SCHEME, SOURCE_URI } from "~/components/output/bytes/wnfs/files.js";
 ////////////////////////////////////////////
 
 /**
- * Audio source backed by the files in the Firkin + WNFS WNFS.
+ * Audio source backed by Firkin blobs listed in the WNFS pointer map.
  *
  * The actual WNFS work happens in the storage output element; this element's
  * worker reaches it over a `BroadcastChannel`.

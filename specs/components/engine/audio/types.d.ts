@@ -5,7 +5,9 @@ export type Actions = {
   adjustVolume: (_: { audioId?: string; volume: number }) => void;
   pause: (_: { audioId: string }) => void;
   play: (_: { audioId: string; volume?: number }) => void;
-  reload: (_: { audioId: string; play: boolean; progress?: number }) => void;
+  reload: (
+    _: { audioId: string; play: boolean; progress?: number; force?: boolean },
+  ) => void;
   seek: (
     _: { currentTime?: number; audioId: string; percentage?: number },
   ) => void;
@@ -17,7 +19,15 @@ export type Actions = {
 
 export type Audio = AudioUrl | AudioStream;
 
-export type AudioUrl = AudioBase & { url: string };
+export type AudioUrl = AudioBase & {
+  url: string;
+
+  /**
+   * Unix seconds at which `url` stops working (presigned links). `Infinity`
+   * for object URLs, which live as long as the document.
+   */
+  expiresAt?: number;
+};
 
 export type AudioStream = AudioBase & {
   stream: ReadableStream;

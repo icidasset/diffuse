@@ -1,14 +1,12 @@
 import { RpcChannel } from "~/common/worker/rpc-channel.js";
 
 /**
- * Browser-side access to the files stored in the Firkin + WNFS WNFS.
+ * Browser-side access to the audio files referenced by the Firkin + WNFS.
  *
- * The output element owns the mounted file system and exposes these actions
- * over a `BroadcastChannel`, so input and upload workers can list, read and
- * write files without pulling the WNFS/WASM code into their own bundles.
- *
- * Files are stored as a single block each, so they must fit the Firkin
- * instance's per-blob limit (100 MiB by default).
+ * Audio bytes live in Firkin as raw blobs (content-addressed). The WNFS only
+ * stores a small pointer map: `<name> → { cid, size, mime, modified }`. Input
+ * and upload workers talk to the output element over a `BroadcastChannel`; the
+ * output owns the WNFS mount and the Firkin session.
  */
 
 /** URI scheme for files in the Firkin + WNFS WNFS. */
@@ -17,8 +15,8 @@ export const SCHEME = "wnfs+firkin";
 /** The single URI representing the current Firkin + WNFS account. */
 export const SOURCE_URI = `${SCHEME}://me`;
 
-/** Private WNFS directory that holds uploaded media files. */
-export const STORAGE_DIR = "diffuse-files";
+/** Private WNFS file holding the `name → Firkin CID` pointer map. */
+export const FILES_MANIFEST = "diffuse-files.json";
 
 /** Path segment used in file URIs (user-facing). */
 export const URI_DIR = "files";
@@ -27,10 +25,56 @@ export const URI_DIR = "files";
 export const OUTPUT_NAME = "diffuse/output/bytes/wnfs";
 
 /**
+ * How long a presigned Firkin read URL stays valid.
+ *
+ * The queue-audio orchestrator re-resolves and reloads a URL shortly before
+ * it lapses, so this is a ceiling rather than the expected link lifetime —
+ * a leaked URL stays a usable bearer capability for at most this long.
+ */
+export const FILE_URL_TTL_SECONDS = 6 * 60 * 60;
+
+/**
  * @typedef {Object} StorageFile
  * @property {string} name
+ * @property {string} cid - Raw Firkin blob CID.
+ * @property {number} size - Bytes.
+ * @property {string} mime
  * @property {number} modified - Unix epoch milliseconds.
  */
+
+/**
+ * @typedef {Object} FilesManifest
+ * @property {number} version
+ * @property {Record<string, Omit<StorageFile, "name">>} files
+ */
+
+/**
+ * @param {Uint8Array} bytes
+ * @returns {FilesManifest}
+ */
+export function decodeManifest(bytes) {
+  try {
+    const parsed = JSON.parse(new TextDecoder().decode(bytes));
+    if (
+      parsed && typeof parsed === "object" && parsed.files &&
+      typeof parsed.files === "object"
+    ) {
+      return { version: 1, files: parsed.files };
+    }
+  } catch (err) {
+    console.error("Failed to decode the Firkin + WNFS file manifest:", err);
+  }
+
+  return { version: 1, files: {} };
+}
+
+/**
+ * @param {FilesManifest} manifest
+ * @returns {Uint8Array}
+ */
+export function encodeManifest(manifest) {
+  return new TextEncoder().encode(JSON.stringify(manifest));
+}
 
 /**
  * @typedef {Object} StorageStatus
@@ -108,9 +152,10 @@ export function mimeType(name) {
 /** Per-action timeouts. Writes wait for the debounced `/dag/push`. */
 const TIMEOUT = {
   status: 3_000,
-  list: 60_000,
+  list: 30_000,
   read: 60_000,
-  write: 120_000,
+  fileURL: 10_000,
+  upload: 120_000,
   delete: 120_000,
 };
 
@@ -146,8 +191,8 @@ export class StorageClient {
   }
 
   /** @returns {Promise<StorageFile[]>} */
-  list() {
-    return this.#call("storageList", [], TIMEOUT.list);
+  listFiles() {
+    return this.#call("storageListFiles", [], TIMEOUT.list);
   }
 
   /**
@@ -159,20 +204,38 @@ export class StorageClient {
   }
 
   /**
+   * A short-lived, presigned Firkin URL for this file.
+   *
+   * @param {string} name
+   * @param {number} [expireIn]
+   * @returns {Promise<string | null>}
+   */
+  fileURL(name, expireIn) {
+    return this.#call("storageFileURL", [name, expireIn], TIMEOUT.fileURL);
+  }
+
+  /**
+   * Upload a file as a raw Firkin blob and record its pointer in the WNFS.
+   *
    * @param {string} name
    * @param {Uint8Array} bytes
-   * @returns {Promise<string | null>} The new data root.
+   * @param {string} mime
+   * @returns {Promise<{ cid: string } | null>}
    */
-  write(name, bytes) {
-    return this.#call("storageWrite", [name, bytes], TIMEOUT.write);
+  uploadFile(name, bytes, mime) {
+    return this.#call(
+      "storageUploadFile",
+      [name, bytes, mime],
+      TIMEOUT.upload,
+    );
   }
 
   /**
    * @param {string} name
-   * @returns {Promise<string | null>} The new data root, or null if unchanged.
+   * @returns {Promise<void>}
    */
-  remove(name) {
-    return this.#call("storageDelete", [name], TIMEOUT.delete);
+  deleteFile(name) {
+    return this.#call("storageDeleteFile", [name], TIMEOUT.delete);
   }
 
   close() {
@@ -222,8 +285,9 @@ export class StorageClient {
 /**
  * @typedef {Object} StorageActions
  * @property {() => StorageStatus | Promise<StorageStatus>} storageStatus
- * @property {() => StorageFile[] | Promise<StorageFile[]>} storageList
+ * @property {() => StorageFile[] | Promise<StorageFile[]>} storageListFiles
  * @property {(name: string) => Uint8Array | Promise<Uint8Array>} storageRead
- * @property {(name: string, bytes: Uint8Array) => string | null | Promise<string | null>} storageWrite
- * @property {(name: string) => string | null | Promise<string | null>} storageDelete
+ * @property {(name: string, expireIn?: number) => string | null | Promise<string | null>} storageFileURL
+ * @property {(name: string, bytes: Uint8Array, mime: string) => { cid: string } | null | Promise<{ cid: string } | null>} storageUploadFile
+ * @property {(name: string) => void | Promise<void>} storageDeleteFile
  */
