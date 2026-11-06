@@ -96,6 +96,25 @@ import {
 ////////////////////////////////////////////
 
 /**
+ * Thrown when a Firkin instance rejects the account: its DID has to be
+ * registered before the registry is readable, so the UI surfaces the DID for
+ * copying instead of burying it in an error message.
+ */
+export class UnregisteredAccountError extends Error {
+  /** @param {string} did */
+  constructor(did) {
+    super(
+      "This account is not registered with the Firkin instance. Register its DID in the instance's admin console, then sign in.",
+    );
+
+    this.name = "UnregisteredAccountError";
+
+    /** The DID that has to be registered. */
+    this.did = did;
+  }
+}
+
+/**
  * Collections copied from the local output when their WNFS file is missing.
  *
  * @type {readonly CollectionName[]}
@@ -133,6 +152,7 @@ class WnfsFirkinOutput extends BroadcastedOutputElement {
   #ready = signal(false);
   #session = signal(/** @type {Session | undefined} */ (undefined));
   #storage = signal(/** @type {Storage | undefined} */ (undefined));
+  #lastPasskeyDid = signal(/** @type {string | undefined} */ (undefined));
 
   // STATE
 
@@ -222,6 +242,13 @@ class WnfsFirkinOutput extends BroadcastedOutputElement {
   );
   dataRoot = computed(() => this.#storage.value?.root);
   sessionExpiresAt = computed(() => this.#session.value?.expiresAt);
+
+  /**
+   * The DID the most recent passkey flow derived. Set even when that flow then
+   * failed — a freshly created passkey whose account the instance has not
+   * registered yet is exactly when the UI needs it.
+   */
+  lastPasskeyDid = computed(() => this.#lastPasskeyDid.value);
 
   // LIFECYCLE
 
@@ -319,10 +346,16 @@ class WnfsFirkinOutput extends BroadcastedOutputElement {
     const apiBase = (options.apiBase?.trim() || DEFAULT_API_BASE)
       .replace(/\/+$/, "");
 
+    // Reset first: only a DID derived by *this* attempt may be shown, so a
+    // cancelled prompt never leaves a stale one in the dialog.
+    this.#lastPasskeyDid.value = undefined;
+
     const prf = await this.#passkey(options.create);
 
     const accountSigner = await accountSignerFromPrf(prf.prfFirst);
     const accountDid = accountSigner.did();
+
+    this.#lastPasskeyDid.value = accountDid;
 
     const session = await this.#createSession(
       apiBase,
@@ -346,9 +379,7 @@ class WnfsFirkinOutput extends BroadcastedOutputElement {
     } catch (err) {
       const status = /** @type {any} */ (err)?.status;
       if (status === 401 || status === 403) {
-        throw new Error(
-          `This account (${accountDid}) is not registered with the Firkin instance. Register the DID in the instance's admin console, then sign in.`,
-        );
+        throw new UnregisteredAccountError(accountDid);
       }
       throw err;
     }
@@ -406,21 +437,25 @@ class WnfsFirkinOutput extends BroadcastedOutputElement {
   }
 
   /**
-   * Authenticate with an existing passkey and return the DID it derives.
+   * Create a passkey (or authenticate with an existing one) and return the DID
+   * it derives. Purely local: it touches neither the session nor the WNFS, and
+   * makes no request, which is what the first-time setup needs — a new
+   * account's DID has to be registered with the instance before it can be
+   * used for anything.
    *
-   * This touches neither the session nor the WNFS: it is useful to find out
-   * which DID has to be registered with a Firkin instance before the first
-   * sign-in.
-   *
+   * @param {{ create?: boolean }} [options]
    * @returns {Promise<string>}
    */
-  async passkeyDid() {
+  async passkeyDid(options = {}) {
     await this.whenConnected();
 
-    const prf = await this.#passkey(false);
+    const prf = await this.#passkey(options.create ?? false);
     const signer = await accountSignerFromPrf(prf.prfFirst);
+    const did = signer.did();
 
-    return signer.did();
+    this.#lastPasskeyDid.value = did;
+
+    return did;
   }
 
   /** Forget the local session and storage pointer. */
@@ -431,6 +466,7 @@ class WnfsFirkinOutput extends BroadcastedOutputElement {
 
     this.#session.value = undefined;
     this.#storage.value = undefined;
+    this.#lastPasskeyDid.value = undefined;
     this.#fs = undefined;
     this.#blockstore = undefined;
     this.#rb = undefined;

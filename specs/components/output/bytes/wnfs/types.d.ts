@@ -10,6 +10,12 @@ export type WnfsFirkinOutputElement =
     sessionExpiresAt: SignalReader<number | undefined>;
 
     /**
+     * The DID the most recent passkey flow derived, even when that flow then
+     * failed (e.g. the account is not registered with the instance yet).
+     */
+    lastPasskeyDid: SignalReader<string | undefined>;
+
+    /**
      * Authenticate with a passkey, delegate all `/firkin` capabilities to a
      * browser session key, and load or create the WNFS.
      */
@@ -19,10 +25,11 @@ export type WnfsFirkinOutputElement =
     }): Promise<{ did: string; root: string; created: boolean }>;
 
     /**
-     * Authenticate with an existing passkey and return the DID it derives,
-     * without touching the session or the WNFS.
+     * Create a passkey (or authenticate with an existing one) and return the
+     * DID it derives, without touching the session or the WNFS. Local only:
+     * no request is made.
      */
-    passkeyDid(): Promise<string>;
+    passkeyDid(options?: { create?: boolean }): Promise<string>;
 
     /** Forget the local session and storage pointer. */
     signOut(): Promise<void>;

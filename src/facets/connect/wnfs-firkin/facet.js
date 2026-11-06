@@ -1,6 +1,9 @@
 import { html, render as litRender } from "lit-html";
 
-import { NAME as WNFS_OUTPUT_NAME } from "~/components/output/bytes/wnfs/element.js";
+import {
+  NAME as WNFS_OUTPUT_NAME,
+  UnregisteredAccountError,
+} from "~/components/output/bytes/wnfs/element.js";
 import { DEFAULT_API_BASE } from "~/components/output/bytes/wnfs/constants.js";
 import { effect } from "~/common/signal.js";
 import foundation from "~/common/foundation.js";
@@ -107,8 +110,9 @@ const { setItems, setError, setDialogError } = setup({
       >
     </label>
     <p class="caption">
-      Not registered yet? Use <strong>Show DID</strong> to find the DID for an
-      existing passkey and register it with the instance, then sign in.
+      Not registered yet? <strong>Create a new passkey</strong> or
+      <strong>Show DID</strong> (for an existing one) to get its DID — the
+      instance's admin has to register it first.
     </p>
     <div id="rb-did-result" hidden>
       <p class="caption" style="font-weight: 700; margin-top: 0;">Account DID</p>
@@ -124,7 +128,7 @@ const { setItems, setError, setDialogError } = setup({
           <i class="ph-fill ph-copy"></i>
         </button>
       </div>
-      <p class="caption">
+      <p class="caption" id="rb-did-hint">
         Register this DID with the instance, then sign in.
       </p>
     </div>
@@ -141,7 +145,7 @@ const { setItems, setError, setDialogError } = setup({
     </button>
   `,
 
-  onSubmit: () => connect(false),
+  onSubmit: () => connectWithDid(),
 
   onOutputActivate: async () => {
     await outputOrchestrator.select(OUTPUT_ID);
@@ -168,11 +172,16 @@ const copyDidBtn =
   /** @type {HTMLButtonElement | null} */ (
     document.querySelector("#rb-copy-did-btn")
   );
+const didHint =
+  /** @type {HTMLElement | null} */ (document.querySelector("#rb-did-hint"));
+
+const DEFAULT_DID_HINT = "Register this DID with the instance, then sign in.";
 
 // Do not carry a previously shown DID into the next dialog session.
 dialog?.addEventListener("close", () => {
   if (didResult) didResult.hidden = true;
   if (didValue) didValue.textContent = "";
+  if (didHint) didHint.textContent = DEFAULT_DID_HINT;
 });
 
 ////////////////////////////////////////////
@@ -210,14 +219,44 @@ effect(() => {
 // ACTIONS
 ////////////////////////////////////////////
 
-/** @param {boolean} create */
-async function connect(create) {
+/** Sign in to the instance and make this output the selected one. */
+async function connect() {
   if (!wnfsEl) throw new Error("Firkin + WNFS output is not available");
 
   const apiBase = apiInput.value.trim() || undefined;
 
-  await wnfsEl.signIn({ apiBase, create });
+  await wnfsEl.signIn({ apiBase });
   await outputOrchestrator.select(OUTPUT_ID);
+}
+
+/**
+ * Sign in, surfacing the passkey's DID when that is the way forward: an
+ * unregistered account needs its DID registered before anything else works.
+ */
+async function connectWithDid() {
+  try {
+    await connect();
+  } catch (err) {
+    const did = err instanceof UnregisteredAccountError
+      ? wnfsEl?.lastPasskeyDid()
+      : undefined;
+
+    if (did) showDid(did);
+
+    throw err;
+  }
+}
+
+/**
+ * Show a DID in the dialog's result block, ready to copy.
+ *
+ * @param {string} did
+ * @param {string} [hint]
+ */
+function showDid(did, hint = DEFAULT_DID_HINT) {
+  if (didValue) didValue.textContent = did;
+  if (didHint) didHint.textContent = hint;
+  if (didResult) didResult.hidden = false;
 }
 
 async function disconnect() {
@@ -244,10 +283,7 @@ showDidBtn?.addEventListener("click", async () => {
   if (didResult) didResult.hidden = true;
 
   try {
-    const did = await wnfsEl.passkeyDid();
-
-    if (didValue) didValue.textContent = did;
-    if (didResult) didResult.hidden = false;
+    showDid(await wnfsEl.passkeyDid());
   } catch (err) {
     setDialogError(
       err instanceof Error ? err.message : "Could not derive the DID",
@@ -285,8 +321,17 @@ document
     setDialogError(null);
 
     try {
-      await connect(true);
-      dialog?.close();
+      if (!wnfsEl) throw new Error("Firkin + WNFS output is not available");
+
+      // Deliberately local: the account cannot be used until an admin
+      // registers the DID it derives, so there is nothing to ask the
+      // instance yet. Signing in is a separate step, once it is registered.
+      const did = await wnfsEl.passkeyDid({ create: true });
+
+      showDid(
+        did,
+        "Passkey created. Register this DID with the instance, then sign in.",
+      );
     } catch (err) {
       setDialogError(
         err instanceof Error ? err.message : "Passkey setup failed",
