@@ -22,7 +22,7 @@ import {
   delegate,
   inlineInvocation,
   invocation,
-} from "~/vendor/firkin/index.js";
+} from "@tokono.ma/firkin";
 
 import { FirkinBlockstore } from "./blockstore.js";
 import {

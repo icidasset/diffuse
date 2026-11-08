@@ -5,7 +5,7 @@ import { utf8 } from "iso-base/utf8";
 import {
   Signer,
   WebCryptoSigner,
-} from "~/vendor/firkin/index.js";
+} from "@tokono.ma/firkin";
 
 import { KEY_DERIVATION_INFO, KEY_DERIVATION_SALT } from "./constants.js";
 

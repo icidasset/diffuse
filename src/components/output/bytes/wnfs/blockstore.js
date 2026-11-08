@@ -4,7 +4,7 @@ import { CID } from "multiformats/cid";
 import { IDB_BLOCK_PREFIX } from "./constants.js";
 
 /**
- * @import { Firkin } from "~/vendor/firkin/index.js"
+ * @import { Firkin } from "@tokono.ma/firkin"
  * @import { Blockstore, Pair } from "interface-blockstore"
  * @import { AwaitIterable } from "interface-store"
  */
