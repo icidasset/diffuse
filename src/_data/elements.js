@@ -285,6 +285,18 @@ export default {
         "Stores output into the local indexedDB. Supports any type of data that indexedDB supports.",
     },
     {
+      url: "components/output/bytes/dropbox/element.js",
+      title: "Bytes / Dropbox",
+      desc:
+        "Store output data as raw bytes in the Dropbox app folder.",
+    },
+    {
+      url: "components/output/bytes/wnfs/element.js",
+      title: "Bytes / Firkin + WNFS",
+      desc:
+        "Store output data as an encrypted WNFS DAG whose blocks are hosted on Firkin. The WNFS root and the keys needed to unlock it are kept in the Firkin registry, so the same account can restore the data elsewhere.",
+    },
+    {
       url: "components/output/bytes/s3/element.js",
       title: "Bytes / S3",
       desc:
@@ -301,13 +313,7 @@ export default {
       title: "Raw / AT Protocol (Space)",
       desc:
         "Raw output backed by an AT Protocol permissioned data space, storing the user's Diffuse data in their own account space.",
-    },
-    {
-      url: "components/output/bytes/dropbox/element.js",
-      title: "Bytes / Dropbox",
-      desc:
-        "Store output data as raw bytes in the Dropbox app folder.",
-    },
+    }
   ],
 
   supplements: [

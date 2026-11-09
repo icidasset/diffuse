@@ -2,7 +2,7 @@
 name: diffuse-facet
 description: Create an interface or feature facet for Diffuse (diffuse.sh)
 user-invocable: true
-version: 0.3.0
+version: 0.3.1
 ---
 
 Create a [Diffuse](https://diffuse.sh) facet and produce the HTML ready to paste into the `create/` page.
@@ -141,7 +141,8 @@ queue.unshift(); // previous track
 ### Additional requirements and notes
 
 - When working with track lists, realise that there could be a huge number of tracks that you need to work with (eg. 20000 tracks). Implement a custom virtual scroll (see the winamp or blur browser elements for examples).
-- Prefer the lit-html library as the templating/rendering engine. It is available from `~/vendor/lit-html/index.js` (among some other libraries such as: `idb-keyval`, `throttle-debounce`, several `@atcute` libraries, and `kmenu-core`). Always make sure to use the `~/vendor/` prefix for libraries, you're not working in an enviroment that bundles code.
+- Prefer the lit-html library as the templating/rendering engine. The import map lives in `src/_includes/layouts/diffuse.vto`; it exposes `~/` as the build root and aliases these bare specifiers to `./vendor/…`: `lit-html`, `idb-keyval`, `throttle-debounce`, `kmenu`, `@atcute/cbor`, `@atcute/oauth-browser-client`, `@atcute/tid`, `@paulmillr/qr`, plus the `@awesome.me/webawesome/` and `@phosphor-icons/web/` prefixes.
+- Facets are not bundled, so any library without an import map entry has to be imported through its vendored file path, e.g. `multiformats/cid` as `~/vendor/multiformats/cid.js`, or `@tokono.ma/firkin` as `~/vendor/firkin/index.js`. Never import a bare npm or jsr specifier that isn't in the import map — it will fail to resolve in the browser.
 - Prefer to fetch the tracks from the `scoped-tracks` orchestrator element.
 - Always prefer to use an orchestrator or another component instead of reimplementing logic yourself.
 - Be mindful of performance.
