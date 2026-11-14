@@ -24,17 +24,25 @@ export const IDB_BLOCK_PREFIX = `${IDB_PREFIX}/block`;
 export const IDB_LOCAL_PREFIX = `${IDB_PREFIX}/local`;
 
 /**
- * Registry names in the Firkin account registry:
- *
- * - `diffuse.storage.root` → the WNFS data root (CID of the root tree).
- * - `diffuse.storage.private-key` → a blob containing the WNFS exchange key
- *   private JWK, encrypted with the passkey-derived XChaCha20-Poly1305 key.
- *
- * Registry names cannot contain `/`, see `rb_core::registry::validate_name`.
+ * Namespace in Firkin's namespaced name registry. Firkin namespaces are a
+ * single path segment (no `/`), so the hierarchical name is dot-separated.
+ * This scopes every Diffuse WNFS pointer to this feature.
  */
-export const REGISTRY_ROOT = "diffuse.storage.root";
+export const REGISTRY_NAMESPACE = "diffuse.wnfs.output";
+
+/**
+ * Registry names in `REGISTRY_NAMESPACE`:
+ *
+ * - `root` → the WNFS data root (CID of the root tree).
+ * - `private-key` → a blob containing the WNFS exchange key private JWK,
+ *   encrypted with the passkey-derived XChaCha20-Poly1305 key.
+ *
+ * Registry namespaces and names cannot contain `/`, see
+ * `firkin_core::registry::validate_name`.
+ */
+export const REGISTRY_ROOT = "root";
 /** Registry name for the encrypted WNFS exchange private key blob. */
-export const REGISTRY_PRIVATE_KEY = "diffuse.storage.private-key";
+export const REGISTRY_PRIVATE_KEY = "private-key";
 
 /**
  * Debounce for coalescing block uploads from rapid saves into one

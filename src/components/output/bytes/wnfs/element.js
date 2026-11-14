@@ -17,11 +17,13 @@ import {
 } from "~/components/transformer/output/refiner/passkey-encryption/passkey.js";
 
 import {
+  ApiError,
+  CMD,
   Firkin,
   WebCryptoSigner,
   delegate,
+  delegationTokenSource,
   inlineInvocation,
-  invocation,
 } from "@tokono.ma/firkin";
 
 import { FirkinBlockstore } from "./blockstore.js";
@@ -50,6 +52,7 @@ import {
   IDB_SESSION,
   IDB_STORAGE,
   PASSKEY_NAMESPACE,
+  REGISTRY_NAMESPACE,
   REGISTRY_PRIVATE_KEY,
   REGISTRY_ROOT,
   RESTORE_TIMEOUT_MS,
@@ -74,7 +77,6 @@ import {
  * @property {number} expiresAt
  * @property {boolean} [inlineProofs] - The server rejected delegation publishing
  *   (or it failed), so tokens carry their proof inline instead of by CID.
- * @property {boolean} [published] - The delegation is in the server's store.
  *
  * @typedef {Object} Storage
  * @property {string} apiBase
@@ -372,13 +374,13 @@ class WnfsFirkinOutput extends BroadcastedOutputElement {
     let keyCid = null;
 
     try {
-      [rootCid, keyCid] = await Promise.all([
-        this.#rb.registryGet(REGISTRY_ROOT),
-        this.#rb.registryGet(REGISTRY_PRIVATE_KEY),
-      ]);
+      const pointers = await this.#readRegistryPointers();
+      rootCid = pointers.root;
+      keyCid = pointers.key;
     } catch (err) {
-      const status = /** @type {any} */ (err)?.status;
-      if (status === 401 || status === 403) {
+      if (
+        err instanceof ApiError && (err.status === 401 || err.status === 403)
+      ) {
         throw new UnregisteredAccountError(accountDid);
       }
       throw err;
@@ -523,7 +525,10 @@ class WnfsFirkinOutput extends BroadcastedOutputElement {
       return;
     }
 
-    const rootCid = await this.#rb.registryGet(REGISTRY_ROOT);
+    const rootCid = await this.#rb.registryGet(
+      REGISTRY_NAMESPACE,
+      REGISTRY_ROOT,
+    );
     if (!rootCid) return;
 
     // Lazy mount: reads are served from the local collection cache when it
@@ -536,6 +541,26 @@ class WnfsFirkinOutput extends BroadcastedOutputElement {
     if (rootCid !== storage.root) {
       await IDB.set(IDB_STORAGE, this.#storage.value);
     }
+  }
+
+  /**
+   * Read both WNFS pointers from the account registry in one request.
+   *
+   * Firkin's registry is namespaced and `registryNames` returns every name in
+   * a namespace, so the root and key pointers share one authenticated read.
+   *
+   * @returns {Promise<{ root: string | null; key: string | null }>}
+   */
+  async #readRegistryPointers() {
+    const rb = this.#rb;
+    if (!rb) throw new Error("Firkin client is not ready");
+
+    const names = await rb.registryNames(REGISTRY_NAMESPACE);
+
+    return {
+      root: names?.[REGISTRY_ROOT] ?? null,
+      key: names?.[REGISTRY_PRIVATE_KEY] ?? null,
+    };
   }
 
   /**
@@ -629,8 +654,12 @@ class WnfsFirkinOutput extends BroadcastedOutputElement {
     const encrypted = encryptPrivateKey(storageKey, payload);
     const { cid: keyCid } = await this.#rb.upload(encrypted);
 
-    await this.#rb.registrySet(REGISTRY_PRIVATE_KEY, keyCid);
-    await this.#rb.registrySet(REGISTRY_ROOT, root);
+    await this.#rb.registrySet(
+      REGISTRY_NAMESPACE,
+      REGISTRY_PRIVATE_KEY,
+      keyCid,
+    );
+    await this.#rb.registrySet(REGISTRY_NAMESPACE, REGISTRY_ROOT, root);
 
     // Keep a non-extractable handle for everyday use.
     const privateKey = await importExchangePrivateKey(privateJwk);
@@ -734,7 +763,7 @@ class WnfsFirkinOutput extends BroadcastedOutputElement {
     await blockstore.flush(root);
     blockstore.setRoot(root);
 
-    await rb.registrySet(REGISTRY_ROOT, root);
+    await rb.registrySet(REGISTRY_NAMESPACE, REGISTRY_ROOT, root);
     storage.root = root;
 
     await IDB.set(IDB_LOCAL_ROOT, root);
@@ -807,39 +836,35 @@ class WnfsFirkinOutput extends BroadcastedOutputElement {
       keys: () => this.#blockstore?.keys() ?? [],
     };
 
+    // Reference the delegation by CID when it has been published (the SDK's
+    // default; smaller tokens). Servers without a delegation store get the
+    // bootstrap shape with the proof inline.
+    /** @type {import("@tokono.ma/firkin").TokenSource} */
+    const tokenSource = session.inlineProofs
+      ? async (command, options) =>
+        await inlineInvocation(sessionSigner, {
+          command,
+          proofs: [{ proof: session.proof, cid: session.proofCid }],
+          expireIn: options?.expireIn ?? 600,
+        })
+      : delegationTokenSource(
+        sessionSigner,
+        { cid: session.proofCid },
+        { subject: session.did },
+      );
+
     return new Firkin(
       session.apiBase,
-      async (/** @type {string} */ command, options) => {
-        const expireIn = options?.expireIn ?? 600;
-
-        // Reference the delegation by CID when it has been published (the
-        // SDK's default; smaller tokens). Servers without a delegation store
-        // get the bootstrap shape with the proof inline.
-        if (session.inlineProofs) {
-          return await inlineInvocation(sessionSigner, {
-            command,
-            proofs: [{ proof: session.proof, cid: session.proofCid }],
-            expireIn,
-          });
-        }
-
-        return await invocation(sessionSigner, {
-          command,
-          // The bytes are used locally to discover/narrow the chain; only the
-          // CID goes on the wire.
-          proofs: [{ proof: session.proof, cid: session.proofCid }],
-          subject: session.did,
-          expireIn,
-        });
-      },
-      undefined,
-      /** @type {any} */ (blockCache),
+      { tokenSource },
+      { cache: /** @type {any} */ (blockCache) },
     );
   }
 
   /**
    * Publish the session delegation to the server's delegation store so tokens
-   * can reference it by CID. Idempotent; publishing is skipped once done.
+   * can reference it by CID. Idempotent, so it runs on every restore: a server
+   * that has lost its store (or a freshly upgraded instance) gets the
+   * delegation again.
    *
    * Falls back to inline proofs on servers that have no delegation store
    * (the token still works there, it is just larger).
@@ -847,7 +872,7 @@ class WnfsFirkinOutput extends BroadcastedOutputElement {
    * @param {Session} session
    */
   async #publishSessionDelegation(session) {
-    if (session.published || session.inlineProofs) return;
+    if (session.inlineProofs) return;
 
     const sessionSigner = WebCryptoSigner.fromPersisted(
       session.privateKey,
@@ -861,9 +886,10 @@ class WnfsFirkinOutput extends BroadcastedOutputElement {
 
     try {
       // Bootstrap token: the delegation is not stored yet, so its proof has to
-      // travel inline for this one call.
+      // travel inline for this one call. Publishing is its own capability,
+      // narrowed to this delegation's CID (not blob upload).
       const token = await inlineInvocation(sessionSigner, {
-        command: "/firkin/blob/upload",
+        command: `${CMD.delegationPublish}/${session.proofCid}`,
         proofs: [{ proof: session.proof, cid: session.proofCid }],
         expireIn: 60,
       });
@@ -872,14 +898,12 @@ class WnfsFirkinOutput extends BroadcastedOutputElement {
         { proof: session.proof, cid: session.proofCid },
         { token },
       );
-      session.published = true;
       session.inlineProofs = false;
     } catch (err) {
       console.warn(
         "Could not publish the Firkin session delegation; falling back to inline proofs:",
         err,
       );
-      session.published = false;
       session.inlineProofs = true;
     }
 
@@ -1310,7 +1334,7 @@ class WnfsFirkinOutput extends BroadcastedOutputElement {
       }
 
       await blockstore.flush(root);
-      await rb.registrySet(REGISTRY_ROOT, root);
+      await rb.registrySet(REGISTRY_NAMESPACE, REGISTRY_ROOT, root);
       blockstore.setRoot(root);
 
       const next = { ...storage, root };

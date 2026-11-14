@@ -48,7 +48,7 @@ describe("Firkin SDK DAG sync", () => {
     const rb = new Firkin(
       "http://example",
       async () => new Uint8Array([1]),
-      fetchImpl,
+      { fetch: fetchImpl },
     );
 
     const blocks = await rb.dagPull(root.cid.toString());
@@ -94,7 +94,7 @@ describe("Firkin SDK DAG sync", () => {
     const rb = new Firkin(
       "http://example",
       async () => new Uint8Array([1]),
-      fetchImpl,
+      { fetch: fetchImpl },
     );
 
     await rb.dagPush(root.cid.toString(), [

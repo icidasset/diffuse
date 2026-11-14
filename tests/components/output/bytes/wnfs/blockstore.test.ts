@@ -136,8 +136,7 @@ describe("components/output/bytes/wnfs/blockstore", () => {
       const rb = new Firkin(
         "http://example",
         async () => new Uint8Array([1]),
-        fetchImpl,
-        blockCache,
+        { fetch: fetchImpl, cache: blockCache },
       );
 
       const blocks = await rb.dagPull(rootCid);
