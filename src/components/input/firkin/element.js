@@ -1,5 +1,5 @@
 import { defineElement, DiffuseElement } from "~/common/element.js";
-import { SCHEME, SOURCE_URI } from "~/components/output/bytes/wnfs/files.js";
+import { SCHEME, SOURCE_URI } from "~/common/firkin/files.js";
 
 /**
  * @import {InputActions, InputSchemeProvider} from "@specs/components/input/types.d.ts"
@@ -12,17 +12,17 @@ import { SCHEME, SOURCE_URI } from "~/components/output/bytes/wnfs/files.js";
 ////////////////////////////////////////////
 
 /**
- * Audio source backed by Firkin blobs listed in the WNFS pointer map.
+ * Audio source backed by Firkin blobs listed in the account's file registry.
  *
- * The actual WNFS work happens in the storage output element; this element's
- * worker reaches it over a `BroadcastChannel`.
+ * The worker reads the shared Firkin session from IndexedDB, so this element
+ * does not depend on the WNFS output or a broadcast channel.
  *
  * @implements {ProxiedActions<InputActions>}
  * @implements {InputSchemeProvider}
  */
-class WnfsFirkinInput extends DiffuseElement {
-  static NAME = "diffuse/input/wnfs-firkin";
-  static WORKER_URL = "components/input/wnfs-firkin/worker.js";
+class FirkinInput extends DiffuseElement {
+  static NAME = "diffuse/input/firkin";
+  static WORKER_URL = "components/input/firkin/worker.js";
 
   SCHEME = SCHEME;
 
@@ -40,29 +40,21 @@ class WnfsFirkinInput extends DiffuseElement {
     this.resolve = proxy.resolve;
   }
 
-  /**
-   * Pass the output element's group/namespace to the worker so it can find the
-   * matching broadcast channel.
-   */
-  workerQuery() {
-    return { group: this.group, namespace: this.namespace ?? "" };
-  }
-
   // 🛠️
 
   /** @param {Track[]} _tracks */
   sources(_tracks) {
-    return [{ label: "Firkin + WNFS", uri: SOURCE_URI }];
+    return [{ label: "Firkin", uri: SOURCE_URI }];
   }
 }
 
-export default WnfsFirkinInput;
+export default FirkinInput;
 
 ////////////////////////////////////////////
 // REGISTER
 ////////////////////////////////////////////
 
-export const CLASS = WnfsFirkinInput;
-export const NAME = "di-wnfs-firkin";
+export const CLASS = FirkinInput;
+export const NAME = "di-firkin";
 
 defineElement(NAME, CLASS);

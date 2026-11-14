@@ -1,25 +1,19 @@
 import { ostiary, rpc } from "~/common/worker.js";
 import {
   buildURI,
-  mimeType,
+  deleteFile,
   parseURI,
-  StorageClient,
-} from "~/components/output/bytes/wnfs/files.js";
+  safeFileName,
+  uploadFile,
+} from "~/common/firkin/files.js";
+import { getSessionClient } from "~/common/firkin/session.js";
 
 /**
  * @import { UploadActions as Actions } from "@specs/components/upload/types.d.ts"
  */
 
-////////////////////////////////////////////
-// SETUP
-////////////////////////////////////////////
-
-const params = new URL(globalThis.location.href).searchParams;
-
-const client = new StorageClient({
-  group: params.get("group") || undefined,
-  namespace: params.get("namespace") || undefined,
-});
+const NOT_CONNECTED =
+  "Firkin is not connected. Sign in on the Connect → Firkin + WNFS page first.";
 
 ////////////////////////////////////////////
 // ACTIONS
@@ -34,8 +28,8 @@ export async function consult(uriOrScheme) {
   }
 
   try {
-    const status = await client.status();
-    return { supported: true, consult: status.connected ? "yes" : "no" };
+    const client = await getSessionClient();
+    return { supported: true, consult: client ? "yes" : "no" };
   } catch {
     return { supported: true, consult: "unsure" };
   }
@@ -47,10 +41,12 @@ export async function consult(uriOrScheme) {
 export async function upload({ file, uri }) {
   const target = parseURI(uri);
   const name = target?.name ?? safeFileName(file.name);
-  const mime = file.type || mimeType(name);
+
+  const client = await getSessionClient();
+  if (!client) throw new Error(NOT_CONNECTED);
 
   const bytes = new Uint8Array(await file.arrayBuffer());
-  await client.uploadFile(name, bytes, mime);
+  await uploadFile(client.rb, name, bytes);
 
   return buildURI(name);
 }
@@ -62,7 +58,10 @@ export async function deleteFn(uri) {
   const parsed = parseURI(uri);
   if (!parsed) return;
 
-  await client.deleteFile(parsed.name);
+  const client = await getSessionClient();
+  if (!client) throw new Error(NOT_CONNECTED);
+
+  await deleteFile(client.rb, parsed.name);
 }
 
 /**
@@ -70,24 +69,11 @@ export async function deleteFn(uri) {
  */
 // deno-lint-ignore require-await
 export async function createSource(_args) {
-  // The Firkin + WNFS source is the signed-in output itself; there is no
-  // OAuth flow that could mint one from here.
+  // The Firkin source is the signed-in account itself; there is no OAuth flow
+  // that could mint one from here.
   throw new Error(
-    "Firkin + WNFS does not use OAuth. Sign in on the Connect → Firkin + WNFS page first, then select it for syncing.",
+    "Firkin does not use OAuth. Sign in on the Connect → Firkin + WNFS page first, then select it for syncing.",
   );
-}
-
-////////////////////////////////////////////
-// 🛠️
-////////////////////////////////////////////
-
-/**
- * @param {string} name
- */
-function safeFileName(name) {
-  const base = name.split("/").pop() ?? "";
-  const cleaned = base.replace(/[\u0000-\u001f]/g, "").trim();
-  return cleaned.length > 0 ? cleaned : "audio";
 }
 
 ////////////////////////////////////////////

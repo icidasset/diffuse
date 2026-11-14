@@ -131,10 +131,10 @@ export default {
         "Ephemeral blobs stored in indexedDB, resolving creates temporary Blob URLs. Not responsible for storing blobs.",
     },
     {
-      url: "components/input/wnfs-firkin/element.js",
-      title: "Firkin + WNFS",
+      url: "components/input/firkin/element.js",
+      title: "Firkin",
       desc:
-        "Firkin-hosted audio files, referenced from an encrypted WNFS pointer map.",
+        "Firkin-hosted audio files, listed from the account's file registry.",
     },
     {
       url: "components/input/https/element.js",
@@ -398,10 +398,10 @@ export default {
         "Uploads and deletes files on Dropbox using the Dropbox v2 HTTP API.",
     },
     {
-      url: "components/upload/wnfs-firkin/element.js",
-      title: "Firkin + WNFS",
+      url: "components/upload/firkin/element.js",
+      title: "Firkin",
       desc:
-        "Uploads files to Firkin and records them in an encrypted WNFS pointer map.",
+        "Uploads files to Firkin and records them in the account's file registry.",
     },
     {
       url: "components/upload/s3/element.js",

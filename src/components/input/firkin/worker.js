@@ -5,12 +5,15 @@ import { isAudioFile } from "~/components/input/common.js";
 import {
   buildURI,
   FILE_URL_TTL_SECONDS,
+  fileURL,
+  listFiles,
   mimeType,
   parseURI,
+  readFile,
   SCHEME,
   SOURCE_URI,
-  StorageClient,
-} from "~/components/output/bytes/wnfs/files.js";
+} from "~/common/firkin/files.js";
+import { getSessionClient } from "~/common/firkin/session.js";
 
 /**
  * @import { Track } from "~/definitions/types.d.ts"
@@ -21,30 +24,34 @@ import {
 // SETUP
 ////////////////////////////////////////////
 
-const params = new URL(globalThis.location.href).searchParams;
-
-const client = new StorageClient({
-  group: params.get("group") || undefined,
-  namespace: params.get("namespace") || undefined,
-});
+const NOT_CONNECTED =
+  "Firkin is not connected. Sign in on the Connect → Firkin + WNFS page first.";
 
 /** @type {Map<string, string>} */
 const blobUrls = new Map();
 
 /** Cache a *definitive* status for a moment; a timeout is retried. */
 const STATUS_TTL = 5_000;
-/** @type {Awaited<ReturnType<StorageClient["status"]>> | undefined} */
+/** @type {{ connected: boolean; did?: string; apiBase?: string } | undefined} */
 let lastStatus;
 let lastStatusAt = 0;
 
-/** @returns {Promise<Awaited<ReturnType<StorageClient["status"]>> | undefined>} */
+/** @returns {Promise<{ connected: boolean; did?: string; apiBase?: string } | undefined>} */
 async function storageStatus() {
   if (lastStatus && Date.now() - lastStatusAt < STATUS_TTL) return lastStatus;
 
   try {
-    lastStatus = await client.status();
+    const client = await getSessionClient();
+    lastStatus = client
+      ? {
+        connected: true,
+        did: client.session.did,
+        apiBase: client.session.apiBase,
+      }
+      : { connected: false };
   } catch {
-    // No output element answered. Don't cache: a leader may come back.
+    // No session yet, or IndexedDB is unavailable. Don't cache: sign-in may
+    // complete while this worker is alive.
     lastStatus = undefined;
   }
 
@@ -105,7 +112,7 @@ export async function groupConsult(uris) {
   const grouping = available === "no"
     ? {
       available,
-      reason: "Firkin + WNFS is not connected",
+      reason: "Firkin is not connected",
       scheme: SCHEME,
       uris,
     }
@@ -118,14 +125,24 @@ export async function groupConsult(uris) {
  * @type {Actions['list']}
  */
 export async function list(cachedTracks = []) {
-  const status = await storageStatus();
-  if (!status?.connected) return cachedTracks;
+  let client;
+  try {
+    client = await getSessionClient();
+  } catch {
+    // IndexedDB/session access failed. Keep the cached tracks rather than
+    // dropping the user's library.
+    return cachedTracks;
+  }
+
+  if (!client) return cachedTracks;
 
   let files;
   try {
-    files = (await client.listFiles()).filter((file) => isAudioFile(file.name));
+    files = (await listFiles(client.rb)).filter((file) =>
+      isAudioFile(file.name)
+    );
   } catch {
-    // The storage became unreachable (tab closed, session lost). Keep the
+    // The session became unusable (expired, revoked, offline). Keep the
     // cached tracks rather than dropping the user's library.
     return cachedTracks;
   }
@@ -152,7 +169,7 @@ export async function list(cachedTracks = []) {
 
   if (tracks.length > 0) return tracks;
 
-  // Keep the source discoverable while the directory is empty.
+  // Keep the source discoverable while the registry is empty.
   const placeholder = cachedTracks.find((track) =>
     track.kind === "placeholder"
   );
@@ -180,25 +197,30 @@ export async function resolve({ uri }) {
   const parsed = parseURI(uri);
   if (!parsed) return undefined;
 
-  // Stream directly from Firkin with a presigned, CID-scoped URL: the media
-  // element and metadata workers get HTTP range support without WNFS or blob
-  // buffering in between.
+  const client = await getSessionClient();
+  if (!client) throw new Error(NOT_CONNECTED);
+
+  // Stream directly from Firkin with a CID-scoped URL: the media element and
+  // metadata workers get HTTP range support without buffering in between.
   try {
-    const url = await client.fileURL(parsed.name, FILE_URL_TTL_SECONDS);
-    if (url) {
-      return {
-        url,
-        expiresAt: Math.round(Date.now() / 1000) + FILE_URL_TTL_SECONDS,
-      };
-    }
+    const url = await fileURL(
+      client.rb,
+      parsed.name,
+      FILE_URL_TTL_SECONDS,
+    );
+
+    return {
+      url,
+      expiresAt: Math.round(Date.now() / 1000) + FILE_URL_TTL_SECONDS,
+    };
   } catch {
-    // Presigned URLs unavailable — fall back to a blob.
+    // Read URLs unavailable — fall back to a blob.
   }
 
   let url = blobUrls.get(uri);
 
   if (!url) {
-    const bytes = await client.read(parsed.name);
+    const bytes = await readFile(client.rb, parsed.name);
     const blob = new Blob(
       [/** @type {BlobPart} */ (/** @type {unknown} */ (bytes))],
       { type: mimeType(parsed.name) },

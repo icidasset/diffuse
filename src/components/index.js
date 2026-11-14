@@ -14,7 +14,7 @@ import * as _EngineAudio from "./engine/audio/element.js"
 import * as _EngineQueue from "./engine/queue/element.js"
 import * as _EngineRepeatShuffle from "./engine/repeat-shuffle/element.js"
 import * as _EngineScope from "./engine/scope/element.js"
-import * as _InputWnfsFirkin from "./input/wnfs-firkin/element.js"
+import * as _InputFirkin from "./input/firkin/element.js"
 import * as _InputDropbox from "./input/dropbox/element.js"
 import * as _InputEphemeralCache from "./input/ephemeral-cache/element.js"
 import * as _InputHttps from "./input/https/element.js"
@@ -53,7 +53,7 @@ import * as _TransformerOutputRefinerInitialContents from "./transformer/output/
 import * as _TransformerOutputRefinerPasskeyEncryption from "./transformer/output/refiner/passkey-encryption/element.js"
 import * as _TransformerOutputRefinerPathCollections from "./transformer/output/refiner/path-collections/element.js"
 import * as _TransformerOutputStringJson from "./transformer/output/string/json/element.js"
-import * as _UploadWnfsFirkin from "./upload/wnfs-firkin/element.js"
+import * as _UploadFirkin from "./upload/firkin/element.js"
 import * as _UploadDropbox from "./upload/dropbox/element.js"
 import * as _UploadS3 from "./upload/s3/element.js"
 import * as _UploadWebdav from "./upload/webdav/element.js"
@@ -87,7 +87,7 @@ export const engine = {
 }
 
 export const input = {
-  wnfsFirkin: _InputWnfsFirkin,
+  firkin: _InputFirkin,
   dropbox: _InputDropbox,
   ephemeralCache: _InputEphemeralCache,
   https: _InputHttps,
@@ -160,7 +160,7 @@ export const transformer = {
 }
 
 export const upload = {
-  wnfsFirkin: _UploadWnfsFirkin,
+  firkin: _UploadFirkin,
   dropbox: _UploadDropbox,
   s3: _UploadS3,
   webdav: _UploadWebdav,

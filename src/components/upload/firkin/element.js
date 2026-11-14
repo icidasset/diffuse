@@ -1,5 +1,5 @@
 import { defineElement, DiffuseElement } from "~/common/element.js";
-import { SCHEME } from "~/components/output/bytes/wnfs/files.js";
+import { SCHEME } from "~/common/firkin/files.js";
 
 /**
  * @import {UploadActions, UploadSchemeProvider} from "@specs/components/upload/types.d.ts"
@@ -11,18 +11,22 @@ import { SCHEME } from "~/components/output/bytes/wnfs/files.js";
 ////////////////////////////////////////////
 
 /**
- * Uploader that stores audio in Firkin and records pointers in the WNFS.
+ * Uploader that stores audio on Firkin and records file names in the account's
+ * file registry.
+ *
+ * The worker reads the shared Firkin session from IndexedDB, so this element
+ * does not depend on the WNFS output or a broadcast channel.
  *
  * @implements {ProxiedActions<UploadActions>}
  * @implements {UploadSchemeProvider}
  */
-class WnfsFirkinUpload extends DiffuseElement {
-  static NAME = "diffuse/upload/wnfs-firkin";
-  static WORKER_URL = "components/upload/wnfs-firkin/worker.js";
+class FirkinUpload extends DiffuseElement {
+  static NAME = "diffuse/upload/firkin";
+  static WORKER_URL = "components/upload/firkin/worker.js";
 
   SCHEME = SCHEME;
 
-  /** Where the Firkin + WNFS output is connected. */
+  /** Where the Firkin account is connected. */
   CONNECT_PATH = "facets/connect/wnfs-firkin/index.tile";
 
   constructor() {
@@ -36,23 +40,15 @@ class WnfsFirkinUpload extends DiffuseElement {
     this.delete = proxy.delete;
     this.createSource = proxy.createSource;
   }
-
-  /**
-   * Pass the output element's group/namespace to the worker so it can find the
-   * matching broadcast channel.
-   */
-  workerQuery() {
-    return { group: this.group, namespace: this.namespace ?? "" };
-  }
 }
 
-export default WnfsFirkinUpload;
+export default FirkinUpload;
 
 ////////////////////////////////////////////
 // REGISTER
 ////////////////////////////////////////////
 
-export const CLASS = WnfsFirkinUpload;
-export const NAME = "du-wnfs-firkin";
+export const CLASS = FirkinUpload;
+export const NAME = "du-firkin";
 
 defineElement(NAME, CLASS);

@@ -1,8 +1,8 @@
 import foundation from "~/common/foundation.js";
 import { effect } from "~/common/signal.js";
 
-import { NAME as INPUT_NAME } from "~/components/input/wnfs-firkin/element.js";
-import { NAME as UPLOAD_NAME } from "~/components/upload/wnfs-firkin/element.js";
+import { NAME as INPUT_NAME } from "~/components/input/firkin/element.js";
+import { NAME as UPLOAD_NAME } from "~/components/upload/firkin/element.js";
 
 /**
  * @import InputConfigurator from "~/components/configurator/input/element.js"
@@ -16,21 +16,27 @@ import { NAME as UPLOAD_NAME } from "~/components/upload/wnfs-firkin/element.js"
 const WNFS_OUTPUT_NAME = "dob-wnfs-firkin";
 
 const OUTPUT_ID = "do-output__dc-output__wnfs-firkin";
-const INPUT_ID = "di-input__dc-input__wnfs-firkin";
-const UPLOAD_ID = "du-upload__dc-upload__wnfs-firkin";
+const INPUT_ID = "di-input__dc-input__firkin";
+const UPLOAD_ID = "du-upload__dc-upload__firkin";
 
 const CONNECT_URL = "facets/connect/wnfs-firkin/index.tile";
-const NAMESPACE = "wnfs-firkin";
+
+/** Namespace of the WNFS userdata output. */
+const OUTPUT_NAMESPACE = "wnfs-firkin";
+/** Namespace of the Firkin-native input/uploader components. */
+const FIRKIN_NAMESPACE = "firkin";
 
 /**
- * Adds the Firkin + WNFS components: the output (storage itself), plus an
- * audio input and an upload destination that operate on the files in the same
- * WNFS.
+ * Adds the Firkin components: the WNFS userdata output (which also owns the
+ * passkey sign-in), plus a Firkin-native audio input and uploader.
+ *
+ * The input and uploader read the shared Firkin session from IndexedDB and
+ * operate on the account's file registry directly; they do not touch the WNFS
+ * or the output's broadcast channel.
  *
  * This is a feature (prelude) facet, so it only runs when the user enables
- * it. The input and upload elements are cheap; their workers talk to the
- * output element over a `BroadcastChannel`, so the WNFS/WASM code stays in the
- * output bundle.
+ * it. The input and upload elements are cheap; their workers only need the
+ * Firkin SDK, so the WNFS/WASM code stays in the output bundle.
  */
 effect(() => {
   const output = foundation.signals.orchestrator.output();
@@ -38,8 +44,8 @@ effect(() => {
   const upload = foundation.signals.configurator.upload();
 
   if (output) wnfsFirkin(output);
-  if (input) wnfsFirkinInput(input);
-  if (upload) wnfsFirkinUpload(upload);
+  if (input) firkinInput(input);
+  if (upload) firkinUpload(upload);
   if (output) output.loadSelected();
 });
 
@@ -61,7 +67,7 @@ function wnfsFirkin(output) {
       storage.setAttribute("group", foundation.GROUP);
       storage.setAttribute("id", OUTPUT_ID);
       storage.setAttribute("label", "Firkin + WNFS");
-      storage.setAttribute("namespace", NAMESPACE);
+      storage.setAttribute("namespace", OUTPUT_NAMESPACE);
       storage.setAttribute("connect", CONNECT_URL);
 
       output.outputConfigurator.append(storage);
@@ -75,14 +81,14 @@ function wnfsFirkin(output) {
 /**
  * @param {InputConfigurator} input
  */
-function wnfsFirkinInput(input) {
+function firkinInput(input) {
   if (input.querySelector(`#${INPUT_ID}`)) return;
 
   const element = document.createElement(INPUT_NAME);
   element.setAttribute("group", foundation.GROUP);
   element.setAttribute("id", INPUT_ID);
-  element.setAttribute("label", "Firkin + WNFS");
-  element.setAttribute("namespace", NAMESPACE);
+  element.setAttribute("label", "Firkin");
+  element.setAttribute("namespace", FIRKIN_NAMESPACE);
 
   input.append(element);
 }
@@ -90,14 +96,14 @@ function wnfsFirkinInput(input) {
 /**
  * @param {UploadConfigurator} upload
  */
-function wnfsFirkinUpload(upload) {
+function firkinUpload(upload) {
   if (upload.querySelector(`#${UPLOAD_ID}`)) return;
 
   const element = document.createElement(UPLOAD_NAME);
   element.setAttribute("group", foundation.GROUP);
   element.setAttribute("id", UPLOAD_ID);
-  element.setAttribute("label", "Firkin + WNFS");
-  element.setAttribute("namespace", NAMESPACE);
+  element.setAttribute("label", "Firkin");
+  element.setAttribute("namespace", FIRKIN_NAMESPACE);
 
   upload.append(element);
 }

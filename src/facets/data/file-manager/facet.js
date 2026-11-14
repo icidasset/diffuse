@@ -8,9 +8,9 @@ import {
   SCHEME as SCHEME_EPHEMERAL_CACHE,
 } from "~/components/input/ephemeral-cache/constants.js";
 import {
-  SCHEME as SCHEME_WNFS_FIRKIN,
-  SOURCE_URI as WNFS_FIRKIN_SOURCE_URI,
-} from "~/components/output/bytes/wnfs/files.js";
+  SCHEME as SCHEME_FIRKIN,
+  SOURCE_URI as FIRKIN_SOURCE_URI,
+} from "~/common/firkin/files.js";
 import { isAudioFile } from "~/components/input/common.js";
 import { SCHEME as SCHEME_DROPBOX } from "~/components/input/dropbox/constants.js";
 import {
@@ -39,7 +39,7 @@ import foundation from "~/common/foundation.js";
 /** @type {Record<string, string>} */
 const SCHEME_LABELS = {
   [SCHEME_DROPBOX]: "Dropbox",
-  [SCHEME_WNFS_FIRKIN]: "Firkin + WNFS",
+  [SCHEME_FIRKIN]: "Firkin",
   [SCHEME_S3]: "S3",
   [SCHEME_WEBDAV]: "WebDAV",
 };
@@ -514,15 +514,15 @@ const CONNECT_CONFIGS = {
     },
   },
 
-  [SCHEME_WNFS_FIRKIN]: {
-    scheme: SCHEME_WNFS_FIRKIN,
+  [SCHEME_FIRKIN]: {
+    scheme: SCHEME_FIRKIN,
 
     fields: [],
 
-    build: () => WNFS_FIRKIN_SOURCE_URI,
+    build: () => FIRKIN_SOURCE_URI,
 
     caption:
-      "Uploaded files are stored as Firkin blobs; only their pointers are kept in your encrypted WNFS.",
+      "Uploaded files are stored as Firkin blobs and listed from your Firkin account registry.",
 
     unavailable: html`
       Not connected to a Firkin instance. Sign in on the
@@ -533,8 +533,8 @@ const CONNECT_CONFIGS = {
     `,
 
     sourceParts: () => ({
-      name: "Firkin + WNFS",
-      detail: "Firkin blobs + encrypted pointers",
+      name: "Firkin",
+      detail: "Firkin blobs + registry pointers",
     }),
   },
 };
@@ -874,10 +874,15 @@ await (async () => {
   namesVersion.value++;
 })();
 
-// Load persisted sync scheme.
+// Load persisted sync scheme. Drop schemes this build no longer provides
+// (e.g. the old `wnfs+firkin` scheme).
 {
   const scheme = await IDB.get(SYNC_SCHEME_KEY);
-  if (scheme) syncScheme.value = scheme;
+  if (scheme && scheme in SCHEME_LABELS) {
+    syncScheme.value = scheme;
+  } else if (scheme) {
+    await IDB.del(SYNC_SCHEME_KEY);
+  }
 }
 
 effect(() => {

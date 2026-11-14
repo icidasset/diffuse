@@ -1,13 +1,12 @@
 /**
  * IndexedDB prefixes for this output.
  *
- * The session (delegated ed25519 key + proof) is stored separately from the
- * WNFS storage pointer (root CID + imported RSA-OAEP private key) so a session
- * refresh never has to re-derive the private key.
+ * The account session (delegated ed25519 key + proof) is shared with the
+ * Firkin input/uploader components and lives in `~/common/firkin/session.js`.
+ * The WNFS storage pointer (root CID + imported RSA-OAEP private key) is kept
+ * here so a session refresh never has to re-derive the private key.
  */
 export const IDB_PREFIX = "diffuse/output/bytes/wnfs";
-/** IndexedDB key for the delegated session key + proof. */
-export const IDB_SESSION = `${IDB_PREFIX}/session`;
 /** IndexedDB key for the WNFS root pointer + imported exchange private key. */
 export const IDB_STORAGE = `${IDB_PREFIX}/storage`;
 /** Root CID that the local collection cache corresponds to. */
