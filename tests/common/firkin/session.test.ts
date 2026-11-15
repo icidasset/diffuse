@@ -31,7 +31,7 @@ describe("common/firkin/session", () => {
         publicKey: account.pubkeyBytes,
         proof: new Uint8Array([1]),
         proofCid: "bafkreitest",
-        expiresAt: Infinity,
+        expiresAt: Date.now() + 60_000,
       };
 
       await saveSession(session);
@@ -43,7 +43,7 @@ describe("common/firkin/session", () => {
       await deleteSession();
       const afterDelete = await getSessionClient();
 
-      // An indefinite session is valid, but an expired record is ignored.
+      // A future session is valid, but an expired record is ignored.
       await saveSession({ ...session, expiresAt: Date.now() - 1 });
       const expired = await getSessionClient();
 

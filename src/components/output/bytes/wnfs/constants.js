@@ -56,10 +56,17 @@ export const UPLOAD_DEBOUNCE_MS = 2_500;
 export const RESTORE_TIMEOUT_MS = 10_000;
 
 /**
- * The UCAN delegation granted to the browser session key. `/firkin` covers every
- * Firkin command (blobs, registry and account recovery).
+ * The UCAN delegation granted to the browser session key. `/firkin` covers the
+ * blob, registry, tag and channel commands. Firkin still requires the account
+ * key directly for register/revoke/recover, so this is not an admin grant.
  */
 export const SESSION_COMMAND = "/firkin";
+
+/**
+ * How long a session delegation lasts before the passkey is needed again.
+ * One year; the session itself is revocable by the account key.
+ */
+export const SESSION_TTL_SECONDS = 365 * 24 * 60 * 60;
 
 /**
  * Default endpoint for the local development instance.
