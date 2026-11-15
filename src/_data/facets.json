@@ -111,7 +111,7 @@
     "title": "Connect / Firkin",
     "category": "Data",
     "incomplete": true,
-    "desc": "Connect to a [Firkin](https://tangled.org/tokono.ma/firkin) instance with a passkey. Powers the Firkin audio input and uploader, and the Firkin + WNFS output when that feature is enabled."
+    "desc": "Connect to a [Firkin](https://tangled.org/tokono.ma/firkin) instance with a passkey."
   },
   {
     "url": "facets/connect/dropbox/index.tile",
@@ -211,12 +211,20 @@
     "desc": "The default setup for uploading audio files to cloud storage. Adds support for: Dropbox, Firkin, S3-compatible storage, and WebDAV."
   },
   {
+    "url": "facets/data/firkin/prelude/index.tile",
+    "title": "Firkin",
+    "kind": "prelude",
+    "category": "Data",
+    "incomplete": true,
+    "desc": "Store your userdata on a [Firkin](https://tangled.org/tokono.ma/firkin) instance as content-addressed blobs, with one account-registry pointer per collection. Uses passkey authentication and no email. Data is not encrypted."
+  },
+  {
     "url": "facets/data/wnfs-firkin/prelude/index.tile",
     "title": "Firkin + WNFS",
     "kind": "prelude",
     "category": "Data",
     "incomplete": true,
-    "desc": "Store your userdata encrypted on a [Firkin](https://tangled.org/tokono.ma/firkin) instance. Uses passkey authentication and no email. [WNFS](https://github.com/wnfs-wg/) and PRF passkeys are used for the encrypted userdata. The Firkin audio input and uploader live in the default input and upload bundles."
+    "desc": "Store your userdata encrypted on a [Firkin](https://tangled.org/tokono.ma/firkin) instance. Uses passkey authentication and no email. [WNFS](https://github.com/wnfs-wg/) and PRF passkeys are used for the encrypted userdata."
   },
   {
     "url": "facets/data/export-import/index.tile",

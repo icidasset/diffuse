@@ -80,9 +80,6 @@ const { setItems, setError, setDialogError } = setup({
     <p>
       Connect to a <a href="https://tangled.org/tokono.ma/firkin" target="_blank">Firkin</a> instance using just a passkey (no email or password).
     </p>
-    <p class="caption">
-      This account powers the Firkin audio input and uploader.
-    </p>
   `,
 
   formFields: html`
