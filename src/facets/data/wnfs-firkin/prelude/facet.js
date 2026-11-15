@@ -1,12 +1,7 @@
 import foundation from "~/common/foundation.js";
 import { effect } from "~/common/signal.js";
 
-import { NAME as INPUT_NAME } from "~/components/input/firkin/element.js";
-import { NAME as UPLOAD_NAME } from "~/components/upload/firkin/element.js";
-
 /**
- * @import InputConfigurator from "~/components/configurator/input/element.js"
- * @import UploadConfigurator from "~/components/configurator/upload/element.js"
  * @import OutputOrchestrator from "~/components/orchestrator/output/element.js"
  */
 
@@ -16,37 +11,29 @@ import { NAME as UPLOAD_NAME } from "~/components/upload/firkin/element.js";
 const WNFS_OUTPUT_NAME = "dob-wnfs-firkin";
 
 const OUTPUT_ID = "do-output__dc-output__wnfs-firkin";
-const INPUT_ID = "di-input__dc-input__firkin";
-const UPLOAD_ID = "du-upload__dc-upload__firkin";
-
 const CONNECT_URL = "facets/connect/wnfs-firkin/index.tile";
 
 /** Namespace of the WNFS userdata output. */
 const OUTPUT_NAMESPACE = "wnfs-firkin";
-/** Namespace of the Firkin-native input/uploader components. */
-const FIRKIN_NAMESPACE = "firkin";
 
 /**
- * Adds the Firkin components: the WNFS userdata output (which also owns the
- * passkey sign-in), plus a Firkin-native audio input and uploader.
+ * Adds the Firkin + WNFS userdata output (which also owns the passkey
+ * sign-in).
  *
- * The input and uploader read the shared Firkin session from IndexedDB and
- * operate on the account's file registry directly; they do not touch the WNFS
- * or the output's broadcast channel.
+ * The Firkin input and uploader live in the default input and upload bundles:
+ * they read the shared Firkin session from IndexedDB and operate on the
+ * account's file registry directly, so they do not depend on this feature or
+ * on the WNFS output.
  *
  * This is a feature (prelude) facet, so it only runs when the user enables
- * it. The input and upload elements are cheap; their workers only need the
- * Firkin SDK, so the WNFS/WASM code stays in the output bundle.
+ * it.
  */
 effect(() => {
   const output = foundation.signals.orchestrator.output();
-  const input = foundation.signals.configurator.input();
-  const upload = foundation.signals.configurator.upload();
+  if (!output) return;
 
-  if (output) wnfsFirkin(output);
-  if (input) firkinInput(input);
-  if (upload) firkinUpload(upload);
-  if (output) output.loadSelected();
+  wnfsFirkin(output);
+  output.loadSelected();
 });
 
 /**
@@ -76,34 +63,4 @@ function wnfsFirkin(output) {
     .catch((err) => {
       console.error("Failed to load the Firkin + WNFS output:", err);
     });
-}
-
-/**
- * @param {InputConfigurator} input
- */
-function firkinInput(input) {
-  if (input.querySelector(`#${INPUT_ID}`)) return;
-
-  const element = document.createElement(INPUT_NAME);
-  element.setAttribute("group", foundation.GROUP);
-  element.setAttribute("id", INPUT_ID);
-  element.setAttribute("label", "Firkin");
-  element.setAttribute("namespace", FIRKIN_NAMESPACE);
-
-  input.append(element);
-}
-
-/**
- * @param {UploadConfigurator} upload
- */
-function firkinUpload(upload) {
-  if (upload.querySelector(`#${UPLOAD_ID}`)) return;
-
-  const element = document.createElement(UPLOAD_NAME);
-  element.setAttribute("group", foundation.GROUP);
-  element.setAttribute("id", UPLOAD_ID);
-  element.setAttribute("label", "Firkin");
-  element.setAttribute("namespace", FIRKIN_NAMESPACE);
-
-  upload.append(element);
 }

@@ -2,6 +2,7 @@ import foundation from "~/common/foundation.js";
 import { effect } from "~/common/signal.js";
 
 import { NAME as DROPBOX_NAME } from "~/components/upload/dropbox/element.js";
+import { NAME as FIRKIN_NAME } from "~/components/upload/firkin/element.js";
 import { NAME as S3_NAME } from "~/components/upload/s3/element.js";
 import { NAME as WEBDAV_NAME } from "~/components/upload/webdav/element.js";
 
@@ -17,6 +18,7 @@ effect(() => {
   if (!upload) return;
 
   dropbox(upload);
+  firkin(upload);
   s3(upload);
   webdav(upload);
 });
@@ -30,6 +32,19 @@ effect(() => {
  */
 export function dropbox(upload) {
   upload.append(document.createElement(DROPBOX_NAME));
+}
+
+/**
+ * @param {UploadConfigurator} upload
+ */
+export function firkin(upload) {
+  const element = document.createElement(FIRKIN_NAME);
+  element.setAttribute("group", foundation.GROUP);
+  element.setAttribute("id", "du-upload__dc-upload__firkin");
+  element.setAttribute("label", "Firkin");
+  element.setAttribute("namespace", "firkin");
+
+  upload.append(element);
 }
 
 /**

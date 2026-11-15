@@ -184,7 +184,7 @@
     "kind": "prelude",
     "category": "Data",
     "tags": ["base"],
-    "desc": "The default setup for audio input sources. Adds support for: Dropbox, HTTPS, Icecast, the local filesystem, OpenSubsonic, S3-compatible storage, and WebDAV."
+    "desc": "The default setup for audio input sources. Adds support for: Dropbox, Firkin, HTTPS, Icecast, the local filesystem, OpenSubsonic, S3-compatible storage, and WebDAV."
   },
   {
     "url": "facets/data/metadata-bundle/index.tile",
@@ -208,7 +208,7 @@
     "kind": "prelude",
     "category": "Data",
     "tags": ["base"],
-    "desc": "The default setup for uploading audio files to cloud storage. Adds support for: Dropbox."
+    "desc": "The default setup for uploading audio files to cloud storage. Adds support for: Dropbox, Firkin, S3-compatible storage, and WebDAV."
   },
   {
     "url": "facets/data/wnfs-firkin/prelude/index.tile",
@@ -216,7 +216,7 @@
     "kind": "prelude",
     "category": "Data",
     "incomplete": true,
-    "desc": "Store your userdata encrypted on a [Firkin](https://tangled.org/tokono.ma/firkin) instance. Uses passkey authentication and no email. [WNFS](https://github.com/wnfs-wg/) and PRF passkeys are used for the encrypted userdata; the audio input and uploader use Firkin blobs and the account's file registry directly."
+    "desc": "Store your userdata encrypted on a [Firkin](https://tangled.org/tokono.ma/firkin) instance. Uses passkey authentication and no email. [WNFS](https://github.com/wnfs-wg/) and PRF passkeys are used for the encrypted userdata. The Firkin audio input and uploader live in the default input and upload bundles."
   },
   {
     "url": "facets/data/export-import/index.tile",

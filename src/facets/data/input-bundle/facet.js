@@ -3,6 +3,7 @@ import { effect } from "~/common/signal.js";
 
 import { NAME as DROPBOX_NAME } from "~/components/input/dropbox/element.js";
 import { NAME as EPHEMERAL_CACHE_NAME } from "~/components/input/ephemeral-cache/element.js";
+import { NAME as FIRKIN_NAME } from "~/components/input/firkin/element.js";
 import { NAME as HTTPS_NAME } from "~/components/input/https/element.js";
 import { NAME as HTTPS_JSON_NAME } from "~/components/input/https-json/element.js";
 import { NAME as ICECAST_NAME } from "~/components/input/icecast/element.js";
@@ -25,6 +26,7 @@ effect(() => {
 
   dropbox(input);
   ephemeralCache(input);
+  firkin(input);
   https(input);
   httpsJson(input);
   icecast(input);
@@ -54,6 +56,23 @@ export function dropbox(input) {
  */
 export function ephemeralCache(input) {
   input.append(document.createElement(EPHEMERAL_CACHE_NAME));
+}
+
+////////////////////////////////////////////
+// FIRKIN
+////////////////////////////////////////////
+
+/**
+ * @param {InputConfigurator} input
+ */
+export function firkin(input) {
+  const element = document.createElement(FIRKIN_NAME);
+  element.setAttribute("group", foundation.GROUP);
+  element.setAttribute("id", "di-input__dc-input__firkin");
+  element.setAttribute("label", "Firkin");
+  element.setAttribute("namespace", "firkin");
+
+  input.append(element);
 }
 
 ////////////////////////////////////////////
