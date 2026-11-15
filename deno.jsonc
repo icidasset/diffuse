@@ -112,6 +112,7 @@
   "exports": {
     // .js
     "./common/atproto.js": "./src/common/atproto.js",
+    "./common/firkin/account.js": "./src/common/firkin/account.js",
     "./common/firkin/files.js": "./src/common/firkin/files.js",
     "./common/firkin/session.js": "./src/common/firkin/session.js",
     "./common/collaboration/index.js": "./src/common/collaboration/index.js",

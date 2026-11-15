@@ -27,7 +27,7 @@ class FirkinUpload extends DiffuseElement {
   SCHEME = SCHEME;
 
   /** Where the Firkin account is connected. */
-  CONNECT_PATH = "facets/connect/wnfs-firkin/index.tile";
+  CONNECT_PATH = "facets/connect/firkin/index.tile";
 
   constructor() {
     super();

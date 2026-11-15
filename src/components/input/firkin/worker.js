@@ -27,7 +27,7 @@ import { getSessionClient } from "~/common/firkin/session.js";
 ////////////////////////////////////////////
 
 const NOT_CONNECTED =
-  "Firkin is not connected. Sign in on the Connect → Firkin + WNFS page first.";
+  "Firkin is not connected. Sign in on the Connect → Firkin page first.";
 
 /** @type {Map<string, string>} */
 const blobUrls = new Map();

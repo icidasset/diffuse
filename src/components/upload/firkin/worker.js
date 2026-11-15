@@ -13,7 +13,7 @@ import { getSessionClient } from "~/common/firkin/session.js";
  */
 
 const NOT_CONNECTED =
-  "Firkin is not connected. Sign in on the Connect → Firkin + WNFS page first.";
+  "Firkin is not connected. Sign in on the Connect → Firkin page first.";
 
 ////////////////////////////////////////////
 // ACTIONS
@@ -72,7 +72,7 @@ export async function createSource(_args) {
   // The Firkin source is the signed-in account itself; there is no OAuth flow
   // that could mint one from here.
   throw new Error(
-    "Firkin does not use OAuth. Sign in on the Connect → Firkin + WNFS page first, then select it for syncing.",
+    "Firkin does not use OAuth. Sign in on the Connect → Firkin page first, then select it for syncing.",
   );
 }
 

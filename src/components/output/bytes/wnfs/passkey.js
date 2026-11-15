@@ -2,11 +2,6 @@ import { xchacha20poly1305 } from "@noble/ciphers/chacha.js";
 import { managedNonce } from "@noble/ciphers/utils.js";
 import { utf8 } from "iso-base/utf8";
 
-import {
-  Signer,
-  WebCryptoSigner,
-} from "@tokono.ma/firkin";
-
 import { KEY_DERIVATION_INFO, KEY_DERIVATION_SALT } from "./constants.js";
 
 const xchacha = managedNonce(xchacha20poly1305);
@@ -63,29 +58,6 @@ export function encryptPrivateKey(key, payload) {
  */
 export function decryptPrivateKey(key, bytes) {
   return JSON.parse(utf8.encode(xchacha(key).decrypt(bytes)));
-}
-
-/**
- * Turn the passkey's PRF "signing" output into the account's ed25519 signer.
- *
- * Prefers a non-extractable WebCrypto key so the seed never lives in JS
- * memory longer than the import. Falls back to the raw seed on browsers
- * without WebCrypto Ed25519.
- *
- * @param {ArrayBuffer} prfFirst
- */
-export async function accountSignerFromPrf(prfFirst) {
-  const seed = new Uint8Array(prfFirst);
-
-  if (seed.length !== 32) {
-    throw new Error("Passkey PRF output was not 32 bytes");
-  }
-
-  try {
-    return await WebCryptoSigner.fromSeedNonExtractable(seed);
-  } catch {
-    return await Signer.fromSeed(seed);
-  }
 }
 
 /**

@@ -11,7 +11,7 @@ import { effect } from "~/common/signal.js";
 const WNFS_OUTPUT_NAME = "dob-wnfs-firkin";
 
 const OUTPUT_ID = "do-output__dc-output__wnfs-firkin";
-const CONNECT_URL = "facets/connect/wnfs-firkin/index.tile";
+const CONNECT_URL = "facets/connect/firkin/index.tile";
 
 /** Namespace of the WNFS userdata output. */
 const OUTPUT_NAMESPACE = "wnfs-firkin";

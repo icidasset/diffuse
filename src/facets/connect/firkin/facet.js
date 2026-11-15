@@ -1,102 +1,87 @@
-import { html, render as litRender } from "lit-html";
+import { html } from "lit-html";
 
 import {
-  NAME as WNFS_OUTPUT_NAME,
+  DEFAULT_API_BASE,
+  passkeyDid as derivePasskeyDid,
+  readAccount,
+  signInAccount,
+  signOutAccount,
   UnregisteredAccountError,
-} from "~/components/output/bytes/wnfs/element.js";
-import { DEFAULT_API_BASE } from "~/components/output/bytes/wnfs/constants.js";
-import { effect } from "~/common/signal.js";
+} from "~/common/firkin/account.js";
+import { effect, signal } from "~/common/signal.js";
 import foundation from "~/common/foundation.js";
 
-import { setup, waitForOutputOption } from "~/facets/connect/common.js";
+import { setup } from "~/facets/connect/common.js";
 
-foundation.setup({ title: "Connect Firkin + WNFS" });
+foundation.setup({ title: "Connect Firkin" });
 
 /**
- * @import { WnfsFirkinOutputElement } from "@specs/components/output/bytes/wnfs/types.d.ts"
+ * The WNFS output is optional: when the Firkin + WNFS feature is enabled its
+ * element is present, and this page sets it up as well. When it is not, this
+ * page only signs in the shared Firkin account (input + uploader).
+ *
+ * @typedef {HTMLElement & {
+ *   signIn(options?: { apiBase?: string; create?: boolean }): Promise<{ did: string; root: string; created: boolean }>;
+ *   signOut(): Promise<void>;
+ *   passkeyDid(options?: { create?: boolean }): Promise<string>;
+ *   apiBase(): string | undefined;
+ *   dataRoot(): string | undefined;
+ * }} WnfsOutputLike
  */
 
 ////////////////////////////////////////////
 // SETUP
 ////////////////////////////////////////////
 
+const WNFS_OUTPUT_NAME = "dob-wnfs-firkin";
+
 const outputOrchestrator = await foundation.orchestrator.output();
 await customElements.whenDefined(outputOrchestrator.localName);
-await customElements.whenDefined(WNFS_OUTPUT_NAME);
 
-const wnfsEl = /** @type {WnfsFirkinOutputElement | undefined} */ (
-  outputOrchestrator.root().querySelector(WNFS_OUTPUT_NAME)
-);
+/** @returns {WnfsOutputLike | null} */
+function wnfsOutput() {
+  const element = outputOrchestrator.root().querySelector(WNFS_OUTPUT_NAME);
+  if (!element) return null;
 
-let outputOption;
-
-try {
-  outputOption = await waitForOutputOption(
-    outputOrchestrator,
-    "Firkin + WNFS",
-    5_000,
-  );
-} catch {
-  const main = document.querySelector("main");
-  if (main) {
-    litRender(
-      html`
-        <div class="facet__left">
-          <h1>Firkin + WNFS</h1>
-        </div>
-        <div class="facet__right">
-          <div class="callout callout--danger">
-            The <strong>Firkin + WNFS</strong> feature is not enabled.
-            Enable it from the
-            <a href="./catalogue/?filter=prelude" target="_blank">features page</a> first.
-          </div>
-        </div>
-      `,
-      main,
-    );
+  // The element may exist before its custom-element class is upgraded.
+  if (typeof /** @type {any} */ (element).dataRoot !== "function") {
+    return null;
   }
 
-  foundation.ready();
-  throw new Error("The Firkin + WNFS feature facet is not enabled");
+  return /** @type {WnfsOutputLike} */ (/** @type {unknown} */ (element));
 }
 
-const OUTPUT_ID = outputOption.id;
+/** @type {{ did: string; apiBase: string } | null} */
+let initialAccount = null;
 
-////////////////////////////////////////////
-// RESTORE
-////////////////////////////////////////////
-
-// Wait for a previously configured session/WNFS so the list shows the
-// account instead of an empty state while the restore is still running.
-await wnfsEl?.whenRestored();
-
-// The output configurator can't find custom outputs during its initial
-// connectedCallback, so it re-loads the selected output asynchronously.
-if (outputOrchestrator.hasSelected() && !outputOrchestrator.selected()) {
-  await new Promise((resolve) => {
-    const stop = effect(() => {
-      if (outputOrchestrator.selected()) {
-        stop();
-        resolve(undefined);
-      }
-    });
-  });
+try {
+  const stored = await readAccount();
+  if (stored) {
+    initialAccount = { did: stored.did, apiBase: stored.apiBase };
+  }
+} catch {
+  // Ignore a corrupt/unavailable local session; the connect form still works.
 }
+
+const account = signal(initialAccount);
 
 ////////////////////////////////////////////
 // UI
 ////////////////////////////////////////////
 
 const { setItems, setError, setDialogError } = setup({
-  title: "Firkin + WNFS",
+  title: "Firkin",
   hasInput: false,
-  outputLabel: "Set up",
-  outputIcon: "ph-fill ph-lightning",
-  outputTitle: "Set up Firkin + WNFS",
+  outputLabel: "Connect",
+  outputIcon: "ph-fill ph-fingerprint",
+  outputTitle: "Connect Firkin",
 
   description: html`
     <p>
-      Store your userdata encrypted on a <a href="https://github.com/wnfs-wg/" target="_blank">Firkin</a> instance using just a passkey (no email or password).
+      Connect to a <a href="https://tangled.org/tokono.ma/firkin" target="_blank">Firkin</a> instance using just a passkey (no email or password).
+    </p>
+    <p class="caption">
+      This account powers the Firkin audio input and uploader.
     </p>
   `,
 
@@ -106,7 +91,7 @@ const { setItems, setError, setDialogError } = setup({
       <input
         id="rb-api"
         placeholder="${DEFAULT_API_BASE}"
-        value="${wnfsEl?.apiBase() ?? DEFAULT_API_BASE}"
+        value="${initialAccount?.apiBase ?? DEFAULT_API_BASE}"
       >
     </label>
     <p class="caption">
@@ -148,7 +133,8 @@ const { setItems, setError, setDialogError } = setup({
   onSubmit: () => connectWithDid(),
 
   onOutputActivate: async () => {
-    await outputOrchestrator.select(OUTPUT_ID);
+    const wnfs = wnfsOutput();
+    if (wnfs?.id) await outputOrchestrator.select(wnfs.id);
   },
 });
 
@@ -189,25 +175,26 @@ dialog?.addEventListener("close", () => {
 ////////////////////////////////////////////
 
 effect(() => {
-  const did = wnfsEl?.did();
-  const root = wnfsEl?.dataRoot();
-  const configured = Boolean(root);
-  const isSelectedOutput =
-    outputOrchestrator.selected()?.id === OUTPUT_ID;
+  const current = account.get();
+  const wnfs = wnfsOutput();
+  const root = wnfs?.dataRoot();
+  const isSelectedOutput = wnfs
+    ? outputOrchestrator.selected()?.id === wnfs.id
+    : false;
 
   setItems(
-    did
+    current
       ? [
         {
-          name: did,
+          name: current.did,
           detail: root
             ? `Firkin + WNFS · ${root.slice(0, 14)}…`
-            : "Not set up",
+            : current.apiBase,
           isInput: false,
-          // Without a WNFS root there is no storage yet, so leave the
-          // "Use as userdata storage" button able to open the sign-in dialog.
-          isOutput: configured,
-          isSelectedOutput: configured && isSelectedOutput,
+          // The WNFS output badge is only shown when that optional feature is
+          // present and has storage.
+          isOutput: Boolean(wnfs && root),
+          isSelectedOutput: Boolean(wnfs && root && isSelectedOutput),
           onRemove: () => disconnect(),
         },
       ]
@@ -219,14 +206,45 @@ effect(() => {
 // ACTIONS
 ////////////////////////////////////////////
 
-/** Sign in to the instance and make this output the selected one. */
+/** Refresh the locally displayed account state from IndexedDB. */
+async function refreshAccount() {
+  try {
+    const stored = await readAccount();
+    account.value = stored
+      ? { did: stored.did, apiBase: stored.apiBase }
+      : null;
+  } catch {
+    account.value = null;
+  }
+}
+
+/**
+ * Sign in. When the WNFS output is enabled, delegate to it so it also sets up
+ * its encrypted userdata; otherwise use the shared account sign-in only.
+ */
 async function connect() {
-  if (!wnfsEl) throw new Error("Firkin + WNFS output is not available");
-
   const apiBase = apiInput.value.trim() || undefined;
+  const wnfs = wnfsOutput();
 
-  await wnfsEl.signIn({ apiBase });
-  await outputOrchestrator.select(OUTPUT_ID);
+  if (wnfs) {
+    const result = await wnfs.signIn({ apiBase });
+    account.value = {
+      did: result.did,
+      apiBase: wnfs.apiBase() ?? apiBase ?? DEFAULT_API_BASE,
+    };
+
+    if (wnfs.id && !outputOrchestrator.hasSelected()) {
+      try {
+        await outputOrchestrator.select(wnfs.id);
+      } catch {
+        // The output option may not be registered yet; the user can select it.
+      }
+    }
+    return;
+  }
+
+  const result = await signInAccount({ apiBase });
+  account.value = { did: result.did, apiBase: result.apiBase };
 }
 
 /**
@@ -237,13 +255,10 @@ async function connectWithDid() {
   try {
     await connect();
   } catch (err) {
-    const did = err instanceof UnregisteredAccountError
-      ? wnfsEl?.lastPasskeyDid()
-      : undefined;
-
-    if (did) showDid(did);
-
+    if (err instanceof UnregisteredAccountError) showDid(err.did);
     throw err;
+  } finally {
+    await refreshAccount();
   }
 }
 
@@ -262,11 +277,21 @@ function showDid(did, hint = DEFAULT_DID_HINT) {
 async function disconnect() {
   setError(null);
   try {
-    await outputOrchestrator.deselect();
-    await wnfsEl?.signOut();
+    const wnfs = wnfsOutput();
+
+    if (wnfs) {
+      if (outputOrchestrator.selected()?.id === wnfs.id) {
+        await outputOrchestrator.deselect();
+      }
+      await wnfs.signOut();
+    } else {
+      await signOutAccount();
+    }
+
+    account.value = null;
   } catch (err) {
     setError(
-      err instanceof Error ? err.message : "Failed to disconnect Firkin + WNFS",
+      err instanceof Error ? err.message : "Failed to disconnect Firkin",
     );
   }
 }
@@ -276,14 +301,15 @@ async function disconnect() {
  * Firkin instance before signing in.
  */
 showDidBtn?.addEventListener("click", async () => {
-  if (!wnfsEl) return;
-
   showDidBtn.disabled = true;
   setDialogError(null);
   if (didResult) didResult.hidden = true;
 
   try {
-    showDid(await wnfsEl.passkeyDid());
+    const wnfs = wnfsOutput();
+    showDid(
+      wnfs ? await wnfs.passkeyDid() : await derivePasskeyDid(),
+    );
   } catch (err) {
     setDialogError(
       err instanceof Error ? err.message : "Could not derive the DID",
@@ -321,12 +347,10 @@ document
     setDialogError(null);
 
     try {
-      if (!wnfsEl) throw new Error("Firkin + WNFS output is not available");
-
-      // Deliberately local: the account cannot be used until an admin
-      // registers the DID it derives, so there is nothing to ask the
-      // instance yet. Signing in is a separate step, once it is registered.
-      const did = await wnfsEl.passkeyDid({ create: true });
+      const wnfs = wnfsOutput();
+      const did = wnfs
+        ? await wnfs.passkeyDid({ create: true })
+        : await derivePasskeyDid({ create: true });
 
       showDid(
         did,

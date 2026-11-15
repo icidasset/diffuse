@@ -121,6 +121,9 @@ describe("components/input/firkin", () => {
       const { SOURCE_URI } = await import("~/common/firkin/files.js");
 
       const input = new mod.CLASS();
+      // Bypass any service-worker-cached worker bundle from an earlier test
+      // run; the query is ignored by the worker itself.
+      input.workerQuery = () => ({ v: String(Date.now()) });
       document.body.append(input);
 
       const consult = await input.consult(SOURCE_URI);

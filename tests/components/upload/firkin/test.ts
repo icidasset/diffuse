@@ -12,6 +12,9 @@ describe("components/upload/firkin", () => {
       const { SOURCE_URI } = await import("~/common/firkin/files.js");
 
       const upload = new mod.CLASS();
+      // Bypass any service-worker-cached worker bundle from an earlier test
+      // run; the query is ignored by the worker itself.
+      upload.workerQuery = () => ({ v: String(Date.now()) });
       document.body.append(upload);
 
       const consult = await upload.consult(SOURCE_URI);

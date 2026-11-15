@@ -528,8 +528,8 @@ const CONNECT_CONFIGS = {
     unavailable: html`
       Not connected to a Firkin instance. Sign in on the
       <a href="l/?path=${
-        encodeURIComponent("facets/connect/wnfs-firkin/index.tile")
-      }">Connect → Firkin + WNFS</a>
+        encodeURIComponent("facets/connect/firkin/index.tile")
+      }">Connect → Firkin</a>
       interface first, then set up syncing again.
     `,
 

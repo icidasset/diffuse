@@ -11,25 +11,11 @@ import {
   encodeJsonCollection,
 } from "~/common/lens.js";
 
-import {
-  adoptPasskeyPrfResult,
-  createPasskey,
-} from "~/components/transformer/output/refiner/passkey-encryption/passkey.js";
-
-import {
-  ApiError,
-  CMD,
-  WebCryptoSigner,
-  delegate,
-  inlineInvocation,
-} from "@tokono.ma/firkin";
-
 import { FirkinBlockstore } from "./blockstore.js";
 import {
   WnfsFirkinRootTree,
 } from "./root-tree.js";
 import {
-  accountSignerFromPrf,
   decryptPrivateKey,
   deriveStorageKey,
   encryptPrivateKey,
@@ -41,20 +27,22 @@ import {
   clientForSession,
   deleteSession,
   readSession,
-  saveSession,
 } from "~/common/firkin/session.js";
 import {
-  DEFAULT_API_BASE,
+  passkeyDid as derivePasskeyDid,
+  publishSessionDelegation,
+  signInAccount,
+  UnregisteredAccountError,
+} from "~/common/firkin/account.js";
+import {
+  EXCHANGE_KEY_NAMESPACE,
   IDB_LOCAL_PREFIX,
   IDB_LOCAL_ROOT,
   IDB_STORAGE,
-  PASSKEY_NAMESPACE,
   REGISTRY_NAMESPACE,
   REGISTRY_PRIVATE_KEY,
   REGISTRY_ROOT,
   RESTORE_TIMEOUT_MS,
-  SESSION_COMMAND,
-  SESSION_TTL_SECONDS,
   UPLOAD_DEBOUNCE_MS,
   WNFS_OUTPUT_DIR,
 } from "./constants.js";
@@ -84,25 +72,6 @@ import {
 ////////////////////////////////////////////
 // ELEMENT
 ////////////////////////////////////////////
-
-/**
- * Thrown when a Firkin instance rejects the account: its DID has to be
- * registered before the registry is readable, so the UI surfaces the DID for
- * copying instead of burying it in an error message.
- */
-export class UnregisteredAccountError extends Error {
-  /** @param {string} did */
-  constructor(did) {
-    super(
-      "This account is not registered with the Firkin instance. Register its DID in the instance's admin console, then sign in.",
-    );
-
-    this.name = "UnregisteredAccountError";
-
-    /** The DID that has to be registered. */
-    this.did = did;
-  }
-}
 
 /**
  * Collections copied from the local output when their WNFS file is missing.
@@ -308,46 +277,28 @@ class WnfsFirkinOutput extends BroadcastedOutputElement {
     await this.#writeQueue.catch(() => {});
     await this.#flushUploads();
 
-    const apiBase = (options.apiBase?.trim() || DEFAULT_API_BASE)
-      .replace(/\/+$/, "");
-
     // Reset first: only a DID derived by *this* attempt may be shown, so a
     // cancelled prompt never leaves a stale one in the dialog.
     this.#lastPasskeyDid.value = undefined;
 
-    const prf = await this.#passkey(options.create);
+    const account = await signInAccount({
+      apiBase: options.apiBase,
+      create: options.create,
+    }).catch((err) => {
+      if (err instanceof UnregisteredAccountError) {
+        this.#lastPasskeyDid.value = err.did;
+      }
+      throw err;
+    });
 
-    const accountSigner = await accountSignerFromPrf(prf.prfFirst);
-    const accountDid = accountSigner.did();
+    const { apiBase, did: accountDid, prf, session } = account;
 
     this.#lastPasskeyDid.value = accountDid;
-
-    const session = await this.#createSession(
-      apiBase,
-      accountDid,
-      accountSigner,
-    );
-    await this.#publishSessionDelegation(session);
     this.#session.value = session;
     this.#rb = this.#clientFor(session);
 
     const storageKey = await deriveStorageKey(prf.prfSecond);
-
-    let rootCid = null;
-    let keyCid = null;
-
-    try {
-      const pointers = await this.#readRegistryPointers();
-      rootCid = pointers.root;
-      keyCid = pointers.key;
-    } catch (err) {
-      if (
-        err instanceof ApiError && (err.status === 401 || err.status === 403)
-      ) {
-        throw new UnregisteredAccountError(accountDid);
-      }
-      throw err;
-    }
+    const { root: rootCid, key: keyCid } = await this.#readRegistryPointers();
 
     /** @type {Storage} */
     let storage;
@@ -414,9 +365,7 @@ class WnfsFirkinOutput extends BroadcastedOutputElement {
   async passkeyDid(options = {}) {
     await this.whenConnected();
 
-    const prf = await this.#passkey(options.create ?? false);
-    const signer = await accountSignerFromPrf(prf.prfFirst);
-    const did = signer.did();
+    const did = await derivePasskeyDid(options);
 
     this.#lastPasskeyDid.value = did;
 
@@ -426,8 +375,7 @@ class WnfsFirkinOutput extends BroadcastedOutputElement {
   /**
    * Forget the local session and storage pointer.
    *
-   * This does not revoke the server-side delegation; it expires after
-   * `SESSION_TTL_SECONDS`.
+   * This does not revoke the server-side delegation; it expires after a year.
    */
   async signOut() {
     await this.#writeQueue.catch(() => {});
@@ -446,38 +394,13 @@ class WnfsFirkinOutput extends BroadcastedOutputElement {
     this.#ready.value = false;
   }
 
-  // PASSKEY
-
-  /**
-   * Run the passkey flow and return its PRF material.
-   *
-   * @param {boolean} [create=false]
-   * @returns {Promise<{ credentialId: Uint8Array, prfFirst: ArrayBuffer, prfSecond: ArrayBuffer }>}
-   */
-  async #passkey(create = false) {
-    const prf = create
-      ? await createPasskey(PASSKEY_NAMESPACE)
-      : await adoptPasskeyPrfResult(PASSKEY_NAMESPACE);
-
-    if (!prf.supported) throw new Error(prf.reason);
-    if (!prf.prfFirst) {
-      throw new Error(
-        "This authenticator did not return the PRF signing output",
-      );
-    }
-
-    return /** @type {{ credentialId: Uint8Array, prfFirst: ArrayBuffer, prfSecond: ArrayBuffer }} */ (
-      prf
-    );
-  }
-
   // RESTORE
 
   async #restore() {
     const session = await readSession();
     if (!session) return;
 
-    await this.#publishSessionDelegation(session);
+    await publishSessionDelegation(session);
 
     this.#session.value = session;
     this.#rb = this.#clientFor(session);
@@ -588,7 +511,7 @@ class WnfsFirkinOutput extends BroadcastedOutputElement {
       /** @type {string} */ (publicJwk.n),
     );
 
-    await fs.registerExchangeKey(PASSKEY_NAMESPACE, publicKey);
+    await fs.registerExchangeKey(EXCHANGE_KEY_NAMESPACE, publicKey);
 
     const { shareId } = await fs.createPrivateNode({
       path: Path.root(),
@@ -735,57 +658,6 @@ class WnfsFirkinOutput extends BroadcastedOutputElement {
     this.#localFresh = true;
   }
 
-  // SESSION
-
-  /**
-   * Mint a one-year `/firkin` delegation for a browser session key.
-   *
-   * A previously stored session key is reused when it belongs to the same
-   * instance + account, but the delegation is always re-minted. This makes an
-   * explicit passkey sign-in recover from a delegation that was revoked or
-   * expired elsewhere.
-   *
-   * @param {string} apiBase
-   * @param {string} did
-   * @param {any} accountSigner
-   * @returns {Promise<Session>}
-   */
-  async #createSession(apiBase, did, accountSigner) {
-    const stored = await readSession();
-
-    const sessionSigner =
-      stored &&
-        stored.apiBase === apiBase &&
-        stored.did === did &&
-        stored.privateKey instanceof CryptoKey
-        ? WebCryptoSigner.fromPersisted(stored.privateKey, stored.publicKey)
-        : await WebCryptoSigner.generateNonExtractable();
-
-    const { proof, cid } = await delegate(accountSigner, {
-      subject: did,
-      audience: sessionSigner.did(),
-      command: SESSION_COMMAND,
-      expireIn: SESSION_TTL_SECONDS,
-    });
-
-    /** @type {Session} */
-    const session = {
-      apiBase,
-      did,
-      privateKey: /** @type {CryptoKey} */ (sessionSigner.privateKey),
-      publicKey: sessionSigner.pubkeyBytes,
-      proof,
-      proofCid: cid,
-      expiresAt: Date.now() + SESSION_TTL_SECONDS * 1000,
-      // Start with inline proofs: a worker may read this session before the
-      // publish below completes.
-      inlineProofs: true,
-    };
-
-    await saveSession(session);
-    return session;
-  }
-
   /** @param {Session} session */
   #clientFor(session) {
     return clientForSession(session, {
@@ -799,54 +671,6 @@ class WnfsFirkinOutput extends BroadcastedOutputElement {
         keys: () => this.#blockstore?.keys() ?? [],
       },
     });
-  }
-
-  /**
-   * Publish the session delegation to the server's delegation store so tokens
-   * can reference it by CID. Idempotent, so it runs on every restore: a server
-   * that has lost its store (or a freshly upgraded instance) gets the
-   * delegation again.
-   *
-   * Falls back to inline proofs on servers that have no delegation store
-   * (the token still works there, it is just larger).
-   *
-   * @param {Session} session
-   */
-  async #publishSessionDelegation(session) {
-    const sessionSigner = WebCryptoSigner.fromPersisted(
-      session.privateKey,
-      session.publicKey,
-    );
-
-    // The explicit token below is used instead of this client's token source,
-    // so `inlineProofs` here is irrelevant; it avoids minting a reference
-    // proof for a delegation that is not published yet.
-    const rb = this.#clientFor({ ...session, inlineProofs: true });
-
-    try {
-      // Bootstrap token: the delegation is not stored yet, so its proof has to
-      // travel inline for this one call. Publishing is its own capability,
-      // narrowed to this delegation's CID (not blob upload).
-      const token = await inlineInvocation(sessionSigner, {
-        command: `${CMD.delegationPublish}/${session.proofCid}`,
-        proofs: [{ proof: session.proof, cid: session.proofCid }],
-        expireIn: 60,
-      });
-
-      await rb.publishDelegation(
-        { proof: session.proof, cid: session.proofCid },
-        { token },
-      );
-      session.inlineProofs = false;
-    } catch (err) {
-      console.warn(
-        "Could not publish the Firkin session delegation; falling back to inline proofs:",
-        err,
-      );
-      session.inlineProofs = true;
-    }
-
-    await saveSession(session);
   }
 
   // COLLECTIONS

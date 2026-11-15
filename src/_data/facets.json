@@ -107,11 +107,11 @@
     "desc": "Use your AT Protocol account for user-data storage. Your data is stored in your own repo and is not broadcast publicly."
   },
   {
-    "url": "facets/connect/wnfs-firkin/index.tile",
-    "title": "Connect / Firkin + WNFS",
+    "url": "facets/connect/firkin/index.tile",
+    "title": "Connect / Firkin",
     "category": "Data",
     "incomplete": true,
-    "desc": "Connect to a [Firkin](https://tangled.org/tokono.ma/firkin) instance. Depends on the Firkin + WNFS feature."
+    "desc": "Connect to a [Firkin](https://tangled.org/tokono.ma/firkin) instance with a passkey. Powers the Firkin audio input and uploader, and the Firkin + WNFS output when that feature is enabled."
   },
   {
     "url": "facets/connect/dropbox/index.tile",
