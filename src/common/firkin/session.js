@@ -7,7 +7,7 @@ import {
 } from "@tokono.ma/firkin";
 
 /**
- * @import { BlockCache, TokenSource } from "@tokono.ma/firkin"
+ * @import { BlockCache, TokenSource, UcanSigner } from "@tokono.ma/firkin"
  */
 
 /** IndexedDB key for the delegated Firkin account session. */
@@ -27,7 +27,8 @@ export const IDB_SESSION = "diffuse/firkin/session";
  * @property {Uint8Array} publicKey
  * @property {Uint8Array} proof
  * @property {string} proofCid
- * @property {number} expiresAt
+ * @property {number} expiresAt - Unix ms; `Infinity` for an indefinite
+ *   delegation.
  * @property {boolean} [inlineProofs] - The server rejected delegation publishing
  *   (or it failed), so tokens carry their proof inline instead of by CID.
  */
@@ -56,6 +57,20 @@ export async function saveSession(session) {
 
 export async function deleteSession() {
   await IDB.del(IDB_SESSION);
+}
+
+/**
+ * Revoke a delegation with the account key.
+ *
+ * Indefinite sessions never expire, so this is the only way to invalidate one
+ * server-side. Idempotent: revoking an already-revoked CID is harmless.
+ *
+ * @param {{ apiBase: string; proofCid: string }} session
+ * @param {UcanSigner} accountSigner
+ */
+export async function revokeSessionDelegation(session, accountSigner) {
+  const rb = new Firkin(session.apiBase, { signer: accountSigner });
+  await rb.revoke({ cids: [session.proofCid] });
 }
 
 /**

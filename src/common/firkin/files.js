@@ -1,17 +1,28 @@
 import { base64url } from "iso-base/rfc4648";
+import { CID } from "multiformats/cid";
 
 /**
  * @import { Firkin } from "@tokono.ma/firkin"
  */
 
 /**
- * Files stored on Firkin, listed from the account's namespaced registry.
+ * Files stored on Firkin, listed from the account's namespaced registry, plus
+ * generic CID-addressed blobs.
  *
- * Each file is a raw Firkin blob; the registry name is a base64url-encoded
+ * Account files are raw Firkin blobs; the registry name is a base64url-encoded
  * file name (Firkin registry names reject spaces and several other filename
- * characters) pointing at its CID. There is no pointer manifest and no WNFS
- * involvement.
+ * characters) pointing at its CID.
+ *
+ * Generic blobs use `firkin://<host>/blob/<cid>` and resolve anonymously via
+ * RASL (`https://<host>/.well-known/rasl/<cid>`) by default; the instance must
+ * have `RASL=true`. A `?token=` query parameter opts into an authenticated
+ * `/v1/blob/<cid>?token=` read instead (for private blobs or deployments with
+ * RASL disabled). Tokens are bearer secrets and are not refreshed
+ * automatically, so prefer RASL or account mode when possible.
  */
+
+/** Path segment for a generic, CID-addressed blob. */
+const BLOB_DIR = "blob";
 
 /** URI scheme for files stored on Firkin. */
 export const SCHEME = "firkin";
@@ -76,6 +87,83 @@ export function decodeFileName(encoded) {
  */
 export function buildURI(name) {
   return `${SOURCE_URI}/${URI_DIR}/${encodeURIComponent(name)}`;
+}
+
+/**
+ * @typedef {Object} BlobURI
+ * @property {string} host - Firkin API host (and optional port).
+ * @property {string} cid
+ * @property {string} name - Display name, defaults to the CID.
+ * @property {string} [token] - Optional authenticated read token.
+ */
+
+/**
+ * Build a generic CID-addressed blob URI.
+ *
+ * @param {{ host: string; cid: string; name?: string; token?: string }} blob
+ */
+export function buildBlobURI({ host, cid, name, token }) {
+  const params = new URLSearchParams();
+  if (name && name !== cid) params.set("name", name);
+  if (token) params.set("token", token);
+
+  const query = params.toString();
+  return `firkin://${host}/${BLOB_DIR}/${cid}${query ? `?${query}` : ""}`;
+}
+
+/**
+ * Parse a generic `firkin://<host>/blob/<cid>` URI. Returns null for account
+ * file URIs, other schemes, and malformed CIDs.
+ *
+ * @param {string} uri
+ * @returns {BlobURI | null}
+ */
+export function parseBlobURI(uri) {
+  // Parse the authority/path ourselves: browsers and Deno disagree on how
+  // `new URL` handles the authority of a non-special scheme like `firkin:`.
+  const match =
+    /^firkin:\/\/([^/?#]+)\/blob\/([^/?#]+)(?:\?([^#]*))?(?:#.*)?$/.exec(uri);
+  if (!match) return null;
+
+  const host = match[1];
+  if (!host || host === "me" || /\s/.test(host)) return null;
+
+  const cid = match[2];
+  try {
+    CID.parse(cid);
+  } catch {
+    return null;
+  }
+
+  const params = new URLSearchParams(match[3] ?? "");
+
+  return {
+    host,
+    cid,
+    name: params.get("name") || cid,
+    token: params.get("token") || undefined,
+  };
+}
+
+/**
+ * Media URL for a generic blob.
+ *
+ * RASL is the default: it is anonymous, stateless, cacheable and
+ * content-addressed. A `token` in the URI switches to the authenticated blob
+ * route, which is needed for private blobs or deployments with RASL disabled.
+ *
+ * @param {BlobURI} blob
+ */
+export function blobURL(blob) {
+  const origin = `https://${blob.host}`;
+
+  if (blob.token) {
+    return `${origin}/v1/blob/${blob.cid}?token=${
+      encodeURIComponent(blob.token)
+    }`;
+  }
+
+  return `${origin}/.well-known/rasl/${blob.cid}`;
 }
 
 /**

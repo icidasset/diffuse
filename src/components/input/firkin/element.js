@@ -1,5 +1,10 @@
 import { defineElement, DiffuseElement } from "~/common/element.js";
-import { SCHEME, SOURCE_URI } from "~/common/firkin/files.js";
+import {
+  parseBlobURI,
+  parseURI,
+  SCHEME,
+  SOURCE_URI,
+} from "~/common/firkin/files.js";
 
 /**
  * @import {InputActions, InputSchemeProvider} from "@specs/components/input/types.d.ts"
@@ -12,9 +17,14 @@ import { SCHEME, SOURCE_URI } from "~/common/firkin/files.js";
 ////////////////////////////////////////////
 
 /**
- * Audio source backed by Firkin blobs listed in the account's file registry.
+ * Audio source for Firkin account files and generic CID-addressed blobs.
  *
- * The worker reads the shared Firkin session from IndexedDB, so this element
+ * Account files are listed from the account's file registry and use the
+ * shared Firkin session. Generic `firkin://<host>/blob/<cid>` tracks resolve
+ * anonymously via RASL by default; a `?token=` query parameter opts into an
+ * authenticated read.
+ *
+ * The worker reads the shared Firkin session from IndexedDB, so account mode
  * does not depend on the WNFS output or a broadcast channel.
  *
  * @implements {ProxiedActions<InputActions>}
@@ -42,9 +52,37 @@ class FirkinInput extends DiffuseElement {
 
   // 🛠️
 
-  /** @param {Track[]} _tracks */
-  sources(_tracks) {
-    return [{ label: "Firkin", uri: SOURCE_URI }];
+  /** @param {Track[]} tracks */
+  sources(tracks) {
+    /** @type {Map<string, { label: string; uri: string }>} */
+    const generic = new Map();
+    let hasAccount = false;
+
+    for (const track of tracks) {
+      if (track.uri === SOURCE_URI || parseURI(track.uri)) {
+        hasAccount = true;
+        continue;
+      }
+
+      const blob = parseBlobURI(track.uri);
+      if (!blob) continue;
+
+      const uri = `firkin://${blob.host}`;
+      if (!generic.has(uri)) {
+        generic.set(uri, { label: `Firkin (${blob.host})`, uri });
+      }
+    }
+
+    /** @type {{ label: string; uri: string }[]} */
+    const sources = [...generic.values()];
+
+    // The account source is only meaningful when this is the account library
+    // (or there is nothing else to show). Generic CID sources stand alone.
+    if (hasAccount || sources.length === 0) {
+      sources.unshift({ label: "Firkin", uri: SOURCE_URI });
+    }
+
+    return sources;
   }
 }
 

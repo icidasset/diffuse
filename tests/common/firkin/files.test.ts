@@ -3,7 +3,10 @@
 import { describe, it } from "@std/testing/bdd";
 import { expect } from "@std/expect";
 
+import { cidForBytes } from "~/vendor/firkin/index.js";
 import {
+  blobURL,
+  buildBlobURI,
   buildURI,
   decodeFileName,
   deleteFile,
@@ -13,6 +16,7 @@ import {
   getFile,
   listFiles,
   mimeType,
+  parseBlobURI,
   parseURI,
   readFile,
   safeFileName,
@@ -95,6 +99,43 @@ describe("common/firkin/files", () => {
     expect(parseURI("firkin://me/other/x.mp3")).toBeNull();
     expect(parseURI("firkin://me/files/a/b.mp3")).toBeNull();
     expect(parseURI("firkin://me/files/%E0%A4%A")).toBeNull();
+  });
+
+  it("builds and parses generic CID-addressed blob URIs", () => {
+    const cid = cidForBytes(new Uint8Array([1]), { codec: 0x55 });
+
+    const rasl = buildBlobURI({
+      host: "firkin.example",
+      cid,
+      name: "Artist - Title.mp3",
+    });
+
+    expect(rasl).toBe(
+      `firkin://firkin.example/blob/${cid}?name=Artist+-+Title.mp3`,
+    );
+    expect(parseBlobURI(rasl)).toEqual({
+      host: "firkin.example",
+      cid,
+      name: "Artist - Title.mp3",
+      token: undefined,
+    });
+    expect(blobURL(parseBlobURI(rasl))).toBe(
+      `https://firkin.example/.well-known/rasl/${cid}`,
+    );
+
+    const authed = buildBlobURI({
+      host: "firkin.example",
+      cid,
+      token: "ucan-token",
+    });
+
+    expect(parseBlobURI(authed)?.token).toBe("ucan-token");
+    expect(blobURL(parseBlobURI(authed))).toBe(
+      `https://firkin.example/v1/blob/${cid}?token=ucan-token`,
+    );
+
+    expect(parseBlobURI(buildURI("a.mp3"))).toBeNull();
+    expect(parseBlobURI("firkin://firkin.example/blob/not-a-cid")).toBeNull();
   });
 
   it("encodes arbitrary file names as registry names", () => {

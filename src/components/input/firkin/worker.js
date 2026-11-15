@@ -3,11 +3,13 @@ import * as TID from "@atcute/tid";
 import { ostiary, rpc } from "~/common/worker.js";
 import { isAudioFile } from "~/components/input/common.js";
 import {
+  blobURL,
   buildURI,
   FILE_URL_TTL_SECONDS,
   fileURL,
   listFiles,
   mimeType,
+  parseBlobURI,
   parseURI,
   readFile,
   SCHEME,
@@ -78,6 +80,12 @@ export async function consult(uriOrScheme) {
     return { supported: true, consult: "undetermined" };
   }
 
+  // Generic CID-addressed blobs need no session: RASL is anonymous by
+  // default, and an optional token is carried by the URI itself.
+  if (parseBlobURI(uriOrScheme)) {
+    return { supported: true, consult: "yes" };
+  }
+
   const status = await storageStatus();
   if (!status) return { supported: true, consult: "unsure" };
 
@@ -105,6 +113,12 @@ export async function detach({ tracks }) {
  * @type {Actions['groupConsult']}
  */
 export async function groupConsult(uris) {
+  // A group containing generic CID sources is usable without the account
+  // session; only an account-only group follows the session state.
+  if (uris.some((uri) => parseBlobURI(uri) !== null)) {
+    return { [SCHEME]: { available: "yes", scheme: SCHEME, uris } };
+  }
+
   const status = await storageStatus();
   const available = !status ? "unsure" : status.connected ? "yes" : "no";
 
@@ -167,7 +181,15 @@ export async function list(cachedTracks = []) {
     };
   });
 
-  if (tracks.length > 0) return tracks;
+  // Generic CID-addressed tracks are self-contained; keep them alongside the
+  // account library when the session is available.
+  const genericTracks = cachedTracks.filter((track) =>
+    parseBlobURI(track.uri) !== null
+  );
+
+  const allTracks = [...tracks, ...genericTracks];
+
+  if (allTracks.length > 0) return allTracks;
 
   // Keep the source discoverable while the registry is empty.
   const placeholder = cachedTracks.find((track) =>
@@ -194,9 +216,24 @@ export async function list(cachedTracks = []) {
  * @type {Actions['resolve']}
  */
 export async function resolve({ uri }) {
-  const parsed = parseURI(uri);
-  if (!parsed) return undefined;
+  const account = parseURI(uri);
+  if (account) return await resolveAccountFile(uri, account.name);
 
+  const blob = parseBlobURI(uri);
+  if (blob) {
+    // RASL by default; a `token` in the URI opts into the authenticated blob
+    // route. RASL content is immutable, so there is nothing to refresh.
+    return { url: blobURL(blob), expiresAt: Infinity };
+  }
+
+  return undefined;
+}
+
+/**
+ * @param {string} uri
+ * @param {string} name
+ */
+async function resolveAccountFile(uri, name) {
   const client = await getSessionClient();
   if (!client) throw new Error(NOT_CONNECTED);
 
@@ -205,7 +242,7 @@ export async function resolve({ uri }) {
   try {
     const url = await fileURL(
       client.rb,
-      parsed.name,
+      name,
       FILE_URL_TTL_SECONDS,
     );
 
@@ -220,10 +257,10 @@ export async function resolve({ uri }) {
   let url = blobUrls.get(uri);
 
   if (!url) {
-    const bytes = await readFile(client.rb, parsed.name);
+    const bytes = await readFile(client.rb, name);
     const blob = new Blob(
       [/** @type {BlobPart} */ (/** @type {unknown} */ (bytes))],
-      { type: mimeType(parsed.name) },
+      { type: mimeType(name) },
     );
     url = URL.createObjectURL(blob);
     blobUrls.set(uri, url);

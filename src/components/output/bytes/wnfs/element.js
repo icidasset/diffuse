@@ -41,6 +41,7 @@ import {
   clientForSession,
   deleteSession,
   readSession,
+  revokeSessionDelegation,
   saveSession,
 } from "~/common/firkin/session.js";
 import {
@@ -54,7 +55,6 @@ import {
   REGISTRY_ROOT,
   RESTORE_TIMEOUT_MS,
   SESSION_COMMAND,
-  SESSION_TTL_SECONDS,
   UPLOAD_DEBOUNCE_MS,
   WNFS_OUTPUT_DIR,
 } from "./constants.js";
@@ -423,7 +423,13 @@ class WnfsFirkinOutput extends BroadcastedOutputElement {
     return did;
   }
 
-  /** Forget the local session and storage pointer. */
+  /**
+   * Forget the local session and storage pointer.
+   *
+   * This does not revoke the server-side delegation: it is indefinite and
+   * revocation needs the account key, which is only available during passkey
+   * sign-in.
+   */
   async signOut() {
     await this.#writeQueue.catch(() => {});
     await this.#flushUploads();
@@ -733,12 +739,18 @@ class WnfsFirkinOutput extends BroadcastedOutputElement {
   // SESSION
 
   /**
-   * Mint a fresh `/firkin` delegation for a browser session key.
+   * Return an indefinite `/firkin` delegation for a browser session key.
    *
    * A previously stored session key is reused when it belongs to the same
-   * instance + account, but the delegation is always re-minted. This makes an
-   * explicit passkey sign-in recover from a delegation that was revoked or
-   * expired elsewhere.
+   * instance + account. A still-valid indefinite delegation is reused too:
+   * the account's delegation store is capped, so minting a fresh non-expiring
+   * delegation on every sign-in would eventually fill it. If the stored
+   * delegation was revoked, a new one is minted with the same session key.
+   *
+   * The delegation has no expiry (`exp: null`), so it stays valid until the
+   * account key revokes it. That makes persistent sign-in possible, but also
+   * means sign-out only forgets the session locally; revoke it server-side
+   * with the account key if the browser is being abandoned.
    *
    * @param {string} apiBase
    * @param {string} did
@@ -747,20 +759,45 @@ class WnfsFirkinOutput extends BroadcastedOutputElement {
    */
   async #createSession(apiBase, did, accountSigner) {
     const stored = await readSession();
+    const sameAccount = stored !== undefined &&
+      stored.apiBase === apiBase &&
+      stored.did === did;
 
-    const sessionSigner =
-      stored &&
-        stored.apiBase === apiBase &&
-        stored.did === did &&
+    // Prefer the existing indefinite delegation when it still resolves.
+    if (
+      stored && sameAccount && stored.proofCid &&
+      stored.expiresAt === Infinity &&
+      stored.privateKey instanceof CryptoKey &&
+      await this.#isSessionUsable(stored)
+    ) {
+      return stored;
+    }
+
+    // If we are not reusing an indefinite delegation, revoke it before
+    // replacing it so non-expiring grants do not accumulate in the account's
+    // delegation store. Revoking an already-dead CID is idempotent.
+    if (
+      stored && sameAccount && stored.proofCid &&
+      stored.expiresAt === Infinity
+    ) {
+      await revokeSessionDelegation(stored, accountSigner).catch((err) => {
+        console.warn(
+          "Could not revoke the previous Firkin session delegation:",
+          err,
+        );
+      });
+    }
+
+    const sessionSigner = stored && sameAccount &&
         stored.privateKey instanceof CryptoKey
-        ? WebCryptoSigner.fromPersisted(stored.privateKey, stored.publicKey)
-        : await WebCryptoSigner.generateNonExtractable();
+      ? WebCryptoSigner.fromPersisted(stored.privateKey, stored.publicKey)
+      : await WebCryptoSigner.generateNonExtractable();
 
     const { proof, cid } = await delegate(accountSigner, {
       subject: did,
       audience: sessionSigner.did(),
       command: SESSION_COMMAND,
-      expireIn: SESSION_TTL_SECONDS,
+      // Omit `expireIn`: the session lasts until revoked.
     });
 
     /** @type {Session} */
@@ -771,7 +808,7 @@ class WnfsFirkinOutput extends BroadcastedOutputElement {
       publicKey: sessionSigner.pubkeyBytes,
       proof,
       proofCid: cid,
-      expiresAt: Date.now() + SESSION_TTL_SECONDS * 1000,
+      expiresAt: Infinity,
       // Start with inline proofs: a worker may read this session before the
       // publish below completes.
       inlineProofs: true,
@@ -779,6 +816,34 @@ class WnfsFirkinOutput extends BroadcastedOutputElement {
 
     await saveSession(session);
     return session;
+  }
+
+  /**
+   * Validate a stored indefinite session with an authenticated registry read.
+   * Network/server errors are treated as "still usable" so an offline
+   * sign-in does not rotate the delegation needlessly.
+   *
+   * @param {Session} session
+   * @returns {Promise<boolean>}
+   */
+  async #isSessionUsable(session) {
+    try {
+      const rb = clientForSession({ ...session, inlineProofs: true });
+      await rb.registryList();
+      return true;
+    } catch (err) {
+      if (
+        err instanceof ApiError && (err.status === 401 || err.status === 403)
+      ) {
+        return false;
+      }
+
+      console.warn(
+        "Could not validate the stored Firkin session; reusing it:",
+        err,
+      );
+      return true;
+    }
   }
 
   /** @param {Session} session */

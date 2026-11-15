@@ -62,12 +62,6 @@ export const RESTORE_TIMEOUT_MS = 10_000;
 export const SESSION_COMMAND = "/firkin";
 
 /**
- * How long a session delegation lasts before the passkey is needed again.
- * The session itself is revocable by the account key.
- */
-export const SESSION_TTL_SECONDS = 30 * 24 * 60 * 60;
-
-/**
  * Default endpoint for the local development instance.
  */
 export const DEFAULT_API_BASE = "http://localhost:8787";

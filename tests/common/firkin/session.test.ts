@@ -24,15 +24,17 @@ describe("common/firkin/session", () => {
         ["sign"],
       );
 
-      await saveSession({
+      const session = {
         apiBase: "http://example.invalid",
         did: account.did(),
         privateKey: keyPair.privateKey,
         publicKey: account.pubkeyBytes,
         proof: new Uint8Array([1]),
         proofCid: "bafkreitest",
-        expiresAt: Date.now() + 60_000,
-      });
+        expiresAt: Infinity,
+      };
+
+      await saveSession(session);
 
       const client = await getSessionClient();
       const connected = Boolean(client);
@@ -41,11 +43,16 @@ describe("common/firkin/session", () => {
       await deleteSession();
       const afterDelete = await getSessionClient();
 
+      // An indefinite session is valid, but an expired record is ignored.
+      await saveSession({ ...session, expiresAt: Date.now() - 1 });
+      const expired = await getSessionClient();
+
       return {
         connected,
         did,
         expectedDid: account.did(),
         afterDelete: Boolean(afterDelete),
+        expired: Boolean(expired),
       };
     });
 
@@ -54,6 +61,7 @@ describe("common/firkin/session", () => {
       did: result.expectedDid,
       expectedDid: result.expectedDid,
       afterDelete: false,
+      expired: false,
     });
   });
 });

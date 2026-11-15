@@ -134,7 +134,7 @@ export default {
       url: "components/input/firkin/element.js",
       title: "Firkin",
       desc:
-        "Firkin-hosted audio files, listed from the account's file registry.",
+        "Firkin account files plus generic CID-addressed blobs. Generic blobs resolve anonymously via RASL by default; a read token in the URI opts into authenticated access.",
     },
     {
       url: "components/input/https/element.js",

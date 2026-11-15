@@ -421,6 +421,7 @@ stopSyncBtn?.addEventListener("click", () => stopSyncing());
  *   build: (values: Record<string, string>) => string;
  *   caption: string;
  *   unavailable?: string | TemplateResult;
+ *   isSyncTarget?: (uri: string) => boolean;
  *   sourceParts: (uri: string) => { name: string; detail: string };
  * }} ConnectConfig
  */
@@ -536,6 +537,10 @@ const CONNECT_CONFIGS = {
       name: "Firkin",
       detail: "Firkin blobs + registry pointers",
     }),
+
+    // Generic CID-addressed sources are read-only; only the account library
+    // is an upload destination.
+    isSyncTarget: (uri) => uri === FIRKIN_SOURCE_URI,
   },
 };
 
@@ -620,7 +625,8 @@ function openConnectSourceDialog(config) {
   }
 
   // Destinations already connected for this scheme.
-  const sources = sourcesOrchestrator.sources()[config.scheme] ?? [];
+  const sources = (sourcesOrchestrator.sources()[config.scheme] ?? [])
+    .filter((source) => config.isSyncTarget?.(source.uri) ?? true);
   const existing = sources.map((source) => ({
     ...source,
     ...config.sourceParts(source.uri),
