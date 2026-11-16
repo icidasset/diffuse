@@ -38,6 +38,7 @@ import * as _OrchestratorQueueAudio from "./orchestrator/queue-audio/element.js"
 import * as _OrchestratorScopedTracks from "./orchestrator/scoped-tracks/element.js"
 import * as _OrchestratorScrobbleAudio from "./orchestrator/scrobble-audio/element.js"
 import * as _OrchestratorSources from "./orchestrator/sources/element.js"
+import * as _OutputBytesFirkin from "./output/bytes/firkin/element.js"
 import * as _OutputBytesS3 from "./output/bytes/s3/element.js"
 import * as _OutputPolymorphicIndexedDb from "./output/polymorphic/indexed-db/element.js"
 import * as _OutputRawAtprotoPasskey from "./output/raw/atproto-passkey/element.js"
@@ -121,6 +122,7 @@ export const orchestrator = {
 
 export const output = {
   bytes: {
+    firkin: _OutputBytesFirkin,
     s3: _OutputBytesS3,
   },
   polymorphic: {

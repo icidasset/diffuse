@@ -211,6 +211,14 @@
     "desc": "The default setup for uploading audio files to cloud storage. Adds support for: Dropbox, Firkin, S3-compatible storage, and WebDAV."
   },
   {
+    "url": "facets/data/firkin-automerge/prelude/index.tile",
+    "title": "Output / Firkin (Automerge)",
+    "kind": "prelude",
+    "category": "Data",
+    "incomplete": true,
+    "desc": "Store your userdata on a [Firkin](https://tangled.org/tokono.ma/firkin) instance as [Automerge](https://automerge.org/) documents. Each save appends only the changes since the last sync, and concurrent edits from different devices merge per record. Uses passkey authentication and no email."
+  },
+  {
     "url": "facets/data/export-import/index.tile",
     "title": "Export & Import",
     "category": "Data",

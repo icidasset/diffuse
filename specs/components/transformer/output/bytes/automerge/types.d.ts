@@ -7,16 +7,21 @@ import type {
 } from "~/definitions/types.d.ts";
 
 /**
- * The schema identity stamped on an Automerge doc so the stored binary is
- * self-describing.
+ * The document shape for every collection.
+ *
+ * Records are keyed by `id` rather than held in an array so that concurrent
+ * edits to different records merge independently; `order` keeps the array order
+ * the output interface expects.
  */
-export type DocumentSchema = {
-  /** The lexicon NSID the records in `collection` conform to. */
+export type CollectionDocument<T> = {
+  /** The lexicon NSID the records conform to, so the stored binary is self-describing. */
   $schema?: string;
+  order: string[];
+  records: Record<string, T>;
 };
 
-export type CollaborationsDocument = { collection: Collaboration[] } & DocumentSchema;
-export type FacetsDocument = { collection: Facet[] } & DocumentSchema;
-export type PlaylistItemsDocument = { collection: PlaylistItem[] } & DocumentSchema;
-export type SettingsDocument = { collection: Setting[] } & DocumentSchema;
-export type TracksDocument = { collection: Track[] } & DocumentSchema;
+export type CollaborationsDocument = CollectionDocument<Collaboration>;
+export type FacetsDocument = CollectionDocument<Facet>;
+export type PlaylistItemsDocument = CollectionDocument<PlaylistItem>;
+export type SettingsDocument = CollectionDocument<Setting>;
+export type TracksDocument = CollectionDocument<Track>;

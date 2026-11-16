@@ -1,35 +1,18 @@
-import * as Automerge from "@automerge/automerge";
-import { base64 } from "iso-base/rfc4648";
+/** Collections every output stores. */
+export const COLLECTIONS = /** @type {import("~/common/self-describing.js").CollectionName[]} */ ([
+  "collaborations",
+  "facets",
+  "playlistItems",
+  "settings",
+  "tracks",
+]);
 
 /**
- * @import { CollaborationsDocument, FacetsDocument, PlaylistItemsDocument, SettingsDocument, TracksDocument } from "@specs/components/transformer/output/bytes/automerge/types.d.ts";
+ * Append this many entries to a log before collapsing it into one snapshot.
+ * Manifests are rewritten on every append, so keeping them short keeps saves
+ * cheap.
  */
+export const MAX_PACKS = 32;
 
-/** @type {Automerge.Doc<CollaborationsDocument>} */
-export const INITIAL_COLLABORATIONS_DOCUMENT = Automerge.from({
-  collection: [],
-});
-
-/** @type {Automerge.Doc<FacetsDocument>} */
-export const INITIAL_FACETS_DOCUMENT = Automerge.load(
-  base64.decode(
-    "hW9Kg1fmLLcAeAEQZ2dnbV0O8AUftAeEXT1QVQHsmc9lhGh1ysz4ECa3pEUgzSZG2aF8hob78u7FqeybBQYBAgMCEwIjBkACVgIHFQwhAiMCNAFCAlYCgAECfwB/AX8Bf8KTqcwGfwB/B38KY29sbGVjdGlvbn8AfwEBfwJ/AH8AAA",
-  ),
-);
-
-/** @type {Automerge.Doc<PlaylistItemsDocument>} */
-export const INITIAL_PLAYLIST_ITEMS_DOCUMENT = Automerge.load(
-  base64.decode(
-    "hW9Kg5IPZcsAeAEQIyp0LRYp0l9bpZKWJXTPlgGtUD/lrIatFjiIwoUdtJhh/sBQFIcpPppxduoIp1ArXwYBAgMCEwIjBkACVgIHFQwhAiMCNAFCAlYCgAECfwB/AX8Bf8eTqcwGfwB/B38KY29sbGVjdGlvbn8AfwEBfwJ/AH8AAA",
-  ),
-);
-
-/** @type {Automerge.Doc<SettingsDocument>} */
-export const INITIAL_SETTINGS_DOCUMENT = Automerge.from({ collection: [] });
-
-/** @type {Automerge.Doc<TracksDocument>} */
-export const INITIAL_TRACKS_DOCUMENT = Automerge.load(
-  base64.decode(
-    "hW9Kg+NQ56QAeAEQxkdUqSHSfh9+5TiM1gnDswH+Nh6PA98q+0oB013slgls/ARH8Fi5NvI9jhK2RZ1DTgYBAgMCEwIjBkACVgIHFQwhAiMCNAFCAlYCgAECfwB/AX8Bf5eSqcwGfwB/B38KY29sbGVjdGlvbn8AfwEBfwJ/AH8AAA",
-  ),
-);
+/** IndexedDB prefix for the heads each collection was last pushed at. */
+export const IDB_PREFIX = "diffuse/transformer/output/bytes/automerge";
