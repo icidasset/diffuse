@@ -1,3 +1,4 @@
+import * as TID from "@atcute/tid";
 import { html } from "lit-html";
 
 import {
@@ -8,10 +9,12 @@ import {
   signOutAccount,
   UnregisteredAccountError,
 } from "~/common/firkin/account.js";
+import { SOURCE_URI } from "~/common/firkin/files.js";
+import { FIRKIN_METHODS } from "~/common/firkin/methods.js";
 import { effect, signal } from "~/common/signal.js";
 import foundation from "~/common/foundation.js";
 
-import { setup } from "~/facets/connect/common.js";
+import { setup, waitForOutputOption } from "~/facets/connect/common.js";
 
 foundation.setup({ title: "Connect Firkin" });
 
@@ -33,24 +36,77 @@ try {
 
 const account = signal(initialAccount);
 
+const outputOrchestrator = await foundation.orchestrator.output();
+await customElements.whenDefined(outputOrchestrator.localName);
+
+// Added by the output bundle, so they may not be registered yet on this page.
+/** @type {Map<string, { id: string }>} */
+const firkinOptions = new Map();
+
+await Promise.all(
+  FIRKIN_METHODS.map(async (method) => {
+    const option = await waitForOutputOption(outputOrchestrator, method.label);
+
+    firkinOptions.set(method.id, option);
+  }),
+);
+
+const FIRKIN_OPTION_IDS = new Set(
+  [...firkinOptions.values()].map((option) => option.id),
+);
+
+/**
+ * The method the dialog is set to. With one method there is no chooser.
+ *
+ * @returns {import("~/common/firkin/methods.js").FirkinMethod}
+ */
+function chosenMethod() {
+  const select = document.querySelector("#rb-method");
+  const id = select instanceof HTMLSelectElement ? select.value : "";
+
+  return FIRKIN_METHODS.find((method) => method.id === id) ?? FIRKIN_METHODS[0];
+}
+
+/**
+ * @param {import("~/common/firkin/methods.js").FirkinMethod} method
+ */
+function selectMethod(method) {
+  const option = firkinOptions.get(method.id);
+  if (!option) throw new Error(`${method.label} is not available`);
+
+  return outputOrchestrator.select(option.id);
+}
+
 ////////////////////////////////////////////
 // UI
 ////////////////////////////////////////////
 
 const { setItems, setError, setDialogError } = setup({
   title: "Firkin",
-  hasInput: false,
-  outputLabel: "Connect",
-  outputIcon: "ph-fill ph-fingerprint",
-  outputTitle: "Connect Firkin",
+  outputIcon: "ph-fill ph-cloud",
+  outputTitle: `Use Firkin as userdata storage`,
 
   description: html`
     <p>
-      Connect to a <a href="https://tangled.org/tokono.ma/firkin" target="_blank">Firkin</a> instance using just a passkey (no email or password).
+      Connect to a <a href="https://tangled.org/tokono.ma/firkin" target="_blank">Firkin</a> instance using just a passkey, no email or password.
     </p>
   `,
 
   formFields: html`
+    ${
+    FIRKIN_METHODS.length > 1
+      ? html`
+        <label>
+          Storage method
+          <select id="rb-method">
+            ${FIRKIN_METHODS.map((method) =>
+              html`<option value="${method.id}">${method.label}</option>`
+            )}
+          </select>
+        </label>
+      `
+      : ""
+  }
     <label>
       API endpoint
       <input
@@ -95,7 +151,12 @@ const { setItems, setError, setDialogError } = setup({
     </button>
   `,
 
-  onSubmit: () => connectWithDid(),
+  onSubmit: (mode) => addFirkin(mode),
+
+  // Already signed in and the output is configured: just make it active.
+  onOutputActivate: async () => {
+    await selectMethod(chosenMethod());
+  },
 });
 
 const dialog =
@@ -134,8 +195,25 @@ dialog?.addEventListener("close", () => {
 // REACTIVE LIST
 ////////////////////////////////////////////
 
+/**
+ * Whether one of this account's sources is in the collection. The Firkin input
+ * resolves `firkin://me` into `firkin://me/files/...` tracks, so both count.
+ */
+function hasInputSource() {
+  const collection = outputOrchestrator.tracks.collection();
+  if (collection.state !== "loaded") return false;
+
+  return collection.data.some((track) =>
+    typeof track.uri === "string" &&
+    (track.uri === SOURCE_URI || track.uri.startsWith(`${SOURCE_URI}/`))
+  );
+}
+
 effect(() => {
   const current = account.get();
+  const isInput = hasInputSource();
+  const selectedId = outputOrchestrator.selected()?.id;
+  const isOutput = selectedId !== undefined && FIRKIN_OPTION_IDS.has(selectedId);
 
   setItems(
     current
@@ -143,9 +221,9 @@ effect(() => {
         {
           name: current.did,
           detail: current.apiBase,
-          isInput: false,
-          isOutput: false,
-          isSelectedOutput: false,
+          isInput,
+          isOutput,
+          isSelectedOutput: isOutput,
           onRemove: () => disconnect(),
         },
       ]
@@ -167,6 +245,50 @@ async function refreshAccount() {
   } catch {
     account.value = null;
   }
+}
+
+/**
+ * Add Firkin as an audio source or as the userdata output.
+ *
+ * Both need the account session, so this signs in first when it has to; the
+ * dialog stays open while the passkey prompt runs.
+ *
+ * @param {'input' | 'output'} mode
+ */
+async function addFirkin(mode) {
+  if (!account.get()) await connectWithDid();
+
+  if (mode === "input") {
+    await addInput();
+  } else {
+    await selectMethod(chosenMethod());
+  }
+}
+
+/**
+ * Add the account's files as an audio source.
+ *
+ * The input element resolves `firkin://me` into the account's file registry, so
+ * a single placeholder track is enough to make them appear.
+ */
+async function addInput() {
+  if (hasInputSource()) return;
+
+  const collection = outputOrchestrator.tracks.collection();
+  const existing = collection.state === "loaded" ? collection.data : [];
+  const now = new Date().toISOString();
+
+  await outputOrchestrator.tracks.save([
+    ...existing,
+    {
+      $type: "sh.diffuse.output.track",
+      id: TID.now(),
+      createdAt: now,
+      updatedAt: now,
+      kind: "placeholder",
+      uri: SOURCE_URI,
+    },
+  ]);
 }
 
 /**
@@ -209,6 +331,13 @@ function showDid(did, hint = DEFAULT_DID_HINT) {
 async function disconnect() {
   setError(null);
   try {
+    // Without a session the output has nothing to read, so stop using it
+    // before dropping the account.
+    const selectedId = outputOrchestrator.selected()?.id;
+    if (selectedId !== undefined && FIRKIN_OPTION_IDS.has(selectedId)) {
+      await outputOrchestrator.deselect();
+    }
+
     await signOutAccount();
 
     account.value = null;

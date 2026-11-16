@@ -107,18 +107,17 @@
     "desc": "Use your AT Protocol account for user-data storage. Your data is stored in your own repo and is not broadcast publicly."
   },
   {
-    "url": "facets/connect/firkin/index.tile",
-    "title": "Connect / Firkin",
-    "category": "Data",
-    "incomplete": true,
-    "desc": "Connect to a [Firkin](https://tangled.org/tokono.ma/firkin) instance with a passkey."
-  },
-  {
     "url": "facets/connect/dropbox/index.tile",
     "title": "Connect / Dropbox",
     "category": "Data",
     "featured": true,
     "desc": "Add Dropbox as an audio source or use it as user-data storage."
+  },
+  {
+    "url": "facets/connect/firkin/index.tile",
+    "title": "Connect / Firkin",
+    "category": "Data",
+    "desc": "Connect to a [Firkin](https://tangled.org/tokono.ma/firkin) instance with a passkey."
   },
   {
     "url": "facets/connect/https/index.tile",
@@ -209,14 +208,6 @@
     "category": "Data",
     "tags": ["base"],
     "desc": "The default setup for uploading audio files to cloud storage. Adds support for: Dropbox, Firkin, S3-compatible storage, and WebDAV."
-  },
-  {
-    "url": "facets/data/firkin-automerge/prelude/index.tile",
-    "title": "Output / Firkin (Automerge)",
-    "kind": "prelude",
-    "category": "Data",
-    "incomplete": true,
-    "desc": "Store your userdata on a [Firkin](https://tangled.org/tokono.ma/firkin) instance as [Automerge](https://automerge.org/) documents. Each save appends only the changes since the last sync, and concurrent edits from different devices merge per record. Uses passkey authentication and no email."
   },
   {
     "url": "facets/data/export-import/index.tile",

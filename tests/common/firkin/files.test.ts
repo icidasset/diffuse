@@ -148,7 +148,9 @@ describe("common/firkin/files", () => {
       ]
     ) {
       const encoded = encodeFileName(name);
-      expect(encoded).toMatch(/^[A-Za-z0-9._~@+:-]+$/);
+
+      // Registry names are part of the UCAN command, which must be lowercase.
+      expect(encoded).toMatch(/^[0-9a-f]+$/);
       expect(decodeFileName(encoded)).toBe(name);
     }
   });

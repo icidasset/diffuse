@@ -1,4 +1,3 @@
-import { base64url } from "iso-base/rfc4648";
 import { CID } from "multiformats/cid";
 
 /**
@@ -9,7 +8,7 @@ import { CID } from "multiformats/cid";
  * Files stored on Firkin, listed from the account's namespaced registry, plus
  * generic CID-addressed blobs.
  *
- * Account files are raw Firkin blobs; the registry name is a base64url-encoded
+ * Account files are raw Firkin blobs; the registry name is a hex-encoded
  * file name (Firkin registry names reject spaces and several other filename
  * characters) pointing at its CID.
  *
@@ -55,16 +54,20 @@ export const FILE_URL_TTL_SECONDS = 6 * 60 * 60;
  */
 
 /**
- * Encode a file name as a Firkin registry name.
+ * Encode a name as a registry name.
  *
- * Registry names are restricted to `A–Z a–z 0–9 . _ - ~ @ + :`, so a
- * base64url encoding keeps arbitrary (Unicode, spaces, punctuation) filenames
- * addressable.
+ * A registry name is part of the UCAN command string a request is authorised
+ * with — `/firkin/registry/read/<namespace>/<name>` — and the server requires
+ * commands to be lowercase, so base64url (which has uppercase) can't be used.
+ * Hex is injective and case-free, and keeps arbitrary (Unicode, spaces,
+ * punctuation) names addressable.
  *
  * @param {string} name
  */
 export function encodeFileName(name) {
-  const encoded = base64url.encode(new TextEncoder().encode(name));
+  const encoded = [...new TextEncoder().encode(name)]
+    .map((byte) => byte.toString(16).padStart(2, "0"))
+    .join("");
 
   if (encoded.length > MAX_REGISTRY_NAME_LENGTH) {
     throw new Error(`File name is too long for Firkin: ${name}`);
@@ -77,7 +80,18 @@ export function encodeFileName(name) {
  * @param {string} encoded
  */
 export function decodeFileName(encoded) {
-  return new TextDecoder().decode(base64url.decode(encoded));
+  if (encoded.length % 2 !== 0 || /[^0-9a-f]/i.test(encoded)) {
+    throw new Error(`Not a hex-encoded name: ${encoded}`);
+  }
+
+  /** @type {number[]} */
+  const bytes = [];
+
+  for (let index = 0; index < encoded.length; index += 2) {
+    bytes.push(parseInt(encoded.slice(index, index + 2), 16));
+  }
+
+  return new TextDecoder().decode(new Uint8Array(bytes));
 }
 
 /**

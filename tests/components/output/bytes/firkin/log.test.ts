@@ -402,6 +402,18 @@ describe("components/output/bytes/firkin/log", () => {
     expect(await read(rb, "tracks", auth)).toEqual([]);
   });
 
+  it("writes lowercase registry names", async () => {
+    // The namespace and name end up in the UCAN command
+    // (`/firkin/registry/read/<ns>/<name>`), and the server rejects commands
+    // that aren't lowercase.
+    const namespace = registryNamespace("firkin-automerge");
+    const name = logName("playlistItems", deviceA);
+
+    expect(namespace).toMatch(/^[a-z0-9._-]+$/);
+    expect(name).toMatch(/^[a-z0-9._-]+$/);
+    expect(logName("tracks", deviceA)).toMatch(/^[a-z0-9._-]+$/);
+  });
+
   it("writes the version and device into the payload", async () => {
     const rb = fakeClient();
     const auth = fakeAuth(deviceA);

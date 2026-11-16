@@ -342,6 +342,12 @@ export default {
         "Stores each collection as an Automerge document, with records keyed by id so concurrent edits merge. Appends deltas to a history-preserving output and replays the log; set snapshot for an output that replaces its value.",
     },
     {
+      url: "components/transformer/output/bytes/encrypt/element.js",
+      title: "Output / Bytes / Encrypt",
+      desc:
+        "Encrypts each value an output stores, so the backing store only sees framed ciphertext. Seals one entry per save, so appended deltas never re-encrypt history.",
+    },
+    {
       url: "components/transformer/output/bytes/dasl-sync/element.js",
       title: "Output / Bytes / DASL Sync",
       desc:

@@ -4,6 +4,11 @@ import * as IDB from "idb-keyval";
 import { computed, signal } from "~/common/signal.js";
 import { BroadcastedOutputElement, outputManager } from "../../common.js";
 import { defineElement } from "~/common/element.js";
+import {
+  HINT_DEBOUNCE_MS,
+  channelName,
+  openHintChannel,
+} from "~/common/firkin/channel.js";
 import { getSessionClient } from "~/common/firkin/session.js";
 
 import { IDB_FLOORS, IDB_PACKS, NOT_CONNECTED } from "./constants.js";
@@ -65,6 +70,14 @@ class FirkinOutput extends BroadcastedOutputElement {
   /** @type {Map<string, Promise<unknown>>} */
   #writes = new Map();
 
+  // HINTS
+
+  /** @type {ReturnType<typeof openHintChannel> | undefined} */
+  #channel;
+
+  /** @type {Map<string, ReturnType<typeof setTimeout>>} */
+  #hints = new Map();
+
   constructor() {
     super();
 
@@ -125,10 +138,15 @@ class FirkinOutput extends BroadcastedOutputElement {
     globalThis.removeEventListener("online", this.#online);
     globalThis.removeEventListener("offline", this.#offline);
 
+    this.#closeChannel();
+
     super.disconnectedCallback();
   }
 
-  #offline = () => this.#isOnline.set(false);
+  #offline = () => {
+    this.#isOnline.set(false);
+    this.#closeChannel();
+  };
   #online = () => {
     this.#isOnline.set(true);
     void this.#refreshConnected();
@@ -146,6 +164,8 @@ class FirkinOutput extends BroadcastedOutputElement {
         // A cheap authenticated read proves the session (and account) works.
         await client.rb.registryList();
         this.#connected.value = true;
+
+        this.#ensureChannel(client);
       } catch (err) {
         // Unauthorized/forbidden means the account is unregistered or the
         // delegation was revoked; other errors are treated optimistically.
@@ -156,6 +176,76 @@ class FirkinOutput extends BroadcastedOutputElement {
     } catch {
       this.#connected.value = false;
     }
+  }
+
+  // HINTS
+
+  /**
+   * Subscribe to change hints from other devices.
+   *
+   * Other devices' writes are only visible after a read, so a hint just says
+   * which collection to re-read; it never carries data. Without a channel the
+   * output still works, it is only less immediate.
+   *
+   * @param {{ session: Session; rb: Firkin }} client
+   */
+  #ensureChannel(client) {
+    if (this.#channel) return;
+
+    const name = channelName(this.#namespace);
+    const device = this.#auth(client.session).device;
+
+    this.#channel = openHintChannel({
+      device,
+      url: async () => {
+        const current = await getSessionClient();
+        if (!current) return undefined;
+
+        return await current.rb.channelUrl(name);
+      },
+      onHint: (collection) => this.#refreshCollection(collection),
+    });
+  }
+
+  #closeChannel() {
+    this.#channel?.close();
+    this.#channel = undefined;
+
+    for (const timer of this.#hints.values()) clearTimeout(timer);
+    this.#hints.clear();
+  }
+
+  /**
+   * Re-read one collection, coalescing a burst of hints into one read.
+   *
+   * @param {string} collection
+   */
+  #refreshCollection(collection) {
+    const reload = this.#reload(collection);
+    if (!reload) return;
+
+    const pending = this.#hints.get(collection);
+    if (pending !== undefined) clearTimeout(pending);
+
+    this.#hints.set(
+      collection,
+      setTimeout(() => {
+        this.#hints.delete(collection);
+        void reload().catch((err) => {
+          console.warn(`Could not refresh '${collection}' after a hint:`, err);
+        });
+      }, HINT_DEBOUNCE_MS),
+    );
+  }
+
+  /**
+   * @param {string} collection
+   * @returns {(() => Promise<void>) | undefined}
+   */
+  #reload(collection) {
+    const manager = /** @type {any} */ (this.#manager);
+
+    return manager[collection]?.reload;
   }
 
   // CONFIGURATION
@@ -421,6 +511,10 @@ class FirkinOutput extends BroadcastedOutputElement {
       } catch (err) {
         console.warn("Could not cache a Firkin entry:", err);
       }
+
+      // Best effort: the entry is already committed, so a lost hint only
+      // delays other devices.
+      this.#channel?.send(name);
     };
 
     // Serialize appends per log so concurrent saves can't rewrite the same

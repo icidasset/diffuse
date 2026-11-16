@@ -89,7 +89,7 @@ export function normalize(doc) {
  */
 export function recordsOf(doc) {
   const ordered = doc.order
-    .map((id) => doc.records[id])
+    .map((id) => normalizeLists(doc.records[id]))
     .filter((record) => record !== undefined);
 
   // `order` is a plain list, so two devices adding different records at the
@@ -99,10 +99,36 @@ export function recordsOf(doc) {
   for (const [id, record] of Object.entries(doc.records)) {
     if (seen.has(id) || record === undefined) continue;
 
-    ordered.push(record);
+    ordered.push(normalizeLists(record));
   }
 
   return ordered;
+}
+
+/**
+ * Turn objects that are really arrays back into arrays.
+ *
+ * An earlier version of `recursivelyCloneRecords` spread arrays into objects
+ * with numeric keys, so list fields in documents written before that fix are
+ * stored as `{ 0: …, 1: … }`. Normalizing on read repairs them, and the next
+ * save writes real arrays again.
+ *
+ * @param {any} value
+ * @returns {any}
+ */
+function normalizeLists(value) {
+  if (Array.isArray(value)) return value.map(normalizeLists);
+  if (value === null || typeof value !== "object") return value;
+
+  const entries = Object.entries(value);
+  const normalized = entries.map(([key, item]) => [key, normalizeLists(item)]);
+
+  const isList = normalized.length > 0 &&
+    normalized.every(([key], index) => key === String(index));
+
+  return isList
+    ? normalized.map(([, item]) => item)
+    : Object.fromEntries(normalized);
 }
 
 /**

@@ -249,14 +249,24 @@ export async function loadStoredCipherKey(namespace) {
 // KEY DERIVATION
 ////////////////////////////////////////////
 
+/** HKDF salt shared by every key derived from the passkey. */
+const PASSKEY_SALT = "diffuse-atproto-passkey-salt";
+
+/** Default purpose: the key that hides track URIs in a collection. */
+export const TRACK_URI_INFO = "diffuse-atproto-track-uri";
+
 /**
  * Derive a 256-bit key from the PRF "second" output via HKDF.
- * Returns raw bytes suitable for use with XChaCha20-Poly1305.
+ * Returns raw bytes suitable for use with XChaCha20-Poly1305 or AES-GCM.
+ *
+ * `info` separates purposes: the same passkey derives a different key per
+ * label, so encrypting output entries never reuses the track-URI key.
  *
  * @param {ArrayBuffer} prfSecond
+ * @param {string} [info]
  * @returns {Promise<Uint8Array>}
  */
-export async function deriveCipherKey(prfSecond) {
+export async function deriveCipherKey(prfSecond, info = TRACK_URI_INFO) {
   const keyMaterial = await crypto.subtle.importKey(
     "raw",
     prfSecond,
@@ -270,15 +280,8 @@ export async function deriveCipherKey(prfSecond) {
       name: "HKDF",
       hash: "SHA-256",
 
-      salt:
-        /** @type {ArrayBuffer} */ (/** @type {unknown} */ (utf8.decode(
-          "diffuse-atproto-passkey-salt",
-        ))),
-
-      info:
-        /** @type {ArrayBuffer} */ (/** @type {unknown} */ (utf8.decode(
-          "diffuse-atproto-track-uri",
-        ))),
+      salt: new TextEncoder().encode(PASSKEY_SALT),
+      info: new TextEncoder().encode(info),
     },
     keyMaterial,
     256,

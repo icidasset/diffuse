@@ -35,6 +35,37 @@ describe("components/transformer/output/bytes/automerge/doc", () => {
     expect(recordsOf(doc)).toEqual(items);
   });
 
+  it("keeps list fields as arrays", () => {
+    // Spreading an array (`{ ...list }`) silently turns it into an object with
+    // numeric keys, which breaks `includes`, `map` and friends downstream.
+    const facet = {
+      $type: "sh.diffuse.output.facet",
+      id: "f1",
+      name: "Facet",
+      tags: ["base", "extra"],
+    };
+
+    const { doc } = changeDocument(createDocument(), [facet]);
+    const [record] = recordsOf(doc);
+
+    expect(Array.isArray(record.tags)).toBe(true);
+    expect(record).toEqual(facet);
+  });
+
+  it("repairs list fields that were written as numeric-keyed objects", () => {
+    const mangled = {
+      id: "f1",
+      tags: { 0: "base", 1: "extra" },
+      stats: { no: 1, nested: { 0: "a" } },
+    };
+
+    const { doc } = changeDocument(createDocument(), [mangled]);
+    const [record] = recordsOf(doc);
+
+    expect(record.tags).toEqual(["base", "extra"]);
+    expect(record.stats).toEqual({ no: 1, nested: ["a"] });
+  });
+
   it("skips the change when nothing differs", () => {
     const items = [track("a")];
     const first = changeDocument(createDocument(), items);

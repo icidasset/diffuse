@@ -553,6 +553,9 @@ async function writeFileTree() {
   Deno.writeTextFileSync(swDist, swStamped);
 }
 
+site.addEventListener("afterBuild", writeFileTree);
+site.addEventListener("afterUpdate", writeFileTree);
+
 ////////////////////////////////////////////
 // BUILD TILE CARS FOR FACETS
 ////////////////////////////////////////////

@@ -117,6 +117,18 @@ class AutomergeBytesOutputTransformer extends OutputTransformer {
       if (!this.base().ready()) return;
       void this.#pull();
     });
+
+    // Apply anything the output hands over later without being asked — a live
+    // hint that made it re-read, or a transformer below finishing async work.
+    // Deliberately does not reload: that would feed back into this effect.
+    this.effect(() => {
+      const remote = this.base();
+      if (!remote.ready()) return;
+
+      for (const name of COLLECTIONS) {
+        void this.#apply(name, remote[name].collection());
+      }
+    });
   }
 
   // ENTRIES
@@ -315,6 +327,8 @@ class AutomergeBytesOutputTransformer extends OutputTransformer {
   }
 
   /**
+   * Re-read one collection from the output and apply it.
+   *
    * @param {CollectionName} name
    */
   async #pullCollection(name) {
@@ -326,52 +340,83 @@ class AutomergeBytesOutputTransformer extends OutputTransformer {
 
       await remote[name].reload();
 
-      const collection = remote[name].collection();
-      if (collection.state !== "loaded") return;
-
-      const bytes = collection.data;
-      const current = this.#docs.get(name) ?? createDocument();
-
-      if (!(bytes instanceof Uint8Array)) {
-        // Nothing remote yet: publish what we have locally so the next device
-        // can start from it.
-        if (recordsOf(current).length > 0) {
-          await this.#push(name, current);
-        }
-        return;
-      }
-
-      // Replaying an unchanged log is wasted work; the output hands back the
-      // same bytes, so remember what was applied.
-      const fingerprint = fingerprintOf(bytes);
-      if (fingerprint === this.#applied.get(name)) return;
-
-      const before = headsOf(current).join(";");
-      const doc = applyLog(current, bytes, await this.#actor());
-
-      this.#applied.set(name, fingerprint);
-      this.#docs.set(name, doc);
-
-      if (headsOf(doc).join(";") === before) return;
-
-      this.#version.value++;
-
-      const local = this.#localOutput.value;
-      if (local) {
-        try {
-          await local[name].save(encodeDocument(doc));
-        } catch (err) {
-          console.warn(`Could not cache the '${name}' document locally:`, err);
-        }
-      }
-
-      // The log we just replayed holds everything we know about, so the remote
-      // already has these heads: the next save can append only what changed.
-      if (!this.#dirty.has(name)) {
-        const cursor = await this.#cursor(name);
-        await this.#setCursor(name, { heads: headsOf(doc), pushes: cursor.pushes });
-      }
+      await this.#applyLocked(name, remote[name].collection(), {
+        bootstrap: true,
+      });
     });
+  }
+
+  /**
+   * Apply a collection value the output already has.
+   *
+   * @param {CollectionName} name
+   * @param {{ state: "loading" } | { state: "loaded"; data: Uint8Array | undefined } | { state: "error" }} collection
+   */
+  async #apply(name, collection) {
+    await this.#initialise();
+
+    await this.#serialize(async () => {
+      const remote = this.base();
+      if (!remote.ready()) return;
+
+      await this.#applyLocked(name, collection);
+    });
+  }
+
+  /**
+   * The shared body. Must be called inside `#serialize`.
+   *
+   * @param {CollectionName} name
+   * @param {{ state: "loading" } | { state: "loaded"; data: Uint8Array | undefined } | { state: "error" }} collection
+   * @param {{ bootstrap?: boolean }} [options] - `bootstrap` publishes our local
+   *   document when the output has nothing yet; only safe right after a read.
+   */
+  async #applyLocked(name, collection, options = {}) {
+    if (collection.state !== "loaded") return;
+
+    const bytes = collection.data;
+    const current = this.#docs.get(name) ?? createDocument();
+
+    if (!(bytes instanceof Uint8Array)) {
+      // Nothing remote yet: publish what we have so the namespace exists and
+      // another device can start from it. An empty document counts — it makes
+      // the first read cheaper and surfaces a failing push straight away.
+      if (options.bootstrap) {
+        await this.#push(name, current);
+      }
+      return;
+    }
+
+    // Replaying an unchanged log is wasted work; the output hands back the
+    // same bytes, so remember what was applied.
+    const fingerprint = fingerprintOf(bytes);
+    if (fingerprint === this.#applied.get(name)) return;
+
+    const before = headsOf(current).join(";");
+    const doc = applyLog(current, bytes, await this.#actor());
+
+    this.#applied.set(name, fingerprint);
+    this.#docs.set(name, doc);
+
+    if (headsOf(doc).join(";") === before) return;
+
+    this.#version.value++;
+
+    const local = this.#localOutput.value;
+    if (local) {
+      try {
+        await local[name].save(encodeDocument(doc));
+      } catch (err) {
+        console.warn(`Could not cache the '${name}' document locally:`, err);
+      }
+    }
+
+    // The log we just replayed holds everything we know about, so the remote
+    // already has these heads: the next save can append only what changed.
+    if (!this.#dirty.has(name)) {
+      const cursor = await this.#cursor(name);
+      await this.#setCursor(name, { heads: headsOf(doc), pushes: cursor.pushes });
+    }
   }
 
   // ACTOR

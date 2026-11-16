@@ -40,6 +40,7 @@ const ICONS = {
   "Local": "devices",
   "AT Protocol (Public)": "at",
   "AT Protocol (Space)": "at",
+  "Firkin": "cloud",
   "S3": "amazon-logo",
   "Dropbox": "dropbox-logo",
 };
@@ -162,6 +163,44 @@ effect(() => {
 ////////////////////////////////////////////
 
 /**
+ * Collapse output options that share a `provider` into one row.
+ *
+ * A provider can offer several methods ("Firkin (Automerge)", …), but the user
+ * is choosing a provider, not a method — so the row is labelled with the
+ * provider and resolves to whichever method is active, else the provider's
+ * default, else the first.
+ *
+ * @param {OutputOption[]} opts
+ * @param {string | null | undefined} activeId
+ * @returns {{ opt: OutputOption; label: string }[]}
+ */
+function collapseProviders(opts, activeId) {
+  /** @type {Map<string, OutputOption[]>} */
+  const groups = new Map();
+
+  for (const opt of opts) {
+    const provider = opt.element?.getAttribute("provider");
+    const key = provider ?? `option:${opt.id}`;
+
+    const members = groups.get(key);
+    if (members) members.push(opt);
+    else groups.set(key, [opt]);
+  }
+
+  return [...groups.values()].map((members) => {
+    const provider = members[0].element?.getAttribute("provider");
+    if (!provider) return { opt: members[0], label: members[0].label };
+
+    const active = members.find((member) => member.id === activeId);
+    const preferred = members.find((member) =>
+      member.element?.hasAttribute("provider-default")
+    );
+
+    return { opt: active ?? preferred ?? members[0], label: provider };
+  });
+}
+
+/**
  * @param {OutputOption} opt
  * @param {Set<string>} activatedSet
  * @returns {number | null} - track count, or null if not yet loaded
@@ -196,10 +235,15 @@ effect(() => {
 
   const activeId = selected?.id ?? defaultId;
 
+  // Methods of one provider are a single choice from the user's point of view:
+  // "Firkin", not "Firkin (Automerge)" next to "Firkin (DASL)". The row
+  // resolves to the active method, or the provider's default one.
+  const rows = collapseProviders(opts, activeId);
+
   // Don't list methods whose connect facet is `incomplete`, unless that
   // method is the active one (so the user can still see and switch away
   // from it).
-  const visibleOpts = opts.filter((opt) => {
+  const visibleRows = rows.filter(({ opt }) => {
     if (opt.id === activeId) return true;
     const url = opt.element?.getAttribute("connect");
     return url ? !INCOMPLETE_CONNECT.has(url) : true;
@@ -207,11 +251,11 @@ effect(() => {
 
   litRender(
     html`
-      ${visibleOpts.map((opt) => {
+      ${visibleRows.map(({ opt, label }) => {
         const isActive = opt.id === activeId;
         const isActivated = activatedSet.has(opt.id);
         const trackCount = getTrackCount(opt, activatedSet);
-        const icon = ICONS[opt.label] ?? "database";
+        const icon = ICONS[label] ?? "database";
         const connectUrl = opt.element?.getAttribute("connect");
 
         /** @type {string | typeof nothing} */
@@ -233,7 +277,7 @@ effect(() => {
             <i class="ph-fill ph-${icon} userdata-item__icon"></i>
             <div class="userdata-item__info">
               <span class="userdata-item__name">
-                ${opt.label}
+                ${label}
                 ${isActive
                   ? html`<span class="userdata-item__badge">Active</span>`
                   : nothing}

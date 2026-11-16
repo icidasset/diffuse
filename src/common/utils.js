@@ -232,8 +232,23 @@ export function removeUndefinedValuesFromRecord(rec) {
 }
 
 /**
- * @template {Record<string, any>} T
+ * Deep-clone a record (or any JSON value) without sharing references.
+ *
+ * Arrays stay arrays — spreading them (`{ ...array }`) would turn them into
+ * objects with numeric keys, which is silent data loss for every list field.
+ *
+ * @template T
  * @param {T} rec
+ * @returns {T}
+ *
+ * @example Keeps arrays as arrays
+ * ```js
+ * import { recursivelyCloneRecords } from "~/common/utils.js";
+ *
+ * const clone = recursivelyCloneRecords({ tags: ["base"] });
+ * if (!Array.isArray(clone.tags)) throw new Error("arrays should stay arrays");
+ * if (clone.tags[0] !== "base") throw new Error("array values should be copied");
+ * ```
  *
  * @example Deep-clones nested records without sharing references
  * ```js
@@ -251,16 +266,21 @@ export function removeUndefinedValuesFromRecord(rec) {
  * ```
  */
 export function recursivelyCloneRecords(rec) {
-  const recClone = { ...rec };
+  if (Array.isArray(rec)) {
+    return /** @type {any} */ (rec.map(recursivelyCloneRecords));
+  }
+  if (rec === null || typeof rec !== "object") return rec;
 
-  Object.entries(recClone).forEach(([key, value]) => {
-    if (typeof value === "object") {
-      /** @ts-ignore */
-      recClone[key] = recursivelyCloneRecords(value);
-    }
-  });
+  /** @type {Record<string, any>} */
+  const recClone = {};
 
-  return recClone;
+  for (const [key, value] of Object.entries(rec)) {
+    recClone[key] = typeof value === "object"
+      ? recursivelyCloneRecords(value)
+      : value;
+  }
+
+  return /** @type {any} */ (recClone);
 }
 
 /**

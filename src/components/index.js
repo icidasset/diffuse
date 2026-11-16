@@ -46,6 +46,7 @@ import * as _SupplementLastFm from "./supplement/last.fm/element.js"
 import * as _SupplementListenbrainz from "./supplement/listenbrainz/element.js"
 import * as _SupplementRocksky from "./supplement/rocksky/element.js"
 import * as _TransformerOutputBytesAutomerge from "./transformer/output/bytes/automerge/element.js"
+import * as _TransformerOutputBytesEncrypt from "./transformer/output/bytes/encrypt/element.js"
 import * as _TransformerOutputBytesDaslSync from "./transformer/output/bytes/dasl-sync/element.js"
 import * as _TransformerOutputBytesJson from "./transformer/output/bytes/json/element.js"
 import * as _TransformerOutputRawAtprotoSync from "./transformer/output/raw/atproto-sync/element.js"
@@ -143,6 +144,7 @@ export const transformer = {
   output: {
     bytes: {
       automerge: _TransformerOutputBytesAutomerge,
+      encrypt: _TransformerOutputBytesEncrypt,
       daslSync: _TransformerOutputBytesDaslSync,
       json: _TransformerOutputBytesJson,
     },

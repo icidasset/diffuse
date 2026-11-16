@@ -17,6 +17,7 @@ import {
   readSession,
   saveSession,
 } from "./session.js";
+import { forgetOutputKey, storePasskeyOutputKey } from "./output-key.js";
 
 /**
  * @import { UcanSigner } from "@tokono.ma/firkin"
@@ -266,10 +267,18 @@ export async function signInAccount(options = {}) {
     throw err;
   }
 
+  // Encryption is opt-in: a failure here must not stop the sign-in.
+  try {
+    await storePasskeyOutputKey(prf.prfSecond);
+  } catch (err) {
+    console.warn("Could not derive the output encryption key:", err);
+  }
+
   return { apiBase, did, session, prf, accountSigner };
 }
 
-/** Forget the local account session. */
+/** Forget the local account session and the derived output key. */
 export async function signOutAccount() {
   await deleteSession();
+  await forgetOutputKey();
 }
