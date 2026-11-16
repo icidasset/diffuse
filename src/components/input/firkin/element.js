@@ -25,7 +25,7 @@ import {
  * authenticated read.
  *
  * The worker reads the shared Firkin session from IndexedDB, so account mode
- * does not depend on the WNFS output or a broadcast channel.
+ * only needs the Connect / Firkin page to have been used once.
  *
  * @implements {ProxiedActions<InputActions>}
  * @implements {InputSchemeProvider}

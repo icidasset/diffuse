@@ -42,7 +42,6 @@ const ICONS = {
   "AT Protocol (Space)": "at",
   "S3": "amazon-logo",
   "Dropbox": "dropbox-logo",
-  "Firkin (WNFS)": "cloud",
 };
 
 /**

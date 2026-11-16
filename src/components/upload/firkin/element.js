@@ -15,7 +15,7 @@ import { SCHEME } from "~/common/firkin/files.js";
  * file registry.
  *
  * The worker reads the shared Firkin session from IndexedDB, so this element
- * does not depend on the WNFS output or a broadcast channel.
+ * only needs the Connect / Firkin page to have been used once.
  *
  * @implements {ProxiedActions<UploadActions>}
  * @implements {UploadSchemeProvider}

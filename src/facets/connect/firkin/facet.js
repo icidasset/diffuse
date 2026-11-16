@@ -15,41 +15,9 @@ import { setup } from "~/facets/connect/common.js";
 
 foundation.setup({ title: "Connect Firkin" });
 
-/**
- * The WNFS output is optional: when the Firkin + WNFS feature is enabled its
- * element is present, and this page sets it up as well. When it is not, this
- * page only signs in the shared Firkin account (input + uploader).
- *
- * @typedef {HTMLElement & {
- *   signIn(options?: { apiBase?: string; create?: boolean }): Promise<{ did: string; root: string; created: boolean }>;
- *   signOut(): Promise<void>;
- *   passkeyDid(options?: { create?: boolean }): Promise<string>;
- *   apiBase(): string | undefined;
- *   dataRoot(): string | undefined;
- * }} WnfsOutputLike
- */
-
 ////////////////////////////////////////////
 // SETUP
 ////////////////////////////////////////////
-
-const WNFS_OUTPUT_NAME = "dob-wnfs-firkin";
-
-const outputOrchestrator = await foundation.orchestrator.output();
-await customElements.whenDefined(outputOrchestrator.localName);
-
-/** @returns {WnfsOutputLike | null} */
-function wnfsOutput() {
-  const element = outputOrchestrator.root().querySelector(WNFS_OUTPUT_NAME);
-  if (!element) return null;
-
-  // The element may exist before its custom-element class is upgraded.
-  if (typeof /** @type {any} */ (element).dataRoot !== "function") {
-    return null;
-  }
-
-  return /** @type {WnfsOutputLike} */ (/** @type {unknown} */ (element));
-}
 
 /** @type {{ did: string; apiBase: string } | null} */
 let initialAccount = null;
@@ -128,11 +96,6 @@ const { setItems, setError, setDialogError } = setup({
   `,
 
   onSubmit: () => connectWithDid(),
-
-  onOutputActivate: async () => {
-    const wnfs = wnfsOutput();
-    if (wnfs?.id) await outputOrchestrator.select(wnfs.id);
-  },
 });
 
 const dialog =
@@ -173,25 +136,16 @@ dialog?.addEventListener("close", () => {
 
 effect(() => {
   const current = account.get();
-  const wnfs = wnfsOutput();
-  const root = wnfs?.dataRoot();
-  const isSelectedOutput = wnfs
-    ? outputOrchestrator.selected()?.id === wnfs.id
-    : false;
 
   setItems(
     current
       ? [
         {
           name: current.did,
-          detail: root
-            ? `Firkin (WNFS) · ${root.slice(0, 14)}…`
-            : current.apiBase,
+          detail: current.apiBase,
           isInput: false,
-          // The WNFS output badge is only shown when that optional feature is
-          // present and has storage.
-          isOutput: Boolean(wnfs && root),
-          isSelectedOutput: Boolean(wnfs && root && isSelectedOutput),
+          isOutput: false,
+          isSelectedOutput: false,
           onRemove: () => disconnect(),
         },
       ]
@@ -216,30 +170,11 @@ async function refreshAccount() {
 }
 
 /**
- * Sign in. When the WNFS output is enabled, delegate to it so it also sets up
- * its encrypted userdata; otherwise use the shared account sign-in only.
+ * Sign in: derive the account key from the passkey, mint a one-year session
+ * delegation for this browser, and verify that the account is registered.
  */
 async function connect() {
   const apiBase = apiInput.value.trim() || undefined;
-  const wnfs = wnfsOutput();
-
-  if (wnfs) {
-    const result = await wnfs.signIn({ apiBase });
-    account.value = {
-      did: result.did,
-      apiBase: wnfs.apiBase() ?? apiBase ?? DEFAULT_API_BASE,
-    };
-
-    if (wnfs.id && !outputOrchestrator.hasSelected()) {
-      try {
-        await outputOrchestrator.select(wnfs.id);
-      } catch {
-        // The output option may not be registered yet; the user can select it.
-      }
-    }
-    return;
-  }
-
   const result = await signInAccount({ apiBase });
   account.value = { did: result.did, apiBase: result.apiBase };
 }
@@ -274,16 +209,7 @@ function showDid(did, hint = DEFAULT_DID_HINT) {
 async function disconnect() {
   setError(null);
   try {
-    const wnfs = wnfsOutput();
-
-    if (wnfs) {
-      if (outputOrchestrator.selected()?.id === wnfs.id) {
-        await outputOrchestrator.deselect();
-      }
-      await wnfs.signOut();
-    } else {
-      await signOutAccount();
-    }
+    await signOutAccount();
 
     account.value = null;
   } catch (err) {
@@ -303,10 +229,7 @@ showDidBtn?.addEventListener("click", async () => {
   if (didResult) didResult.hidden = true;
 
   try {
-    const wnfs = wnfsOutput();
-    showDid(
-      wnfs ? await wnfs.passkeyDid() : await derivePasskeyDid(),
-    );
+    showDid(await derivePasskeyDid());
   } catch (err) {
     setDialogError(
       err instanceof Error ? err.message : "Could not derive the DID",
@@ -344,10 +267,7 @@ document
     setDialogError(null);
 
     try {
-      const wnfs = wnfsOutput();
-      const did = wnfs
-        ? await wnfs.passkeyDid({ create: true })
-        : await derivePasskeyDid({ create: true });
+      const did = await derivePasskeyDid({ create: true });
 
       showDid(
         did,
