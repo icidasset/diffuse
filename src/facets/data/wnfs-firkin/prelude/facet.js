@@ -53,7 +53,7 @@ function wnfsFirkin(output) {
       const storage = document.createElement(WNFS_OUTPUT_NAME);
       storage.setAttribute("group", foundation.GROUP);
       storage.setAttribute("id", OUTPUT_ID);
-      storage.setAttribute("label", "Firkin + WNFS");
+      storage.setAttribute("label", "Firkin (WNFS)");
       storage.setAttribute("namespace", OUTPUT_NAMESPACE);
       storage.setAttribute("connect", CONNECT_URL);
 

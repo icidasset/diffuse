@@ -211,16 +211,8 @@
     "desc": "The default setup for uploading audio files to cloud storage. Adds support for: Dropbox, Firkin, S3-compatible storage, and WebDAV."
   },
   {
-    "url": "facets/data/firkin/prelude/index.tile",
-    "title": "Firkin",
-    "kind": "prelude",
-    "category": "Data",
-    "incomplete": true,
-    "desc": "Store your userdata on a [Firkin](https://tangled.org/tokono.ma/firkin) instance as content-addressed blobs, with one account-registry pointer per collection. Uses passkey authentication and no email. Data is not encrypted."
-  },
-  {
     "url": "facets/data/wnfs-firkin/prelude/index.tile",
-    "title": "Firkin + WNFS",
+    "title": "Output / Firkin (WNFS)",
     "kind": "prelude",
     "category": "Data",
     "incomplete": true,

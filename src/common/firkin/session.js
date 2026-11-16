@@ -13,29 +13,6 @@ import {
 /** IndexedDB key for the delegated Firkin account session. */
 export const IDB_SESSION = "diffuse/firkin/session";
 
-/** BroadcastChannel name for session changes across tabs/workers. */
-const SESSION_CHANNEL = "diffuse/firkin/session";
-
-/** @type {BroadcastChannel | undefined} */
-let sessionChannel;
-
-/** @type {Set<() => void>} */
-const sessionListeners = new Set();
-
-/** @returns {BroadcastChannel | undefined} */
-function channel() {
-  if (sessionChannel) return sessionChannel;
-  if (typeof BroadcastChannel === "undefined") return undefined;
-
-  sessionChannel = new BroadcastChannel(SESSION_CHANNEL);
-  return sessionChannel;
-}
-
-function notifySessionChanged() {
-  for (const listener of sessionListeners) listener();
-  channel()?.postMessage("changed");
-}
-
 /**
  * The Firkin account session shared by the storage output and the Firkin
  * input/uploader components.
@@ -75,35 +52,10 @@ export async function readSession() {
  */
 export async function saveSession(session) {
   await IDB.set(IDB_SESSION, session);
-  notifySessionChanged();
 }
 
 export async function deleteSession() {
   await IDB.del(IDB_SESSION);
-  notifySessionChanged();
-}
-
-/**
- * Watch the shared session. Calls `callback` immediately and whenever the
- * persisted session changes (including from another tab or worker).
- *
- * @param {() => void | Promise<void>} callback
- * @returns {() => void} Unsubscribe.
- */
-export function watchSession(callback) {
-  const run = () => {
-    void callback();
-  };
-
-  sessionListeners.add(run);
-  const ch = channel();
-  ch?.addEventListener("message", run);
-  run();
-
-  return () => {
-    sessionListeners.delete(run);
-    ch?.removeEventListener("message", run);
-  };
 }
 
 /**

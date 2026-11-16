@@ -185,7 +185,7 @@ effect(() => {
         {
           name: current.did,
           detail: root
-            ? `Firkin + WNFS · ${root.slice(0, 14)}…`
+            ? `Firkin (WNFS) · ${root.slice(0, 14)}…`
             : current.apiBase,
           isInput: false,
           // The WNFS output badge is only shown when that optional feature is

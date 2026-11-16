@@ -211,8 +211,6 @@
     "./components/output/bytes/dropbox/constants.js": "./src/components/output/bytes/dropbox/constants.js",
     "./components/output/bytes/dropbox/element.js": "./src/components/output/bytes/dropbox/element.js",
     "./components/output/bytes/dropbox/worker.js": "./src/components/output/bytes/dropbox/worker.js",
-    "./components/output/bytes/firkin/constants.js": "./src/components/output/bytes/firkin/constants.js",
-    "./components/output/bytes/firkin/element.js": "./src/components/output/bytes/firkin/element.js",
     "./components/output/bytes/wnfs/blockstore.js": "./src/components/output/bytes/wnfs/blockstore.js",
     "./components/output/bytes/wnfs/constants.js": "./src/components/output/bytes/wnfs/constants.js",
     "./components/output/bytes/wnfs/element.js": "./src/components/output/bytes/wnfs/element.js",

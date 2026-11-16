@@ -286,7 +286,7 @@ export default {
     },
     {
       url: "components/output/bytes/wnfs/element.js",
-      title: "Polymorphic / Firkin + WNFS",
+      title: "Polymorphic / Firkin (WNFS)",
       desc:
         "Store output data as an encrypted WNFS DAG whose blocks are hosted on Firkin. The WNFS root and the keys needed to unlock it are kept in the Firkin registry, so the same account can restore the data elsewhere.",
     },
@@ -295,12 +295,6 @@ export default {
       title: "Bytes / Dropbox",
       desc:
         "Store output data as raw bytes in the Dropbox app folder.",
-    },
-    {
-      url: "components/output/bytes/firkin/element.js",
-      title: "Bytes / Firkin",
-      desc:
-        "Store output data as raw Firkin blobs, with one account-registry pointer per collection. Pair it with a sync transformer for local-first behavior.",
     },
     {
       url: "components/output/bytes/s3/element.js",
