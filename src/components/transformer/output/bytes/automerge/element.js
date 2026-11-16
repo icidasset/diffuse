@@ -156,9 +156,9 @@ class AutomergeBytesOutputTransformer extends OutputTransformer {
       clearTimeout(this.#settle);
       this.#settle = undefined;
 
-      // A save made before the output was usable (e.g. carrying the local copy
-      // in before the encryption key arrived) only reached the local cache.
-      // Now that it can be written, push it.
+      // A save made before the output was usable (e.g. an edit made before the
+      // encryption key arrived) only reached the local cache. Now that it can
+      // be written, push it.
       for (const name of this.#dirty) {
         const doc = this.#docs.get(name);
         if (doc) this.#enqueuePush(name, doc);
