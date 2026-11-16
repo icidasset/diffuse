@@ -8,15 +8,14 @@ import { ApiError } from "@tokono.ma/firkin";
 import { cidForBytes } from "~/vendor/firkin/index.js";
 
 import {
+  MANIFEST_VERSION,
   logName,
   registryNamespace,
 } from "~/components/output/bytes/firkin/constants.js";
 import {
   appendEntry,
-  countEntries,
   latestEntry,
   readEntries,
-  replaceLog,
 } from "~/components/output/bytes/firkin/log.js";
 
 /**
@@ -86,37 +85,96 @@ function fakeClient() {
   return /** @type {any} */ (client);
 }
 
+/**
+ * A stand-in for the session signer: a cheap digest over the key and the whole
+ * message, so both a forged key and a tampered payload fail verification.
+ *
+ * @param {string} device
+ * @param {Uint8Array} bytes
+ */
+function digest(device, bytes) {
+  let hash = 2166136261;
+
+  for (const byte of new TextEncoder().encode(device)) {
+    hash ^= byte;
+    hash = Math.imul(hash, 16777619);
+  }
+  for (const byte of bytes) {
+    hash ^= byte;
+    hash = Math.imul(hash, 16777619);
+  }
+
+  const out = new Uint8Array(4);
+  new DataView(out.buffer).setUint32(0, hash >>> 0);
+
+  return out;
+}
+
+/** @param {string} device */
+function fakeAuth(device) {
+  return {
+    device,
+    sign: async (/** @type {Uint8Array} */ bytes) => digest(device, bytes),
+    verify: async (
+      /** @type {string} */ signedBy,
+      /** @type {Uint8Array} */ signature,
+      /** @type {Uint8Array} */ bytes,
+    ) => {
+      const expected = digest(signedBy, bytes);
+
+      return signature.length === expected.length &&
+        signature.every((byte, index) => byte === expected[index]);
+    },
+  };
+}
+
+const deviceA = "a".repeat(64);
+const deviceB = "b".repeat(64);
+
 /** @param {string} text */
 const bytes = (text) => new TextEncoder().encode(text);
 
 /** @param {Uint8Array} value */
 const text = (value) => new TextDecoder().decode(value);
 
+/**
+ * Read a log the way the element does.
+ *
+ * @param {any} rb
+ * @param {string} name
+ * @param {ReturnType<typeof fakeAuth>} auth
+ * @param {{ floors?: Map<string, number>; onAccept?: (device: string, seq: number) => void }} [options]
+ */
+const read = (rb, name, auth, options = {}) =>
+  readEntries(rb, "ns", name, { auth, ...options });
+
 describe("components/output/bytes/firkin/log", () => {
   it("unions the entries of every writer", async () => {
     const rb = fakeClient();
+    const auth = fakeAuth(deviceA);
 
-    await appendEntry(rb, "ns", "tracks", "device-a", bytes("a"));
-    await appendEntry(rb, "ns", "tracks", "device-b", bytes("b"));
+    await appendEntry(rb, "ns", "tracks", bytes("a"), { auth });
+    await appendEntry(rb, "ns", "tracks", bytes("b"), {
+      auth: fakeAuth(deviceB),
+    });
 
-    const entries = await readEntries(rb, "ns", "tracks");
+    const entries = await read(rb, "tracks", auth);
 
     expect(entries.length).toBe(2);
-    expect(
-      entries.map((entry) => text(rb.blobs.get(entry.cid))).sort(),
-    ).toEqual(["a", "b"]);
-
-    expect(await countEntries(rb, "ns", "tracks", "device-a")).toBe(1);
-    expect(await countEntries(rb, "ns", "tracks", "device-b")).toBe(1);
+    expect(entries.map((entry) => text(rb.blobs.get(entry.cid))).sort())
+      .toEqual(["a", "b"]);
   });
 
   it("returns the entry that was appended last", async () => {
     const rb = fakeClient();
+    const auth = fakeAuth(deviceA);
 
-    await appendEntry(rb, "ns", "tracks", "device-a", bytes("old"));
-    const newest = await appendEntry(rb, "ns", "tracks", "device-a", bytes("new"));
+    await appendEntry(rb, "ns", "tracks", bytes("old"), { auth });
+    const newest = await appendEntry(rb, "ns", "tracks", bytes("new"), {
+      auth,
+    });
 
-    const entry = await latestEntry(rb, "ns", "tracks");
+    const entry = await latestEntry(rb, "ns", "tracks", { auth });
 
     expect(entry?.cid).toBe(newest.cid);
     expect(text(rb.blobs.get(entry.cid))).toBe("new");
@@ -124,88 +182,197 @@ describe("components/output/bytes/firkin/log", () => {
 
   it("returns nothing for an empty log", async () => {
     const rb = fakeClient();
+    const auth = fakeAuth(deviceA);
 
-    expect(await latestEntry(rb, "ns", "tracks")).toBe(undefined);
-    expect(await readEntries(rb, "ns", "tracks")).toEqual([]);
+    expect(await latestEntry(rb, "ns", "tracks", { auth })).toBe(undefined);
+    expect(await read(rb, "tracks", auth)).toEqual([]);
   });
 
   it("does not append identical bytes twice", async () => {
     const rb = fakeClient();
+    const auth = fakeAuth(deviceA);
 
-    const first = await appendEntry(rb, "ns", "tracks", "device-a", bytes("same"));
-    const second = await appendEntry(
-      rb,
-      "ns",
-      "tracks",
-      "device-a",
-      bytes("same"),
-    );
+    const first = await appendEntry(rb, "ns", "tracks", bytes("same"), { auth });
+    const second = await appendEntry(rb, "ns", "tracks", bytes("same"), {
+      auth,
+    });
 
     expect(first.appended).toBe(true);
     expect(second.appended).toBe(false);
     expect(second.cid).toBe(first.cid);
-    expect((await readEntries(rb, "ns", "tracks")).map((e) => e.cid)).toEqual([
-      first.cid,
+    expect((await read(rb, "tracks", auth)).map((entry) => entry.cid))
+      .toEqual([first.cid]);
+  });
+
+  it("bumps the sequence on every write", async () => {
+    const rb = fakeClient();
+    const auth = fakeAuth(deviceA);
+
+    /** @type {number[]} */
+    const seqs = [];
+
+    await appendEntry(rb, "ns", "tracks", bytes("1"), { auth });
+    await read(rb, "tracks", auth, {
+      onAccept: (_device, seq) => seqs.push(seq),
+    });
+    await appendEntry(rb, "ns", "tracks", bytes("2"), { auth });
+    await read(rb, "tracks", auth, {
+      onAccept: (_device, seq) => seqs.push(seq),
+    });
+    await appendEntry(rb, "ns", "tracks", bytes("3"), { auth });
+    await read(rb, "tracks", auth, {
+      onAccept: (_device, seq) => seqs.push(seq),
+    });
+
+    expect(seqs).toEqual([1, 2, 3]);
+  });
+
+  it("ignores a manifest signed by someone else", async () => {
+    const rb = fakeClient();
+    const auth = fakeAuth(deviceA);
+
+    await appendEntry(rb, "ns", "tracks", bytes("mine"), { auth });
+
+    // A different key writes under device-a's ref. Anyone with the account's
+    // `/firkin` capability can do this, so the reader must not trust it — the
+    // write is a denial of service on that ref, not a forgery it accepts.
+    await appendEntry(rb, "ns", "tracks", bytes("forged"), {
+      auth: { ...fakeAuth(deviceB), device: deviceA },
+    });
+
+    expect(await read(rb, "tracks", auth)).toEqual([]);
+
+    // The real device repairs its own ref on the next write.
+    await appendEntry(rb, "ns", "tracks", bytes("mine again"), { auth });
+
+    const entries = await read(rb, "tracks", auth);
+
+    expect(entries.map((entry) => text(rb.blobs.get(entry.cid)))).toEqual([
+      "mine again",
     ]);
   });
 
-  it("keeps another writer's entries when replacing a log", async () => {
+  it("ignores a manifest filed under the wrong collection", async () => {
     const rb = fakeClient();
+    const auth = fakeAuth(deviceA);
 
-    await appendEntry(rb, "ns", "tracks", "device-a", bytes("1"));
-    await appendEntry(rb, "ns", "tracks", "device-a", bytes("2"));
-    const other = await appendEntry(rb, "ns", "tracks", "device-b", bytes("b"));
+    await appendEntry(rb, "ns", "tracks", bytes("tracks"), { auth });
 
-    // `at` has millisecond resolution and "newest" is arbitrary between
-    // writers that append in the same millisecond.
-    await new Promise((resolve) => setTimeout(resolve, 2));
+    // Copy the tracks manifest to the facets ref: same signature, wrong log.
+    const signed = rb.registry
+      .get(registryNamespace("ns"))
+      .get(logName("tracks", deviceA));
+    await rb.registrySet(
+      registryNamespace("ns"),
+      logName("facets", deviceA),
+      signed,
+    );
 
-    const snapshot = await replaceLog(rb, "ns", "tracks", "device-a", bytes("all"));
+    expect(await read(rb, "facets", auth)).toEqual([]);
+    expect((await read(rb, "tracks", auth)).length).toBe(1);
+  });
 
-    expect(await countEntries(rb, "ns", "tracks", "device-a")).toBe(1);
-    expect((await readEntries(rb, "ns", "tracks")).map((e) => e.cid).sort())
-      .toEqual([snapshot, other.cid].sort());
-    // The snapshot is the newest entry, so `get` sees the compacted value.
-    expect((await latestEntry(rb, "ns", "tracks")).cid).toBe(snapshot);
+  it("ignores a tampered manifest", async () => {
+    const rb = fakeClient();
+    const auth = fakeAuth(deviceA);
+
+    await appendEntry(rb, "ns", "tracks", bytes("original"), { auth });
+
+    const cid = rb.registry
+      .get(registryNamespace("ns"))
+      .get(logName("tracks", deviceA));
+    /** @type {{ p: Uint8Array; s: Uint8Array }} */
+    const envelope = DagCBOR.decode(rb.blobs.get(cid));
+
+    /** @type {any} */
+    const payload = DagCBOR.decode(envelope.p);
+    payload.packs = [{ cid: "bafkreiforged", at: 1 }];
+
+    const tampered = DagCBOR.encode({
+      p: DagCBOR.encode(payload),
+      s: envelope.s,
+    });
+    const { cid: tamperedCid } = await rb.upload(tampered);
+    await rb.registrySet(
+      registryNamespace("ns"),
+      logName("tracks", deviceA),
+      tamperedCid,
+    );
+
+    expect(await read(rb, "tracks", auth)).toEqual([]);
+  });
+
+  it("ignores a manifest that rolls a device's sequence back", async () => {
+    const rb = fakeClient();
+    const auth = fakeAuth(deviceA);
+
+    await appendEntry(rb, "ns", "tracks", bytes("one"), { auth });
+
+    /** @type {Map<string, number>} */
+    const floors = new Map();
+    const first = await read(rb, "tracks", auth, {
+      floors,
+      onAccept: (device, seq) => floors.set(device, seq),
+    });
+
+    await appendEntry(rb, "ns", "tracks", bytes("two"), { auth });
+    const second = await read(rb, "tracks", auth, {
+      floors,
+      onAccept: (device, seq) => floors.set(device, seq),
+    });
+
+    // Replay the seq=1 manifest; with a floor of 2 its entries are ignored.
+    const replayed = await read(rb, "tracks", auth, { floors });
+
+    expect(first.length).toBe(1);
+    expect(second.length).toBe(2);
+    expect(replayed.map((entry) => text(rb.blobs.get(entry.cid)))).toEqual([
+      "one",
+      "two",
+    ]);
   });
 
   it("keeps logs separate per collection", async () => {
     const rb = fakeClient();
+    const auth = fakeAuth(deviceA);
 
-    await appendEntry(rb, "ns", "tracks", "device-a", bytes("t"));
-    await appendEntry(rb, "ns", "facets", "device-a", bytes("f"));
+    await appendEntry(rb, "ns", "tracks", bytes("t"), { auth });
+    await appendEntry(rb, "ns", "facets", bytes("f"), { auth });
 
-    expect((await readEntries(rb, "ns", "tracks")).length).toBe(1);
-    expect((await readEntries(rb, "ns", "facets")).length).toBe(1);
-    expect(await readEntries(rb, "ns", "settings")).toEqual([]);
+    expect((await read(rb, "tracks", auth)).length).toBe(1);
+    expect((await read(rb, "facets", auth)).length).toBe(1);
+    expect(await read(rb, "settings", auth)).toEqual([]);
   });
 
   it("trims a log to its newest entries when a limit is set", async () => {
     const rb = fakeClient();
+    const auth = fakeAuth(deviceA);
 
-    await appendEntry(rb, "ns", "tracks", "device-a", bytes("1"), { keep: 2 });
-    await appendEntry(rb, "ns", "tracks", "device-a", bytes("2"), { keep: 2 });
-    await appendEntry(rb, "ns", "tracks", "device-a", bytes("3"), { keep: 2 });
+    await appendEntry(rb, "ns", "tracks", bytes("1"), { auth, keep: 2 });
+    await appendEntry(rb, "ns", "tracks", bytes("2"), { auth, keep: 2 });
+    await appendEntry(rb, "ns", "tracks", bytes("3"), { auth, keep: 2 });
 
-    const entries = await readEntries(rb, "ns", "tracks");
+    const entries = await read(rb, "tracks", auth);
 
     expect(entries.map((entry) => text(rb.blobs.get(entry.cid)))).toEqual([
       "2",
       "3",
     ]);
-    expect(await countEntries(rb, "ns", "tracks", "device-a")).toBe(2);
-    expect(text(rb.blobs.get((await latestEntry(rb, "ns", "tracks")).cid)))
-      .toBe("3");
+    expect((await read(rb, "tracks", auth)).length).toBe(2);
   });
 
   it("trims each writer's log independently", async () => {
     const rb = fakeClient();
+    const auth = fakeAuth(deviceA);
 
-    await appendEntry(rb, "ns", "tracks", "device-a", bytes("a1"), { keep: 1 });
-    await appendEntry(rb, "ns", "tracks", "device-a", bytes("a2"), { keep: 1 });
-    await appendEntry(rb, "ns", "tracks", "device-b", bytes("b1"), { keep: 1 });
+    await appendEntry(rb, "ns", "tracks", bytes("a1"), { auth, keep: 1 });
+    await appendEntry(rb, "ns", "tracks", bytes("a2"), { auth, keep: 1 });
+    await appendEntry(rb, "ns", "tracks", bytes("b1"), {
+      auth: fakeAuth(deviceB),
+      keep: 1,
+    });
 
-    const entries = await readEntries(rb, "ns", "tracks");
+    const entries = await read(rb, "tracks", auth);
 
     expect(entries.map((entry) => text(rb.blobs.get(entry.cid))).sort())
       .toEqual(["a2", "b1"]);
@@ -213,42 +380,45 @@ describe("components/output/bytes/firkin/log", () => {
 
   it("keeps everything when the limit is not set", async () => {
     const rb = fakeClient();
+    const auth = fakeAuth(deviceA);
 
-    await appendEntry(rb, "ns", "tracks", "device-a", bytes("1"));
-    await appendEntry(rb, "ns", "tracks", "device-a", bytes("2"));
+    await appendEntry(rb, "ns", "tracks", bytes("1"), { auth });
+    await appendEntry(rb, "ns", "tracks", bytes("2"), { auth });
 
-    expect(await countEntries(rb, "ns", "tracks", "device-a")).toBe(2);
+    expect((await read(rb, "tracks", auth)).length).toBe(2);
   });
 
   it("treats a manifest with a missing blob as an empty log", async () => {
     const rb = fakeClient();
+    const auth = fakeAuth(deviceA);
 
-    await appendEntry(rb, "ns", "tracks", "device-a", bytes("a"));
+    await appendEntry(rb, "ns", "tracks", bytes("a"), { auth });
 
     const manifestCid = rb.registry
       .get(registryNamespace("ns"))
-      .get(logName("tracks", "device-a"));
+      .get(logName("tracks", deviceA));
     rb.blobs.delete(manifestCid);
 
-    expect(await readEntries(rb, "ns", "tracks")).toEqual([]);
+    expect(await read(rb, "tracks", auth)).toEqual([]);
   });
 
-  it("reads a manifest written before entries were stamped", async () => {
+  it("writes the version and device into the payload", async () => {
     const rb = fakeClient();
-    const { cid } = await rb.upload(bytes("legacy"));
+    const auth = fakeAuth(deviceA);
 
-    // Shape written by the first build of this element.
-    const manifest = await rb.upload(
-      DagCBOR.encode({ v: 1, packs: [cid] }),
-    );
-    await rb.registrySet(
-      registryNamespace("ns"),
-      logName("tracks", "device-a"),
-      manifest.cid,
-    );
+    await appendEntry(rb, "ns", "tracks", bytes("a"), { auth });
 
-    const entries = await readEntries(rb, "ns", "tracks");
+    const cid = rb.registry
+      .get(registryNamespace("ns"))
+      .get(logName("tracks", deviceA));
+    /** @type {{ p: Uint8Array }} */
+    const envelope = DagCBOR.decode(rb.blobs.get(cid));
+    /** @type {any} */
+    const payload = DagCBOR.decode(envelope.p);
 
-    expect(entries).toEqual([{ cid, at: 0 }]);
+    expect(payload.v).toBe(MANIFEST_VERSION);
+    expect(payload.device).toBe(deviceA);
+    expect(payload.seq).toBe(1);
+    expect(payload.packs.length).toBe(1);
   });
 });

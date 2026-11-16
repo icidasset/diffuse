@@ -6,7 +6,10 @@ import { expect } from "@std/expect";
 import { testWeb } from "@tests/common/index.ts";
 
 describe("components/transformer/output/bytes/automerge", () => {
-  it("pulls only unseen log entries and pushes a delta", async () => {
+  it("syncs over a plain append-only output", async () => {
+    // The stub implements *only* the standard output interface — no `appends`,
+    // no `packs`, no `entryCids`. If the transformer needed any of those, this
+    // test wouldn't even load.
     const result = await testWeb(async () => {
       const mod = await import(
         "~/components/transformer/output/bytes/automerge/element.js"
@@ -23,58 +26,44 @@ describe("components/transformer/output/bytes/automerge", () => {
         "tracks",
       ];
 
-      // A stand-in for `dob-firkin`: an append-only log that records what the
-      // transformer asks for and what it writes.
-      let seq = 0;
+      const join = (chunks) => {
+        const total = chunks.reduce((sum, chunk) => sum + chunk.length, 0);
+        const out = new Uint8Array(total);
+        let offset = 0;
+        for (const chunk of chunks) {
+          out.set(chunk, offset);
+          offset += chunk.length;
+        }
+        return out;
+      };
 
-      class StubLog extends HTMLElement {
-        appends = true;
-        entries = Object.fromEntries(names.map((name) => [name, []]));
-        requested = [];
+      /** An append-only `OutputElement<Uint8Array>` with no extra API. */
+      class StubOutput extends HTMLElement {
+        chunks = Object.fromEntries(names.map((name) => [name, []]));
         saves = [];
 
         ready() {
           return true;
         }
 
-        entryCids(name) {
-          return Promise.resolve(this.entries[name].map((entry) => entry.cid));
-        }
-
-        packs(name, cids) {
-          this.requested.push(...(cids ?? []));
-
-          const wanted = cids ? new Set(cids) : undefined;
-          return Promise.resolve(
-            this.entries[name].filter((entry) =>
-              !wanted || wanted.has(entry.cid)
-            ),
-          );
-        }
-
-        packCount(name) {
-          return Promise.resolve(this.entries[name].length);
-        }
-
-        compact(name, snapshot) {
-          this.entries[name] = [{ cid: `snapshot-${++seq}`, bytes: snapshot }];
-          return Promise.resolve();
-        }
-
-        /** Simulate another device appending to the log. */
         append(name, bytes) {
-          const cid = `entry-${++seq}`;
-          this.entries[name].push({ cid, bytes });
-          return cid;
+          this.chunks[name].push(bytes);
+          return bytes.length;
         }
       }
 
       for (const name of names) {
-        Object.defineProperty(StubLog.prototype, name, {
+        Object.defineProperty(StubOutput.prototype, name, {
           get() {
             const base = this;
             return {
-              collection: () => ({ state: "loaded", data: undefined }),
+              collection: () => {
+                const chunks = base.chunks[name];
+                return {
+                  state: "loaded",
+                  data: chunks.length === 0 ? undefined : join(chunks),
+                };
+              },
               reload: () => Promise.resolve(),
               save: (bytes) => {
                 base.saves.push({ name, bytes });
@@ -86,11 +75,11 @@ describe("components/transformer/output/bytes/automerge", () => {
         });
       }
 
-      customElements.define("stub-firkin-log", StubLog);
+      customElements.define("stub-append-output", StubOutput);
 
-      const base = document.createElement("stub-firkin-log");
-      base.id = "stub-base";
-      document.body.append(base);
+      const output = document.createElement("stub-append-output");
+      output.id = "stub-base";
+      document.body.append(output);
 
       const track = (id) => ({
         $type: "sh.diffuse.output.track",
@@ -112,12 +101,12 @@ describe("components/transformer/output/bytes/automerge", () => {
         return collection.state === "loaded" ? collection.data : undefined;
       };
 
-      // Another device already published a full document (a bootstrap or a
-      // compacted snapshot), big enough that a delta is obviously smaller.
+      // Another device already published a whole document (a snapshot).
       const published = Array.from({ length: 50 }, (_, i) => track(`t${i}`));
       const remote = doc.changeDocument(doc.createDocument(), published).doc;
       const remoteHeads = doc.headsOf(remote);
-      const remoteCid = base.append("tracks", doc.encodeDocument(remote));
+      const snapshot = doc.encodeDocument(remote);
+      output.append("tracks", snapshot);
 
       const transformer = new mod.CLASS();
       transformer.id = "stub-transformer";
@@ -126,39 +115,24 @@ describe("components/transformer/output/bytes/automerge", () => {
       document.body.append(transformer);
 
       const firstPullOk = await waitFor(() => tracks()?.length === 50);
-      const firstPull = [...base.requested];
+      if (!firstPullOk) return { firstPullOk, count: tracks()?.length };
 
-      if (!firstPullOk) {
-        return { firstPullOk, firstPull, ids: (tracks() ?? []).length };
-      }
-
-      // Saving appends one entry to the log.
-      const fullLength = doc.encodeDocument(remote).length;
+      // Saving appends one entry — a delta, because the pull told the
+      // transformer which heads the remote already has.
       await transformer.tracks.save([...published, track("local")]);
+      const pushed = output.chunks.tracks.at(-1);
 
-      const pushed = base.entries.tracks.at(-1);
-      const saves = base.saves.length;
-
-      // A delta can't be loaded on its own (its dependencies are missing); a
-      // whole document can.
       let pushedIsDelta = false;
       try {
-        doc.adoptDocument(pushed.bytes);
+        doc.adoptDocument(pushed);
       } catch {
         pushedIsDelta = true;
       }
 
-      // Re-pulling must not re-fetch what was already applied.
-      const before = base.requested.length;
-      await transformer.tracks.reload();
-      const refetched = base.requested.slice(before);
-
-      // A new entry from another device is picked up on the next pull. It is a
-      // delta against the published document, so it only applies if this device
-      // is on the same lineage.
+      // A new delta from another device arrives; a pull applies it off the log.
       const later = doc.changeDocument(remote, [...published, track("other")])
         .doc;
-      base.append("tracks", doc.changesSince(later, remoteHeads));
+      output.append("tracks", doc.changesSince(later, remoteHeads));
 
       await transformer.tracks.reload();
       const secondPullOk = await waitFor(() => tracks()?.length === 52);
@@ -168,32 +142,23 @@ describe("components/transformer/output/bytes/automerge", () => {
       return {
         firstPullOk,
         secondPullOk,
-        firstPull,
-        remoteCid,
-        refetched,
-        saves,
+        saves: output.saves.filter((save) => save.name === "tracks").length,
         pushedIsDelta,
-        pushedLength: pushed.bytes.length,
-        fullLength,
+        pushedLength: pushed.length,
+        snapshotLength: snapshot.length,
         hasLocal: ids.includes("local"),
         hasOther: ids.includes("other"),
       };
     });
 
-    // Only the unseen entry was fetched on the first pull, and the local save
-    // appended exactly one entry.
     expect(result.firstPullOk).toBe(true);
-    expect(result.firstPull).toEqual([result.remoteCid]);
     expect(result.saves).toBe(1);
 
-    // The push was a change chunk, not a whole document, and it is far smaller.
+    // The write was a change chunk, much smaller than a document.
     expect(result.pushedIsDelta).toBe(true);
-    expect(result.pushedLength * 2).toBeLessThan(result.fullLength);
+    expect(result.pushedLength * 2).toBeLessThan(result.snapshotLength);
 
-    // Already-applied entries aren't fetched again.
-    expect(result.refetched).not.toContain(result.remoteCid);
-
-    // Local and remote changes both survive.
+    // A delta written by another device is applied from the same log.
     expect(result.secondPullOk).toBe(true);
     expect(result.hasLocal).toBe(true);
     expect(result.hasOther).toBe(true);

@@ -8,11 +8,14 @@ export const COLLECTIONS = /** @type {import("~/common/self-describing.js").Coll
 ]);
 
 /**
- * Append this many entries to a log before collapsing it into one snapshot.
- * Manifests are rewritten on every append, so keeping them short keeps saves
- * cheap.
+ * Write a whole document instead of a delta this often.
+ *
+ * The transformer only sees its output through the standard interface, so it
+ * can't ask an output to compact a log. Instead it keeps the log self-sufficient
+ * by periodically appending a snapshot: any window that still contains the last
+ * snapshot can be replayed from scratch.
  */
-export const MAX_PACKS = 32;
+export const SNAPSHOT_EVERY = 32;
 
-/** IndexedDB prefix for the heads each collection was last pushed at. */
+/** IndexedDB prefix for the push cursor of each collection. */
 export const IDB_PREFIX = "diffuse/transformer/output/bytes/automerge";

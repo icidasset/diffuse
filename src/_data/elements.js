@@ -294,7 +294,7 @@ export default {
       url: "components/output/bytes/firkin/element.js",
       title: "Bytes / Firkin",
       desc:
-        "An append-only log on Firkin: every put adds one immutable blob and get returns the newest, so it works as a value store while keeping history. Set keep to bound the history.",
+        "An append-only store on Firkin. In `mode=value` get returns the newest entry (keep bounds the history); in `mode=log` it returns every entry, so a history-preserving consumer can replay deltas. Per-device manifests are signed by the writer's session key.",
     },
     {
       url: "components/output/bytes/s3/element.js",
@@ -339,7 +339,7 @@ export default {
       url: "components/transformer/output/bytes/automerge/element.js",
       title: "Output / Bytes / Automerge",
       desc:
-        "Stores each collection as an Automerge document, with records keyed by id so concurrent edits merge. Appends only changes when the backing output is a log.",
+        "Stores each collection as an Automerge document, with records keyed by id so concurrent edits merge. Appends deltas to a history-preserving output and replays the log; set snapshot for an output that replaces its value.",
     },
     {
       url: "components/transformer/output/bytes/dasl-sync/element.js",

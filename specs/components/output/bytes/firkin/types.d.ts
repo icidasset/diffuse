@@ -16,15 +16,33 @@ export type LogEntry = {
 };
 
 /**
- * One writer's index of its log entries, stored as a dag-cbor blob and pointed
- * at by the account registry. Entries are immutable; appending only rewrites
- * this manifest.
+ * The signed content of a manifest.
+ *
+ * Anyone with the account's `/firkin` capability can write any registry name,
+ * so a manifest has to say which device and log it belongs to and be signed by
+ * that device's key. `seq` is monotonic per device, so replaying an old
+ * manifest is detectable.
  */
-export type LogManifest = {
-  /** Manifest shape version. */
+export type LogManifestPayload = {
+  /** Payload shape version. */
   v: number;
+  /** Base64url-encoded collection name the manifest belongs to. */
+  collection: string;
+  /** Hex-encoded public key of the writer; also the ref suffix. */
+  device: string;
+  /** Monotonic per device, starting at 1. */
+  seq: number;
   /** The writer's entries, in append order. */
   packs: LogEntry[];
+};
+
+/**
+ * What is actually stored as a blob: the exact signed bytes plus their
+ * signature, so verification never depends on re-encoding being canonical.
+ */
+export type LogManifestEnvelope = {
+  p: Uint8Array;
+  s: Uint8Array;
 };
 
 /** An entry's bytes, paired with the address they were read from. */
@@ -34,35 +52,32 @@ export type FirkinEntry = {
 };
 
 /**
- * The Firkin bytes output is an **append-only** log.
+ * The Firkin bytes output is an **append-only** store.
  *
- * - `put` appends.
- * - `get` returns the **newest entry**. That is only a complete value for
- *   writers that append whole values (a JSON collection, a DASL container). A
- *   writer that appends deltas — Automerge, for example — must read `packs()`
- *   and replay the entries instead, which is why `appends` exists.
- * - `packs` exposes the history.
+ * `put` appends; what `get` returns is the element's `mode`:
+ *
+ * - `mode="value"` (default) — the newest entry, for whole-value formats.
+ * - `mode="log"` — every entry concatenated, oldest first, for formats built
+ *   from self-delimiting chunks.
+ *
+ * Consumers never need to know which member wrote what, or that the store is a
+ * log at all: both modes are plain `OutputElement<Uint8Array>`.
  */
 export type FirkinOutputElement = OutputElement<Uint8Array | undefined> & {
-  /** Marks the append semantics for transformers that care. */
-  appends: true;
+  /** `"value"` returns the newest entry; `"log"` returns every entry. */
+  mode: "value" | "log";
   /**
    * How many entries to retain per log.
    *
-   * Unset keeps everything, which is what delta-based consumers need. A
-   * value-shaped transformer only reads the newest entry, so `keep="1"` bounds
-   * the per-device manifest without losing anything it can see.
+   * Unset keeps everything. A value-shaped consumer only reads the newest
+   * entry, so `keep="1"` bounds the per-device manifest without losing anything
+   * it can see; a log-shaped consumer needs a window that still contains the
+   * writer's periodic snapshots.
    */
   keep?: number;
-  /** CIDs of every entry for `name`, oldest first. Reads manifests only. */
-  entryCids(name: string): Promise<string[]>;
   /**
-   * Entry bytes for `name`, oldest first. Pass `cids` to fetch only those; the
-   * result keeps log order and skips entries whose blob is gone.
+   * Every entry for `name`, oldest first — the history behind `get`, for
+   * tooling and inspection.
    */
-  packs(name: string, cids?: string[]): Promise<FirkinEntry[]>;
-  /** How many entries this browser has appended for `name`. */
-  packCount(name: string): Promise<number>;
-  /** Replace this browser's entries for `name` with a single snapshot. */
-  compact(name: string, snapshot: Uint8Array): Promise<void>;
+  packs(name: string): Promise<FirkinEntry[]>;
 };

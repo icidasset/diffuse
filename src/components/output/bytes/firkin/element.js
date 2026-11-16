@@ -1,22 +1,21 @@
-import { ApiError } from "@tokono.ma/firkin";
+import { ApiError, bytesToHex, WebCryptoSigner } from "@tokono.ma/firkin";
+import * as IDB from "idb-keyval";
 
 import { computed, signal } from "~/common/signal.js";
 import { BroadcastedOutputElement, outputManager } from "../../common.js";
 import { defineElement } from "~/common/element.js";
 import { getSessionClient } from "~/common/firkin/session.js";
 
-import { NOT_CONNECTED, readDeviceId } from "./constants.js";
-import {
-  appendEntry,
-  countEntries,
-  latestEntry,
-  readEntries,
-  replaceLog,
-} from "./log.js";
+import { IDB_FLOORS, IDB_PACKS, NOT_CONNECTED } from "./constants.js";
+import { appendEntry, readEntries } from "./log.js";
+import { verifySignature } from "./verify.js";
 
 /**
- * @import {OutputElement, OutputManager} from "@specs/components/output/types.d.ts"
+ * @import {OutputElement} from "@specs/components/output/types.d.ts"
  * @import {FirkinOutputElement} from "@specs/components/output/bytes/firkin/types.d.ts"
+ * @import {Session} from "~/common/firkin/session.js"
+ * @import {LogAuth} from "./log.js"
+ * @import {Firkin} from "@tokono.ma/firkin"
  */
 
 ////////////////////////////////////////////
@@ -24,30 +23,32 @@ import {
 ////////////////////////////////////////////
 
 /**
- * An **append-only** value store on Firkin: every `put` appends one immutable
- * blob, and `get` returns the most recently appended one.
+ * An **append-only** store on Firkin: every `put` appends one immutable blob.
  *
- * That makes it usable two ways:
+ * What `get` returns is the element's `mode`:
  *
- * - as a plain value store (pair it with any transformer that expects whole
- *   values, like `dtob-dasl-sync` or `dtob-json`) that happens to keep history;
- * - as a log, by reading `packs(name)` and replaying the entries — what
- *   `dtob-automerge` does, so a save only uploads the changes since the last
- *   push instead of a whole document.
+ * - `mode="value"` (default) — the most recently appended entry. Pair it with
+ *   a whole-value transformer (`dtob-dasl-sync`, `dtob-json`); `keep="1"` keeps
+ *   the per-device manifest bounded.
+ * - `mode="log"` — the concatenation of every entry, oldest first. Pair it with
+ *   a transformer whose format is a sequence of self-delimiting chunks
+ *   (`dtob-automerge`): appending a delta is a small write, and replaying the
+ *   whole log reconstructs the value.
  *
- * Set `keep="1"` when a value-shaped transformer is the only reader: the log
- * then drops everything but the newest entry, which keeps the per-device
- * manifest bounded. Without it, history is retained.
+ * Either way the element exposes the plain `OutputElement<Uint8Array>` surface,
+ * so no consumer checks a Firkin-specific capability. Choosing a `mode` is
+ * configuration, not a dependency.
+ *
+ * Each manifest is signed by the session key it is filed under, so a client
+ * holding the account's `/firkin` capability can't pass its writes off as
+ * another device's — it can only deny service on a ref, which that device
+ * repairs on its next write.
  *
  * @implements {OutputElement<Uint8Array | undefined>}
  * @implements {FirkinOutputElement}
  */
 class FirkinOutput extends BroadcastedOutputElement {
   static NAME = "diffuse/output/bytes/firkin";
-
-  /** Signals that `put` appends instead of replacing (see the class docs). */
-  /** @type {true} */
-  appends = true;
 
   #manager;
 
@@ -157,111 +158,15 @@ class FirkinOutput extends BroadcastedOutputElement {
     }
   }
 
-  // LOG
-
-  /**
-   * CIDs of every entry for `name`, oldest first.
-   *
-   * Reads manifests only, so asking "what is new?" costs one request per
-   * writer rather than one per entry.
-   *
-   * @param {string} name
-   * @returns {Promise<string[]>}
-   */
-  async entryCids(name) {
-    const client = await getSessionClient();
-    if (!client) return [];
-
-    const entries = await readEntries(client.rb, this.#namespace, name);
-
-    return entries.map((entry) => entry.cid);
-  }
-
-  /**
-   * Entry bytes for `name`, oldest first. Pass `cids` to fetch only those; the
-   * result keeps log order and skips entries whose blob is gone.
-   *
-   * @param {string} name
-   * @param {string[]} [cids]
-   * @returns {Promise<import("@specs/components/output/bytes/firkin/types.d.ts").FirkinEntry[]>}
-   */
-  async packs(name, cids) {
-    const client = await getSessionClient();
-    if (!client) return [];
-
-    const wanted = cids ? new Set(cids) : undefined;
-    const entries = (await readEntries(client.rb, this.#namespace, name))
-      .filter((entry) => !wanted || wanted.has(entry.cid));
-
-    const bytes = await Promise.all(
-      entries.map((entry) => this.#readPack(client.rb, entry.cid)),
-    );
-
-    return entries.flatMap((entry, index) =>
-      bytes[index] ? [{ cid: entry.cid, bytes: bytes[index] }] : []
-    );
-  }
-
-  /**
-   * How many entries this browser has appended for `name`.
-   *
-   * @param {string} name
-   */
-  async packCount(name) {
-    const client = await getSessionClient();
-    if (!client) return 0;
-
-    return await countEntries(
-      client.rb,
-      this.#namespace,
-      name,
-      await readDeviceId(),
-    );
-  }
-
-  /**
-   * Replace this browser's entries for `name` with a single snapshot.
-   *
-   * @param {string} name
-   * @param {Uint8Array} snapshot
-   */
-  async compact(name, snapshot) {
-    const client = await getSessionClient();
-    if (!client) throw new Error(NOT_CONNECTED);
-
-    const cid = await replaceLog(
-      client.rb,
-      this.#namespace,
-      name,
-      await readDeviceId(),
-      snapshot,
-    );
-
-    this.#packs.set(cid, snapshot);
-  }
-
-  /**
-   * @param {import("@tokono.ma/firkin").Firkin} rb
-   * @param {string} cid
-   */
-  async #readPack(rb, cid) {
-    const cached = this.#packs.get(cid);
-    if (cached) return cached;
-
-    try {
-      const bytes = await rb.get(cid);
-      this.#packs.set(cid, bytes);
-      return bytes;
-    } catch (err) {
-      // A missing block makes for a shorter log; the reader decides whether
-      // what remains is enough.
-      if (err instanceof ApiError && err.status === 404) return undefined;
-      throw err;
-    }
-  }
+  // CONFIGURATION
 
   get #namespace() {
     return this.namespace ?? "default";
+  }
+
+  /** `"value"` returns the newest entry; `"log"` returns every entry. */
+  get mode() {
+    return this.getAttribute("mode") === "log" ? "log" : "value";
   }
 
   /**
@@ -278,11 +183,189 @@ class FirkinOutput extends BroadcastedOutputElement {
     return Number.isInteger(parsed) && parsed > 0 ? parsed : undefined;
   }
 
+  // LOG
+
+  /**
+   * Every entry for `name`, oldest first.
+   *
+   * @param {string} name
+   */
+  async packs(name) {
+    const client = await getSessionClient();
+    if (!client) return [];
+
+    const entries = await this.#entries(client, name);
+    const bytes = await Promise.all(
+      entries.map((entry) => this.#readPack(client.rb, entry.cid)),
+    );
+
+    return entries.flatMap((entry, index) =>
+      bytes[index] ? [{ cid: entry.cid, bytes: bytes[index] }] : []
+    );
+  }
+
+  /**
+   * @param {Firkin} rb
+   * @param {string} cid
+   */
+  async #readPack(rb, cid) {
+    const cached = this.#packs.get(cid);
+    if (cached) return cached;
+
+    try {
+      const stored = await IDB.get(`${IDB_PACKS}/${cid}`);
+      if (stored instanceof Uint8Array) {
+        this.#packs.set(cid, stored);
+        return stored;
+      }
+    } catch (err) {
+      console.warn("Could not read a cached Firkin entry:", err);
+    }
+
+    try {
+      const bytes = await rb.get(cid);
+      this.#packs.set(cid, bytes);
+
+      try {
+        await IDB.set(`${IDB_PACKS}/${cid}`, bytes);
+      } catch (err) {
+        console.warn("Could not cache a Firkin entry:", err);
+      }
+
+      return bytes;
+    } catch (err) {
+      // A missing block makes for a shorter log; the reader decides whether
+      // what remains is enough.
+      if (err instanceof ApiError && err.status === 404) return undefined;
+      throw err;
+    }
+  }
+
+  // AUTH
+
+  /** @type {{ publicKey: Uint8Array; auth: LogAuth } | undefined} */
+  #authCache;
+
+  /**
+   * Signing material for the current session.
+   *
+   * The device id is the session's public key, so a manifest can only ever be
+   * written under the ref its key owns.
+   *
+   * @param {Session} session
+   */
+  #auth(session) {
+    if (this.#authCache?.publicKey === session.publicKey) {
+      return this.#authCache.auth;
+    }
+
+    const signer = WebCryptoSigner.fromPersisted(
+      session.privateKey,
+      session.publicKey,
+    );
+
+    const auth = {
+      device: bytesToHex(session.publicKey),
+      sign: (/** @type {Uint8Array} */ bytes) => signer.sign(bytes),
+      verify: verifySignature,
+    };
+
+    this.#authCache = { publicKey: session.publicKey, auth };
+
+    return auth;
+  }
+
+  // SEQUENCES
+
+  /** @type {Map<string, Map<string, number>>} */
+  #floorCache = new Map();
+
+  /** @param {string} name */
+  #floorsKey(name) {
+    return `${IDB_FLOORS}/${this.#namespace}/${name}`;
+  }
+
+  /**
+   * The newest manifest sequence already accepted per device. A manifest with a
+   * lower one is a replay and is ignored.
+   *
+   * @param {string} name
+   * @returns {Promise<Map<string, number>>}
+   */
+  async #floors(name) {
+    const cached = this.#floorCache.get(name);
+    if (cached) return cached;
+
+    /** @type {Map<string, number>} */
+    const floors = new Map();
+
+    try {
+      const stored = await IDB.get(this.#floorsKey(name));
+      if (stored && typeof stored === "object") {
+        for (const [device, seq] of Object.entries(stored)) {
+          if (typeof seq === "number") floors.set(device, seq);
+        }
+      }
+    } catch (err) {
+      console.warn(`Could not read the '${name}' manifest floors:`, err);
+    }
+
+    this.#floorCache.set(name, floors);
+
+    return floors;
+  }
+
+  /**
+   * @param {string} name
+   * @param {Array<[string, number]>} accepted
+   */
+  async #recordFloors(name, accepted) {
+    if (accepted.length === 0) return;
+
+    const floors = await this.#floors(name);
+    let dirty = false;
+
+    for (const [device, seq] of accepted) {
+      if ((floors.get(device) ?? 0) >= seq) continue;
+
+      floors.set(device, seq);
+      dirty = true;
+    }
+
+    if (!dirty) return;
+
+    try {
+      await IDB.set(this.#floorsKey(name), Object.fromEntries(floors));
+    } catch (err) {
+      console.warn(`Could not persist the '${name}' manifest floors:`, err);
+    }
+  }
+
+  /**
+   * Read a log with signature and rollback checks, recording the sequences it
+   * accepted so a later replay can be recognised.
+   *
+   * @param {{ session: Session; rb: Firkin }} client
+   * @param {string} name
+   */
+  async #entries(client, name) {
+    /** @type {Array<[string, number]>} */
+    const accepted = [];
+
+    const entries = await readEntries(client.rb, this.#namespace, name, {
+      auth: this.#auth(client.session),
+      floors: await this.#floors(name),
+      onAccept: (device, seq) => accepted.push([device, seq]),
+    });
+
+    await this.#recordFloors(name, accepted);
+
+    return entries;
+  }
+
   // GET & PUT
 
   /**
-   * The newest entry for `name`.
-   *
    * @param {string} name
    * @returns {Promise<Uint8Array | undefined>}
    */
@@ -290,10 +373,22 @@ class FirkinOutput extends BroadcastedOutputElement {
     const client = await getSessionClient();
     if (!client) return undefined;
 
-    const entry = await latestEntry(client.rb, this.#namespace, name);
-    if (!entry) return undefined;
+    const entries = await this.#entries(client, name);
+    if (entries.length === 0) return undefined;
 
-    return await this.#readPack(client.rb, entry.cid);
+    if (this.mode === "value") {
+      const newest = entries.at(-1);
+      if (!newest) return undefined;
+
+      return await this.#readPack(client.rb, newest.cid);
+    }
+
+    const bytes = await Promise.all(
+      entries.map((entry) => this.#readPack(client.rb, entry.cid)),
+    );
+    const present = /** @type {Uint8Array[]} */ (bytes.filter(Boolean));
+
+    return present.length === 0 ? undefined : concat(present);
   };
 
   /**
@@ -311,12 +406,21 @@ class FirkinOutput extends BroadcastedOutputElement {
         client.rb,
         this.#namespace,
         name,
-        await readDeviceId(),
         data,
-        { keep: this.keep },
+        {
+          auth: this.#auth(client.session),
+          floors: await this.#floors(name),
+          keep: this.keep,
+        },
       );
 
       this.#packs.set(cid, data);
+
+      try {
+        await IDB.set(`${IDB_PACKS}/${cid}`, data);
+      } catch (err) {
+        console.warn("Could not cache a Firkin entry:", err);
+      }
     };
 
     // Serialize appends per log so concurrent saves can't rewrite the same
@@ -327,6 +431,22 @@ class FirkinOutput extends BroadcastedOutputElement {
 
     return written;
   };
+}
+
+/**
+ * @param {Uint8Array[]} entries
+ */
+function concat(entries) {
+  const total = entries.reduce((sum, bytes) => sum + bytes.length, 0);
+  const out = new Uint8Array(total);
+
+  let offset = 0;
+  for (const bytes of entries) {
+    out.set(bytes, offset);
+    offset += bytes.length;
+  }
+
+  return out;
 }
 
 export default FirkinOutput;

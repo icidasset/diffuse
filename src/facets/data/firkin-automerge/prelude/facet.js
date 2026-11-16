@@ -19,6 +19,12 @@ const CONNECT_URL = "facets/connect/firkin/index.tile";
 const NAMESPACE = "firkin-automerge";
 
 /**
+ * Entries kept per device. Must exceed the transformer's snapshot cadence, so a
+ * window always contains a whole document to replay from.
+ */
+const KEEP = 64;
+
+/**
  * Adds the Firkin + Automerge userdata output.
  *
  * The Firkin element is a generic append-only log: every save appends only the
@@ -60,6 +66,10 @@ function firkinAutomerge(output) {
       storage.setAttribute("group", foundation.GROUP);
       storage.setAttribute("id", OUTPUT_ID);
       storage.setAttribute("namespace", NAMESPACE);
+      // The transformer appends deltas and replays the whole log, so the
+      // element has to hand back every entry (not just the newest).
+      storage.setAttribute("mode", "log");
+      storage.setAttribute("keep", String(KEEP));
 
       const transformer = document.createElement(TRANSFORMER_NAME);
       transformer.setAttribute("group", foundation.GROUP);

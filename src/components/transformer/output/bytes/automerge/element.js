@@ -8,17 +8,15 @@ import { OutputTransformer } from "../../base.js";
 import { collectionSchema } from "~/common/self-describing.js";
 import { defineElement } from "~/common/element.js";
 
-import { COLLECTIONS, IDB_PREFIX, MAX_PACKS } from "./constants.js";
+import { COLLECTIONS, IDB_PREFIX, SNAPSHOT_EVERY } from "./constants.js";
 import {
-  adoptDocument,
-  applyPack,
+  applyLog,
   changeDocument,
   changesSince,
   createDocument,
   encodeDocument,
   headsOf,
   loadDocument,
-  mergeDocument,
   recordsOf,
 } from "./doc.js";
 
@@ -31,28 +29,23 @@ import {
  */
 
 /**
- * The extra surface an append-only output exposes (see
- * `@specs/components/output/bytes/firkin/types.d.ts`). Detect it at runtime so
- * the same transformer also works over whole-value outputs like S3/Dropbox.
- *
- * @typedef {Object} AppendCapable
- * @property {true} appends
- * @property {(name: string) => Promise<string[]>} entryCids
- * @property {(name: string, cids?: string[]) => Promise<import("@specs/components/output/bytes/firkin/types.d.ts").FirkinEntry[]>} packs
- * @property {(name: string) => Promise<number>} packCount
- * @property {(name: string, snapshot: Uint8Array) => Promise<void>} compact
- */
-
-/**
  * Stores each collection as an Automerge document.
  *
- * Two things matter for multi-device use:
+ * It only uses the standard output interface — `ready`, `collection`, `save`,
+ * `reload` — so it knows nothing about the output underneath it. Two things
+ * make that enough:
  *
- * - Records live in a map keyed by `id` (see `doc.js`), so concurrent edits to
- *   different records merge instead of one device's collection winning wholesale.
- * - When the backing output appends (the Firkin log), only the changes since
- *   the last push are written — an edit to one track is a few hundred bytes,
- *   not the whole document.
+ * - **Records live in a map keyed by `id`** (see `doc.js`), so concurrent edits
+ *   to different records merge instead of one device's collection winning.
+ * - **Saves append deltas** (`saveSince`), and a whole document is written every
+ *   `SNAPSHOT_EVERY` saves. Over an output that keeps history (a log, like the
+ *   Firkin output in `mode="log"`), a save is a few hundred bytes and `get`
+ *   returns the whole log to replay.
+ *
+ * Deltas only reconstruct a value when every earlier entry is still readable, so
+ * an output that *replaces* its value (S3, Dropbox) needs `snapshot` set: every
+ * save then writes a whole document. That is configuration on this element —
+ * nothing here inspects the output for capabilities.
  *
  * Local data lives in a `dop-indexed-db` child, so the UI is usable offline and
  * the remote is only read to merge in other devices' changes.
@@ -77,31 +70,31 @@ class AutomergeBytesOutputTransformer extends OutputTransformer {
   /** @type {Map<string, import("./doc.js").AutomergeDoc>} */
   #docs = new Map();
 
-  /** @type {Map<string, Heads | undefined>} */
-  #pushed = new Map();
+  /** @type {Map<string, { heads?: Heads; pushes: number }>} */
+  #cursors = new Map();
+
+  /**
+   * Fingerprint of the remote bytes last applied per collection, so a reload
+   * that yields the same log isn't replayed.
+   *
+   * @type {Map<string, string>}
+   */
+  #applied = new Map();
 
   /** Collections whose last push failed (offline, signed out, …). */
   #dirty = new Set();
 
-  /**
-   * Log entries already applied, per collection. Persisted so a page load only
-   * fetches what was appended since the last one.
-   *
-   * @type {Map<string, Set<string>>}
-   */
-  #seen = new Map();
-
   /** @type {Promise<void> | undefined} */
   #pulling;
+
+  /** @type {Promise<void> | undefined} */
+  #initialising;
 
   /**
    * Serializes document mutations. Without this a pull that started before a
    * save would overwrite the document the save just wrote.
    */
   #queue = Promise.resolve();
-
-  /** @type {Promise<void> | undefined} */
-  #initialising;
 
   constructor() {
     super();
@@ -201,10 +194,7 @@ class AutomergeBytesOutputTransformer extends OutputTransformer {
               // this device's actor so concurrent writers never share a
               // sequence number.
               this.#docs.set(name, createDocument(await this.#actor()));
-
-              // No local copy means nothing has been applied yet, whatever the
-              // cursor says.
-              await this.#resetSeen(name);
+              await this.#resetCursor(name);
             }
           } catch (err) {
             console.warn(`Could not read the local '${name}' document:`, err);
@@ -270,22 +260,20 @@ class AutomergeBytesOutputTransformer extends OutputTransformer {
    *
    * @param {CollectionName} name
    * @param {import("./doc.js").AutomergeDoc} doc
-   * @param {{ full?: boolean }} [options]
    */
-  async #push(name, doc, options = {}) {
+  async #push(name, doc) {
     // Without the backing output there is nothing to push to yet; wait for it
     // so an early save isn't silently dropped.
     await this.output.whenDefined;
 
-    /** @type {AppendCapable | undefined} */
-    const element = /** @type {any} */ (this.output.signal());
-    const appends = element?.appends === true;
+    const cursor = await this.#cursor(name);
+    // The first push of a session is a delta when we know what the remote has
+    // (see the cursor advance after a pull); otherwise `changesSince` returns a
+    // whole document anyway.
+    const snapshot = this.hasAttribute("snapshot") ||
+      (cursor.pushes > 0 && cursor.pushes % SNAPSHOT_EVERY === 0);
 
-    const pushedHeads = await this.#pushedHeads(name);
-    const bytes = appends && !options.full
-      ? changesSince(doc, pushedHeads)
-      : encodeDocument(doc);
-
+    const bytes = snapshot ? encodeDocument(doc) : changesSince(doc, cursor.heads);
     if (bytes.length === 0) return;
 
     try {
@@ -297,11 +285,10 @@ class AutomergeBytesOutputTransformer extends OutputTransformer {
     }
 
     this.#dirty.delete(name);
-
-    if (!appends) return;
-
-    await this.#setPushedHeads(name, headsOf(doc));
-    await this.#compactIfNeeded(name, doc, element);
+    await this.#setCursor(name, {
+      heads: headsOf(doc),
+      pushes: cursor.pushes + 1,
+    });
   }
 
   /**
@@ -337,143 +324,52 @@ class AutomergeBytesOutputTransformer extends OutputTransformer {
       const remote = this.base();
       if (!remote.ready()) return;
 
-      /** @type {AppendCapable | undefined} */
-      const element = /** @type {any} */ (this.output.signal());
-      const appends = element?.appends === true &&
-        typeof element.entryCids === "function" &&
-        typeof element.packs === "function";
+      await remote[name].reload();
 
-      let doc = this.#docs.get(name) ?? createDocument();
-      const before = headsOf(doc).join(";");
+      const collection = remote[name].collection();
+      if (collection.state !== "loaded") return;
 
-      let complete = true;
-      let empty = false;
-      let applied = 0;
+      const bytes = collection.data;
+      const current = this.#docs.get(name) ?? createDocument();
 
-      if (appends) {
-        const cids = await element.entryCids(name);
-        empty = cids.length === 0;
-
-        // Only ask for entries this device hasn't applied yet. The cursor is
-        // persisted, so a reload costs one manifest read per writer instead of
-        // downloading the whole history again.
-        const seen = await this.#seenCids(name);
-        const unseen = cids.filter((cid) => !seen.has(cid));
-        const entries = unseen.length > 0
-          ? await /** @type {AppendCapable} */ (element).packs(name, unseen)
-          : [];
-
-        // With nothing of our own, adopt the shared document instead of
-        // merging into the empty one we started with: independently created
-        // documents keep separate roots, and later changes written against the
-        // other root would stay invisible here.
-        let pending = [...entries];
-        if (recordsOf(doc).length === 0) {
-          for (const entry of [...pending].reverse()) {
-            try {
-              const adopted = adoptDocument(entry.bytes, await this.#actor());
-              if (recordsOf(adopted).length === 0) continue;
-
-              doc = adopted;
-              pending = pending.filter((item) => item !== entry);
-              break;
-            } catch {
-              // Not a document; a change chunk needs the rest of the log first.
-            }
-          }
+      if (!(bytes instanceof Uint8Array)) {
+        // Nothing remote yet: publish what we have locally so the next device
+        // can start from it.
+        if (recordsOf(current).length > 0) {
+          await this.#push(name, current);
         }
-
-        // Apply in dependency order: an entry may reference changes written by
-        // another device that comes later in the log.
-        let progress = true;
-
-        while (pending.length > 0 && progress) {
-          progress = false;
-
-          for (let i = 0; i < pending.length; i++) {
-            try {
-              doc = applyPack(doc, pending[i].bytes);
-              pending.splice(i, 1);
-              i--;
-              progress = true;
-            } catch {
-              // Missing dependencies; try again after the other entries.
-            }
-          }
-        }
-
-        applied = entries.length - pending.length;
-        complete = pending.length === 0;
-
-        // Record only what landed, and drop CIDs that left the log (compaction
-        // or a manifest gone missing) so the cursor stays bounded.
-        await this.#recordSeen(
-          name,
-          pending.length === 0
-            ? entries.map((entry) => entry.cid)
-            : entries.filter((entry) => !pending.includes(entry)).map((entry) =>
-              entry.cid
-            ),
-          cids,
-        );
-
-        if (!complete) {
-          console.warn(
-            `Waiting on ${pending.length} '${name}' log entr${
-              pending.length === 1 ? "y" : "ies"
-            } with missing changes`,
-          );
-        }
-      } else {
-        // Whole-value backing output: merge the remote document in.
-        await remote[name].reload();
-        const collection = remote[name].collection();
-
-        if (collection.state === "loaded") {
-          if (collection.data instanceof Uint8Array) {
-            try {
-              doc = mergeDocument(doc, collection.data);
-            } catch (err) {
-              console.warn(`Could not merge the remote '${name}' document:`, err);
-            }
-          } else if (collection.data === undefined) {
-            empty = true;
-          }
-        }
+        return;
       }
 
-      // Always keep the handle `applyPack` returned: applying an entry that is
-      // already in the document still produces a new handle and marks the old
-      // one outdated, so keeping the old one breaks every later pull.
+      // Replaying an unchanged log is wasted work; the output hands back the
+      // same bytes, so remember what was applied.
+      const fingerprint = fingerprintOf(bytes);
+      if (fingerprint === this.#applied.get(name)) return;
+
+      const before = headsOf(current).join(";");
+      const doc = applyLog(current, bytes, await this.#actor());
+
+      this.#applied.set(name, fingerprint);
       this.#docs.set(name, doc);
 
-      if (headsOf(doc).join(";") !== before) {
-        this.#version.value++;
+      if (headsOf(doc).join(";") === before) return;
 
-        const local = this.#localOutput.value;
-        if (local) {
-          try {
-            await local[name].save(encodeDocument(doc));
-          } catch (err) {
-            console.warn(`Could not cache the '${name}' document locally:`, err);
-          }
+      this.#version.value++;
+
+      const local = this.#localOutput.value;
+      if (local) {
+        try {
+          await local[name].save(encodeDocument(doc));
+        } catch (err) {
+          console.warn(`Could not cache the '${name}' document locally:`, err);
         }
       }
 
-      // A complete pull means the remote log already holds everything we know
-      // about, so move the push cursor up to it: the next save then appends
-      // only what changed after this point instead of re-uploading the entries
-      // we just pulled.
-      if (appends && applied > 0 && complete && !this.#dirty.has(name)) {
-        await this.#setPushedHeads(name, headsOf(doc));
-      }
-
-      // A log with no entries means the remote has nothing yet: publish what we
-      // have locally so the next device can start from it.
-      if (empty && recordsOf(doc).length > 0) {
-        await this.#push(name, doc, { full: true });
-      } else if (complete && this.#dirty.has(name)) {
-        await this.#push(name, doc);
+      // The log we just replayed holds everything we know about, so the remote
+      // already has these heads: the next save can append only what changed.
+      if (!this.#dirty.has(name)) {
+        const cursor = await this.#cursor(name);
+        await this.#setCursor(name, { heads: headsOf(doc), pushes: cursor.pushes });
       }
     });
   }
@@ -512,141 +408,84 @@ class AutomergeBytesOutputTransformer extends OutputTransformer {
     return this.#actorPromise;
   }
 
-  // PULL CURSOR
-
-  /** @param {CollectionName} name */
-  #seenKey(name) {
-    return `${IDB_PREFIX}/${this.namespace ?? "default"}/${name}/seen`;
-  }
-
-  /**
-   * CIDs of the log entries this device has already applied.
-   *
-   * @param {CollectionName} name
-   * @returns {Promise<Set<string>>}
-   */
-  async #seenCids(name) {
-    const cached = this.#seen.get(name);
-    if (cached) return cached;
-
-    /** @type {Set<string>} */
-    let seen = new Set();
-    try {
-      const stored = await IDB.get(this.#seenKey(name));
-      if (Array.isArray(stored)) {
-        seen = new Set(stored.filter((cid) => typeof cid === "string"));
-      }
-    } catch (err) {
-      console.warn(`Could not read the '${name}' pull cursor:`, err);
-    }
-
-    this.#seen.set(name, seen);
-
-    return seen;
-  }
-
-  /**
-   * Remember which entries landed, and forget ones that left the log.
-   *
-   * @param {CollectionName} name
-   * @param {string[]} applied
-   * @param {string[]} current - Every CID currently in the log.
-   */
-  async #recordSeen(name, applied, current) {
-    const seen = await this.#seenCids(name);
-    for (const cid of applied) seen.add(cid);
-
-    const keep = new Set(current);
-    for (const cid of [...seen]) {
-      if (!keep.has(cid)) seen.delete(cid);
-    }
-
-    try {
-      await IDB.set(this.#seenKey(name), [...seen]);
-    } catch (err) {
-      console.warn(`Could not persist the '${name}' pull cursor:`, err);
-    }
-  }
-
-  /** @param {CollectionName} name */
-  async #resetSeen(name) {
-    this.#seen.set(name, new Set());
-
-    try {
-      await IDB.del(this.#seenKey(name));
-    } catch (err) {
-      console.warn(`Could not reset the '${name}' pull cursor:`, err);
-    }
-  }
-
   // PUSH CURSOR
 
   /** @param {CollectionName} name */
-  #pushedKey(name) {
-    return `${IDB_PREFIX}/${this.namespace ?? "default"}/${name}/pushed`;
+  #cursorKey(name) {
+    return `${IDB_PREFIX}/${this.namespace ?? "default"}/${name}/cursor`;
   }
 
   /**
-   * The heads the remote already has for this collection.
+   * How far this device has pushed a collection: the heads the remote already
+   * has, and how many pushes happened since the document was started.
    *
    * @param {CollectionName} name
-   * @returns {Promise<Heads | undefined>}
+   * @returns {Promise<{ heads?: Heads; pushes: number }>}
    */
-  async #pushedHeads(name) {
-    if (this.#pushed.has(name)) return this.#pushed.get(name);
+  async #cursor(name) {
+    const cached = this.#cursors.get(name);
+    if (cached) return cached;
 
-    /** @type {Heads | undefined} */
-    let heads;
+    /** @type {{ heads?: Heads; pushes: number }} */
+    const cursor = { pushes: 0 };
+
     try {
-      const stored = await IDB.get(this.#pushedKey(name));
-      if (
-        Array.isArray(stored) &&
-        stored.every((hash) => typeof hash === "string")
-      ) {
-        heads = stored;
+      const stored = await IDB.get(this.#cursorKey(name));
+      if (stored && typeof stored === "object") {
+        if (Array.isArray(stored.heads)) cursor.heads = stored.heads;
+        if (Number.isInteger(stored.pushes)) cursor.pushes = stored.pushes;
       }
     } catch (err) {
       console.warn(`Could not read the '${name}' push cursor:`, err);
     }
 
-    this.#pushed.set(name, heads);
+    this.#cursors.set(name, cursor);
 
-    return heads;
+    return cursor;
   }
 
   /**
    * @param {CollectionName} name
-   * @param {Heads} heads
+   * @param {{ heads?: Heads; pushes: number }} cursor
    */
-  async #setPushedHeads(name, heads) {
-    this.#pushed.set(name, heads);
+  async #setCursor(name, cursor) {
+    this.#cursors.set(name, cursor);
 
     try {
-      await IDB.set(this.#pushedKey(name), heads);
+      await IDB.set(this.#cursorKey(name), cursor);
     } catch (err) {
       console.warn(`Could not persist the '${name}' push cursor:`, err);
     }
   }
 
-  /**
-   * Collapse a long log into one snapshot once it passes `MAX_PACKS`.
-   *
-   * @param {CollectionName} name
-   * @param {import("./doc.js").AutomergeDoc} doc
-   * @param {AppendCapable} element
-   */
-  async #compactIfNeeded(name, doc, element) {
-    if (typeof element.packCount !== "function") return;
-    if (typeof element.compact !== "function") return;
+  /** @param {CollectionName} name */
+  async #resetCursor(name) {
+    const cursor = { pushes: 0 };
+    this.#cursors.set(name, cursor);
 
     try {
-      if (await element.packCount(name) <= MAX_PACKS) return;
-
-      await element.compact(name, encodeDocument(doc));
+      await IDB.del(this.#cursorKey(name));
     } catch (err) {
-      console.warn(`Could not compact the '${name}' log:`, err);
+      console.warn(`Could not reset the '${name}' push cursor:`, err);
     }
   }
+}
+
+/**
+ * Cheap content fingerprint. The log only grows, so length plus a hash is
+ * enough to tell "same log as last time" from "something changed".
+ *
+ * @param {Uint8Array} bytes
+ */
+function fingerprintOf(bytes) {
+  let hash = 2166136261;
+
+  for (let index = 0; index < bytes.length; index++) {
+    hash ^= bytes[index];
+    hash = Math.imul(hash, 16777619);
+  }
+
+  return `${bytes.length}:${hash >>> 0}`;
 }
 
 export default AutomergeBytesOutputTransformer;

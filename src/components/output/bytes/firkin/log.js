@@ -1,5 +1,6 @@
-import * as DagCBOR from "@ipld/dag-cbor";
 import { ApiError } from "@tokono.ma/firkin";
+
+import * as DagCBOR from "@ipld/dag-cbor";
 
 import { encodeFileName } from "~/common/firkin/files.js";
 
@@ -13,35 +14,56 @@ import {
 
 /**
  * @import {Firkin} from "@tokono.ma/firkin"
- * @import {LogEntry, LogManifest} from "@specs/components/output/bytes/firkin/types.d.ts"
+ * @import {LogEntry, LogManifestPayload} from "@specs/components/output/bytes/firkin/types.d.ts"
  */
 
 /**
  * The transport behind {@link FirkinOutput}: a sharded, append-only log.
  *
- * Writers never touch each other's entries. Each one keeps a manifest under its
- * own registry name and only ever rewrites that manifest, so two devices
- * writing at the same time can't lose each other's appends even though the
- * registry has no compare-and-swap. Readers union the manifests.
+ * Writers never touch each other's entries. Each one keeps a *signed* manifest
+ * under its own registry name (derived from its public key) and only ever
+ * rewrites that manifest, so two devices writing at the same time can't lose
+ * each other's appends even though the registry has no compare-and-swap.
+ * Readers union the manifests.
  *
- * Entries are stamped with the wall clock at append time. That is what makes
- * "the newest entry" meaningful across writers; it only has to be roughly
- * right, because a consumer that needs convergence merges every entry instead
- * of picking one.
+ * Signing matters because anyone holding the account's `/firkin` capability can
+ * write any registry name. A manifest binds the device, the collection and a
+ * monotonic sequence number, so a reader can tell a device's own manifest from
+ * one forged or replayed under its ref.
  *
- * These helpers take a `Firkin` client so they can be tested without a session
- * or a browser.
+ * These helpers take a `Firkin` client plus a `LogAuth` so they can be tested
+ * without a session or a browser.
+ */
+
+/**
+ * @typedef {Object} LogAuth
+ * @property {string} device - Hex-encoded public key; also the ref suffix.
+ * @property {(bytes: Uint8Array) => Promise<Uint8Array>} sign
+ * @property {(device: string, signature: Uint8Array, bytes: Uint8Array) => Promise<boolean>} verify
+ */
+
+/**
+ * @typedef {Object} ReadOptions
+ * @property {LogAuth} auth
+ * @property {Map<string, number>} [floors] - Newest sequence already accepted
+ *   per device; a lower one is a rollback and is ignored.
+ * @property {(device: string, seq: number) => void} [onAccept] - Reports the
+ *   sequence of every accepted manifest so the caller can raise its floors.
  */
 
 /**
  * Resolve every log entry for `name`, across all writers, oldest first.
  *
+ * Manifests that fail verification, don't belong to their ref, or roll a
+ * device's sequence back are ignored; the rest of the log still reads.
+ *
  * @param {Firkin} rb
  * @param {string} namespace
  * @param {string} name
+ * @param {ReadOptions} options
  * @returns {Promise<LogEntry[]>}
  */
-export async function readEntries(rb, namespace, name) {
+export async function readEntries(rb, namespace, name, options) {
   const prefix = `${encodeFileName(name)}.`;
   const names = await rb.registryNames(registryNamespace(namespace));
 
@@ -56,8 +78,16 @@ export async function readEntries(rb, namespace, name) {
   ) {
     if (!key.startsWith(prefix)) continue;
 
-    const manifest = await readManifestByCid(rb, manifestCid);
-    for (const entry of manifest?.packs ?? []) {
+    const device = key.slice(prefix.length);
+    const payload = await readManifest(rb, name, device, manifestCid, options);
+    if (!payload) continue;
+
+    const floor = options.floors?.get(device) ?? 0;
+    if (payload.seq < floor) continue;
+
+    options.onAccept?.(device, payload.seq);
+
+    for (const entry of payload.packs) {
       if (seen.has(entry.cid)) continue;
 
       seen.add(entry.cid);
@@ -69,21 +99,22 @@ export async function readEntries(rb, namespace, name) {
 }
 
 /**
- * The most recently appended entry, or `undefined` when the log is empty.
+ * The most recently appended entry, or `undefined` when there is none.
  *
  * @param {Firkin} rb
  * @param {string} namespace
  * @param {string} name
+ * @param {ReadOptions} options
  * @returns {Promise<LogEntry | undefined>}
  */
-export async function latestEntry(rb, namespace, name) {
-  const entries = await readEntries(rb, namespace, name);
+export async function latestEntry(rb, namespace, name, options) {
+  const entries = await readEntries(rb, namespace, name, options);
 
   return entries.at(-1);
 }
 
 /**
- * Append one entry to a writer's log.
+ * Append one entry to the caller's log.
  *
  * Re-appending identical bytes is a no-op: the same bytes hash to the same CID,
  * and the CID is already in the log.
@@ -91,137 +122,149 @@ export async function latestEntry(rb, namespace, name) {
  * @param {Firkin} rb
  * @param {string} namespace
  * @param {string} name
- * @param {string} device
  * @param {Uint8Array} bytes
- * @param {{ keep?: number }} [options] - `keep` trims the log to its newest
- *   entries, for consumers that only ever read the latest value.
+ * @param {{ auth: LogAuth; keep?: number; floors?: Map<string, number> }} options
+ *   - `keep` trims the log to its newest entries, for consumers that only ever
+ *   read the latest value.
  * @returns {Promise<{ cid: string; appended: boolean }>}
  */
-export async function appendEntry(rb, namespace, name, device, bytes, options = {}) {
+export async function appendEntry(rb, namespace, name, bytes, options) {
+  const { auth } = options;
   const { cid } = await rb.upload(bytes, { codec: CODEC_RAW });
 
-  const manifest = await readManifest(rb, namespace, name, device);
-  if (manifest?.packs.some((entry) => entry.cid === cid)) {
+  const current = await readManifest(
+    rb,
+    name,
+    auth.device,
+    await rb.registryGet(
+      registryNamespace(namespace),
+      logName(name, auth.device),
+    ),
+    { auth, floors: options.floors },
+  );
+
+  if (current?.packs.some((entry) => entry.cid === cid)) {
     return { cid, appended: false };
   }
 
   /** @type {LogEntry} */
   const entry = { cid, at: Date.now() };
 
-  const packs = [...manifest?.packs ?? [], entry];
+  const packs = [...current?.packs ?? [], entry];
   const keep = options.keep;
   const trimmed = keep && keep > 0 && packs.length > keep
     ? packs.slice(-keep)
     : packs;
 
-  await writeManifest(rb, namespace, name, device, trimmed);
+  await writeManifest(rb, namespace, name, auth, trimmed, (current?.seq ?? 0) + 1);
 
   return { cid, appended: true };
 }
 
 /**
- * How many entries `device` has appended for `name`.
+ * Read and verify one manifest.
  *
  * @param {Firkin} rb
- * @param {string} namespace
  * @param {string} name
- * @param {string} device
- * @returns {Promise<number>}
+ * @param {string} device - Taken from the ref name.
+ * @param {string | null} cid
+ * @param {{ auth?: LogAuth; floors?: Map<string, number> }} options
+ * @returns {Promise<LogManifestPayload | undefined>}
  */
-export async function countEntries(rb, namespace, name, device) {
-  const manifest = await readManifest(rb, namespace, name, device);
-
-  return manifest?.packs.length ?? 0;
-}
-
-/**
- * Replace `device`'s log with a single entry.
- *
- * Other writers' manifests are untouched, so their entries stay reachable.
- *
- * @param {Firkin} rb
- * @param {string} namespace
- * @param {string} name
- * @param {string} device
- * @param {Uint8Array} snapshot
- * @returns {Promise<string>} CID of the snapshot entry.
- */
-export async function replaceLog(rb, namespace, name, device, snapshot) {
-  const { cid } = await rb.upload(snapshot, { codec: CODEC_RAW });
-  await writeManifest(rb, namespace, name, device, [{ cid, at: Date.now() }]);
-
-  return cid;
-}
-
-/**
- * @param {Firkin} rb
- * @param {string} namespace
- * @param {string} name
- * @param {string} device
- * @returns {Promise<LogManifest | undefined>}
- */
-async function readManifest(rb, namespace, name, device) {
-  const cid = await rb.registryGet(
-    registryNamespace(namespace),
-    logName(name, device),
-  );
+async function readManifest(rb, name, device, cid, options) {
   if (!cid) return undefined;
 
-  return await readManifestByCid(rb, cid);
-}
-
-/**
- * @param {Firkin} rb
- * @param {string} cid
- * @returns {Promise<LogManifest | undefined>}
- */
-async function readManifestByCid(rb, cid) {
+  /** @type {any} */
+  let envelope;
   try {
-    const bytes = await rb.get(cid);
-    return normalizeManifest(/** @type {LogManifest} */ (DagCBOR.decode(bytes)));
+    envelope = DagCBOR.decode(await rb.get(cid));
   } catch (err) {
     // A manifest whose blob is gone behaves like an empty log; the reader
     // decides whether the remaining entries are enough.
     if (err instanceof ApiError && err.status === 404) return undefined;
     throw err;
   }
-}
 
-/**
- * Accept the older `packs: string[]` shape so a manifest written by an earlier
- * build doesn't read as garbage. Those entries sort before every stamped one.
- *
- * @param {LogManifest | { v?: number; packs?: unknown }} manifest
- * @returns {LogManifest}
- */
-function normalizeManifest(manifest) {
-  const packs = Array.isArray(manifest.packs) ? manifest.packs : [];
+  const signed = envelope?.p;
+  const signature = envelope?.s;
+  if (!(signed instanceof Uint8Array) || !(signature instanceof Uint8Array)) {
+    return undefined;
+  }
 
-  return {
-    v: MANIFEST_VERSION,
-    packs: packs.map((/** @type {any} */ entry) =>
-      typeof entry === "string" ? { cid: entry, at: 0 } : entry
-    ),
-  };
+  /** @type {LogManifestPayload} */
+  let payload;
+  try {
+    payload = DagCBOR.decode(signed);
+  } catch {
+    return undefined;
+  }
+
+  // The manifest has to be about the log it is filed under, and signed by the
+  // key the ref is named after.
+  if (payload.device !== device) return undefined;
+  if (payload.collection !== encodeFileName(name)) return undefined;
+  if (payload.v !== MANIFEST_VERSION) return undefined;
+  if (!Number.isInteger(payload.seq) || payload.seq < 1) return undefined;
+  if (!Array.isArray(payload.packs)) return undefined;
+
+  const auth = options.auth;
+  if (!auth) return undefined;
+
+  let valid = false;
+  try {
+    valid = await auth.verify(payload.device, signature, signed);
+  } catch (err) {
+    console.warn(`Could not verify a '${name}' manifest:`, err);
+  }
+
+  return valid ? payload : undefined;
 }
 
 /**
  * @param {Firkin} rb
  * @param {string} namespace
  * @param {string} name
- * @param {string} device
+ * @param {LogAuth} auth
  * @param {LogEntry[]} packs
+ * @param {number} [nextSeq] - Use the sequence the caller already read, so an
+ *   append costs one manifest read rather than two.
  */
-async function writeManifest(rb, namespace, name, device, packs) {
-  /** @type {LogManifest} */
-  const manifest = { v: MANIFEST_VERSION, packs };
-  const { cid } = await rb.upload(DagCBOR.encode(manifest), {
+async function writeManifest(rb, namespace, name, auth, packs, nextSeq) {
+  let seq = nextSeq;
+  if (seq === undefined) {
+    const current = await readManifest(
+      rb,
+      name,
+      auth.device,
+      await rb.registryGet(
+        registryNamespace(namespace),
+        logName(name, auth.device),
+      ),
+      { auth },
+    );
+
+    seq = (current?.seq ?? 0) + 1;
+  }
+
+  /** @type {LogManifestPayload} */
+  const payload = {
+    v: MANIFEST_VERSION,
+    collection: encodeFileName(name),
+    device: auth.device,
+    seq,
+    packs,
+  };
+
+  const signed = DagCBOR.encode(payload);
+  const signature = await auth.sign(signed);
+
+  const { cid } = await rb.upload(DagCBOR.encode({ p: signed, s: signature }), {
     codec: CODEC_DAG_CBOR,
   });
 
   await rb.registrySet(
     registryNamespace(namespace),
-    logName(name, device),
+    logName(name, auth.device),
     cid,
   );
 }

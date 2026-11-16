@@ -220,6 +220,31 @@ export function applyPack(doc, bytes) {
 }
 
 /**
+ * Apply a whole log — every entry of a log-shaped output concatenated — to a
+ * collection.
+ *
+ * A device with no records of its own adopts the log, which also gives it this
+ * device's actor id. Otherwise the entries are applied incrementally, falling
+ * back to loading the log as one document when a delta can't be applied in a
+ * single pass (a snapshot that `loadIncremental` ignores, or changes whose
+ * dependencies have been trimmed out of the log).
+ *
+ * @param {AutomergeDoc} doc
+ * @param {Uint8Array} bytes
+ * @param {string} [actor]
+ * @returns {AutomergeDoc}
+ */
+export function applyLog(doc, bytes, actor) {
+  if (recordsOf(doc).length === 0) return adoptDocument(bytes, actor);
+
+  try {
+    return applyPack(doc, bytes);
+  } catch {
+    return mergeDocuments(doc, Automerge.load(bytes));
+  }
+}
+
+/**
  * Union two documents, including documents that were created independently.
  *
  * Automerge documents each grow from their own root object, and merging two

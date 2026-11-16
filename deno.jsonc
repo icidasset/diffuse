@@ -209,6 +209,7 @@
     "./components/output/bytes/dropbox/worker.js": "./src/components/output/bytes/dropbox/worker.js",
     "./components/output/bytes/firkin/constants.js": "./src/components/output/bytes/firkin/constants.js",
     "./components/output/bytes/firkin/element.js": "./src/components/output/bytes/firkin/element.js",
+    "./components/output/bytes/firkin/log.js": "./src/components/output/bytes/firkin/log.js",
     "./components/output/bytes/s3/constants.js": "./src/components/output/bytes/s3/constants.js",
     "./components/output/common.js": "./src/components/output/common.js",
     "./components/output/polymorphic/indexed-db/constants.js": "./src/components/output/polymorphic/indexed-db/constants.js",
