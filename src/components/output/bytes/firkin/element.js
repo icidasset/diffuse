@@ -11,7 +11,12 @@ import {
 } from "~/common/firkin/channel.js";
 import { getSessionClient } from "~/common/firkin/session.js";
 
-import { IDB_FLOORS, IDB_PACKS, NOT_CONNECTED } from "./constants.js";
+import {
+  IDB_FLOORS,
+  IDB_PACKS,
+  NAMES_TTL_MS,
+  NOT_CONNECTED,
+} from "./constants.js";
 import { appendEntry, readEntries } from "./log.js";
 import { verifySignature } from "./verify.js";
 
@@ -77,6 +82,16 @@ class FirkinOutput extends BroadcastedOutputElement {
 
   /** @type {Map<string, ReturnType<typeof setTimeout>>} */
   #hints = new Map();
+
+  /**
+   * One namespace listing, shared by the collections that read from it.
+   *
+   * All five collections of an output live in the same namespace, so a pull
+   * would otherwise ask the same question five times.
+   *
+   * @type {Map<string, { at: number; names: Promise<Record<string, string> | null> }>}
+   */
+  #listings = new Map();
 
   constructor() {
     super();
@@ -231,6 +246,10 @@ class FirkinOutput extends BroadcastedOutputElement {
       collection,
       setTimeout(() => {
         this.#hints.delete(collection);
+
+        // Another device wrote something: don't trust the cached listing.
+        this.#listings.clear();
+
         void reload().catch((err) => {
           console.warn(`Could not refresh '${collection}' after a hint:`, err);
         });
@@ -432,6 +451,30 @@ class FirkinOutput extends BroadcastedOutputElement {
   }
 
   /**
+   * The namespace listing, reused for a moment so a pull doesn't ask the same
+   * question once per collection.
+   *
+   * @param {Firkin} rb
+   */
+  #loadNames(rb) {
+    return (/** @type {string} */ namespace) => {
+      const cached = this.#listings.get(namespace);
+      if (cached && Date.now() - cached.at < NAMES_TTL_MS) {
+        return cached.names;
+      }
+
+      const names = rb.registryNames(namespace).catch((err) => {
+        this.#listings.delete(namespace);
+        throw err;
+      });
+
+      this.#listings.set(namespace, { at: Date.now(), names });
+
+      return names;
+    };
+  }
+
+  /**
    * Read a log with signature and rollback checks, recording the sequences it
    * accepted so a later replay can be recognised.
    *
@@ -445,6 +488,7 @@ class FirkinOutput extends BroadcastedOutputElement {
     const entries = await readEntries(client.rb, this.#namespace, name, {
       auth: this.#auth(client.session),
       floors: await this.#floors(name),
+      loadNames: this.#loadNames(client.rb),
       onAccept: (device, seq) => accepted.push([device, seq]),
     });
 
@@ -511,6 +555,9 @@ class FirkinOutput extends BroadcastedOutputElement {
       } catch (err) {
         console.warn("Could not cache a Firkin entry:", err);
       }
+
+      // Our own write changes the namespace listing.
+      this.#listings.clear();
 
       // Best effort: the entry is already committed, so a lost hint only
       // delays other devices.

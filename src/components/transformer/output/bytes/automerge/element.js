@@ -8,7 +8,14 @@ import { OutputTransformer } from "../../base.js";
 import { collectionSchema } from "~/common/self-describing.js";
 import { defineElement } from "~/common/element.js";
 
-import { COLLECTIONS, IDB_PREFIX, SNAPSHOT_EVERY } from "./constants.js";
+import {
+  COLLECTIONS,
+  FIRST_READ_TIMEOUT_MS,
+  IDB_PREFIX,
+  LOCAL_READ_TIMEOUT_MS,
+  NOT_READY_GRACE_MS,
+  SNAPSHOT_EVERY,
+} from "./constants.js";
 import {
   applyLog,
   changeDocument,
@@ -65,6 +72,16 @@ class AutomergeBytesOutputTransformer extends OutputTransformer {
   /** Bumped whenever a document changes so the collection computeds re-run. */
   #version = signal(0);
 
+  /**
+   * Collections we have an answer for: either a local document with records, or
+   * a completed read of the output. Until a collection is in here its state
+   * stays `loading`, so the UI shows its loading state instead of flashing an
+   * empty list while the first read is still in flight.
+   *
+   * @type {import("~/common/signal.d.ts").Signal<Set<string>>}
+   */
+  #ready = signal(new Set());
+
   // STATE
 
   /** @type {Map<string, import("./doc.js").AutomergeDoc>} */
@@ -91,6 +108,15 @@ class AutomergeBytesOutputTransformer extends OutputTransformer {
   #initialising;
 
   /**
+   * Resolves once `connectedCallback` has found the local output. Effects run
+   * from the constructor, so without this a pull can start initialising before
+   * the local cache is known — and skip it entirely.
+   *
+   * @type {PromiseWithResolvers<void>}
+   */
+  #localReady = Promise.withResolvers();
+
+  /**
    * Serializes document mutations. Without this a pull that started before a
    * save would overwrite the document the save just wrote.
    */
@@ -109,12 +135,35 @@ class AutomergeBytesOutputTransformer extends OutputTransformer {
     this.settings = this.#entry("settings");
     this.tracks = this.#entry("tracks");
 
-    this.ready = computed(() => this.#loaded.value);
+    // Ready means "usable": with no session or no encryption key the output can
+    // report an empty library, and the configurator mirrors whatever a selected
+    // output reports into the local store — so an unusable output must not
+    // claim to be ready, or it would wipe that mirror.
+    this.ready = computed(() => this.#loaded.value && this.base().ready());
 
     // Pull once the backing output is usable (signed in, online, …). Retries
     // whenever that flips back to true after a failure.
     this.effect(() => {
-      if (!this.base().ready()) return;
+      const remote = this.base();
+
+      if (!remote.ready()) {
+        // Nothing can be read yet. Don't leave the UI spinning if that never
+        // changes (no session, no encryption key).
+        this.#scheduleSettle();
+        return;
+      }
+
+      clearTimeout(this.#settle);
+      this.#settle = undefined;
+
+      // A save made before the output was usable (e.g. carrying the local copy
+      // in before the encryption key arrived) only reached the local cache.
+      // Now that it can be written, push it.
+      for (const name of this.#dirty) {
+        const doc = this.#docs.get(name);
+        if (doc) this.#enqueuePush(name, doc);
+      }
+
       void this.#pull();
     });
 
@@ -141,6 +190,7 @@ class AutomergeBytesOutputTransformer extends OutputTransformer {
       collection: computed(() => {
         this.#version.get();
         if (!this.#loaded.value) return { state: "loading" };
+        if (!this.#ready.value.has(name)) return { state: "loading" };
 
         return {
           state: "loaded",
@@ -160,10 +210,15 @@ class AutomergeBytesOutputTransformer extends OutputTransformer {
 
     /** @type {OutputElement<Uint8Array | undefined> | null} */
     const local = this.root().querySelector("dop-indexed-db");
-    if (!local) throw new Error("Can't find local output");
+    if (!local) {
+      // Nothing to restore from; don't leave `#initialise` waiting.
+      this.#localReady.resolve();
+      throw new Error("Can't find local output");
+    }
 
     customElements.whenDefined(local.localName).then(() => {
       this.#localOutput.value = local;
+      this.#localReady.resolve();
       void this.#initialise();
     });
   }
@@ -188,34 +243,61 @@ class AutomergeBytesOutputTransformer extends OutputTransformer {
    */
   #initialise() {
     this.#initialising ??= (async () => {
-      const local = this.#localOutput.value;
+      try {
+        // `connectedCallback` resolves this; the timeout is a belt-and-braces
+        // so a missing local element can never leave the collections loading.
+        await Promise.race([
+          this.#localReady.promise,
+          new Promise((resolve) => setTimeout(resolve, NOT_READY_GRACE_MS)),
+        ]);
 
-      if (local) {
-        await Promise.all(COLLECTIONS.map(async (name) => {
-          try {
-            await local[name].reload();
+        const local = this.#localOutput.value;
 
-            const collection = local[name].collection();
-            if (collection.state !== "loaded") return;
+        if (local) {
+          await Promise.all(COLLECTIONS.map(async (name) => {
+            try {
+              // The local output reads through a worker; a stuck worker must
+              // not keep the whole interface loading.
+              await Promise.race([
+                local[name].reload(),
+                new Promise((resolve) =>
+                  setTimeout(resolve, LOCAL_READ_TIMEOUT_MS)
+                ),
+              ]);
 
-            const doc = loadDocument(collection.data);
-            if (doc) {
-              this.#docs.set(name, doc);
-            } else {
-              // Nothing cached: start from an empty document of our own, under
-              // this device's actor so concurrent writers never share a
-              // sequence number.
-              this.#docs.set(name, createDocument(await this.#actor()));
-              await this.#resetCursor(name);
+              const collection = local[name].collection();
+              if (collection.state !== "loaded") return;
+
+              const doc = loadDocument(collection.data);
+              if (doc) {
+                this.#docs.set(name, doc);
+
+                // Local-first: a collection we have synced before can be shown
+                // straight away — even when it is empty, because then "empty"
+                // is the truth rather than "unknown".
+                const cursor = await this.#cursor(name);
+                if (
+                  recordsOf(doc).length > 0 || cursor.heads !== undefined
+                ) {
+                  this.#markReady(name);
+                }
+              } else {
+                // Nothing cached: start from an empty document of our own,
+                // under this device's actor so concurrent writers never share a
+                // sequence number.
+                this.#docs.set(name, createDocument(await this.#actor()));
+                await this.#resetCursor(name);
+              }
+            } catch (err) {
+              console.warn(`Could not read the local '${name}' document:`, err);
             }
-          } catch (err) {
-            console.warn(`Could not read the local '${name}' document:`, err);
-          }
-        }));
+          }));
+        }
+      } finally {
+        // Whatever happened above, the interface must stop loading.
+        this.#loaded.value = true;
+        this.#version.value++;
       }
-
-      this.#loaded.value = true;
-      this.#version.value++;
     })();
 
     return this.#initialising;
@@ -249,8 +331,65 @@ class AutomergeBytesOutputTransformer extends OutputTransformer {
         }
       }
 
-      await this.#push(name, doc);
+      this.#enqueuePush(name, doc);
     });
+  }
+
+  /** @type {Promise<void>} */
+  #pushQueue = Promise.resolve();
+
+  /**
+   * Queue a push, off the document queue: a slow or dead server must not block
+   * reads, saves or other collections.
+   *
+   * @param {CollectionName} name
+   * @param {import("./doc.js").AutomergeDoc} doc
+   */
+  #enqueuePush(name, doc) {
+    const run = () => this.#push(name, doc);
+
+    this.#pushQueue = this.#pushQueue.then(run, run).then(
+      () => {},
+      () => {},
+    );
+  }
+
+  /** @type {ReturnType<typeof setTimeout> | undefined} */
+  #settle;
+
+  /**
+   * Give up waiting for an output that can't read, so the UI shows an empty
+   * library instead of an endless loader.
+   */
+  #scheduleSettle() {
+    if (this.#settle !== undefined) return;
+
+    this.#settle = setTimeout(() => {
+      this.#settle = undefined;
+
+      if (this.base().ready()) return;
+
+      console.warn(
+        "Firkin output: nothing can be read yet (no session, or no " +
+          "encryption key on this browser). Showing an empty library; sign " +
+          "in on Connect → Firkin to fix it.",
+      );
+
+      for (const name of COLLECTIONS) this.#markReady(name);
+    }, NOT_READY_GRACE_MS);
+  }
+
+  /**
+   * Record that a collection has an answer to show.
+   *
+   * @param {CollectionName} name
+   */
+  #markReady(name) {
+    if (this.#ready.value.has(name)) return;
+
+    const next = new Set(this.#ready.value);
+    next.add(name);
+    this.#ready.value = next;
   }
 
   /**
@@ -310,15 +449,24 @@ class AutomergeBytesOutputTransformer extends OutputTransformer {
     this.#pulling ??= (async () => {
       await this.#initialise();
 
+      // One slow collection must not leave the others loading, and the reads
+      // run one after another.
+      const settle = setTimeout(() => {
+        for (const name of COLLECTIONS) this.#markReady(name);
+      }, FIRST_READ_TIMEOUT_MS);
+
       try {
         for (const name of COLLECTIONS) {
           try {
             await this.#pullCollection(name);
           } catch (err) {
             console.warn(`Could not pull the '${name}' document:`, err);
+            this.#markReady(name);
           }
         }
       } finally {
+        // Deliberately not cleared: if a read resolved but the output still
+        // reports `loading`, this is what finally settles the UI.
         this.#pulling = undefined;
       }
     })();
@@ -334,16 +482,29 @@ class AutomergeBytesOutputTransformer extends OutputTransformer {
   async #pullCollection(name) {
     await this.#initialise();
 
-    await this.#serialize(async () => {
-      const remote = this.base();
-      if (!remote.ready()) return;
+    // A slow or unreachable output must not hold the first paint hostage: show
+    // what we have (usually nothing) and fill it in when the read lands.
+    const settle = setTimeout(() => {
+      this.#markReady(name);
+    }, FIRST_READ_TIMEOUT_MS);
 
-      await remote[name].reload();
+    try {
+      await this.#serialize(async () => {
+        const remote = this.base();
+        if (!remote.ready()) return;
 
-      await this.#applyLocked(name, remote[name].collection(), {
-        bootstrap: true,
+        await Promise.race([
+          remote[name].reload(),
+          new Promise((resolve) => setTimeout(resolve, FIRST_READ_TIMEOUT_MS)),
+        ]);
+
+        await this.#applyLocked(name, remote[name].collection(), {
+          bootstrap: true,
+        });
       });
-    });
+    } finally {
+      clearTimeout(settle);
+    }
   }
 
   /**
@@ -372,50 +533,55 @@ class AutomergeBytesOutputTransformer extends OutputTransformer {
    *   document when the output has nothing yet; only safe right after a read.
    */
   async #applyLocked(name, collection, options = {}) {
+    // A loading collection is not an answer; leave it to the next read.
     if (collection.state !== "loaded") return;
 
-    const bytes = collection.data;
-    const current = this.#docs.get(name) ?? createDocument();
+    try {
+      const bytes = collection.data;
+      const current = this.#docs.get(name) ?? createDocument();
 
-    if (!(bytes instanceof Uint8Array)) {
-      // Nothing remote yet: publish what we have so the namespace exists and
-      // another device can start from it. An empty document counts — it makes
-      // the first read cheaper and surfaces a failing push straight away.
-      if (options.bootstrap) {
-        await this.#push(name, current);
+      if (!(bytes instanceof Uint8Array)) {
+        // Nothing remote yet: publish what we have so the namespace exists and
+        // another device can start from it. An empty document counts — it makes
+        // the first read cheaper and surfaces a failing push straight away.
+        if (options.bootstrap) {
+          this.#enqueuePush(name, current);
+        }
+        return;
       }
-      return;
-    }
 
-    // Replaying an unchanged log is wasted work; the output hands back the
-    // same bytes, so remember what was applied.
-    const fingerprint = fingerprintOf(bytes);
-    if (fingerprint === this.#applied.get(name)) return;
+      // Replaying an unchanged log is wasted work; the output hands back the
+      // same bytes, so remember what was applied.
+      const fingerprint = fingerprintOf(bytes);
+      if (fingerprint === this.#applied.get(name)) return;
 
-    const before = headsOf(current).join(";");
-    const doc = applyLog(current, bytes, await this.#actor());
+      const before = headsOf(current).join(";");
+      const doc = applyLog(current, bytes, await this.#actor());
 
-    this.#applied.set(name, fingerprint);
-    this.#docs.set(name, doc);
+      this.#applied.set(name, fingerprint);
+      this.#docs.set(name, doc);
 
-    if (headsOf(doc).join(";") === before) return;
+      if (headsOf(doc).join(";") === before) return;
 
-    this.#version.value++;
+      this.#version.value++;
 
-    const local = this.#localOutput.value;
-    if (local) {
-      try {
-        await local[name].save(encodeDocument(doc));
-      } catch (err) {
-        console.warn(`Could not cache the '${name}' document locally:`, err);
+      const local = this.#localOutput.value;
+      if (local) {
+        try {
+          await local[name].save(encodeDocument(doc));
+        } catch (err) {
+          console.warn(`Could not cache the '${name}' document locally:`, err);
+        }
       }
-    }
 
-    // The log we just replayed holds everything we know about, so the remote
-    // already has these heads: the next save can append only what changed.
-    if (!this.#dirty.has(name)) {
-      const cursor = await this.#cursor(name);
-      await this.#setCursor(name, { heads: headsOf(doc), pushes: cursor.pushes });
+      // The log we just replayed holds everything we know about, so the remote
+      // already has these heads: the next save can append only what changed.
+      if (!this.#dirty.has(name)) {
+        const cursor = await this.#cursor(name);
+        await this.#setCursor(name, { heads: headsOf(doc), pushes: cursor.pushes });
+      }
+    } finally {
+      this.#markReady(name);
     }
   }
 

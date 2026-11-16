@@ -75,10 +75,23 @@ function fakeClient() {
 
     /** @param {string} ns */
     async registryNames(ns) {
-      const stored = namespace(ns);
-      if (stored.size === 0) return null;
+      // Current servers answer 200 with an empty object for an empty namespace.
+      return Object.fromEntries(namespace(ns));
+    },
 
-      return Object.fromEntries(stored);
+    /**
+     * @param {string} ns
+     * @param {string[]} names
+     */
+    async registryLookup(ns, names) {
+      const stored = namespace(ns);
+
+      return Object.fromEntries(
+        names.flatMap((name) => {
+          const cid = stored.get(name);
+          return cid === undefined ? [] : [[name, cid]];
+        }),
+      );
     },
   };
 
@@ -186,6 +199,24 @@ describe("components/output/bytes/firkin/log", () => {
 
     expect(await latestEntry(rb, "ns", "tracks", { auth })).toBe(undefined);
     expect(await read(rb, "tracks", auth)).toEqual([]);
+  });
+
+  it("appends without reading a ref that doesn't exist yet", async () => {
+    const rb = fakeClient();
+    const auth = fakeAuth(deviceA);
+
+    // `registryLookup` is the only registry read on the write path.
+    let gets = 0;
+    const originalGet = rb.registryGet;
+    rb.registryGet = (...args) => {
+      gets += 1;
+      return originalGet(...args);
+    };
+
+    const first = await appendEntry(rb, "ns", "tracks", bytes("a"), { auth });
+
+    expect(first.appended).toBe(true);
+    expect(gets).toBe(0);
   });
 
   it("does not append identical bytes twice", async () => {

@@ -49,6 +49,9 @@ import {
  *   per device; a lower one is a rollback and is ignored.
  * @property {(device: string, seq: number) => void} [onAccept] - Reports the
  *   sequence of every accepted manifest so the caller can raise its floors.
+ * @property {(namespace: string) => Promise<Record<string, string> | null>} [loadNames]
+ *   - Where the namespace listing comes from. Defaults to the client, and
+ *   exists so a caller can serve several reads from one request.
  */
 
 /**
@@ -65,7 +68,9 @@ import {
  */
 export async function readEntries(rb, namespace, name, options) {
   const prefix = `${encodeFileName(name)}.`;
-  const names = await rb.registryNames(registryNamespace(namespace));
+  const loadNames = options.loadNames ??
+    ((/** @type {string} */ ns) => rb.registryNames(ns));
+  const names = await loadNames(registryNamespace(namespace));
 
   /** @type {LogEntry[]} */
   const entries = [];
@@ -132,16 +137,15 @@ export async function appendEntry(rb, namespace, name, bytes, options) {
   const { auth } = options;
   const { cid } = await rb.upload(bytes, { codec: CODEC_RAW });
 
-  const current = await readManifest(
-    rb,
-    name,
-    auth.device,
-    await rb.registryGet(
-      registryNamespace(namespace),
-      logName(name, auth.device),
-    ),
-    { auth, floors: options.floors },
-  );
+  // `registryLookup` returns only names that are set, so a device writing for
+  // the first time costs one request and no 404.
+  const ref = logName(name, auth.device);
+  const found = await rb.registryLookup(registryNamespace(namespace), [ref]);
+
+  const current = await readManifest(rb, name, auth.device, found[ref], {
+    auth,
+    floors: options.floors,
+  });
 
   if (current?.packs.some((entry) => entry.cid === cid)) {
     return { cid, appended: false };
@@ -226,25 +230,10 @@ async function readManifest(rb, name, device, cid, options) {
  * @param {string} name
  * @param {LogAuth} auth
  * @param {LogEntry[]} packs
- * @param {number} [nextSeq] - Use the sequence the caller already read, so an
- *   append costs one manifest read rather than two.
+ * @param {number} seq - The caller already read the current manifest, so the
+ *   write doesn't need a second read.
  */
-async function writeManifest(rb, namespace, name, auth, packs, nextSeq) {
-  let seq = nextSeq;
-  if (seq === undefined) {
-    const current = await readManifest(
-      rb,
-      name,
-      auth.device,
-      await rb.registryGet(
-        registryNamespace(namespace),
-        logName(name, auth.device),
-      ),
-      { auth },
-    );
-
-    seq = (current?.seq ?? 0) + 1;
-  }
+async function writeManifest(rb, namespace, name, auth, packs, seq) {
 
   /** @type {LogManifestPayload} */
   const payload = {

@@ -68,12 +68,19 @@ function rememberFacet(facet) {
 // initialPreludeKey is captured the first time the collection finishes loading
 // (not at startup when it's still pending), so the effect never fires on the
 // very first load and causes an infinite reload loop.
+//
+// The key is *which* preludes are enabled, nothing else. Record ids, ordering
+// and `resources` all churn (a facet picks up `resources` once its tile is
+// fetched, switching storage replaces one manifest with an equivalent one), and
+// every one of those used to force a reload — including right after connecting
+// an account that has no data yet.
 const preludeKey = computed(() => {
   const col = output.facets.collection();
   if (col.state !== "loaded") return null;
   return col.data
     .filter((f) => f.kind === "prelude")
-    .map((f) => `${f.id}:${f.enabled !== false}:${JSON.stringify(f.resources ?? null)}`)
+    .map((f) => `${f.uri}:${f.enabled !== false}`)
+    .sort()
     .join(",");
 });
 

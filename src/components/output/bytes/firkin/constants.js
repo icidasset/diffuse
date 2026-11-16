@@ -18,6 +18,15 @@ export const IDB_FLOORS = "diffuse/output/bytes/firkin/floors";
 /** IndexedDB prefix for cached log entries, keyed by CID. */
 export const IDB_PACKS = "diffuse/output/bytes/firkin/packs";
 
+/**
+ * How long one namespace listing is reused.
+ *
+ * Every collection of an output lives in the same namespace, so a pull asks
+ * the same question five times in a row. Coalescing those is enough; anything
+ * longer would hide another device's write from an explicit reload.
+ */
+export const NAMES_TTL_MS = 1_000;
+
 export const NOT_CONNECTED =
   "Firkin is not connected. Sign in on the Connect → Firkin page first.";
 

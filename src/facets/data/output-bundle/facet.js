@@ -40,6 +40,13 @@ const FIRKIN_CHAIN_MODULES = {
  * @import OutputOrchestrator from "~/components/orchestrator/output/element.js"
  */
 
+/**
+ * Marker so it's obvious in the console which build wired this page.
+ *
+ * @type {string}
+ */
+const BUILD_MARKER = "output-bundle@carry-over-switch-guard";
+
 /** @type {Set<string>} */
 let previouslyActivated = new Set();
 
@@ -49,6 +56,12 @@ let previouslyActivated = new Set();
 effect(() => {
   const output = foundation.signals.orchestrator.output();
   if (!output) return;
+
+  console.info(
+    `diffuse: ${BUILD_MARKER} (firkin methods: ${
+      FIRKIN_METHODS.map((method) => method.id).join(", ")
+    })`,
+  );
 
   atprotoPasskey(output);
   atprotoSpace(output);

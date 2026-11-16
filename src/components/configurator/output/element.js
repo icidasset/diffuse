@@ -1,7 +1,7 @@
 import { BroadcastableDiffuseElement, defineElement } from "~/common/element.js";
 import { batch, computed, signal } from "~/common/signal.js";
 
-import { PRELUDE_BASE } from "~/common/facets/constants.js";
+import { PRELUDE_BASE, STARTING_SET_URIS } from "~/common/facets/constants.js";
 import { buildFacets } from "~/common/facets/utils.js";
 
 /**
@@ -10,11 +10,21 @@ import { buildFacets } from "~/common/facets/utils.js";
  * @import {OutputManagerDeputy, OutputElement} from "@specs/components/output/types.d.ts"
  *
  * @import {OutputConfiguratorElement} from "@specs/components/configurator/output/types.d.ts"
+ * @import {CollectionName} from "~/common/self-describing.js"
  */
 
 /**
  * @typedef {OutputElement} Output
  */
+
+/** The five collections every output persists. */
+const COLLECTIONS = /** @type {CollectionName[]} */ ([
+  "collaborations",
+  "facets",
+  "playlistItems",
+  "settings",
+  "tracks",
+]);
 
 const STORAGE_PREFIX = "diffuse/configurator/output";
 
@@ -35,7 +45,7 @@ class OutputConfigurator extends BroadcastableDiffuseElement {
     const manager = {
       collaborations: {
         collection: computed(() => {
-          const out = this.#selected.value;
+          const out = this.#activeOutput();
           if (out) return out.collaborations.collection();
 
           const def = this.#defaultOutput.value;
@@ -67,7 +77,7 @@ class OutputConfigurator extends BroadcastableDiffuseElement {
       },
       facets: {
         collection: computed(() => {
-          const out = this.#selected.value;
+          const out = this.#activeOutput();
           if (out) return out.facets.collection();
 
           const def = this.#defaultOutput.value;
@@ -116,7 +126,7 @@ class OutputConfigurator extends BroadcastableDiffuseElement {
       },
       playlistItems: {
         collection: computed(() => {
-          const out = this.#selected.value;
+          const out = this.#activeOutput();
           if (out) return out.playlistItems.collection();
 
           const def = this.#defaultOutput.value;
@@ -148,7 +158,7 @@ class OutputConfigurator extends BroadcastableDiffuseElement {
       },
       settings: {
         collection: computed(() => {
-          const out = this.#selected.value;
+          const out = this.#activeOutput();
           if (out) return out.settings.collection();
 
           const def = this.#defaultOutput.value;
@@ -180,7 +190,7 @@ class OutputConfigurator extends BroadcastableDiffuseElement {
       },
       tracks: {
         collection: computed(() => {
-          const out = this.#selected.value;
+          const out = this.#activeOutput();
           if (out) return out.tracks.collection();
 
           const def = this.#defaultOutput.value;
@@ -238,8 +248,15 @@ class OutputConfigurator extends BroadcastableDiffuseElement {
      * save it to the default output or memory.
      */
     this.effect(() => {
+      if (this.#switching.value) return;
+
       const out = this.#selected.value;
       if (!out) return;
+
+      // Only mirror an output that can actually read. An unusable output (e.g.
+      // signed out) reports an empty library, and mirroring that would wipe
+      // the local copy every other output falls back to.
+      if (!out.ready()) return;
 
       const col = out.collaborations.collection();
       if (col.state !== "loaded") return;
@@ -250,8 +267,15 @@ class OutputConfigurator extends BroadcastableDiffuseElement {
     });
 
     this.effect(() => {
+      if (this.#switching.value) return;
+
       const out = this.#selected.value;
       if (!out) return;
+
+      // Only mirror an output that can actually read. An unusable output (e.g.
+      // signed out) reports an empty library, and mirroring that would wipe
+      // the local copy every other output falls back to.
+      if (!out.ready()) return;
 
       const col = out.facets.collection();
       if (col.state !== "loaded") return;
@@ -262,8 +286,15 @@ class OutputConfigurator extends BroadcastableDiffuseElement {
     });
 
     this.effect(() => {
+      if (this.#switching.value) return;
+
       const out = this.#selected.value;
       if (!out) return;
+
+      // Only mirror an output that can actually read. An unusable output (e.g.
+      // signed out) reports an empty library, and mirroring that would wipe
+      // the local copy every other output falls back to.
+      if (!out.ready()) return;
 
       const col = out.playlistItems.collection();
       if (col.state !== "loaded") return;
@@ -274,8 +305,15 @@ class OutputConfigurator extends BroadcastableDiffuseElement {
     });
 
     this.effect(() => {
+      if (this.#switching.value) return;
+
       const out = this.#selected.value;
       if (!out) return;
+
+      // Only mirror an output that can actually read. An unusable output (e.g.
+      // signed out) reports an empty library, and mirroring that would wipe
+      // the local copy every other output falls back to.
+      if (!out.ready()) return;
 
       const col = out.settings.collection();
       if (col.state !== "loaded") return;
@@ -286,8 +324,15 @@ class OutputConfigurator extends BroadcastableDiffuseElement {
     });
 
     this.effect(() => {
+      if (this.#switching.value) return;
+
       const out = this.#selected.value;
       if (!out) return;
+
+      // Only mirror an output that can actually read. An unusable output (e.g.
+      // signed out) reports an empty library, and mirroring that would wipe
+      // the local copy every other output falls back to.
+      if (!out.ready()) return;
 
       const col = out.tracks.collection();
       if (col.state !== "loaded") return;
@@ -319,6 +364,14 @@ class OutputConfigurator extends BroadcastableDiffuseElement {
   );
 
   #setupFinished = signal(false);
+
+  /**
+   * True while a selected output is being wired in and the local copy is being
+   * carried into it. The mirror effects must stay out of the way until then: a
+   * freshly selected output reports empty collections, and mirroring those
+   * would erase the local copy `#carryOver` reads from.
+   */
+  #switching = signal(false);
 
   // STATE
 
@@ -371,11 +424,30 @@ class OutputConfigurator extends BroadcastableDiffuseElement {
     const defaultOutput = def_ault ? await this.#findOutput(def_ault) : null;
     const selectedOutput = await this.#findOutput(selectedOutputId);
 
+    // A restored selection skips `#selectOutput`, so carry the local copy here
+    // as well — a stored Firkin selection otherwise never receives it. Snapshot
+    // the mirror before wiring the selection in: the mirror effects would
+    // otherwise be free to write the selected output's still-empty collections
+    // over the local copy this reads from.
+    const carry = selectedOutput && selectedOutput !== defaultOutput
+      ? {
+        output: selectedOutput,
+        mirror: await this.#mirrorSnapshot(defaultOutput),
+      }
+      : null;
+
     batch(() => {
+      this.#switching.value = carry !== null;
       this.#selected.value = selectedOutput;
       this.#defaultOutput.value = defaultOutput;
       this.#setupFinished.value = true;
     });
+
+    if (carry) {
+      void this.#carryOver(carry.output, carry.mirror).finally(() => {
+        this.#switching.value = false;
+      });
+    }
   }
 
   // MISC
@@ -425,8 +497,125 @@ class OutputConfigurator extends BroadcastableDiffuseElement {
       this.#activated.value = new Set([...this.#activated.value.values(), id]);
     }
 
-    this.#selected.value = await this.#findOutput(id);
+    // The local output mirrors whichever output is selected, so switching to a
+    // fresh one would replace the mirror with nothing. Snapshot it first and
+    // carry it into the new output when that output turns out to be empty —
+    // otherwise selecting a new storage method looks like losing your data.
+    const mirror = await this.#mirrorSnapshot(this.#defaultOutput.value);
+
+    const selected = await this.#findOutput(id);
+
+    batch(() => {
+      this.#switching.value = true;
+      this.#selected.value = selected;
+    });
+
+    try {
+      if (selected) await this.#carryOver(selected, mirror);
+    } finally {
+      this.#switching.value = false;
+    }
   };
+
+  /**
+   * What the local mirror currently holds, collection by collection.
+   *
+   * @param {Output | null | undefined} [mirrorOutput]
+   * @returns {Promise<Array<{ name: CollectionName; data: any[] | undefined }>>}
+   */
+  async #mirrorSnapshot(mirrorOutput = this.#defaultOutput.value) {
+    if (!mirrorOutput) return [];
+
+    return await Promise.all(COLLECTIONS.map(async (name) => {
+      // Give a lazy local read a moment to answer, so a page load doesn't
+      // snapshot an unanswered collection as empty.
+      const collection = await this.#settledCollection(mirrorOutput, name, 20);
+
+      return {
+        name,
+        data: collection?.state === "loaded" && Array.isArray(collection.data)
+          ? collection.data
+          : undefined,
+      };
+    }));
+  }
+
+  /**
+   * Copy the local mirror into a freshly selected output, collection by
+   * collection, but only where that output has nothing. Anything already there
+   * (e.g. synced from another device) wins.
+   *
+   * @param {Output} output
+   * @param {Array<{ name: CollectionName; data: any[] | undefined }>} mirror
+   */
+  async #carryOver(output, mirror) {
+    for (const { name, data: stored } of mirror) {
+      // Facets are the one collection the interface synthesises: an empty local
+      // store still shows the starting set. Carry that, or switching storage
+      // empties the facet list the user is looking at.
+      const data = stored && stored.length > 0
+        ? stored
+        : name === "facets"
+        ? buildFacets(STARTING_SET_URIS)
+        : stored;
+
+      const label = `carry-over '${name}'`;
+
+      if (!data || data.length === 0) {
+        console.info(`${label}: nothing to carry`);
+        continue;
+      }
+
+      const target = await this.#settledCollection(output, name);
+      if (!target) {
+        console.info(`${label}: target never answered`);
+        continue;
+      }
+      if (Array.isArray(target.data) && target.data.length > 0) {
+        console.info(`${label}: target already has ${target.data.length}`);
+        continue;
+      }
+
+      try {
+        await /** @type {any} */ (output)[name].save(data);
+        console.info(`${label}: carried ${data.length}`);
+      } catch (err) {
+        console.warn(`${label}: failed`, err);
+      }
+    }
+  }
+
+  /**
+   * Wait (briefly) for one collection of an output to report its state.
+   *
+   * @param {Output} output
+   * @param {CollectionName} name
+   */
+  async #settledCollection(output, name, attempts = 60) {
+    for (let attempt = 0; attempt < attempts; attempt++) {
+      const collection = /** @type {any} */ (output)[name].collection();
+      if (collection.state !== "loading") return collection;
+
+      await new Promise((resolve) => setTimeout(resolve, 50));
+    }
+
+    return undefined;
+  }
+
+  /**
+   * The output the interface should read from right now.
+   *
+   * While a switch is in progress the newly selected output is still empty —
+   * reporting that reads as "the library and the preludes are gone", and the
+   * loader reloads the page for a changed prelude set, which would abort the
+   * carry-over. So the local copy stays authoritative until the carry-over has
+   * run; afterwards it is either the same data or the output's own.
+   *
+   * @returns {Output | null | undefined}
+   */
+  #activeOutput() {
+    return this.#switching.value ? null : this.#selected.value;
+  }
 
   #selectedOutputId() {
     return localStorage.getItem(`${STORAGE_PREFIX}/selected/id`);
