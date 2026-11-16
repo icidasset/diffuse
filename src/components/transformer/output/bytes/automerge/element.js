@@ -310,35 +310,29 @@ class AutomergeBytesOutputTransformer extends OutputTransformer {
   async #save(name, items) {
     await this.#initialise();
 
-    try {
-      await this.#serialize(async () => {
-        const current = this.#docs.get(name) ?? createDocument();
-        const { doc, changed } = changeDocument(current, items, {
-          schema: collectionSchema(name),
-          stripUndefined: name === "facets",
-        });
-
-        if (!changed) return;
-
-        this.#docs.set(name, doc);
-        this.#version.value++;
-
-        const local = this.#localOutput.value;
-        if (local) {
-          try {
-            await local[name].save(encodeDocument(doc));
-          } catch (err) {
-            console.warn(`Could not cache the '${name}' document locally:`, err);
-          }
-        }
-
-        this.#enqueuePush(name, doc);
+    return await this.#serialize(async () => {
+      const current = this.#docs.get(name) ?? createDocument();
+      const { doc, changed } = changeDocument(current, items, {
+        schema: collectionSchema(name),
+        stripUndefined: name === "facets",
       });
-    } finally {
-      // A save is an answer: whatever the document now holds is what this
-      // collection has, so stop reporting `loading` for it.
-      this.#markReady(name);
-    }
+
+      if (!changed) return;
+
+      this.#docs.set(name, doc);
+      this.#version.value++;
+
+      const local = this.#localOutput.value;
+      if (local) {
+        try {
+          await local[name].save(encodeDocument(doc));
+        } catch (err) {
+          console.warn(`Could not cache the '${name}' document locally:`, err);
+        }
+      }
+
+      this.#enqueuePush(name, doc);
+    });
   }
 
   /** @type {Promise<void>} */

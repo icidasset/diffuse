@@ -1,7 +1,7 @@
 import { BroadcastableDiffuseElement, defineElement } from "~/common/element.js";
 import { batch, computed, signal } from "~/common/signal.js";
 
-import { PRELUDE_BASE, STARTING_SET_URIS } from "~/common/facets/constants.js";
+import { PRELUDE_BASE } from "~/common/facets/constants.js";
 import { buildFacets } from "~/common/facets/utils.js";
 
 /**
@@ -10,21 +10,11 @@ import { buildFacets } from "~/common/facets/utils.js";
  * @import {OutputManagerDeputy, OutputElement} from "@specs/components/output/types.d.ts"
  *
  * @import {OutputConfiguratorElement} from "@specs/components/configurator/output/types.d.ts"
- * @import {CollectionName} from "~/common/self-describing.js"
  */
 
 /**
  * @typedef {OutputElement} Output
  */
-
-/** The five collections every output persists. */
-const COLLECTIONS = /** @type {CollectionName[]} */ ([
-  "collaborations",
-  "facets",
-  "playlistItems",
-  "settings",
-  "tracks",
-]);
 
 const STORAGE_PREFIX = "diffuse/configurator/output";
 
@@ -246,14 +236,10 @@ class OutputConfigurator extends BroadcastableDiffuseElement {
     /**
      * When there's a selected output and its collection changes,
      * save it to the default output or memory.
-     *
-     * Only mirror an output that can actually read: an unusable one (signed
-     * out, no encryption key) reports an empty library, and mirroring that
-     * would erase the local copy every output falls back to.
      */
     this.effect(() => {
       const out = this.#selected.value;
-      if (!out?.ready()) return;
+      if (!out) return;
 
       const col = out.collaborations.collection();
       if (col.state !== "loaded") return;
@@ -265,7 +251,7 @@ class OutputConfigurator extends BroadcastableDiffuseElement {
 
     this.effect(() => {
       const out = this.#selected.value;
-      if (!out?.ready()) return;
+      if (!out) return;
 
       const col = out.facets.collection();
       if (col.state !== "loaded") return;
@@ -277,7 +263,7 @@ class OutputConfigurator extends BroadcastableDiffuseElement {
 
     this.effect(() => {
       const out = this.#selected.value;
-      if (!out?.ready()) return;
+      if (!out) return;
 
       const col = out.playlistItems.collection();
       if (col.state !== "loaded") return;
@@ -289,7 +275,7 @@ class OutputConfigurator extends BroadcastableDiffuseElement {
 
     this.effect(() => {
       const out = this.#selected.value;
-      if (!out?.ready()) return;
+      if (!out) return;
 
       const col = out.settings.collection();
       if (col.state !== "loaded") return;
@@ -301,7 +287,7 @@ class OutputConfigurator extends BroadcastableDiffuseElement {
 
     this.effect(() => {
       const out = this.#selected.value;
-      if (!out?.ready()) return;
+      if (!out) return;
 
       const col = out.tracks.collection();
       if (col.state !== "loaded") return;
@@ -385,19 +371,11 @@ class OutputConfigurator extends BroadcastableDiffuseElement {
     const defaultOutput = def_ault ? await this.#findOutput(def_ault) : null;
     const selectedOutput = await this.#findOutput(selectedOutputId);
 
-    // The local mirror has to be able to answer while a stored selection is
-    // being prepared: without it the collections report `loading`, and the
-    // interface shows a spinner although the library is right here.
     batch(() => {
+      this.#selected.value = selectedOutput;
       this.#defaultOutput.value = defaultOutput;
       this.#setupFinished.value = true;
     });
-
-    if (selectedOutput) {
-      await this.#carryOver(selectedOutput, defaultOutput);
-    }
-
-    this.#selected.value = selectedOutput;
   }
 
   // MISC
@@ -440,72 +418,6 @@ class OutputConfigurator extends BroadcastableDiffuseElement {
   }
 
   /**
-   * Put the local copy into an output that has nothing of its own, before that
-   * output is selected.
-   *
-   * Carrying first is what keeps a switch honest: until the new output holds
-   * the library, the previous output (usually the local mirror) stays the one
-   * being read, so the interface never shows an empty library, never triggers a
-   * reload for a changed prelude set, and the mirror effects can't overwrite
-   * the local copy with an empty collection. Anything the output already has
-   * (e.g. synced from another device) wins.
-   *
-   * @param {Output} output
-   * @param {Output | null | undefined} mirror
-   */
-  async #carryOver(output, mirror) {
-    if (!mirror || output === mirror) return;
-
-    for (const name of COLLECTIONS) {
-      const local = /** @type {any} */ (mirror)[name].collection();
-      if (local.state !== "loaded") continue;
-
-      // Facets are the one collection the interface synthesises: an empty local
-      // store still shows the starting set. Carry that, or switching storage
-      // empties the facet list the user is looking at.
-      const data = Array.isArray(local.data) && local.data.length > 0
-        ? local.data
-        : name === "facets"
-        ? buildFacets(STARTING_SET_URIS)
-        : undefined;
-
-      if (!data || data.length === 0) continue;
-
-      const target = /** @type {any} */ (output)[name];
-      const current = await this.#settled(target);
-      if (
-        !current || (Array.isArray(current.data) && current.data.length > 0)
-      ) {
-        continue;
-      }
-
-      try {
-        await target.save(data);
-        console.info(`carry-over '${name}': carried ${data.length}`);
-      } catch (err) {
-        console.warn(`carry-over '${name}': failed`, err);
-      }
-    }
-  }
-
-  /**
-   * Wait (briefly) for a collection to report its state; a lazy output starts
-   * out `loading`.
-   *
-   * @param {{ collection: () => any }} entry
-   */
-  async #settled(entry, attempts = 60) {
-    for (let attempt = 0; attempt < attempts; attempt++) {
-      const collection = entry.collection();
-      if (collection.state !== "loading") return collection;
-
-      await new Promise((resolve) => setTimeout(resolve, 50));
-    }
-
-    return undefined;
-  }
-
-  /**
    * @param {string | null} id
    */
   #selectOutput = async (id) => {
@@ -513,13 +425,7 @@ class OutputConfigurator extends BroadcastableDiffuseElement {
       this.#activated.value = new Set([...this.#activated.value.values(), id]);
     }
 
-    const selected = await this.#findOutput(id);
-
-    if (selected) {
-      await this.#carryOver(selected, this.#defaultOutput.value);
-    }
-
-    this.#selected.value = selected;
+    this.#selected.value = await this.#findOutput(id);
   };
 
   #selectedOutputId() {
@@ -563,11 +469,6 @@ class OutputConfigurator extends BroadcastableDiffuseElement {
 
   loadSelected = async () => {
     const selectedOutput = await this.#findOutput(this.#selectedOutputId());
-
-    if (selectedOutput) {
-      await this.#carryOver(selectedOutput, this.#defaultOutput.value);
-    }
-
     this.#selected.value = selectedOutput;
   };
 
