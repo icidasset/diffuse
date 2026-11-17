@@ -81,6 +81,14 @@ class IndexedDBOutput extends BroadcastedOutputElement {
   #get = async (name) => {
     const stored = await IDB.get(`${IDB_PREFIX}/${this.#cat(name)}`);
     if (stored === undefined) return undefined;
+
+    // Bytes/strings were stored by a transformer above and are self-describing
+    // at that layer — it decodes them again (automerge binaries cannot be
+    // CBOR-decoded here). Only envelopes from a standalone usage are decoded.
+    if (stored instanceof Uint8Array || typeof stored === "string") {
+      return stored;
+    }
+
     return decodeCollection(
       stored,
       /** @type {CollectionName} */ (name),

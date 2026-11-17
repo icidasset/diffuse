@@ -1,5 +1,6 @@
 import * as IDB from "idb-keyval";
 
+import { signal } from "~/common/signal.js";
 import { deriveCipherKey } from "~/components/transformer/output/refiner/passkey-encryption/passkey.js";
 
 /**
@@ -29,6 +30,48 @@ export const IDB_OUTPUT_META = "diffuse/firkin/output-key-meta";
 
 /** PBKDF2 work factor. OWASP's 2023 minimum for PBKDF2-HMAC-SHA256. */
 export const PBKDF2_ITERATIONS = 600_000;
+
+/**
+ * The stored output key as reactive state, so consumers (the encryption
+ * element) can read it without the wiring having to deliver it at exactly
+ * the right moment.
+ */
+const keySignal = signal(/** @type {CryptoKey | undefined} */ (undefined));
+
+/**
+ * The stored output key, reactively: `undefined` until the key is derived by
+ * a sign-in (on this page or another tab) and again after sign-out.
+ *
+ * @returns {CryptoKey | undefined}
+ */
+export function outputKey() {
+  return keySignal.get();
+}
+
+// Hydrate once, when this module is first imported. Deliberately only ever
+// *adds* a key here: a store that commits while this read is in flight must
+// not be overwritten with `undefined` (sign-out clears it explicitly).
+void loadOutputKey().then((stored) => {
+  if (stored) keySignal.set(stored);
+});
+
+const channel = (() => {
+  try {
+    return typeof BroadcastChannel === "undefined"
+      ? undefined
+      : new BroadcastChannel("diffuse/firkin/output-key");
+  } catch {
+    // An opaque origin or a runtime without the API; other tabs then simply
+    // pick the key up on their next page load.
+    return undefined;
+  }
+})();
+
+// Sign-in/out in another tab: re-read the source of truth. Unlike the
+// hydration above this may also clear the signal, matching the other tab.
+channel?.addEventListener("message", () => {
+  void loadOutputKey().then((stored) => keySignal.set(stored));
+});
 
 /** @typedef {"passkey" | "passphrase"} OutputKeySource */
 
@@ -134,6 +177,9 @@ export async function unlockOutputKeyWithPassphrase(passphrase) {
 async function storeOutputKey(key, meta) {
   await IDB.set(IDB_OUTPUT_KEY, key);
   await IDB.set(IDB_OUTPUT_META, meta);
+
+  keySignal.set(key);
+  channel?.postMessage(null);
 }
 
 /**
@@ -165,6 +211,9 @@ export async function readOutputKeyMeta() {
 export async function forgetOutputKey() {
   await IDB.del(IDB_OUTPUT_KEY);
   await IDB.del(IDB_OUTPUT_META);
+
+  keySignal.set(undefined);
+  channel?.postMessage(null);
 }
 
 /** @returns {Promise<OutputKeyMeta | undefined>} */

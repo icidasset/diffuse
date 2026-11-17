@@ -302,8 +302,10 @@ export function firkin(output, method) {
 }
 
 /**
- * Import a method's elements and hand the encryption key to the one that needs
- * it, if there is one.
+ * Import a method's elements. Nothing else to wire up: the encryption step
+ * reads the shared Firkin output key itself (see
+ * `~/common/firkin/output-key.js`), so a key derived by a later sign-in is
+ * picked up reactively.
  *
  * @param {import("~/common/firkin/methods.js").FirkinMethod} method
  */
@@ -311,31 +313,9 @@ export function firkinCustomElements(method) {
   Promise.all([
     import("~/components/output/bytes/firkin/element.js"),
     ...method.chain.map((name) => FIRKIN_CHAIN_MODULES[name]?.()),
-  ])
-    .then(async () => {
-      if (!method.chain.includes(ENCRYPT_NAME)) return;
-
-      // Signing in derived and stored this key; without a session there is
-      // nothing to decrypt, and the output reports itself as not ready.
-      const { loadOutputKey } = await import("~/common/firkin/output-key.js");
-      const key = await loadOutputKey();
-      if (!key) {
-        console.warn(
-          "Firkin output: no encryption key on this browser yet. Sign in on " +
-            "Connect → Firkin to derive one; until then this output cannot " +
-            "read or write anything.",
-        );
-        return;
-      }
-
-      const encrypt = document.getElementById(stepId(method, ENCRYPT_NAME));
-      if (!encrypt) return;
-
-      /** @type {any} */ (encrypt).setKey(key);
-    })
-    .catch((err) => {
-      console.error("Failed to load the Firkin output:", err);
-    });
+  ]).catch((err) => {
+    console.error("Failed to load the Firkin output:", err);
+  });
 }
 
 ////////////////////////////////////////////

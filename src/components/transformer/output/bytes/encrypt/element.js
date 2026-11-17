@@ -1,6 +1,7 @@
 import { computed, signal } from "~/common/signal.js";
 import { OutputTransformer } from "../../base.js";
 import { defineElement } from "~/common/element.js";
+import { outputKey } from "~/common/firkin/output-key.js";
 
 import { decryptLog, encryptEntry } from "./crypto.js";
 
@@ -25,19 +26,28 @@ import { decryptLog, encryptEntry } from "./crypto.js";
  * — because it is asynchronous and a `collection()` read can't be. The effect
  * covers the other case, where the backing output changes on its own.
  *
- * The key is supplied by whoever wires the element up (`setKey`), which keeps
- * this element free of any passkey or account knowledge.
+ * By default the key is the shared Firkin output key (`outputKey()`), read
+ * reactively: wiring only has to load this element, and a key derived by a
+ * later sign-in — on this page or another tab — is picked up on its own.
+ * `setKey` overrides it for manual wirings (tests), keeping those setups free
+ * of any passkey or account knowledge.
  *
  * @extends {OutputTransformer<Uint8Array>}
  */
 class EncryptBytesOutputTransformer extends OutputTransformer {
-  /** @type {import("~/common/signal.d.ts").Signal<CryptoKey | undefined>} */
-  #key = signal(/** @type {CryptoKey | undefined} */ (undefined));
+  /** Manual override (`setKey`), for tests and custom wirings. */
+  #manualKey = signal(/** @type {CryptoKey | undefined} */ (undefined));
+
+  /**
+   * The AES-GCM key used for this output: the manual override when one was
+   * set, otherwise the shared Firkin output key.
+   */
+  #key = computed(() => this.#manualKey.get() ?? outputKey());
 
   constructor() {
     super();
 
-    this.ready = computed(() => this.#key.get() !== undefined);
+    this.ready = computed(() => this.#key() !== undefined);
 
     this.collaborations = this.#entry("collaborations");
     this.facets = this.#entry("facets");
@@ -47,12 +57,14 @@ class EncryptBytesOutputTransformer extends OutputTransformer {
   }
 
   /**
-   * The AES-GCM key used for this output.
+   * Override the key for this element; `undefined` returns to the shared
+   * Firkin output key. Production wiring needs nothing — the element reads
+   * the shared key itself.
    *
    * @param {CryptoKey | undefined} key
    */
   setKey(key) {
-    this.#key.set(key);
+    this.#manualKey.set(key);
   }
 
   /**
@@ -73,7 +85,7 @@ class EncryptBytesOutputTransformer extends OutputTransformer {
 
     const refresh = () => {
       pending ??= (async () => {
-        const key = this.#key.get();
+        const key = this.#key();
         const source = base.collection();
 
         if (source.state !== "loaded") {
@@ -107,7 +119,7 @@ class EncryptBytesOutputTransformer extends OutputTransformer {
     };
 
     this.effect(() => {
-      this.#key.get();
+      this.#key();
       base.collection();
 
       void refresh();
@@ -120,7 +132,7 @@ class EncryptBytesOutputTransformer extends OutputTransformer {
         await refresh();
       },
       save: async (/** @type {Uint8Array | undefined} */ bytes) => {
-        const key = this.#key.get();
+        const key = this.#key();
         if (!key) throw new Error("The output encryption key is not loaded");
         if (!bytes || bytes.length === 0) return;
 
