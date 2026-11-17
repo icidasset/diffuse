@@ -83,7 +83,7 @@ function selectMethod(method) {
 
 const { setItems, setError, setDialogError } = setup({
   title: "Firkin",
-  outputIcon: "ph-fill ph-cloud",
+  outputIcon: "ph-fill ph-scales",
   outputTitle: `Use Firkin as userdata storage`,
 
   description: html`

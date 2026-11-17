@@ -136,3 +136,59 @@ export async function data(output) {
     });
   });
 }
+
+/**
+ * Per-output "initialized" flags.
+ *
+ * An output is initialized once it has been used: either it already contained
+ * data, some data was written to it, or the local store was copied into it.
+ * The flag is what stops an empty output from being seeded again after the user
+ * deliberately deleted everything.
+ *
+ * The flags live in localStorage, keyed by the output id. They are deliberately
+ * kept out of the output's own data: writing into a syncing output's
+ * collections flows through its merge pipeline, which is reactive feedback that
+ * loops and freezes the page.
+ */
+const OUTPUT_INITIALIZED_KEY = "diffuse/common/output/initialized";
+
+/**
+ * @returns {Record<string, boolean>}
+ */
+function readInitializedOutputs() {
+  try {
+    return /** @type {Record<string, boolean>} */ (
+      JSON.parse(localStorage.getItem(OUTPUT_INITIALIZED_KEY) ?? "{}")
+    ) ?? {};
+  } catch {
+    return {};
+  }
+}
+
+/**
+ * Whether the output with the given id has been initialized.
+ *
+ * @param {string} id
+ * @returns {boolean}
+ */
+export function isOutputInitialized(id) {
+  return !!readInitializedOutputs()[id];
+}
+
+/**
+ * Mark the output with the given id as initialized.
+ *
+ * @param {string} id
+ */
+export function markOutputInitialized(id) {
+  const map = readInitializedOutputs();
+  if (map[id]) return;
+
+  map[id] = true;
+
+  try {
+    localStorage.setItem(OUTPUT_INITIALIZED_KEY, JSON.stringify(map));
+  } catch (err) {
+    console.warn("Could not persist the output's initialized flag:", err);
+  }
+}

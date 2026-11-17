@@ -6,20 +6,12 @@ import {
   STARTING_SET_URIS,
 } from "~/common/facets/constants.js";
 import { buildFacets } from "~/common/facets/utils.js";
+import { isOutputInitialized, markOutputInitialized } from "~/common/output.js";
 
 /**
  * @import {OutputManagerDeputy} from "@specs/components/output/types.d.ts"
  * @import {OutputConfiguratorElement} from "@specs/components/configurator/output/types.d.ts"
  */
-
-// Per-output "initialized" flag. Stored in localStorage keyed by the output id
-// so it is scoped per bucket/output, but deliberately kept OUT of the output's
-// own data: writing into a syncing output's collections (e.g. Dropbox via
-// dtob-dasl-sync) flows through its merge/sync pipeline, which is reactive
-// feedback that loops and freezes the page. localStorage is local-only control
-// state, so it's safe.
-const STORAGE_KEY =
-  "diffuse/transformer/output/refiner/initial-contents/initialized";
 
 ////////////////////////////////////////////
 // ELEMENT
@@ -43,7 +35,7 @@ class InitialContentsTransformer extends OutputTransformer {
       if (col.state !== "loaded") return;
       const data = Array.isArray(col.data) ? col.data : [];
       if (data.length === 0) return;
-      this.#markInitialized();
+      markOutputInitialized(this.#selectedId());
     });
 
     /** @type {OutputManagerDeputy} */
@@ -63,7 +55,7 @@ class InitialContentsTransformer extends OutputTransformer {
             return { state: "loaded", data };
           }
 
-          if (this.#isInitialized()) {
+          if (isOutputInitialized(this.#selectedId())) {
             return { state: "loaded", data };
           }
 
@@ -76,7 +68,7 @@ class InitialContentsTransformer extends OutputTransformer {
           // visible before the initialized flag flips, avoiding a flash of
           // the empty collection while a fresh output pops its starting set.
           await base.facets.save(newFacets);
-          this.#markInitialized();
+          markOutputInitialized(this.#selectedId());
         },
       },
 
@@ -110,40 +102,6 @@ class InitialContentsTransformer extends OutputTransformer {
     return typeof output.selected === "function"
       ? output.selected()?.id ?? "local"
       : output.id || "local";
-  }
-
-  /**
-   * Whether the current output is initialized.
-   * @returns {boolean}
-   */
-  #isInitialized() {
-    const id = this.#selectedId();
-    try {
-      const map = /** @type {Record<string, boolean>} */ (
-        JSON.parse(localStorage.getItem(STORAGE_KEY) ?? "{}")
-      );
-      return !!map?.[id];
-    } catch {
-      return false;
-    }
-  }
-
-  /**
-   * Mark the current output as initialized by updating its flag in the
-   * in-memory map and persisting to localStorage.
-   */
-  #markInitialized() {
-    const id = this.#selectedId();
-    let map = /** @type {Record<string, boolean>} */ ({});
-    try {
-      map = /** @type {Record<string, boolean>} */ (
-        JSON.parse(localStorage.getItem(STORAGE_KEY) ?? "{}")
-      ) ?? {};
-    } catch {}
-    if (map[id]) return;
-
-    map[id] = true;
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(map));
   }
 }
 

@@ -1,4 +1,6 @@
 import { html, render as litRender } from "lit-html";
+import { unsafeHTML } from "~/vendor/lit-html/directives/unsafe-html.js";
+import { marked } from "marked";
 
 import { data as facetsData } from "~/facets/index.js";
 import foundation from "~/common/foundation.js";
@@ -12,7 +14,7 @@ const loaderHref = (path) => `l/?path=${encodeURIComponent(path)}`;
 const icons = {
   "facets/connect/atproto-passkey/index.tile": "at",
   "facets/connect/atproto-space/index.tile": "at",
-  "facets/connect/firkin/index.tile": "cloud",
+  "facets/connect/firkin/index.tile": "scales",
   "facets/connect/dropbox/index.tile": "cloud",
   "facets/connect/https/index.tile": "globe",
   "facets/connect/https-json/index.tile": "list-bullets",
@@ -25,6 +27,7 @@ const icons = {
 
 const recommended = new Set([
   "facets/connect/dropbox/index.tile",
+  "facets/connect/firkin/index.tile",
   "facets/connect/local/index.tile",
   "facets/connect/s3/index.tile",
   "facets/connect/opensubsonic/index.tile",
@@ -76,16 +79,27 @@ litRender(
         ${facets.map(({ name, description, icon, href, isRecommended }) =>
           html`
             <li>
-              <a class="connect-item" href="${href}">
+              <div class="connect-item">
+                <a
+                  class="connect-item__link"
+                  href="${href}"
+                  aria-label="${name}"
+                ></a>
                 <i class="ph-fill ph-${icon} connect-item__icon"></i>
                 <div class="connect-item__info">
                   <span class="connect-item__name">
                     ${name}
-                    ${isRecommended ? html`<span class="connect-item__badge">Recommended</span>` : ""}
+                    ${isRecommended
+                      ? html`<span class="connect-item__badge">Recommended</span>`
+                      : ""}
                   </span>
-                  <span class="connect-item__detail">${description}</span>
+                  <span class="connect-item__detail">
+                    ${unsafeHTML(
+                      marked.parseInline(description, { async: false }),
+                    )}
+                  </span>
                 </div>
-              </a>
+              </div>
             </li>
           `
         )}

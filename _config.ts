@@ -258,6 +258,13 @@ site.remoteFile(
   import.meta.resolve("./node_modules/98.css/dist/98.css"),
 );
 
+// Tile facet scripts are embedded verbatim and only see the page import map, so
+// serve marked's self-contained ESM build next to the other vendored modules.
+site.remoteFile(
+  "vendor/marked/marked.esm.js",
+  import.meta.resolve("./node_modules/marked/lib/marked.esm.js"),
+);
+
 // panproto (`@panproto/core`) loads its WASM lazily at browser runtime during a
 // schema write-back. Serve the module's binary so the browser can fetch it
 // without loading it into the Deno/build context.

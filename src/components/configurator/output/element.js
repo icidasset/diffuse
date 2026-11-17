@@ -1,8 +1,13 @@
 import { BroadcastableDiffuseElement, defineElement } from "~/common/element.js";
 import { batch, computed, signal } from "~/common/signal.js";
 
-import { PRELUDE_BASE } from "~/common/facets/constants.js";
+import { PRELUDE_BASE, STARTING_SET_URIS } from "~/common/facets/constants.js";
 import { buildFacets } from "~/common/facets/utils.js";
+import {
+  data as outputData,
+  isOutputInitialized,
+  markOutputInitialized,
+} from "~/common/output.js";
 
 /**
  * @import {DiffuseElement} from "~/common/element.js"
@@ -17,6 +22,25 @@ import { buildFacets } from "~/common/facets/utils.js";
  */
 
 const STORAGE_PREFIX = "diffuse/configurator/output";
+
+const COLLECTIONS = /** @type {const} */ ([
+  "collaborations",
+  "facets",
+  "playlistItems",
+  "settings",
+  "tracks",
+]);
+
+/**
+ * An empty indexed-db output reports `loaded` with `undefined` data, so treat
+ * anything that isn't an array as an empty collection.
+ *
+ * @param {unknown} data
+ * @returns {any[]}
+ */
+function asArray(data) {
+  return Array.isArray(data) ? data : [];
+}
 
 ////////////////////////////////////////////
 // ELEMENT
@@ -236,17 +260,25 @@ class OutputConfigurator extends BroadcastableDiffuseElement {
     /**
      * When there's a selected output and its collection changes,
      * save it to the default output or memory.
+     *
+     * An empty selected output that has never been initialized is skipped:
+     * its data is about to be carried over from the default (see below), and
+     * mirroring the empty value would erase the local copy first.
      */
     this.effect(() => {
       const out = this.#selected.value;
       if (!out) return;
 
       const col = out.collaborations.collection();
-      if (col.state !== "loaded") return;
+      if (col?.state !== "loaded") return;
 
       const def = this.#defaultOutput.value;
-      if (def) def.collaborations.save(col.data);
-      else this.#memory.collaborations.set(col.data);
+      if (def) {
+        if (!this.#shouldMirror(out)) return;
+        def.collaborations.save(col.data);
+      } else {
+        this.#memory.collaborations.set(col.data);
+      }
     });
 
     this.effect(() => {
@@ -254,11 +286,15 @@ class OutputConfigurator extends BroadcastableDiffuseElement {
       if (!out) return;
 
       const col = out.facets.collection();
-      if (col.state !== "loaded") return;
+      if (col?.state !== "loaded") return;
 
       const def = this.#defaultOutput.value;
-      if (def) def.facets.save(col.data);
-      else this.#memory.facets.set(col.data);
+      if (def) {
+        if (!this.#shouldMirror(out)) return;
+        def.facets.save(col.data);
+      } else {
+        this.#memory.facets.set(col.data);
+      }
     });
 
     this.effect(() => {
@@ -266,11 +302,15 @@ class OutputConfigurator extends BroadcastableDiffuseElement {
       if (!out) return;
 
       const col = out.playlistItems.collection();
-      if (col.state !== "loaded") return;
+      if (col?.state !== "loaded") return;
 
       const def = this.#defaultOutput.value;
-      if (def) def.playlistItems.save(col.data);
-      else this.#memory.playlistItems.set(col.data);
+      if (def) {
+        if (!this.#shouldMirror(out)) return;
+        def.playlistItems.save(col.data);
+      } else {
+        this.#memory.playlistItems.set(col.data);
+      }
     });
 
     this.effect(() => {
@@ -278,11 +318,15 @@ class OutputConfigurator extends BroadcastableDiffuseElement {
       if (!out) return;
 
       const col = out.settings.collection();
-      if (col.state !== "loaded") return;
+      if (col?.state !== "loaded") return;
 
       const def = this.#defaultOutput.value;
-      if (def) def.settings.save(col.data);
-      else this.#memory.settings.set(col.data);
+      if (def) {
+        if (!this.#shouldMirror(out)) return;
+        def.settings.save(col.data);
+      } else {
+        this.#memory.settings.set(col.data);
+      }
     });
 
     this.effect(() => {
@@ -290,12 +334,126 @@ class OutputConfigurator extends BroadcastableDiffuseElement {
       if (!out) return;
 
       const col = out.tracks.collection();
-      if (col.state !== "loaded") return;
+      if (col?.state !== "loaded") return;
 
       const def = this.#defaultOutput.value;
-      if (def) def.tracks.save(col.data);
-      else this.#memory.tracks.set(col.data);
+      if (def) {
+        if (!this.#shouldMirror(out)) return;
+        def.tracks.save(col.data);
+      } else {
+        this.#memory.tracks.set(col.data);
+      }
     });
+
+    /**
+     * Copy the default (Local) output's contents into a selected output that
+     * has never been used.
+     *
+     * This is what makes a new remote bucket start with the data already
+     * stored locally instead of an empty library. Facets fall back to the
+     * starting set when the local store has none, matching the initial-contents
+     * refiner.
+     */
+    this.effect(() => {
+      const out = this.#selected.value;
+      const def = this.#defaultOutput.value;
+      if (!out || !def || out === def) return;
+
+      const id = out.id;
+      if (isOutputInitialized(id) || this.#carryingOver.has(id)) return;
+      if (!this.#isEmptyAndUninitialized(out)) return;
+
+      this.#carryingOver.add(id);
+      void this.#carryOver(out, def, id);
+    });
+  }
+
+  /**
+   * Whether the selected output is completely empty and has never been used.
+   * Only then should its contents be carried over from the default output.
+   *
+   * @param {Output} out
+   * @returns {boolean}
+   */
+  #isEmptyAndUninitialized(out) {
+    if (isOutputInitialized(out.id)) return false;
+
+    for (const name of COLLECTIONS) {
+      const collection = out[name].collection();
+      // A transformer can still be mid-evaluation when a dependency it sets
+      // during its own first read flushes this effect. Treat that as "not
+      // ready yet"; the change that caused it re-runs this effect.
+      if (!collection || collection.state !== "loaded") return false;
+      if (asArray(collection.data).length > 0) return false;
+    }
+
+    return true;
+  }
+
+  /**
+   * Mirroring a selected output into the default store is only safe once the
+   * output has been used. Before that, an empty collection would overwrite the
+   * local copy it is about to be seeded from.
+   *
+   * @param {Output} out
+   * @returns {boolean}
+   */
+  #shouldMirror(out) {
+    return isOutputInitialized(out.id) || this.#hasData(out);
+  }
+
+  /**
+   * @param {Output} out
+   * @returns {boolean}
+   */
+  #hasData(out) {
+    return COLLECTIONS.some((name) => {
+      const collection = out[name].collection();
+      return collection?.state === "loaded" &&
+        asArray(collection.data).length > 0;
+    });
+  }
+
+  /**
+   * Read the default output and write it into an empty selected output. Runs
+   * once per output; the initialized flag prevents a later carry-over after
+   * the user intentionally emptied it.
+   *
+   * @param {Output} out
+   * @param {Output} def
+   * @param {string} id
+   */
+  async #carryOver(out, def, id) {
+    try {
+      const data = {
+        collaborations: asArray(await outputData(def.collaborations)),
+        facets: asArray(await outputData(def.facets)),
+        playlistItems: asArray(await outputData(def.playlistItems)),
+        settings: asArray(await outputData(def.settings)),
+        tracks: asArray(await outputData(def.tracks)),
+      };
+
+      // Nothing stored locally yet (a fresh install): leave the output
+      // uninitialized so the initial-contents refiner keeps showing the
+      // starting set.
+      if (!Object.values(data).some((items) => items.length > 0)) return;
+
+      await Promise.all([
+        out.collaborations.save(data.collaborations),
+        out.facets.save(
+          data.facets.length > 0 ? data.facets : buildFacets(STARTING_SET_URIS),
+        ),
+        out.playlistItems.save(data.playlistItems),
+        out.settings.save(data.settings),
+        out.tracks.save(data.tracks),
+      ]);
+
+      markOutputInitialized(id);
+    } catch (err) {
+      console.error("Could not carry the local output over:", err);
+    } finally {
+      this.#carryingOver.delete(id);
+    }
   }
 
   // SIGNALS
@@ -317,6 +475,14 @@ class OutputConfigurator extends BroadcastableDiffuseElement {
   #selected = signal(
     /** @type {Output | null | undefined} */ (undefined),
   );
+
+  /**
+   * Output ids whose contents are being copied from the default output, so the
+   * effect above doesn't start a second copy while the first is in flight.
+   *
+   * @type {Set<string>}
+   */
+  #carryingOver = new Set();
 
   #setupFinished = signal(false);
 
