@@ -1,0 +1,344 @@
+// @ts-nocheck -- the fake server, crypto shim and dynamic wiring are untyped
+
+import { describe, it } from "@std/testing/bdd";
+import { expect } from "@std/expect";
+
+import { testWeb } from "@tests/common/index.ts";
+
+/**
+ * Whether the data the configurator **carries over** from the local store into
+ * a newly selected Firkin output reaches the remote, or only the local cache.
+ *
+ * The carry-over (`OutputConfigurator.#carryOver`) saves through the selected
+ * output's standard interface, so every carried-over collection should be
+ * pushed to the Firkin log like any other save.
+ */
+describe("components/output/bytes/firkin carry-over", () => {
+  it("pushes carried-over collections to the remote log", async () => {
+    const result = await testWeb(async () => {
+      const { Signer, delegate, WebCryptoSigner } = await import(
+        "~/vendor/firkin/index.js"
+      );
+
+      // --- Ed25519 shim (test browser predates native WebCrypto Ed25519) ----
+      const signerByPub = new Map();
+      const pubBytes = new Map();
+
+      const hex = (bytes) =>
+        Array.from(bytes).map((b) => b.toString(16).padStart(2, "0")).join("");
+
+      const ogImportKey = crypto.subtle.importKey.bind(crypto.subtle);
+      const ogVerify = crypto.subtle.verify.bind(crypto.subtle);
+
+      const decoyKey = () =>
+        ogImportKey(
+          "raw",
+          new Uint8Array([0]),
+          { name: "HMAC", hash: "SHA-256" },
+          false,
+          ["sign", "verify"],
+        );
+
+      crypto.subtle.importKey = async (format, data, alg, extractable, usages) => {
+        if (alg?.name === "Ed25519") {
+          const bytes = new Uint8Array(data);
+          const id = hex(bytes);
+          let decoy = pubBytes.get(id);
+          if (!decoy) {
+            decoy = await decoyKey();
+            pubBytes.set(decoy, bytes);
+          }
+          return decoy;
+        }
+        return ogImportKey(format, data, alg, extractable, usages);
+      };
+
+      crypto.subtle.verify = async (alg, key, signature, data) => {
+        const name = typeof alg === "string" ? alg : alg?.name;
+        const bytes = pubBytes.get(key);
+        if (name === "Ed25519" && bytes) {
+          const verifier = new Signer(new Uint8Array(32), bytes);
+          return await verifier.verify(
+            new Uint8Array(signature),
+            new Uint8Array(data),
+          );
+        }
+        return ogVerify(alg, key, signature, data);
+      };
+
+      const ogWebSign = WebCryptoSigner.prototype.sign;
+      WebCryptoSigner.prototype.sign = async function (message) {
+        const signer = this.pubkeyBytes
+          ? signerByPub.get(hex(this.pubkeyBytes))
+          : undefined;
+        if (signer) return signer.sign(message);
+        return ogWebSign.call(this, message);
+      };
+
+      // --- Fake Firkin server ------------------------------------------------
+      const blobs = new Map();
+      const registry = new Map();
+      const calls = [];
+      const errors = [];
+
+      const json = (body, status = 200) =>
+        new Response(JSON.stringify(body), {
+          status,
+          headers: { "Content-Type": "application/json" },
+        });
+
+      const fakeFetch = async (input, init) => {
+        const url = typeof input === "string" ? input : input.url;
+        const path = decodeURIComponent(new URL(url).pathname);
+        const method = init?.method ?? "GET";
+
+        calls.push(`${method} ${path}`);
+
+        if (path === "/v1/registry") return json({ namespaces: [] });
+
+        if (path === "/v1/registry/lookup") {
+          const body = JSON.parse(init.body);
+          const found = {};
+          for (const name of body.names ?? []) {
+            const cid = registry.get(`${body.namespace}/${name}`);
+            if (cid) found[name] = cid;
+          }
+          return json({ found });
+        }
+
+        if (path.startsWith("/v1/registry/") && method === "PUT") {
+          const [ns, name] = path.slice("/v1/registry/".length).split("/");
+          registry.set(`${ns}/${name}`, JSON.parse(init.body).cid);
+          return new Response(null, { status: 204 });
+        }
+
+        if (path.startsWith("/v1/registry/")) {
+          const ns = path.slice("/v1/registry/".length);
+          const names = {};
+          for (const [key, cid] of registry) {
+            const [kns, kname] = key.split("/");
+            if (kns === ns) names[kname] = cid;
+          }
+          return json({ names });
+        }
+
+        if (path.startsWith("/v1/blob/") && method === "PUT") {
+          const cid = path.slice("/v1/blob/".length);
+          blobs.set(
+            cid,
+            new Uint8Array(await new Response(init.body).arrayBuffer()),
+          );
+          return json({ status: "stored" });
+        }
+
+        if (path.startsWith("/v1/blob/")) {
+          const bytes = blobs.get(path.slice("/v1/blob/".length));
+          if (!bytes) return new Response("missing", { status: 404 });
+          return new Response(bytes, { status: 200 });
+        }
+
+        throw new Error(`unexpected call: ${method} ${path}`);
+      };
+
+      const realFetch = globalThis.fetch;
+      globalThis.fetch = fakeFetch;
+
+      try {
+        // --- A session + output key, as sign-in would have stored them ------
+        const IDB = await import("idb-keyval");
+
+        const sessionSigner = await Signer.fromSeed(
+          crypto.getRandomValues(new Uint8Array(32)),
+        );
+        const sessionKey = await decoyKey();
+        signerByPub.set(hex(sessionSigner.pubkeyBytes), sessionSigner);
+
+        const accountSigner = await Signer.fromSeed(
+          crypto.getRandomValues(new Uint8Array(32)),
+        );
+        const { proof, cid: proofCid } = await delegate(accountSigner, {
+          subject: accountSigner.did(),
+          audience: sessionSigner.did(),
+          command: "/firkin",
+          expireIn: 365 * 24 * 3600,
+        });
+
+        const aes = await crypto.subtle.generateKey(
+          { name: "AES-GCM", length: 256 },
+          false,
+          ["encrypt", "decrypt"],
+        );
+
+        await IDB.set("diffuse/firkin/session", {
+          apiBase: "https://firkin.test",
+          did: accountSigner.did(),
+          privateKey: sessionKey,
+          publicKey: sessionSigner.pubkeyBytes,
+          proof,
+          proofCid,
+          expiresAt: Date.now() + 365 * 24 * 3600 * 1000,
+          inlineProofs: true,
+        });
+        await IDB.set("diffuse/firkin/output-key", aes);
+
+        // --- The chain the output bundle builds -----------------------------
+        await import("~/components/output/bytes/firkin/element.js");
+        await import("~/components/transformer/output/bytes/encrypt/element.js");
+        await import(
+          "~/components/transformer/output/bytes/automerge/element.js"
+        );
+        const idb = await import(
+          "~/components/output/polymorphic/indexed-db/element.js"
+        );
+        const { CLASS: Configurator } = await import(
+          "~/components/configurator/output/element.js"
+        );
+
+        const root = document.createElement("div");
+        document.body.append(root);
+
+        const storage = document.createElement("dob-firkin");
+        storage.id = "storage-carry-test";
+        storage.setAttribute("namespace", "firkin-automerge");
+        storage.setAttribute("mode", "log");
+        storage.setAttribute("keep", "64");
+
+        const encrypt = document.createElement("dtob-encrypt");
+        encrypt.id = "encrypt-carry-test";
+        encrypt.setAttribute("output-selector", "#storage-carry-test");
+        encrypt.setKey(aes);
+
+        const option = document.createElement("dtob-automerge");
+        option.id = "option-carry-test";
+        option.setAttribute("namespace", "firkin-automerge");
+        option.setAttribute("output-selector", "#encrypt-carry-test");
+
+        const def = new idb.CLASS();
+        def.id = "def-carry-test";
+        def.setAttribute("namespace", "def-carry-test");
+
+        const configurator = new Configurator();
+        configurator.setAttribute("default", def.id);
+        configurator.append(def, option);
+
+        root.append(storage, encrypt, configurator);
+
+        // Let the configurator's async connectedCallback settle.
+        await new Promise((resolve) => setTimeout(resolve, 100));
+
+        // Data in the local store, before the Firkin output is selected —
+        // this is what the carry-over copies into the selected output.
+        await def.tracks.save([
+          {
+            $type: "sh.diffuse.output.track",
+            id: "t1",
+            uri: "https://example.com/t1.mp3",
+          },
+        ]);
+        await def.facets.save([
+          { $type: "sh.diffuse.output.facet", id: "f1", name: "Carried" },
+        ]);
+
+        await configurator.select(option.id);
+
+        // Wait until every collection's log has a manifest on the remote —
+        // that is the carry-over having been pushed, not just cached.
+        const deadline = Date.now() + 15_000;
+        let carried = new Set();
+        while (Date.now() < deadline) {
+          carried = new Set(
+            [...registry.keys()].map((key) => {
+              // "<namespace>/<encoded-collection>.<device-hex>"
+              const [encoded] = key.split("/")[1].split(".");
+              return [...Array(encoded.length / 2)]
+                .map((_, i) =>
+                  parseInt(encoded.slice(i * 2, i * 2 + 2), 16)
+                )
+                .map((byte) => String.fromCharCode(byte))
+                .join("");
+            }),
+          );
+
+          if (
+            ["collaborations", "facets", "playlistItems", "settings", "tracks"]
+              .every((name) => carried.has(name))
+          ) {
+            break;
+          }
+
+          await new Promise((resolve) => setTimeout(resolve, 50));
+        }
+
+        // Read the carried-over data back through a second, fresh chain.
+        const storage2 = document.createElement("dob-firkin");
+        storage2.id = "storage-carry-read";
+        storage2.setAttribute("namespace", "firkin-automerge");
+        storage2.setAttribute("mode", "log");
+        storage2.setAttribute("keep", "64");
+
+        const encrypt2 = document.createElement("dtob-encrypt");
+        encrypt2.id = "encrypt-carry-read";
+        encrypt2.setAttribute("output-selector", "#storage-carry-read");
+        encrypt2.setKey(aes);
+
+        const option2 = document.createElement("dtob-automerge");
+        option2.id = "option-carry-read";
+        option2.setAttribute("namespace", "firkin-automerge");
+        option2.setAttribute("output-selector", "#encrypt-carry-read");
+
+        root.append(storage2, encrypt2, option2);
+
+        const read = async (name) => {
+          const deadlineRead = Date.now() + 8_000;
+          let collection = { state: "loading" };
+          while (Date.now() < deadlineRead) {
+            try {
+              await option2[name].reload();
+              collection = option2[name].collection();
+            } catch (err) {
+              collection = { state: "error", error: String(err) };
+            }
+            if (collection.state === "loaded" && collection.data?.length > 0) {
+              break;
+            }
+            await new Promise((resolve) => setTimeout(resolve, 50));
+          }
+          return collection;
+        };
+
+        const tracks = await read("tracks");
+        const facets = await read("facets");
+
+        return {
+          carried: [...carried].sort(),
+          uploads: calls.filter((call) => call.startsWith("PUT /v1/blob/")).length,
+          tracks: tracks.state === "loaded"
+            ? tracks.data.map((item) => item.id)
+            : tracks.state,
+          facets: facets.state === "loaded"
+            ? facets.data.map((item) => item.id)
+            : facets.state,
+          errors,
+        };
+      } finally {
+        globalThis.fetch = realFetch;
+      }
+    });
+
+    console.log("CARRY_OVER_RESULT", JSON.stringify(result, null, 2));
+
+    expect(result.errors).toEqual([]);
+    expect(result.carried).toEqual(
+      expect.arrayContaining([
+        "collaborations",
+        "facets",
+        "playlistItems",
+        "settings",
+        "tracks",
+      ]),
+    );
+    expect(result.uploads).toBeGreaterThan(0);
+    expect(result.tracks).toEqual(["t1"]);
+    expect(result.facets).toEqual(["f1"]);
+  });
+});
