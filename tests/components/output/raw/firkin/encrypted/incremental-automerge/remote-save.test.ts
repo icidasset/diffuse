@@ -6,14 +6,15 @@ import { expect } from "@std/expect";
 import { testWeb } from "@tests/common/index.ts";
 
 /**
- * The full Firkin save path in a browser: `dtob-automerge` → `dtob-encrypt` →
- * `dob-firkin`, with a fake in-page Firkin server standing in for the network.
+ * The full Firkin save path in a browser: the single
+ * `dob-firkin-automerge` output element, with a fake in-page Firkin server
+ * standing in for the network.
  *
  * Regression target: selecting the Firkin option must append entries to the
  * remote log (blob upload + signed manifest registry write), not only to the
  * local cache.
  */
-describe("components/output/bytes/firkin remote save", () => {
+describe("components/output/raw/firkin/encrypted/incremental-automerge remote save", () => {
   it("pushes saved collections to the remote log", async () => {
     const result = await testWeb(async () => {
       const { Signer, delegate, WebCryptoSigner } = await import(
@@ -234,7 +235,6 @@ describe("components/output/bytes/firkin remote save", () => {
         const sessionKey = await decoyKey();
         signerByPub.set(hex(sessionSigner.pubkeyBytes), sessionSigner);
 
-        // A real delegation, as sign-in would mint.
         const accountSigner = await Signer.fromSeed(
           crypto.getRandomValues(new Uint8Array(32)),
         );
@@ -244,12 +244,6 @@ describe("components/output/bytes/firkin remote save", () => {
           command: "/firkin",
           expireIn: 365 * 24 * 3600,
         });
-
-        const aes = await crypto.subtle.generateKey(
-          { name: "AES-GCM", length: 256 },
-          false,
-          ["encrypt", "decrypt"],
-        );
 
         await IDB.set("diffuse/firkin/session", {
           apiBase: "https://firkin.test",
@@ -261,7 +255,13 @@ describe("components/output/bytes/firkin remote save", () => {
           expiresAt: Date.now() + 365 * 24 * 3600 * 1000,
           inlineProofs: true,
         });
-        await IDB.set("diffuse/firkin/output-key", aes);
+
+        // The element reads the shared output key itself, so store it the way
+        // sign-in does (this also updates the reactive signal).
+        const { unlockOutputKeyWithPassphrase } = await import(
+          "~/common/firkin/output-key.js"
+        );
+        await unlockOutputKeyWithPassphrase("test-passphrase");
 
         // Directly exercise the session → client → server path.
         const diag = {};
@@ -282,11 +282,9 @@ describe("components/output/bytes/firkin remote save", () => {
           diag.sessionError = `${err?.name}: ${err?.message}`;
         }
 
-        // --- The chain the output bundle builds -----------------------------
-        await import("~/components/output/bytes/firkin/element.js");
-        await import("~/components/transformer/output/bytes/encrypt/element.js");
+        // --- The output element ---------------------------------------
         await import(
-          "~/components/transformer/output/bytes/automerge/element.js"
+          "~/components/output/raw/firkin/encrypted/incremental-automerge/element.js"
         );
         const idb = await import(
           "~/components/output/polymorphic/indexed-db/element.js"
@@ -298,34 +296,17 @@ describe("components/output/bytes/firkin remote save", () => {
         const root = document.createElement("div");
         document.body.append(root);
 
-        const storage = document.createElement("dob-firkin");
-        storage.id = "storage-remote-test";
-        storage.setAttribute("namespace", "firkin-automerge");
-        storage.setAttribute("mode", "log");
-        storage.setAttribute("keep", "64");
-
-        const encrypt = document.createElement("dtob-encrypt");
-        encrypt.id = "encrypt-remote-test";
-        encrypt.setAttribute("output-selector", "#storage-remote-test");
-        encrypt.setKey(aes);
-
-        const option = document.createElement("dtob-automerge");
+        const option = document.createElement("dob-firkin-automerge");
         option.id = "option-remote-test";
         option.setAttribute("namespace", "firkin-automerge");
-        option.setAttribute("output-selector", "#encrypt-remote-test");
+        option.setAttribute("keep", "64");
 
-        // Observe how far a save travels down the chain.
-        for (const [label, element] of [
-          ["option", option],
-          ["encrypt", encrypt],
-          ["storage", storage],
-        ]) {
-          const ogSave = element.tracks.save.bind(element);
-          element.tracks.save = async (bytes) => {
-            saveCalls.push(`${label}:${bytes?.length ?? "null"}`);
-            return await ogSave(bytes);
-          };
-        }
+        // Observe saves reaching the output.
+        const ogSave = option.tracks.save.bind(option);
+        option.tracks.save = async (items) => {
+          saveCalls.push(`save:${items?.length ?? "null"}`);
+          return await ogSave(items);
+        };
 
         const def = new idb.CLASS();
         def.id = "def-remote-test";
@@ -335,7 +316,7 @@ describe("components/output/bytes/firkin remote save", () => {
         configurator.setAttribute("default", def.id);
         configurator.append(def, option);
 
-        root.append(storage, encrypt, configurator);
+        root.append(configurator);
 
         // Let the configurator's async connectedCallback finish before
         // selecting, the same way a real page has.
@@ -360,31 +341,21 @@ describe("components/output/bytes/firkin remote save", () => {
           await new Promise((resolve) => setTimeout(resolve, 50));
         }
 
-        // A second, fresh chain reading the same remote log must see the save.
-        const storage2 = document.createElement("dob-firkin");
-        storage2.id = "storage-remote-read";
-        storage2.setAttribute("namespace", "firkin-automerge");
-        storage2.setAttribute("mode", "log");
-        storage2.setAttribute("keep", "64");
+        // A second, fresh instance reading the same remote log must see the
+        // save.
+        const reader = document.createElement("dob-firkin-automerge");
+        reader.id = "option-remote-read";
+        reader.setAttribute("namespace", "firkin-automerge");
+        reader.setAttribute("keep", "64");
 
-        const encrypt2 = document.createElement("dtob-encrypt");
-        encrypt2.id = "encrypt-remote-read";
-        encrypt2.setAttribute("output-selector", "#storage-remote-read");
-        encrypt2.setKey(aes);
-
-        const option2 = document.createElement("dtob-automerge");
-        option2.id = "option-remote-read";
-        option2.setAttribute("namespace", "firkin-automerge");
-        option2.setAttribute("output-selector", "#encrypt-remote-read");
-
-        root.append(storage2, encrypt2, option2);
+        root.append(reader);
 
         let read = { state: "loading" };
         const readDeadline = Date.now() + 8_000;
         while (Date.now() < readDeadline) {
           try {
-            read = await option2.tracks.reload().then(() =>
-              option2.tracks.collection()
+            read = await reader.tracks.reload().then(() =>
+              reader.tracks.collection()
             );
           } catch (err) {
             read = { state: "error", error: String(err) };
@@ -397,7 +368,6 @@ describe("components/output/bytes/firkin remote save", () => {
           diag,
           selectedId: configurator.selected()?.id ?? null,
           optionReady: option.ready(),
-          storageReady: storage.ready(),
           saveCalls,
           pageErrors,
           find: {
@@ -427,8 +397,12 @@ describe("components/output/bytes/firkin remote save", () => {
 
     console.log("REMOTE_SAVE_RESULT", JSON.stringify(result, null, 2));
 
+    // The automerge package's own glue warns about its deprecated initSync
+    // under the full-fat entrypoint; everything else must be silent.
+    expect(
+      result.warnings.filter((warning) => !warning.includes("initSync")),
+    ).toEqual([]);
     expect(result.errors).toEqual([]);
-    expect(result.warnings).toEqual([]);
     expect(result.uploads).toBeGreaterThan(0);
     expect(result.manifests.length).toBeGreaterThan(0);
     expect(result.tracks).toEqual(["t1"]);

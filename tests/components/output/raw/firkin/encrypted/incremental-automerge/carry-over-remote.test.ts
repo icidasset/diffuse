@@ -13,7 +13,7 @@ import { testWeb } from "@tests/common/index.ts";
  * output's standard interface, so every carried-over collection should be
  * pushed to the Firkin log like any other save.
  */
-describe("components/output/bytes/firkin carry-over", () => {
+describe("components/output/raw/firkin/encrypted/incremental-automerge carry-over", () => {
   it("pushes carried-over collections to the remote log", async () => {
     const result = await testWeb(async () => {
       const { Signer, delegate, WebCryptoSigner } = await import(
@@ -163,12 +163,6 @@ describe("components/output/bytes/firkin carry-over", () => {
           expireIn: 365 * 24 * 3600,
         });
 
-        const aes = await crypto.subtle.generateKey(
-          { name: "AES-GCM", length: 256 },
-          false,
-          ["encrypt", "decrypt"],
-        );
-
         await IDB.set("diffuse/firkin/session", {
           apiBase: "https://firkin.test",
           did: accountSigner.did(),
@@ -179,13 +173,17 @@ describe("components/output/bytes/firkin carry-over", () => {
           expiresAt: Date.now() + 365 * 24 * 3600 * 1000,
           inlineProofs: true,
         });
-        await IDB.set("diffuse/firkin/output-key", aes);
 
-        // --- The chain the output bundle builds -----------------------------
-        await import("~/components/output/bytes/firkin/element.js");
-        await import("~/components/transformer/output/bytes/encrypt/element.js");
+        // The element reads the shared output key itself, so store it the way
+        // sign-in does (this also updates the reactive signal).
+        const { unlockOutputKeyWithPassphrase } = await import(
+          "~/common/firkin/output-key.js"
+        );
+        await unlockOutputKeyWithPassphrase("test-passphrase");
+
+        // --- The output element ---------------------------------------
         await import(
-          "~/components/transformer/output/bytes/automerge/element.js"
+          "~/components/output/raw/firkin/encrypted/incremental-automerge/element.js"
         );
         const idb = await import(
           "~/components/output/polymorphic/indexed-db/element.js"
@@ -197,21 +195,10 @@ describe("components/output/bytes/firkin carry-over", () => {
         const root = document.createElement("div");
         document.body.append(root);
 
-        const storage = document.createElement("dob-firkin");
-        storage.id = "storage-carry-test";
-        storage.setAttribute("namespace", "firkin-automerge");
-        storage.setAttribute("mode", "log");
-        storage.setAttribute("keep", "64");
-
-        const encrypt = document.createElement("dtob-encrypt");
-        encrypt.id = "encrypt-carry-test";
-        encrypt.setAttribute("output-selector", "#storage-carry-test");
-        encrypt.setKey(aes);
-
-        const option = document.createElement("dtob-automerge");
+        const option = document.createElement("dob-firkin-automerge");
         option.id = "option-carry-test";
         option.setAttribute("namespace", "firkin-automerge");
-        option.setAttribute("output-selector", "#encrypt-carry-test");
+        option.setAttribute("keep", "64");
 
         const def = new idb.CLASS();
         def.id = "def-carry-test";
@@ -221,7 +208,7 @@ describe("components/output/bytes/firkin carry-over", () => {
         configurator.setAttribute("default", def.id);
         configurator.append(def, option);
 
-        root.append(storage, encrypt, configurator);
+        root.append(configurator);
 
         // Let the configurator's async connectedCallback settle.
         await new Promise((resolve) => setTimeout(resolve, 100));
@@ -269,32 +256,21 @@ describe("components/output/bytes/firkin carry-over", () => {
           await new Promise((resolve) => setTimeout(resolve, 50));
         }
 
-        // Read the carried-over data back through a second, fresh chain.
-        const storage2 = document.createElement("dob-firkin");
-        storage2.id = "storage-carry-read";
-        storage2.setAttribute("namespace", "firkin-automerge");
-        storage2.setAttribute("mode", "log");
-        storage2.setAttribute("keep", "64");
+        // Read the carried-over data back through a second, fresh instance.
+        const reader = document.createElement("dob-firkin-automerge");
+        reader.id = "option-carry-read";
+        reader.setAttribute("namespace", "firkin-automerge");
+        reader.setAttribute("keep", "64");
 
-        const encrypt2 = document.createElement("dtob-encrypt");
-        encrypt2.id = "encrypt-carry-read";
-        encrypt2.setAttribute("output-selector", "#storage-carry-read");
-        encrypt2.setKey(aes);
-
-        const option2 = document.createElement("dtob-automerge");
-        option2.id = "option-carry-read";
-        option2.setAttribute("namespace", "firkin-automerge");
-        option2.setAttribute("output-selector", "#encrypt-carry-read");
-
-        root.append(storage2, encrypt2, option2);
+        root.append(reader);
 
         const read = async (name) => {
           const deadlineRead = Date.now() + 8_000;
           let collection = { state: "loading" };
           while (Date.now() < deadlineRead) {
             try {
-              await option2[name].reload();
-              collection = option2[name].collection();
+              await reader[name].reload();
+              collection = reader[name].collection();
             } catch (err) {
               collection = { state: "error", error: String(err) };
             }

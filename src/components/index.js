@@ -38,15 +38,13 @@ import * as _OrchestratorQueueAudio from "./orchestrator/queue-audio/element.js"
 import * as _OrchestratorScopedTracks from "./orchestrator/scoped-tracks/element.js"
 import * as _OrchestratorScrobbleAudio from "./orchestrator/scrobble-audio/element.js"
 import * as _OrchestratorSources from "./orchestrator/sources/element.js"
-import * as _OutputBytesFirkin from "./output/bytes/firkin/element.js"
 import * as _OutputBytesS3 from "./output/bytes/s3/element.js"
 import * as _OutputPolymorphicIndexedDb from "./output/polymorphic/indexed-db/element.js"
 import * as _OutputRawAtprotoPasskey from "./output/raw/atproto-passkey/element.js"
+import * as _OutputRawFirkinEncryptedIncrementalAutomerge from "./output/raw/firkin/encrypted/incremental-automerge/element.js"
 import * as _SupplementLastFm from "./supplement/last.fm/element.js"
 import * as _SupplementListenbrainz from "./supplement/listenbrainz/element.js"
 import * as _SupplementRocksky from "./supplement/rocksky/element.js"
-import * as _TransformerOutputBytesAutomerge from "./transformer/output/bytes/automerge/element.js"
-import * as _TransformerOutputBytesEncrypt from "./transformer/output/bytes/encrypt/element.js"
 import * as _TransformerOutputBytesDaslSync from "./transformer/output/bytes/dasl-sync/element.js"
 import * as _TransformerOutputBytesJson from "./transformer/output/bytes/json/element.js"
 import * as _TransformerOutputRawAtprotoSync from "./transformer/output/raw/atproto-sync/element.js"
@@ -123,7 +121,6 @@ export const orchestrator = {
 
 export const output = {
   bytes: {
-    firkin: _OutputBytesFirkin,
     s3: _OutputBytesS3,
   },
   polymorphic: {
@@ -131,6 +128,11 @@ export const output = {
   },
   raw: {
     "atproto-passkey": _OutputRawAtprotoPasskey,
+    firkin: {
+      encrypted: {
+        incrementalAutomerge: _OutputRawFirkinEncryptedIncrementalAutomerge,
+      },
+    },
   },
 }
 
@@ -143,8 +145,6 @@ export const supplement = {
 export const transformer = {
   output: {
     bytes: {
-      automerge: _TransformerOutputBytesAutomerge,
-      encrypt: _TransformerOutputBytesEncrypt,
       daslSync: _TransformerOutputBytesDaslSync,
       json: _TransformerOutputBytesJson,
     },

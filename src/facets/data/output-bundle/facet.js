@@ -1,15 +1,4 @@
 import foundation from "~/common/foundation.js";
-import {
-  AUTOMERGE_NAME,
-  CONNECT_URL,
-  ENCRYPT_NAME,
-  FIRKIN_METHODS,
-  FIRKIN_OUTPUT_NAME,
-  methodForOption,
-  optionId,
-  stepId,
-  storageId,
-} from "~/common/firkin/methods.js";
 import { effect } from "~/common/signal.js";
 
 const ATPROTO_OUTPUT_NAME = "dor-atproto-passkey";
@@ -22,19 +11,6 @@ const ATPROTO_SPACE_SYNC_NAME = "dtor-atproto-space-sync";
 const DASL_SYNC_NAME = "dtob-dasl-sync";
 const DROPBOX_OUTPUT_NAME = "dob-dropbox";
 const S3_OUTPUT_NAME = "dob-s3";
-
-/**
- * Chain modules keyed by tag, so the imports stay static and only run when the
- * method is actually activated.
- *
- * @type {Record<string, () => Promise<unknown>>}
- */
-const FIRKIN_CHAIN_MODULES = {
-  [ENCRYPT_NAME]: () =>
-    import("~/components/transformer/output/bytes/encrypt/element.js"),
-  [AUTOMERGE_NAME]: () =>
-    import("~/components/transformer/output/bytes/automerge/element.js"),
-};
 
 /**
  * @import OutputOrchestrator from "~/components/orchestrator/output/element.js"
@@ -53,7 +29,6 @@ effect(() => {
   atprotoPasskey(output);
   atprotoSpace(output);
   dropbox(output);
-  for (const method of FIRKIN_METHODS) firkin(output, method);
   s3(output);
 
   output.loadSelected();
@@ -72,9 +47,6 @@ effect(() => {
   previouslyActivated = set;
 
   Array.from(newlyActicated).map((id) => {
-    const firkinMethod = methodForOption(id);
-    if (firkinMethod) return firkinCustomElements(firkinMethod);
-
     switch (id) {
       case "do-output__dc-output__atproto-passkey":
         return atprotoPasskeyCustomElements();
@@ -219,103 +191,6 @@ export function dropboxCustomElements() {
   import(
     "~/components/transformer/output/bytes/dasl-sync/element.js"
   );
-}
-
-////////////////////////////////////////////
-// FIRKIN
-////////////////////////////////////////////
-
-/**
- * Adds the Firkin userdata output, encrypted with the Firkin passkey.
- *
- * ```mermaid
- * flowchart LR
- *   automerge[dtob-automerge] --> encrypt[dtob-encrypt] --> firkin[dob-firkin]
- * ```
- *
- * The Firkin element is an append-only log, so a save appends only the changes
- * since the last push (a few hundred bytes). The encryption element seals each
- * entry, so the instance only ever stores ciphertext. The Automerge transformer
- * turns the log into the five collections and merges concurrent edits per
- * record.
- *
- * @param {OutputOrchestrator} output
- */
-/**
- * Adds one Firkin-backed userdata method.
- *
- * The chain is described by the method (see `~/common/firkin/methods.js`):
- * the backing log first, then each transformer with its `output-selector`
- * pointing at the previous element. Only the outermost element is added to the
- * configurator, so a method is one selectable thing.
- *
- * For the current method that is:
- *
- * ```mermaid
- * flowchart LR
- *   automerge[dtob-automerge] --> encrypt[dtob-encrypt] --> firkin[dob-firkin]
- * ```
- *
- * @param {OutputOrchestrator} output
- * @param {import("~/common/firkin/methods.js").FirkinMethod} method
- */
-export function firkin(output, method) {
-  const storage = document.createElement(FIRKIN_OUTPUT_NAME);
-  storage.setAttribute("group", foundation.GROUP);
-  storage.setAttribute("id", storageId(method));
-  storage.setAttribute("namespace", method.id);
-  storage.setAttribute("mode", method.mode);
-  storage.setAttribute("keep", String(method.keep));
-  output.append(storage);
-
-  let previous = `#${storageId(method)}`;
-
-  for (const name of method.chain) {
-    const element = document.createElement(name);
-    const isOption = name === method.chain.at(-1);
-    const id = isOption ? optionId(method) : stepId(method, name);
-
-    element.setAttribute("group", foundation.GROUP);
-    element.setAttribute("id", id);
-    element.setAttribute("namespace", method.id);
-    element.setAttribute("output-selector", previous);
-
-    if (isOption) {
-      element.setAttribute("label", method.label);
-      element.setAttribute("connect", CONNECT_URL);
-      // The userdata facet shows one row per provider, so methods of the same
-      // provider collapse into it. The first method is the one that row
-      // activates when nothing is configured yet.
-      element.setAttribute("provider", method.provider);
-      if (method === FIRKIN_METHODS[0]) {
-        element.setAttribute("provider-default", "");
-      }
-      output.outputConfigurator.append(element);
-    } else {
-      // Intermediate steps sit in the output root: the configurator lists
-      // selectable methods, not the wiring between them.
-      output.append(element);
-    }
-
-    previous = `#${id}`;
-  }
-}
-
-/**
- * Import a method's elements. Nothing else to wire up: the encryption step
- * reads the shared Firkin output key itself (see
- * `~/common/firkin/output-key.js`), so a key derived by a later sign-in is
- * picked up reactively.
- *
- * @param {import("~/common/firkin/methods.js").FirkinMethod} method
- */
-export function firkinCustomElements(method) {
-  Promise.all([
-    import("~/components/output/bytes/firkin/element.js"),
-    ...method.chain.map((name) => FIRKIN_CHAIN_MODULES[name]?.()),
-  ]).catch((err) => {
-    console.error("Failed to load the Firkin output:", err);
-  });
 }
 
 ////////////////////////////////////////////

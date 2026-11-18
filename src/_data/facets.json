@@ -12,7 +12,13 @@
     "title": "Audio Output",
     "category": "Playback",
     "featured": true,
-    "desc": "Pick which audio output device (speaker, headphones, …) each facet group plays through."
+    "desc": "Pick which audio output device (speaker, headphones, \u2026) each facet group plays through."
+  },
+  {
+    "url": "facets/playback/auto-queue/index.tile",
+    "title": "Automatic Queue",
+    "category": "Playback",
+    "desc": "Automatically put tracks into the queue when this interface is opened. Also allows for controlling shuffle, repeat, search, sorting and playlist selection."
   },
   {
     "url": "facets/playback/auto-queue/prelude/index.tile",
@@ -21,12 +27,6 @@
     "category": "Playback",
     "featured": false,
     "desc": "Automatically put tracks into the queue. **Always on.** These tracks will always be located after the ones you've added manually."
-  },
-  {
-    "url": "facets/playback/auto-queue/index.tile",
-    "title": "Automatic Queue",
-    "category": "Playback",
-    "desc": "Automatically put tracks into the queue when this interface is opened. Also allows for controlling shuffle, repeat, search, sorting and playlist selection."
   },
   {
     "url": "facets/themes/blur/facet/index.tile",
@@ -232,6 +232,14 @@
     "desc": "A recreation of the click-wheel iPod UI. Spin the wheel to scroll, tap the ring for menu / prev / next / play, and press the centre button to select. Alternatively, use your keyboard arrow keys."
   },
   {
+    "url": "facets/data/firkin-automerge/index.tile",
+    "title": "Output / Firkin + Automerge + Encryption",
+    "kind": "prelude",
+    "category": "Data",
+    "incomplete": true,
+    "desc": "Store your user-data on a Firkin instance as an encrypted, incremental Automerge log: saves append only the changes since the last one, entries are sealed on this device, and other devices merge them. Requires a Firkin account."
+  },
+  {
     "url": "facets/data/path-playlists/prelude/index.tile",
     "title": "Path Playlists",
     "kind": "prelude",
@@ -254,17 +262,17 @@
     "desc": "Automatically preload the next track in the queue."
   },
   {
+    "url": "facets/data/process-tracks/index.tile",
+    "title": "Process Tracks",
+    "category": "Data",
+    "desc": "Process all your audio sources into tracks. Shows a progress bar when processing is occuring."
+  },
+  {
     "url": "facets/data/process-tracks/prelude/index.tile",
     "title": "Process Tracks",
     "kind": "prelude",
     "category": "Data",
     "desc": "Process all your audio inputs into tracks automatically when opening any interface. Only happens once every 10 minutes, if the processing was completed."
-  },
-  {
-    "url": "facets/data/process-tracks/index.tile",
-    "title": "Process Tracks",
-    "category": "Data",
-    "desc": "Process all your audio sources into tracks. Shows a progress bar when processing is occuring."
   },
   {
     "url": "facets/playback/queue/index.tile",

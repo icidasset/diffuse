@@ -1,5 +1,5 @@
 import * as TID from "@atcute/tid";
-import { html } from "lit-html";
+import { html, nothing } from "lit-html";
 
 import {
   DEFAULT_API_BASE,
@@ -39,17 +39,35 @@ const account = signal(initialAccount);
 const outputOrchestrator = await foundation.orchestrator.output();
 await customElements.whenDefined(outputOrchestrator.localName);
 
-// Added by the output bundle, so they may not be registered yet on this page.
+// The output option comes from an opt-in feature facet, so unlike the bundled
+// outputs it may never be registered: the user may simply not have enabled it.
+// Wait long enough for a prelude to have run, then carry on without it — this
+// page is still useful for signing in and for adding the input.
+const OUTPUT_OPTION_WAIT_MS = 2_500;
+
 /** @type {Map<string, { id: string }>} */
 const firkinOptions = new Map();
 
 await Promise.all(
   FIRKIN_METHODS.map(async (method) => {
-    const option = await waitForOutputOption(outputOrchestrator, method.label);
-
-    firkinOptions.set(method.id, option);
+    try {
+      firkinOptions.set(
+        method.id,
+        await waitForOutputOption(
+          outputOrchestrator,
+          method.label,
+          OUTPUT_OPTION_WAIT_MS,
+        ),
+      );
+    } catch {
+      // Not an error: the feature facet is disabled, so there is no output to
+      // offer. The button is hidden below and the description says why.
+    }
   }),
 );
+
+/** Whether the userdata output option exists, i.e. the feature facet is on. */
+const canUseOutput = firkinOptions.size === FIRKIN_METHODS.length;
 
 const FIRKIN_OPTION_IDS = new Set(
   [...firkinOptions.values()].map((option) => option.id),
@@ -85,6 +103,7 @@ const { setItems, setError, setDialogError } = setup({
   title: "Firkin",
   outputIcon: "ph-fill ph-scales",
   outputTitle: `Use Firkin as userdata storage`,
+  hasOutput: canUseOutput,
 
   description: html`
     <p>

@@ -27,12 +27,6 @@ describe("components/configurator/output carry-over chains", () => {
       await import(
         "~/components/transformer/output/refiner/passkey-encryption/element.js"
       );
-      await import(
-        "~/components/transformer/output/bytes/automerge/element.js"
-      );
-      await import(
-        "~/components/transformer/output/bytes/encrypt/element.js"
-      );
 
       const track = {
         $type: "sh.diffuse.output.track",
@@ -104,28 +98,6 @@ describe("components/configurator/output carry-over chains", () => {
           root.append(option);
           return option;
         }],
-        ["automerge+encrypt", async (root, suffix) => {
-          const remote = makeRemote(root, suffix);
-
-          const encrypt = document.createElement("dtob-encrypt");
-          encrypt.id = `encrypt-${suffix}`;
-          encrypt.setAttribute("output-selector", `#${remote.id}`);
-          encrypt.setKey(
-            await crypto.subtle.generateKey(
-              { name: "AES-GCM", length: 256 },
-              false,
-              ["encrypt", "decrypt"],
-            ),
-          );
-          root.append(encrypt);
-
-          const option = document.createElement("dtob-automerge");
-          option.id = `option-${suffix}`;
-          option.setAttribute("namespace", `option-${suffix}`);
-          option.setAttribute("output-selector", `#${encrypt.id}`);
-          root.append(option);
-          return option;
-        }],
       ];
 
       const outcomes = [];
@@ -188,7 +160,6 @@ describe("components/configurator/output carry-over chains", () => {
       { name: "atproto-sync", tracks: ["t1"] },
       { name: "atproto-space-sync", tracks: ["t1"] },
       { name: "passkey-encryption", tracks: ["t1"] },
-      { name: "automerge+encrypt", tracks: ["t1"] },
     ]);
   });
 });

@@ -14,7 +14,7 @@ import {
 
 /**
  * @import {Firkin} from "@tokono.ma/firkin"
- * @import {LogEntry, LogManifestPayload} from "@specs/components/output/bytes/firkin/types.d.ts"
+ * @import {LogEntry, LogManifestPayload} from "@specs/components/output/raw/firkin/types.d.ts"
  */
 
 /**

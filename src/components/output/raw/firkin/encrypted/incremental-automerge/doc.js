@@ -249,11 +249,20 @@ export function applyPack(doc, bytes) {
  * Apply a whole log — every entry of a log-shaped output concatenated — to a
  * collection.
  *
- * A device with no records of its own adopts the log, which also gives it this
- * device's actor id. Otherwise the entries are applied incrementally, falling
- * back to loading the log as one document when a delta can't be applied in a
- * single pass (a snapshot that `loadIncremental` ignores, or changes whose
- * dependencies have been trimmed out of the log).
+ * The log is replayed entry by entry rather than in one pass: entries from
+ * several devices interleave, a device's first entry is a whole document while
+ * its later entries are deltas against it, and `keep` trims each device's
+ * window independently — so a single-pass load either throws ("change's deps
+ * should already be in the document") or silently keeps only one root's
+ * records.
+ *
+ * A device with no records of its own adopts the first entry that loads as a
+ * document, which also gives it this device's actor id. Change entries apply
+ * incrementally; an entry that parses as a document on its own is merged in —
+ * `mergeDocuments` keeps the records a plain merge of two roots would drop.
+ * Entries that still can't apply (dependencies trimmed away) are retried once
+ * after the rest, then dropped — the writer's next whole-document entry
+ * supersedes them.
  *
  * @param {AutomergeDoc} doc
  * @param {Uint8Array} bytes
@@ -261,13 +270,129 @@ export function applyPack(doc, bytes) {
  * @returns {AutomergeDoc}
  */
 export function applyLog(doc, bytes, actor) {
-  if (recordsOf(doc).length === 0) return adoptDocument(bytes, actor);
+  const entries = splitLogEntries(bytes);
 
-  try {
-    return applyPack(doc, bytes);
-  } catch {
-    return mergeDocuments(doc, Automerge.load(bytes));
+  if (recordsOf(doc).length === 0) {
+    for (let index = 0; index < entries.length; index++) {
+      let adopted;
+
+      try {
+        adopted = adoptDocument(entries[index], actor);
+      } catch {
+        continue; // not a document (an orphan delta); keep looking
+      }
+
+      return applyLogEntries(adopted, entries.slice(index + 1));
+    }
+
+    // Nothing loads on its own (a log of orphaned deltas): leave the document
+    // as it is; the writer's next whole-document entry supersedes them.
+    return doc;
   }
+
+  return applyLogEntries(doc, entries);
+}
+
+////////////////////////////////////////////
+// LOG FRAMING
+////////////////////////////////////////////
+
+/** Bytes of the u32be length prefix in front of each decrypted log entry. */
+const LENGTH_PREFIX = 4;
+
+/**
+ * Split a decrypted log value into its entries.
+ *
+ * The encrypt layer length-prefixes each decrypted entry (u32be) precisely so
+ * this is a walk over our own framing instead of a parse of automerge's
+ * container format.
+ *
+ * A log written before entries were framed starts with the payload itself —
+ * its first length header is then implausibly large — and is kept as one
+ * chunk so it still applies, best effort. A truncated tail is dropped.
+ *
+ * @param {Uint8Array} bytes
+ * @returns {Uint8Array[]}
+ */
+function splitLogEntries(bytes) {
+  /** @type {Uint8Array[]} */
+  const entries = [];
+
+  let offset = 0;
+
+  while (offset < bytes.length) {
+    if (offset + LENGTH_PREFIX > bytes.length) break; // trailing fragment
+
+    const length = new DataView(
+      bytes.buffer,
+      bytes.byteOffset + offset,
+      LENGTH_PREFIX,
+    ).getUint32(0);
+
+    const start = offset + LENGTH_PREFIX;
+    const end = start + length;
+
+    if (end > bytes.length) {
+      // An implausible header means this log predates the framing: keep it
+      // whole so it still applies, best effort.
+      if (offset === 0) entries.push(bytes);
+
+      break;
+    }
+
+    entries.push(bytes.subarray(start, end));
+    offset = end;
+  }
+
+  return entries;
+}
+
+/**
+ * Replay log entries in order, tolerating entries that cannot apply.
+ *
+ * An entry that parses as a document on its own (a bootstrap or snapshot of
+ * any writer) is merged in — a plain merge keeps one root, so
+ * `mergeDocuments` re-adds the records the merge would drop. Change entries
+ * apply incrementally. Anything unapplyable (a delta whose dependencies were
+ * trimmed away, or rooted in another writer's document) is retried once, then
+ * dropped — the writer's next whole-document entry supersedes it.
+ *
+ * @param {AutomergeDoc} doc
+ * @param {Uint8Array[]} entries
+ * @returns {AutomergeDoc}
+ */
+function applyLogEntries(doc, entries) {
+  let current = doc;
+
+  let deferred = entries;
+
+  for (let pass = 0; pass < 2 && deferred.length > 0; pass++) {
+    const pending = deferred;
+    deferred = [];
+
+    for (const entry of pending) {
+      // A whole document parses on its own; a change entry does not.
+      try {
+        current = mergeDocuments(current, normalize(Automerge.load(entry)));
+        continue;
+      } catch {
+        // Not a standalone document; apply it as changes below.
+      }
+
+      try {
+        current = Automerge.loadIncremental(current, entry);
+        continue;
+      } catch (err) {
+        if (pass > 0) {
+          console.warn("Dropping a log entry that could not be applied:", err);
+        }
+
+        deferred.push(entry);
+      }
+    }
+  }
+
+  return current;
 }
 
 /**

@@ -8,7 +8,8 @@ import {
   LENGTH_PREFIX,
   decryptLog,
   encryptEntry,
-} from "~/components/transformer/output/bytes/encrypt/crypto.js";
+  frameEntries,
+} from "~/components/output/raw/firkin/encrypted/incremental-automerge/crypto.js";
 
 /** @param {string} text */
 const bytes = (text) => new TextEncoder().encode(text);
@@ -37,14 +38,14 @@ function join(entries) {
   return out;
 }
 
-describe("components/transformer/output/bytes/encrypt/crypto", () => {
+describe("components/output/raw/firkin/encrypted/incremental-automerge/crypto", () => {
   it("round-trips a single entry", async () => {
     const key = await aesKey();
 
     const frame = await encryptEntry(key, bytes("hello"));
 
     expect(frame.length).toBe(LENGTH_PREFIX + IV_LENGTH + 5 + 16);
-    expect(text(await decryptLog(key, frame))).toBe("hello");
+    expect(text((await decryptLog(key, frame)).at(-1))).toBe("hello");
   });
 
   it("keeps the plaintext out of the frame", async () => {
@@ -64,7 +65,17 @@ describe("components/transformer/output/bytes/encrypt/crypto", () => {
       await encryptEntry(key, bytes("three")),
     ]);
 
-    expect(text(await decryptLog(key, log))).toBe("onetwothree");
+    const entries = await decryptLog(key, log);
+
+    expect(entries.map(text)).toEqual(["one", "two", "three"]);
+
+    // The framed value is what `applyLog` splits: [u32be len][entry] each.
+    const framed = frameEntries(entries);
+    const view = new DataView(framed.buffer);
+
+    expect(framed.length).toBe(3 * LENGTH_PREFIX + 3 + 3 + 5);
+    expect(view.getUint32(0)).toBe(3);
+    expect(text(framed.slice(4, 7))).toBe("one");
   });
 
   it("uses a fresh nonce per entry", async () => {
@@ -126,7 +137,7 @@ describe("components/transformer/output/bytes/encrypt/crypto", () => {
     }
   });
 
-  it("treats an empty log as empty plaintext", async () => {
+  it("treats an empty log as no entries", async () => {
     const key = await aesKey();
 
     expect((await decryptLog(key, new Uint8Array(0))).length).toBe(0);

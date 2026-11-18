@@ -42,7 +42,7 @@ export async function encryptEntry(key, plaintext) {
  *
  * @param {CryptoKey} key
  * @param {Uint8Array} value
- * @returns {Promise<Uint8Array>} The plaintext entries, concatenated.
+ * @returns {Promise<Uint8Array[]>} The plaintext entries, oldest first.
  */
 export async function decryptLog(key, value) {
   /** @type {Uint8Array[]} */
@@ -83,7 +83,33 @@ export async function decryptLog(key, value) {
     offset = end;
   }
 
-  return concat(entries);
+  return entries;
+}
+
+/**
+ * Join decrypted entries into a log value: each entry length-prefixed
+ * (u32be) — the prefixes are what let the layer above apply entries one at a
+ * time without parsing automerge's own container format.
+ *
+ * @param {Uint8Array[]} entries
+ * @returns {Uint8Array}
+ */
+export function frameEntries(entries) {
+  const total = entries.reduce(
+    (sum, bytes) => sum + LENGTH_PREFIX + bytes.length,
+    0,
+  );
+  const out = new Uint8Array(total);
+  const view = new DataView(out.buffer);
+
+  let offset = 0;
+  for (const bytes of entries) {
+    view.setUint32(offset, bytes.length);
+    out.set(bytes, offset + LENGTH_PREFIX);
+    offset += LENGTH_PREFIX + bytes.length;
+  }
+
+  return out;
 }
 
 /**
@@ -95,20 +121,4 @@ export async function decryptLog(key, value) {
  */
 function buffer(bytes) {
   return /** @type {BufferSource} */ (/** @type {unknown} */ (bytes));
-}
-
-/**
- * @param {Uint8Array[]} entries
- */
-function concat(entries) {
-  const total = entries.reduce((sum, bytes) => sum + bytes.length, 0);
-  const out = new Uint8Array(total);
-
-  let offset = 0;
-  for (const bytes of entries) {
-    out.set(bytes, offset);
-    offset += bytes.length;
-  }
-
-  return out;
 }

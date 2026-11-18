@@ -9,7 +9,7 @@ import {
 import {
   decryptLog,
   encryptEntry,
-} from "~/components/transformer/output/bytes/encrypt/crypto.js";
+} from "~/components/output/raw/firkin/encrypted/incremental-automerge/crypto.js";
 
 // PBKDF2 at the real work factor is slow by design; the derivation tests only
 // care that it is deterministic and separated, so they use a cheap count.
@@ -29,7 +29,7 @@ describe("common/firkin/output-key", () => {
     const second = await derive(salt, "correct horse");
 
     const frame = await encryptEntry(first, new TextEncoder().encode("hi"));
-    const plaintext = await decryptLog(second, frame);
+    const [plaintext] = await decryptLog(second, frame);
 
     expect(new TextDecoder().decode(plaintext)).toBe("hi");
   });

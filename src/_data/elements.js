@@ -291,10 +291,10 @@ export default {
         "Store output data as raw bytes in the Dropbox app folder.",
     },
     {
-      url: "components/output/bytes/firkin/element.js",
-      title: "Bytes / Firkin",
+      url: "components/output/raw/firkin/encrypted/incremental-automerge/element.js",
+      title: "Raw / Firkin / Encrypted / Incremental Automerge",
       desc:
-        "An append-only store on Firkin. In `mode=value` get returns the newest entry (keep bounds the history); in `mode=log` it returns every entry, so a history-preserving consumer can replay deltas. Per-device manifests are signed by the writer's session key.",
+        "The complete Firkin userdata output: an append-only log of encrypted Automerge changes on a Firkin instance. Each save appends only the changes since the log last saw them (a whole document every 32 saves), entries are sealed per save, and per-device manifests are signed by the writer's session key.",
     },
     {
       url: "components/output/bytes/s3/element.js",
@@ -335,18 +335,6 @@ export default {
   ],
 
   transformers: [
-    {
-      url: "components/transformer/output/bytes/automerge/element.js",
-      title: "Output / Bytes / Automerge",
-      desc:
-        "Stores each collection as an Automerge document, with records keyed by id so concurrent edits merge. Appends deltas to a history-preserving output and replays the log; set snapshot for an output that replaces its value.",
-    },
-    {
-      url: "components/transformer/output/bytes/encrypt/element.js",
-      title: "Output / Bytes / Encrypt",
-      desc:
-        "Encrypts each value an output stores, so the backing store only sees framed ciphertext. Seals one entry per save, so appended deltas never re-encrypt history.",
-    },
     {
       url: "components/transformer/output/bytes/dasl-sync/element.js",
       title: "Output / Bytes / DASL Sync",
