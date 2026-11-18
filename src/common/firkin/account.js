@@ -241,7 +241,7 @@ export async function publishSessionDelegation(session) {
  * account is registered.
  *
  * @param {{ apiBase?: string; create?: boolean }} [options]
- * @returns {Promise<{ apiBase: string; did: string; session: Session; prf: PasskeyMaterial; accountSigner: UcanSigner }>}
+ * @returns {Promise<{ apiBase: string; did: string; session: Session; prf: PasskeyMaterial; accountSigner: UcanSigner; keyError?: unknown }>}
  */
 export async function signInAccount(options = {}) {
   const apiBase = (options.apiBase?.trim() || DEFAULT_API_BASE)
@@ -267,14 +267,22 @@ export async function signInAccount(options = {}) {
     throw err;
   }
 
-  // Encryption is opt-in: a failure here must not stop the sign-in.
+  // The output key comes from the same passkey: the second PRF output is the
+  // only source. A failure here must not stop the sign-in (the account is
+  // usable without an output), but it must be visible — without the key the
+  // output can neither read nor write, and a silently swallowed error leaves
+  // the user with an empty library and no explanation.
+  /** @type {unknown} */
+  let keyError;
+
   try {
     await storePasskeyOutputKey(prf.prfSecond);
   } catch (err) {
-    console.warn("Could not derive the output encryption key:", err);
+    keyError = err;
+    console.error("Could not derive the output encryption key:", err);
   }
 
-  return { apiBase, did, session, prf, accountSigner };
+  return { apiBase, did, session, prf, accountSigner, keyError };
 }
 
 /** Forget the local account session and the derived output key. */

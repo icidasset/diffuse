@@ -11,6 +11,7 @@ import {
 } from "~/common/firkin/account.js";
 import { SOURCE_URI } from "~/common/firkin/files.js";
 import { FIRKIN_METHODS } from "~/common/firkin/methods.js";
+import { outputKey } from "~/common/firkin/output-key.js";
 import { effect, signal } from "~/common/signal.js";
 import foundation from "~/common/foundation.js";
 
@@ -109,6 +110,15 @@ const { setItems, setError, setDialogError } = setup({
     <p>
       Connect to a <a href="https://tangled.org/tokono.ma/firkin" target="_blank">Firkin</a> instance using just a passkey, no email or password.
     </p>
+    ${canUseOutput
+      ? nothing
+      : html`
+        <p class="caption">
+          Storing your user data here needs the
+          <strong>Firkin Output</strong> feature: enable it under Facets →
+          Data, then reload this page.
+        </p>
+      `}
   `,
 
   formFields: html`
@@ -267,6 +277,18 @@ async function refreshAccount() {
 }
 
 /**
+ * Sign in when there is no session — and also when there is one but the output
+ * key is missing, because the key is only ever derived by the passkey step.
+ * Without this a restored session can never recover the key, leaving the output
+ * with nothing to read or write.
+ */
+async function ensureAccount() {
+  if (account.get() && outputKey() !== undefined) return;
+
+  await connectWithDid();
+}
+
+/**
  * Add Firkin as an audio source or as the userdata output.
  *
  * Both need the account session, so this signs in first when it has to; the
@@ -275,7 +297,7 @@ async function refreshAccount() {
  * @param {'input' | 'output'} mode
  */
 async function addFirkin(mode) {
-  if (!account.get()) await connectWithDid();
+  await ensureAccount();
 
   if (mode === "input") {
     await addInput();
@@ -314,10 +336,27 @@ async function addInput() {
  * Sign in: derive the account key from the passkey, mint a one-year session
  * delegation for this browser, and verify that the account is registered.
  */
+/**
+ * Sign in: derive the account key from the passkey, mint a one-year session
+ * delegation for this browser, and verify that the account is registered.
+ */
 async function connect() {
   const apiBase = apiInput.value.trim() || undefined;
   const result = await signInAccount({ apiBase });
   account.value = { did: result.did, apiBase: result.apiBase };
+
+  // The session is valid but the output key is not: say so here, because the
+  // output would otherwise appear configured and silently show nothing.
+  if (result.keyError) {
+    const reason = result.keyError instanceof Error
+      ? result.keyError.message
+      : String(result.keyError);
+
+    setError(
+      "Signed in, but your passkey did not provide the output encryption " +
+        `key, so the Firkin output cannot read or write here. (${reason})`,
+    );
+  }
 }
 
 /**

@@ -36,6 +36,9 @@ async function connectPageState() {
     hasLoaded:
       document.querySelector("#container")?.classList.contains("has-loaded") ??
         false,
+    optionPresent: Boolean(
+      document.getElementById("do-output__dc-output__firkin-automerge"),
+    ),
     inputButton: Boolean(document.querySelector("#connect-add-input-btn")),
     outputButton: Boolean(document.querySelector("#connect-add-output-btn")),
     mentionsFeature:
@@ -81,6 +84,7 @@ describe("connect/firkin", () => {
     expect(result.inputButton).toBe(true);
 
     // No option means no action: the button is hidden and the reason is shown.
+    expect(result.optionPresent).toBe(false);
     expect(result.outputButton).toBe(false);
     expect(result.mentionsFeature).toBe(true);
   });

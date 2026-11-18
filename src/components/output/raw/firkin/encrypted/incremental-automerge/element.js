@@ -498,10 +498,23 @@ class FirkinAutomergeOutput extends BroadcastedOutputElement {
 
       if (this.ready()) return;
 
+      // `ready` is false for different reasons, and "sign in" is no help to a
+      // user who already is: name the part that is actually missing.
+      /** @type {string} */
+      let state;
+
+      if (!this.#isOnline.value) {
+        state = "offline — it reads again once the connection is back";
+      } else if (!this.#connected.value) {
+        state = "not signed in on this browser; sign in on Connect → Firkin";
+      } else {
+        state = "signed in, but this browser has no output encryption key " +
+          "(it is derived from your passkey at sign-in) — sign in again on " +
+          "this device to derive it";
+      }
+
       console.warn(
-        "Firkin output: nothing can be read yet (no session, or no " +
-          "encryption key on this browser). Showing an empty library; sign " +
-          "in on Connect → Firkin to fix it.",
+        `Firkin output: ${state}. Showing an empty library until then.`,
       );
 
       for (const name of COLLECTIONS) this.#markReady(name);
@@ -641,6 +654,15 @@ class FirkinAutomergeOutput extends BroadcastedOutputElement {
     // Only the group leader writes; other tabs read their changes back from the
     // log like any other device.
     if (!(await this.isLeader())) return;
+
+    // Not writable yet: offline, no session, or the output key is not loaded on
+    // this browser. The save is already in the local cache, and marking the
+    // collection dirty is what makes the ready effect push it later — trying
+    // the write here would only log an error for work that is safely stored.
+    if (!this.ready()) {
+      this.#dirty.add(name);
+      return;
+    }
 
     const cursor = await this.#cursor(name);
     const snapshot = cursor.pushes > 0 && cursor.pushes % SNAPSHOT_EVERY === 0;
