@@ -3,10 +3,10 @@ import { html, nothing, render as litRender } from "lit-html";
 import foundation from "~/common/foundation.js";
 import { effect, signal } from "~/common/signal.js";
 
-import { NAME as ATPROTO_PASSKEY_NAME } from "~/components/output/raw/atproto-passkey/element.js";
+import { NAME as ATPROTO_PUBLISH_NAME } from "~/components/supplement/atproto-publish/element.js";
 
 /**
- * @import { ATProtoPasskeyOutputElement } from "@specs/components/output/raw/atproto-passkey/types.d.ts"
+ * @import { ATProtoPublishElement } from "@specs/components/supplement/atproto-publish/types.d.ts"
  */
 
 ////////////////////////////////////////////
@@ -38,15 +38,15 @@ if (!rocksky) {
 
 await customElements.whenDefined(rocksky.localName);
 const atprotoEl = signal(
-  /** @type {ATProtoPasskeyOutputElement | undefined} */ (undefined),
+  /** @type {ATProtoPublishElement | undefined} */ (undefined),
 );
 
-customElements.whenDefined(ATPROTO_PASSKEY_NAME).then(async () => {
-  const outputOrchestrator = await foundation.orchestrator.output();
+customElements.whenDefined(ATPROTO_PUBLISH_NAME).then(() => {
+  const el = document.querySelector(ATPROTO_PUBLISH_NAME);
 
-  atprotoEl.value = /** @type {ATProtoPasskeyOutputElement | undefined} */ (
-    outputOrchestrator.root().querySelector(ATPROTO_PASSKEY_NAME)
-  );
+  atprotoEl.value = el
+    ? /** @type {ATProtoPublishElement} */ (/** @type {unknown} */ (el))
+    : undefined;
 });
 
 ////////////////////////////////////////////

@@ -12,8 +12,7 @@ const loaderHref = (path) => `l/?path=${encodeURIComponent(path)}`;
 
 /** @type {Record<string, string>} */
 const icons = {
-  "facets/connect/atproto-passkey/index.tile": "at",
-  "facets/connect/atproto-space/index.tile": "at",
+  "facets/connect/atproto/index.tile": "at",
   "facets/connect/firkin/index.tile": "scales",
   "facets/connect/dropbox/index.tile": "cloud",
   "facets/connect/https/index.tile": "globe",

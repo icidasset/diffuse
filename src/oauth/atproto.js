@@ -1,7 +1,7 @@
 import { configureOAuth } from "@atcute/oauth-browser-client";
 import { withOAuthContext } from "~/oauth/lock.js";
 
-import metadata from "./oauth-client-metadata.json" with {
+import metadata from "~/components/output/raw/atproto-passkey/oauth-client-metadata.json" with {
   type: "json",
 };
 
@@ -72,14 +72,19 @@ const OAUTH_CONFIG = {
 };
 
 /**
- * Configure the atcute library for the public AT Protocol output.
+ * Configure the atcute library for the AT Protocol publish client.
+ *
+ * The client metadata JSON intentionally stays at
+ * `components/output/raw/atproto-passkey/` even though there is no longer an
+ * output element there: its public URL is the `client_id` for existing OAuth
+ * sessions, so moving it would invalidate them.
  *
  * `@atcute/oauth-browser-client` keeps its database and client id in module
  * globals shared with the Rocksky scrobbler. Whichever module called
  * `configureOAuth()` last owns the globals, and token refresh reads and writes
  * through them. Every operation must therefore re-configure while holding the
- * shared lock, otherwise a Rocksky operation can make this output refresh the
- * wrong session (or use the wrong client id) and stop syncing.
+ * shared lock, otherwise a Rocksky operation can make this client refresh the
+ * wrong session (or use the wrong client id) and stop working.
  */
 function configure() {
   configureOAuth(OAUTH_CONFIG);
@@ -131,7 +136,6 @@ function asDid(did) {
  */
 export function login(handle) {
   return withOAuthContext(OWNER, configure, async () => {
-
     localStorage.setItem(
       "oauth/callback/redirect_path",
       location.pathname + location.search,
@@ -163,7 +167,6 @@ export function login(handle) {
  */
 export function restoreOrFinalize() {
   return withOAuthContext(OWNER, configure, async () => {
-
     const loc = globalThis.location;
 
     // Check for OAuth callback parameters (the library uses response_mode=fragment,

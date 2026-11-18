@@ -56,8 +56,6 @@ The envelope is produced at the encoder, not the storage element:
 | `polymorphic/indexed-db` | IDB object | `encodeCollection` for arrays; bytes pass through |
 | `bytes/dasl-sync` | CBOR `Container` | `$schema` on the container |
 | `bytes/automerge` | Automerge binary | `$schema` field in the CRDT doc |
-| `raw/atproto-space` (records) | atproto records | `$type` = NSID on each record |
-| `raw/atproto-space` (blob bundles) | CBOR blob | whole envelope |
 
 ## Modules
 

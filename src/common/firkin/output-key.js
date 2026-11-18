@@ -1,7 +1,7 @@
 import * as IDB from "idb-keyval";
 
 import { signal } from "~/common/signal.js";
-import { deriveCipherKey } from "~/components/transformer/output/refiner/passkey-encryption/passkey.js";
+import { deriveCipherKey } from "~/common/passkey.js";
 
 /**
  * The key that encrypts output entries can come from more than one place. It is

@@ -40,7 +40,6 @@ import * as _OrchestratorScrobbleAudio from "./orchestrator/scrobble-audio/eleme
 import * as _OrchestratorSources from "./orchestrator/sources/element.js"
 import * as _OutputBytesS3 from "./output/bytes/s3/element.js"
 import * as _OutputPolymorphicIndexedDb from "./output/polymorphic/indexed-db/element.js"
-import * as _OutputRawAtprotoPasskey from "./output/raw/atproto-passkey/element.js"
 import * as _OutputRawFirkinEncryptedIncrementalAutomerge from "./output/raw/firkin/encrypted/incremental-automerge/element.js"
 import * as _SupplementAtprotoPublish from "./supplement/atproto-publish/element.js"
 import * as _SupplementLastFm from "./supplement/last.fm/element.js"
@@ -48,10 +47,8 @@ import * as _SupplementListenbrainz from "./supplement/listenbrainz/element.js"
 import * as _SupplementRocksky from "./supplement/rocksky/element.js"
 import * as _TransformerOutputBytesDaslSync from "./transformer/output/bytes/dasl-sync/element.js"
 import * as _TransformerOutputBytesJson from "./transformer/output/bytes/json/element.js"
-import * as _TransformerOutputRawAtprotoSync from "./transformer/output/raw/atproto-sync/element.js"
 import * as _TransformerOutputRefinerDefault from "./transformer/output/refiner/default/element.js"
 import * as _TransformerOutputRefinerInitialContents from "./transformer/output/refiner/initial-contents/element.js"
-import * as _TransformerOutputRefinerPasskeyEncryption from "./transformer/output/refiner/passkey-encryption/element.js"
 import * as _TransformerOutputRefinerPathCollections from "./transformer/output/refiner/path-collections/element.js"
 import * as _TransformerOutputStringJson from "./transformer/output/string/json/element.js"
 import * as _UploadFirkin from "./upload/firkin/element.js"
@@ -128,7 +125,6 @@ export const output = {
     indexedDb: _OutputPolymorphicIndexedDb,
   },
   raw: {
-    "atproto-passkey": _OutputRawAtprotoPasskey,
     firkin: {
       encrypted: {
         incrementalAutomerge: _OutputRawFirkinEncryptedIncrementalAutomerge,
@@ -150,13 +146,9 @@ export const transformer = {
       daslSync: _TransformerOutputBytesDaslSync,
       json: _TransformerOutputBytesJson,
     },
-    raw: {
-      atprotoSync: _TransformerOutputRawAtprotoSync,
-    },
     refiner: {
       default: _TransformerOutputRefinerDefault,
       initialContents: _TransformerOutputRefinerInitialContents,
-      passkeyEncryption: _TransformerOutputRefinerPasskeyEncryption,
       pathCollections: _TransformerOutputRefinerPathCollections,
     },
     string: {

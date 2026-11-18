@@ -38,8 +38,6 @@ if (outputOrchestrator.hasSelected() && !outputOrchestrator.selected()) {
 /** @type {Record<string, string>} */
 const ICONS = {
   "Local": "devices",
-  "AT Protocol (Public)": "at",
-  "AT Protocol (Space)": "at",
   "Firkin": "scales",
   "S3": "amazon-logo",
   "Dropbox": "dropbox-logo",

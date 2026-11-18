@@ -302,18 +302,6 @@ export default {
       desc:
         "Store output data on AWS S3 or compatible services such as Cloudflare R2.",
     },
-    {
-      url: "components/output/raw/atproto-passkey/element.js",
-      title: "Raw / AT Protocol (Public)",
-      desc:
-        "Store your user data on the storage associated with your ATProtocol identity. Data is lexicon shaped by default so this element takes in that data directly without any transformations.",
-    },
-    {
-      url: "components/output/raw/atproto-space/element.js",
-      title: "Raw / AT Protocol (Space)",
-      desc:
-        "Raw output backed by an AT Protocol permissioned data space, storing the user's Diffuse data in their own account space.",
-    }
   ],
 
   supplements: [
@@ -321,7 +309,7 @@ export default {
       url: "components/supplement/atproto-publish/element.js",
       title: "Publish on the Atmosphere",
       desc:
-        "Publishes playlist items, facets and collaborations to the user's AT Protocol account beside whichever output is selected. Reuses the public AT Protocol output's session and only writes changed records.",
+        "Publishes playlist items, facets and collaborations to the user's AT Protocol account beside whichever output is selected. Owns the shared AT Protocol publish session and only writes changed records.",
     },
     {
       url: "components/supplement/last.fm/element.js",
@@ -353,18 +341,6 @@ export default {
       desc: "Raw data schema output to and from JSON Uint8Array.",
     },
     {
-      url: "components/transformer/output/raw/atproto-sync/element.js",
-      title: "Output / Raw / AT Protocol Sync (Public)",
-      desc:
-        "Wraps an AT Protocol output with a local IndexedDB cache. Uses the repo revision to skip unnecessary fetches and performs union merges with tombstone tracking when both local and remote have diverged.",
-    },
-    {
-      url: "components/transformer/output/raw/atproto-space-sync/element.js",
-      title: "Output / Raw / AT Protocol Sync (Space)",
-      desc:
-        "Wraps an AT Protocol space output with a local IndexedDB cache and keeps the two in sync via union merge by record id (using updatedAt as tiebreaker). Re-syncs on remote-ready and on every save, as spaces have neither a firehose nor a revision.",
-    },
-    {
       url: "components/transformer/output/refiner/default/element.js",
       title: "Output / Refiner / Default",
       desc:
@@ -374,13 +350,6 @@ export default {
       url: "components/transformer/output/refiner/initial-contents/element.js",
       title: "Output / Refiner / Initial Contents",
       desc: "Sets the initial contents for an output on first load.",
-    },
-    {
-      url:
-        "components/transformer/output/refiner/passkey-encryption/element.js",
-      title: "Output / Refiner / Track URI Passkey",
-      desc:
-        "Encrypts track URIs using a passkey-derived PRF key. On read, decrypts encrypted:// URIs transparently; on write, re-encrypts all URIs before passing downstream.",
     },
     {
       url:

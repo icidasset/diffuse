@@ -94,17 +94,10 @@
     "desc": "A listing of some of the options available to use as an audio source, or as a user-data storage method."
   },
   {
-    "url": "facets/connect/atproto-passkey/index.tile",
-    "title": "Connect / Atmosphere (Public)",
+    "url": "facets/connect/atproto/index.tile",
+    "title": "Connect / Atmosphere",
     "category": "Data",
-    "desc": "Use your AT Protocol account for user-data storage. Your data will be stored as public records, but sensitive data can be encrypted using a passkey."
-  },
-  {
-    "url": "facets/connect/atproto-space/index.tile",
-    "title": "Connect / Atmosphere (Space)",
-    "category": "Data",
-    "incomplete": true,
-    "desc": "Use your AT Protocol account for user-data storage. Your data is stored in your own repo and is not broadcast publicly."
+    "desc": "Connect your AT Protocol account. Atmosphere-powered features in Diffuse, such as publishing your facets, playlists and collaborations, use this account."
   },
   {
     "url": "facets/connect/dropbox/index.tile",
@@ -199,7 +192,7 @@
     "kind": "prelude",
     "category": "Data",
     "tags": ["base"],
-    "desc": "The default setup for user-data storage output. Adds support for: AT Protocol, Dropbox, and S3-compatible storage. For these a custom local-first syncing algorithm is used."
+    "desc": "The default setup for user-data storage output. Adds support for: Dropbox and S3-compatible storage. For these a custom local-first syncing algorithm is used."
   },
   {
     "url": "facets/data/upload-bundle/index.tile",

@@ -18,15 +18,6 @@ describe("components/configurator/output carry-over chains", () => {
       await import(
         "~/components/transformer/output/bytes/dasl-sync/element.js"
       );
-      await import(
-        "~/components/transformer/output/raw/atproto-sync/element.js"
-      );
-      await import(
-        "~/components/transformer/output/raw/atproto-space-sync/element.js"
-      );
-      await import(
-        "~/components/transformer/output/refiner/passkey-encryption/element.js"
-      );
 
       const track = {
         $type: "sh.diffuse.output.track",
@@ -59,42 +50,6 @@ describe("components/configurator/output carry-over chains", () => {
           option.id = `option-${suffix}`;
           option.setAttribute("namespace", `option-${suffix}`);
           option.setAttribute("output-selector", `#${remote.id}`);
-          root.append(option);
-          return option;
-        }],
-        ["atproto-sync", (root, suffix) => {
-          const remote = makeRemote(root, suffix);
-          const option = document.createElement("dtor-atproto-sync");
-          option.id = `option-${suffix}`;
-          option.setAttribute("namespace", `option-${suffix}`);
-          option.setAttribute("output-selector", `#${remote.id}`);
-          root.append(option);
-          return option;
-        }],
-        ["atproto-space-sync", (root, suffix) => {
-          const remote = makeRemote(root, suffix);
-          const option = document.createElement("dtor-atproto-space-sync");
-          option.id = `option-${suffix}`;
-          option.setAttribute("namespace", `option-${suffix}`);
-          option.setAttribute("output-selector", `#${remote.id}`);
-          root.append(option);
-          return option;
-        }],
-        ["passkey-encryption", (root, suffix) => {
-          const remote = makeRemote(root, suffix);
-
-          const sync = document.createElement("dtor-atproto-sync");
-          sync.id = `sync-${suffix}`;
-          sync.setAttribute("namespace", `option-${suffix}`);
-          sync.setAttribute("output-selector", `#${remote.id}`);
-          root.append(sync);
-
-          const option = document.createElement(
-            "dtor-passkey-encryption",
-          );
-          option.id = `option-${suffix}`;
-          option.setAttribute("namespace", `option-${suffix}`);
-          option.setAttribute("output-selector", `#${sync.id}`);
           root.append(option);
           return option;
         }],
@@ -157,9 +112,6 @@ describe("components/configurator/output carry-over chains", () => {
 
     expect(result).toEqual([
       { name: "dasl-sync", tracks: ["t1"] },
-      { name: "atproto-sync", tracks: ["t1"] },
-      { name: "atproto-space-sync", tracks: ["t1"] },
-      { name: "passkey-encryption", tracks: ["t1"] },
     ]);
   });
 });

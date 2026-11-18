@@ -39,7 +39,7 @@ The self-describing machinery that does the work lives in:
 - `src/common/lens.js` — `project()`, `migrate()`, `migrateEnvelope()`; the engine
   that applies a lens's steps to project records between NSIDs.
 - Each output encoder's read path (indexed-db, `bytes/json`, `string/json`,
-  `bytes/dasl-sync`, `bytes/automerge`, atproto-space blob bundles) calls
+  `bytes/dasl-sync`, `bytes/automerge`) calls
   `migrateEnvelope` so stale payloads are migrated on read.
 
 ## Steps

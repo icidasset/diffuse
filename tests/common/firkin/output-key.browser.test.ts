@@ -72,7 +72,7 @@ describe("common/firkin/output-key (browser)", () => {
       // Same PRF bytes must land on the same key, and a different purpose must
       // not: that separation is what keeps this key apart from the track-URI key.
       const { deriveCipherKey } = await import(
-        "~/components/transformer/output/refiner/passkey-encryption/passkey.js"
+        "~/common/passkey.js"
       );
 
       const iv = crypto.getRandomValues(new Uint8Array(12));

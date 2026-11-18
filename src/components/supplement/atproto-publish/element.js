@@ -16,7 +16,7 @@ import {
   restoreOrFinalize,
   TokenRefreshError,
   withOAuth,
-} from "~/components/output/raw/atproto-passkey/oauth.js";
+} from "~/oauth/atproto.js";
 
 import {
   bytesHash,
@@ -68,9 +68,9 @@ const DELETE_BATCH_SIZE = 100;
  * Protocol account.
  *
  * This is deliberately not an output: it reads from whichever output is
- * selected and publishes a copy to the account connected through the public
- * AT Protocol output's OAuth session. That makes it usable alongside any
- * storage method (S3, Dropbox, the local output, …).
+ * selected and publishes a copy to the account connected through the shared
+ * AT Protocol publish session. That makes it usable alongside any storage
+ * method (S3, Dropbox, the local output, …).
  *
  * @implements {ATProtoPublishElement}
  */
@@ -231,7 +231,7 @@ class ATProtoPublish extends BroadcastableDiffuseElement {
           this.#resetSession();
         } else {
           console.info(
-            "ATProto publish: no AT Protocol session; connect Atmosphere (Public) to publish.",
+            "ATProto publish: no AT Protocol session; connect an account to publish.",
           );
         }
       } catch (err) {
@@ -256,7 +256,7 @@ class ATProtoPublish extends BroadcastableDiffuseElement {
     const agent = new OAuthUserAgent(session);
 
     // All RPC goes through `agent.handle()`. Run it with the atcute library
-    // configured for the public AT Protocol output under the shared OAuth
+    // configured for the shared AT Protocol client under the shared OAuth
     // lock; otherwise another module (Rocksky) can leave the globals pointing
     // at its own database/client id and a token refresh here would fail.
     const originalHandle = agent.handle.bind(agent);
@@ -467,10 +467,6 @@ class ATProtoPublish extends BroadcastableDiffuseElement {
     const did = this.#did.value;
     if (!output || !this.#rpc || !did) return;
 
-    // The public output already stores these records in the account; writing
-    // them again would only burn rate limit without changing anything.
-    if (this.#alreadyInPublicRepo(output)) return;
-
     const playlistCollection = output.playlistItems.collection();
     const facetCollection = output.facets.collection();
     const collaborationCollection = output.collaborations.collection();
@@ -562,7 +558,7 @@ class ATProtoPublish extends BroadcastableDiffuseElement {
     );
 
     // Playlists are stored as one bundle record (with a CBOR blob) per
-    // playlist, matching the public output's data shape.
+    // playlist, matching the data shape other Diffuse clients expect.
     for (const { rkey, playlist, bytes, hash } of playlistUpserts) {
       const blob = await this.#uploadBlob(bytes);
       if (!blob) continue;
@@ -587,9 +583,9 @@ class ATProtoPublish extends BroadcastableDiffuseElement {
       nextFacets[id] = { hash, rkey: id };
     }
 
-    // Only delete records this element published itself. Another client (or
-    // the public output) may store other records in these collections that the
-    // selected output doesn't know about; those must be left alone.
+    // Only delete records this element published itself. Another client may
+    // store other records in these collections that the selected output
+    // doesn't know about; those must be left alone.
     if (playlistDeletes.length > 0) {
       await this.#applyDeletes(PLAYLIST_ITEM_BUNDLE, playlistDeletes);
       for (const rkey of playlistDeletes) delete nextPlaylists[rkey];
@@ -610,26 +606,6 @@ class ATProtoPublish extends BroadcastableDiffuseElement {
       playlists: nextPlaylists,
       facets: nextFacets,
     });
-  }
-
-  /**
-   * Whether the selected output already stores the data in the public AT
-   * Protocol repo. The space output is not skipped: its data lives in a space,
-   * so publishing a public copy is still the point of this element.
-   *
-   * @param {OutputElement<any>} output
-   * @returns {boolean}
-   */
-  #alreadyInPublicRepo(output) {
-    const configurable = /** @type {any} */ (output);
-
-    if (typeof configurable.selected !== "function") return false;
-
-    const selected = configurable.selected();
-    if (!selected) return false;
-
-    const connect = selected.getAttribute?.("connect") ?? "";
-    return connect.includes("atproto-passkey");
   }
 
   // RPC
@@ -751,5 +727,8 @@ export default ATProtoPublish;
 
 export const CLASS = ATProtoPublish;
 export const NAME = "ds-atproto-publish";
+
+/** Marks the element mounted by the prelude so it is never mounted twice. */
+export const MARKER = "data-atproto-publish";
 
 defineElement(NAME, CLASS);

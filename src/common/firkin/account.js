@@ -7,10 +7,7 @@ import {
   inlineInvocation,
 } from "@tokono.ma/firkin";
 
-import {
-  adoptPasskeyPrfResult,
-  createPasskey,
-} from "~/components/transformer/output/refiner/passkey-encryption/passkey.js";
+import { adoptPasskeyPrfResult, createPasskey } from "~/common/passkey.js";
 import {
   clientForSession,
   deleteSession,

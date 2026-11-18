@@ -71,8 +71,8 @@ const OAUTH_CONFIG = {
  * Configure the atcute library for Rocksky.
  *
  * `@atcute/oauth-browser-client` keeps its database and client id in module
- * globals, shared with every other module that imports it (notably the
- * `atproto-passkey` output). Whichever module called `configureOAuth()` last
+ * globals, shared with every other module that imports it (notably the AT
+ * Protocol publish client). Whichever module called `configureOAuth()` last
  * owns the globals, and a token refresh reads and writes through them. Every
  * operation below therefore runs under `withOAuthContext()`, which holds the
  * shared lock and re-configures when this module doesn't already own them.

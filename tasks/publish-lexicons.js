@@ -1,14 +1,10 @@
-// Publishes the Diffuse lexicons (including the `sh.diffuse.atproto.space`
-// space declaration) as `com.atproto.lexicon.schema` records on an atproto PDS.
-//
-// This mirrors the atproto reference app's lexicon-publishing step. Note that a
-// `space:` scope only resolves if the PDS's lexicon authority resolves the
-// `sh.diffuse.*` namespace from the target account's DID.
+// Publishes the Diffuse lexicons as `com.atproto.lexicon.schema` records on an
+// atproto PDS.
 //
 // Usage:
 //   deno run -A tasks/publish-lexicons.js \
-//     https://spaces-alpha.host.bsky.network \
-//     toko.spaces-alpha.bsky.network \
+//     https://bsky.social \
+//     you.bsky.social \
 //     "<login-password>"
 
 const LEXICON_COLLECTION = "com.atproto.lexicon.schema";

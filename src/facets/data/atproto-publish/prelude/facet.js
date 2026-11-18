@@ -1,9 +1,10 @@
 import foundation from "~/common/foundation.js";
 import { effect } from "~/common/signal.js";
 
-import { NAME as PUBLISH_NAME } from "~/components/supplement/atproto-publish/element.js";
-
-const MARKER = "data-atproto-publish";
+import {
+  MARKER,
+  NAME as PUBLISH_NAME,
+} from "~/components/supplement/atproto-publish/element.js";
 
 /**
  * Mount the Publish on the Atmosphere element beside whatever output is
