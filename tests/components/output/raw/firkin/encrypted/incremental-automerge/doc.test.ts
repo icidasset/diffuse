@@ -36,6 +36,39 @@ describe("components/output/raw/firkin/encrypted/incremental-automerge/doc", () 
     expect(recordsOf(doc)).toEqual(items);
   });
 
+  it("drops undefined values instead of throwing", () => {
+    // Automerge cannot store `undefined`: assigning it throws
+    // "Cannot assign undefined value at /records/<id>/<field>". The input
+    // workers hand over records like `{ stats: previous?.stats }`, so this is
+    // the normal case, not a malformed one.
+    const withUndefined = {
+      $type: "sh.diffuse.output.track",
+      id: "a",
+      uri: "https://a/a",
+      stats: undefined,
+      tags: { title: undefined, artist: "Artist" },
+      list: ["kept", undefined],
+    };
+
+    const { doc, changed } = changeDocument(createDocument(), [withUndefined]);
+
+    expect(changed).toBe(true);
+
+    const [record] = recordsOf(doc);
+
+    // Absent, not `null`: the key is gone entirely, which is also what
+    // `JSON.stringify` would have produced for the same record.
+    expect("stats" in record).toBe(false);
+    expect(record.tags).toEqual({ artist: "Artist" });
+
+    // Inside arrays an undefined entry becomes null, so the other items keep
+    // their indices.
+    expect(record.list).toEqual(["kept", null]);
+
+    // And the document it produced is a valid Automerge document.
+    expect(recordsOf(loadDocument(encodeDocument(doc)))).toEqual([record]);
+  });
+
   it("keeps list fields as arrays", () => {
     // Spreading an array (`{ ...list }`) silently turns it into an object with
     // numeric keys, which breaks `includes`, `map` and friends downstream.

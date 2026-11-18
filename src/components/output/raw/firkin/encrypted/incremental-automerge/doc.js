@@ -3,7 +3,6 @@ import { isUint8Array } from "iso-base/utils";
 
 import {
   recursivelyCloneRecords,
-  removeUndefinedValuesFromRecord,
 } from "~/common/utils.js";
 
 /**
@@ -137,7 +136,7 @@ function normalizeLists(value) {
  *
  * @param {Automerge.Doc<CollectionDocument>} doc
  * @param {any[]} items
- * @param {{ schema?: string; stripUndefined?: boolean }} [options]
+ * @param {{ schema?: string }} [options]
  * @returns {{ doc: Automerge.Doc<CollectionDocument>; changed: boolean }}
  */
 export function changeDocument(doc, items, options = {}) {
@@ -145,10 +144,9 @@ export function changeDocument(doc, items, options = {}) {
   const next = new Map();
 
   for (const item of items) {
-    const cloned = recursivelyCloneRecords(item);
     next.set(
       item.id,
-      options.stripUndefined ? removeUndefinedValuesFromRecord(cloned) : cloned,
+      withoutUndefined(recursivelyCloneRecords(item)),
     );
   }
 
@@ -182,6 +180,37 @@ export function changeDocument(doc, items, options = {}) {
   });
 
   return { doc: nextDoc, changed: true };
+}
+
+/**
+ * Drop `undefined` values, recursively.
+ *
+ * Automerge cannot store `undefined`: assigning a record that carries one throws
+ * `Cannot assign undefined value at /records/<id>/<field>`. Records routinely
+ * arrive with such keys — the input workers report `stats: previous?.stats` —
+ * and every other output either drops them (JSON) or never sees them, so the
+ * output boundary is where they have to go. Inside arrays they become `null`,
+ * which is what `JSON.stringify` would have produced anyway, and keeps the
+ * indices of the remaining items.
+ *
+ * @param {any} value
+ * @returns {any}
+ */
+function withoutUndefined(value) {
+  if (Array.isArray(value)) {
+    return value.map((item) => (item === undefined ? null : withoutUndefined(item)));
+  }
+  if (value === null || typeof value !== "object") return value;
+
+  /** @type {Record<string, any>} */
+  const clean = {};
+
+  for (const [key, item] of Object.entries(value)) {
+    if (item === undefined) continue;
+    clean[key] = withoutUndefined(item);
+  }
+
+  return clean;
 }
 
 /**

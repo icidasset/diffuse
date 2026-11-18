@@ -449,7 +449,6 @@ class FirkinAutomergeOutput extends BroadcastedOutputElement {
       const current = this.#docs.get(name) ?? createDocument();
       const { doc, changed } = changeDocument(current, items, {
         schema: collectionSchema(name),
-        stripUndefined: name === "facets",
       });
 
       if (!changed) return;
