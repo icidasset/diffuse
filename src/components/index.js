@@ -42,6 +42,7 @@ import * as _OutputBytesS3 from "./output/bytes/s3/element.js"
 import * as _OutputPolymorphicIndexedDb from "./output/polymorphic/indexed-db/element.js"
 import * as _OutputRawAtprotoPasskey from "./output/raw/atproto-passkey/element.js"
 import * as _OutputRawFirkinEncryptedIncrementalAutomerge from "./output/raw/firkin/encrypted/incremental-automerge/element.js"
+import * as _SupplementAtprotoPublish from "./supplement/atproto-publish/element.js"
 import * as _SupplementLastFm from "./supplement/last.fm/element.js"
 import * as _SupplementListenbrainz from "./supplement/listenbrainz/element.js"
 import * as _SupplementRocksky from "./supplement/rocksky/element.js"
@@ -137,6 +138,7 @@ export const output = {
 }
 
 export const supplement = {
+  atprotoPublish: _SupplementAtprotoPublish,
   lastFm: _SupplementLastFm,
   listenbrainz: _SupplementListenbrainz,
   rocksky: _SupplementRocksky,

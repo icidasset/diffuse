@@ -318,6 +318,12 @@ export default {
 
   supplements: [
     {
+      url: "components/supplement/atproto-publish/element.js",
+      title: "Publish on the Atmosphere",
+      desc:
+        "Publishes playlist items, facets and collaborations to the user's AT Protocol account beside whichever output is selected. Reuses the public AT Protocol output's session and only writes changed records.",
+    },
+    {
       url: "components/supplement/last.fm/element.js",
       title: "Last.fm Scrobbler",
       desc: "Scrobbles track plays to Last.fm.",

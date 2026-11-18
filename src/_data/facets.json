@@ -275,6 +275,15 @@
     "desc": "Process all your audio inputs into tracks automatically when opening any interface. Only happens once every 10 minutes, if the processing was completed."
   },
   {
+    "url": "facets/data/atproto-publish/prelude/index.tile",
+    "title": "Publish on the Atmosphere",
+    "kind": "prelude",
+    "category": "Data",
+    "featured": false,
+    "incomplete": true,
+    "desc": "Publish your facets, playlists and collaborations on your Atmosphere (atproto) account."
+  },
+  {
     "url": "facets/playback/queue/index.tile",
     "title": "Queue",
     "category": "Playback",
