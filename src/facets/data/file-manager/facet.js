@@ -1214,7 +1214,15 @@ async function removeRemoteEntry(uri, name) {
     // orchestrator's `mergeById` (which uses stale `cachedTracks` from the
     // start of its run) can bring back the deleted track on the next
     // `process()` call.
-    const listed = await inputConfigurator.list(filteredTracks);
+    //
+    // Pass the *unfiltered* tracks (not `filteredTracks`): input components
+    // derive their accounts from the cached tracks and only emit a
+    // placeholder for a source that still has one. Filtering out the last
+    // track of a source would erase it from the listings entirely, so the
+    // source would disappear from `sourcesOrchestrator.sources()` and
+    // subsequent uploads would have no destination. The deleted track itself
+    // won't come back because the cloud listing no longer contains it.
+    const listed = await inputConfigurator.list(tracks);
     await outputOrchestrator.tracks.save(listed);
   } catch (err) {
     const msg = err instanceof Error ? err.message : "Failed to remove entry";
@@ -1565,9 +1573,12 @@ async function resumeUpload(scheme, refreshToken) {
       });
       if (target) {
         await uploadConfigurator.delete(target.uri);
-        // Remove just this track from the output (not the entire source —
-        // `inputConfigurator.detach` would remove all tracks for the account).
-        const afterDelete = listed.filter((t) => t.uri !== target.uri);
+        // Re-list from the cloud so deleting the last track of a source
+        // leaves a placeholder behind (keeping the source available for
+        // future uploads) instead of dropping the source entirely. Pass the
+        // pre-delete tracks so their accounts are still known to the input
+        // component.
+        const afterDelete = await inputConfigurator.list(listed);
         await outputOrchestrator.tracks.save(afterDelete);
       }
     }
