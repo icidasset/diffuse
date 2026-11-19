@@ -53,6 +53,13 @@ export const FIRST_READ_TIMEOUT_MS = 1_500;
 export const MANIFEST_CAS_RETRIES = 5;
 
 /**
+ * How long a save waits before it is pushed. Saves are local-first, so a burst
+ * (processing a library, a batch of edits) coalesces into one remote append
+ * instead of one manifest rewrite per batch.
+ */
+export const PUSH_COALESCE_MS = 750;
+
+/**
  * IndexedDB prefixes. Documents, push cursors and the actor id are per device;
  * pack and floor caches are shared by every instance using the same namespace.
  */

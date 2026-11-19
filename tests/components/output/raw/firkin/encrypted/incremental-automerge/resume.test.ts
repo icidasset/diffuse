@@ -228,11 +228,14 @@ describe("components/output/raw/firkin/encrypted/incremental-automerge resume", 
           "~/components/output/raw/firkin/encrypted/incremental-automerge/element.js"
         );
 
-        const { logName, registryNamespace } = await import(
+        const { IDB_DOCS, logName, registryNamespace } = await import(
           "~/components/output/raw/firkin/encrypted/incremental-automerge/constants.js"
         );
 
         const namespace = "firkin-resume";
+        const tracksCursor = `${IDB_DOCS}/${namespace}/tracks/cursor`;
+
+        const cursorHeads = async () => (await IDB.get(tracksCursor))?.heads;
 
         const root = document.createElement("div");
         document.body.append(root);
@@ -274,10 +277,20 @@ describe("components/output/raw/firkin/encrypted/incremental-automerge resume", 
         const writer = makeOption("resume-writer");
         await until(() => writer.ready());
 
+        // The save's push is coalesced, so wait for its cursor rather than
+        // guessing from a quiet upload counter.
+        await until(async () => Array.isArray(await cursorHeads()));
+        const headsBeforeSave = (await cursorHeads() ?? []).join(";");
+
         await writer.tracks.save([track("t1")]);
 
-        // Wait for the first push and the startup bootstrap pushes to drain, so
-        // the manifest captured below is the one the interrupted save sees.
+        await until(async () => {
+          const heads = await cursorHeads();
+          return Array.isArray(heads) && heads.join(";") !== headsBeforeSave;
+        });
+
+        // Let the startup bootstrap pushes drain too, so the manifest captured
+        // below is the one the interrupted save sees.
         let lastUploads = -1;
         while (lastUploads !== uploads) {
           lastUploads = uploads;

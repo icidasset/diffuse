@@ -502,7 +502,73 @@ describe("components/output/raw/firkin/encrypted/incremental-automerge pull resu
 
         const tracksPacksRefetched = getCids.some((cid) => tracksPacks.has(cid));
         const secondRead = await until(() => tracksOf(secondReader));
+        const secondGets = getCids.length;
         countGets = false;
+
+        // ===== 5. Only an appended entry is fetched on the next pull ========
+        const namespaceE = "firkin-pull-e";
+
+        const writerE = makeOption("pull-writer-e", namespaceE);
+        await until(() => writerE.ready());
+        await until(async () =>
+          Array.isArray(await cursorHeads(namespaceE, "tracks"))
+        );
+
+        const headsBeforeE = (
+          await cursorHeads(namespaceE, "tracks")
+        ).join(";");
+
+        await writerE.tracks.save([track("t1")]);
+        await until(async () => {
+          const heads = await cursorHeads(namespaceE, "tracks");
+          return Array.isArray(heads) && heads.join(";") !== headsBeforeE;
+        });
+        await until(() => manifestCount(namespaceE) >= COLLECTIONS.length);
+
+        const beforeReader = makeOption("pull-before-reader", namespaceE);
+        const appliedE = await until(async () => {
+          const record = await IDB.get(
+            `${docKey(namespaceE, "tracks")}/applied`,
+          );
+
+          return record && typeof record.packs === "string"
+            ? record
+            : undefined;
+        }, 5_000);
+        const oldPacks = new Set(appliedE?.packs.split(";") ?? []);
+
+        // Append a second entry. The next reader starts from the stored applied
+        // log, which is a prefix of the new one.
+        const manifestBeforeE = tracksManifest(namespaceE);
+        await writerE.tracks.save([track("t1"), track("t2")]);
+        await until(() => tracksManifest(namespaceE) !== manifestBeforeE);
+
+        beforeReader.remove();
+        writerE.remove();
+        await clearPackCache();
+
+        getCids.length = 0;
+        countGets = true;
+
+        const afterReader = makeOption("pull-after-reader", namespaceE);
+        const manifestE = tracksManifest(namespaceE);
+        await until(() => getCids.includes(manifestE));
+        await new Promise((resolve) => setTimeout(resolve, 400));
+
+        const afterRead = await until(() => tracksOf(afterReader));
+        countGets = false;
+
+        const currentApplied = await IDB.get(
+          `${docKey(namespaceE, "tracks")}/applied`,
+        );
+        const newPacks = (currentApplied?.packs ?? "")
+          .split(";")
+          .filter((cid) => cid.length > 0 && !oldPacks.has(cid));
+
+        const oldPacksFetched = [...oldPacks].filter((cid) =>
+          getCids.includes(cid)
+        );
+        const newPacksFetched = newPacks.every((cid) => getCids.includes(cid));
 
         return {
           pushed,
@@ -515,8 +581,12 @@ describe("components/output/raw/firkin/encrypted/incremental-automerge pull resu
           afterVisible,
           appliedPacks: typeof applied?.packs === "string",
           tracksPacksRefetched,
-          tracksManifestFetched: getCids.includes(manifest),
+          tracksPacksRefetched,
           secondRead,
+          secondGets,
+          afterRead,
+          oldPacksFetched: oldPacksFetched.length,
+          newPacksFetched,
           errors,
           warnings: warnings.filter((warning) =>
             !warning.includes("initSync") &&
@@ -548,12 +618,17 @@ describe("components/output/raw/firkin/encrypted/incremental-automerge pull resu
     expect(result.whileHidden).toEqual(["t1"]);
     expect(result.afterVisible).toEqual(["t1", "t2"]);
 
-    // The persisted CID list proved the tracks log was unchanged: its manifest
-    // was re-read, but none of its packs were.
+    // The persisted CID list proved the tracks log was unchanged: its packs
+    // were not re-read, and the reader still had the data.
     expect(result.appliedPacks).toBe(true);
-    expect(result.tracksManifestFetched).toBe(true);
     expect(result.tracksPacksRefetched).toBe(false);
+    expect(result.secondGets).toBeGreaterThan(0);
     expect(result.secondRead).toEqual(["t1"]);
+
+    // An appended entry pulls only the new pack, not the stored log's packs.
+    expect(result.afterRead).toEqual(["t1", "t2"]);
+    expect(result.oldPacksFetched).toBe(0);
+    expect(result.newPacksFetched).toBe(true);
 
     expect(result.warnings).toEqual([]);
     expect(result.errors).toEqual([]);

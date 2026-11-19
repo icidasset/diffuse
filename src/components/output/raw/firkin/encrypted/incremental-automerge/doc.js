@@ -83,6 +83,18 @@ export function normalize(doc) {
 }
 
 /**
+ * Whether a document has any records, without materialising the collection.
+ *
+ * `recordsOf()` walks and normalises every record, which is the right thing for
+ * rendering but far too much just to answer "is this empty?".
+ *
+ * @param {AutomergeDoc} doc
+ */
+export function hasRecords(doc) {
+  return doc.order.length > 0 || Object.keys(doc.records).length > 0;
+}
+
+/**
  * @param {Automerge.Doc<CollectionDocument>} doc
  * @returns {any[]}
  */
@@ -116,7 +128,21 @@ export function recordsOf(doc) {
  * @returns {any}
  */
 function normalizeLists(value) {
-  if (Array.isArray(value)) return value.map(normalizeLists);
+  if (Array.isArray(value)) {
+    // Arrays of primitives are the common case; they need no rewrite at all.
+    let changed = false;
+
+    for (const item of value) {
+      if (item === null || typeof item !== "object") continue;
+      if (normalizeLists(item) !== item) {
+        changed = true;
+        break;
+      }
+    }
+
+    return changed ? value.map(normalizeLists) : value;
+  }
+
   if (value === null || typeof value !== "object") return value;
 
   const entries = Object.entries(value);
@@ -125,8 +151,12 @@ function normalizeLists(value) {
   const isList = normalized.length > 0 &&
     normalized.every(([key], index) => key === String(index));
 
-  return isList
-    ? normalized.map(([, item]) => item)
+  if (isList) return normalized.map(([, item]) => item);
+
+  // A plain object whose nested values are already fine is returned as-is, so
+  // reading a collection doesn't clone the whole library.
+  return normalized.every(([, item], index) => item === entries[index][1])
+    ? value
     : Object.fromEntries(normalized);
 }
 
@@ -140,39 +170,52 @@ function normalizeLists(value) {
  * @returns {{ doc: Automerge.Doc<CollectionDocument>; changed: boolean }}
  */
 export function changeDocument(doc, items, options = {}) {
-  /** @type {Map<string, any>} */
-  const next = new Map();
+  /** @type {string[]} */
+  const order = [];
+  const ids = new Set();
 
   for (const item of items) {
-    next.set(
-      item.id,
-      withoutUndefined(recursivelyCloneRecords(item)),
-    );
+    if (ids.has(item.id)) continue;
+
+    ids.add(item.id);
+    order.push(item.id);
   }
 
-  const order = [...next.keys()];
+  const oldIds = Object.keys(doc.records);
 
   let changed = !sameArray(doc.order, order) || doc.$schema !== options.schema;
-  if (!changed) {
-    for (const [id, item] of next) {
-      if (!sameRecord(doc.records[id], item)) {
-        changed = true;
-        break;
-      }
-    }
+
+  // Clone only what actually changed. The previous version cloned the whole
+  // collection (a deep copy per record) just to discover that most records
+  // were identical, which made saving a large library quadratic-ish in practice.
+  /** @type {Map<string, any>} */
+  const changedRecords = new Map();
+
+  for (const item of items) {
+    if (sameRecord(doc.records[item.id], item)) continue;
+
+    changedRecords.set(item.id, withoutUndefined(recursivelyCloneRecords(item)));
+    changed = true;
   }
-  if (!changed && Object.keys(doc.records).length !== next.size) changed = true;
+
+  if (!changed && oldIds.length !== order.length) changed = true;
   if (!changed) return { doc, changed: false };
+
+  // Removals are known from the id sets, so the change doesn't have to walk the
+  // document's whole record map when nothing was deleted (the common case).
+  const deletes = oldIds.length !== order.length ||
+    oldIds.some((id) => !ids.has(id));
 
   const nextDoc = Automerge.change(doc, (d) => {
     if (options.schema) d.$schema = options.schema;
 
-    for (const id of Object.keys(d.records)) {
-      if (!next.has(id)) delete d.records[id];
+    if (deletes) {
+      for (const id of oldIds) {
+        if (!ids.has(id)) delete d.records[id];
+      }
     }
 
-    for (const [id, item] of next) {
-      if (sameRecord(d.records[id], item)) continue;
+    for (const [id, item] of changedRecords) {
       d.records[id] = item;
     }
 

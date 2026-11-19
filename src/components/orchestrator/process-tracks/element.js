@@ -24,6 +24,13 @@ import { parseDisabledUris } from "~/components/orchestrator/sources/common.js";
 ////////////////////////////////////////////
 
 /**
+ * Coalesce the worker's progress batches into one save. A save rewrites the
+ * collection document and pushes it, so one save per batch makes a large
+ * library's metadata pass expensive.
+ */
+const PATCH_SAVE_MS = 1_000;
+
+/**
  * Processes inputs into tracks whenever
  * the already existing tracks are loaded
  * from the assigned output element.
@@ -34,6 +41,12 @@ class ProcessTracksOrchestrator extends BroadcastableDiffuseElement {
 
   /** @type {ProxiedActions<Actions>} */
   #proxy;
+
+  /** Latest progress snapshot from the worker. @type {Track[] | null} */
+  #pendingPatch = null;
+
+  /** @type {ReturnType<typeof setTimeout> | undefined} */
+  #patchTimer;
 
   constructor() {
     super();
@@ -133,13 +146,19 @@ class ProcessTracksOrchestrator extends BroadcastableDiffuseElement {
       this.output.tracks.save(tracks);
     }, link);
 
-    // Save patched tracks as they arrive so progress isn't lost.
-    // Merge with existing tracks to avoid overwriting ones not yet patched.
-    listen("patch", /** @param {Track[]} tracks */ async (tracks) => {
+    // Save patched tracks as they arrive so progress isn't lost — but coalesce
+    // the worker's batches into one save per second.
+    listen("patch", /** @param {Track[]} tracks */ (tracks) => {
       if (!this.output) return;
-      const existing = await data(this.output.tracks);
-      const merged = mergeById(existing, tracks);
-      this.output.tracks.save(merged);
+
+      this.#pendingPatch = tracks;
+
+      if (this.#patchTimer !== undefined) return;
+
+      this.#patchTimer = setTimeout(
+        () => void this.#flushPatch(),
+        PATCH_SAVE_MS,
+      );
     }, link);
 
     // Process whenever tracks are initially loaded;
@@ -219,6 +238,9 @@ class ProcessTracksOrchestrator extends BroadcastableDiffuseElement {
     });
 
     if (result) {
+      // The final result supersedes any coalesced progress save.
+      this.#cancelPatch();
+
       // Re-read the current output tracks instead of using the stale
       // `cachedTracks` snapshot from the start of processing. If a track
       // was deleted from the output while processing was in-flight, it
@@ -230,6 +252,40 @@ class ProcessTracksOrchestrator extends BroadcastableDiffuseElement {
     // Fin
     console.log("🪵 Processing completed");
     this.#isProcessing.set(false);
+  }
+
+  /** @override */
+  disconnectedCallback() {
+    // A progress save still waiting on its timer would otherwise be lost when
+    // the page navigates away mid-process.
+    if (this.#pendingPatch) void this.#flushPatch();
+
+    super.disconnectedCallback();
+  }
+
+  /** Save the latest coalesced progress snapshot. */
+  async #flushPatch() {
+    if (this.#patchTimer !== undefined) {
+      clearTimeout(this.#patchTimer);
+      this.#patchTimer = undefined;
+    }
+
+    const tracks = this.#pendingPatch;
+    this.#pendingPatch = null;
+
+    if (!tracks || !this.output) return;
+
+    const existing = await data(this.output.tracks);
+    await this.output.tracks.save(mergeById(existing, tracks));
+  }
+
+  #cancelPatch() {
+    if (this.#patchTimer !== undefined) {
+      clearTimeout(this.#patchTimer);
+      this.#patchTimer = undefined;
+    }
+
+    this.#pendingPatch = null;
   }
 }
 
