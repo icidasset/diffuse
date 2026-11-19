@@ -68,6 +68,26 @@ function fakeClient() {
       namespace(ns).set(name, cid);
     },
 
+    /**
+     * Compare-and-swap, like the real `If-Match` write.
+     *
+     * @param {string} ns
+     * @param {string} name
+     * @param {string} cid
+     * @param {string | null} when
+     */
+    async registrySetIf(ns, name, cid, when) {
+      const stored = namespace(ns);
+      const current = stored.get(name) ?? null;
+
+      if (when === null ? current !== null : current !== when) {
+        return { ok: false, current };
+      }
+
+      stored.set(name, cid);
+      return { ok: true, cid };
+    },
+
     /** @param {string} ns; @param {string} name */
     async registryGet(ns, name) {
       return namespace(ns).get(name) ?? null;
@@ -233,6 +253,38 @@ describe("components/output/raw/firkin/encrypted/incremental-automerge/log", () 
     expect(second.cid).toBe(first.cid);
     expect((await read(rb, "tracks", auth)).map((entry) => entry.cid))
       .toEqual([first.cid]);
+  });
+
+  it("retries an append that lost the manifest race", async () => {
+    const rb = fakeClient();
+    const auth = fakeAuth(deviceA);
+
+    await appendEntry(rb, "ns", "tracks", bytes("one"), { auth });
+
+    const registrySetIf = rb.registrySetIf;
+    let raced = false;
+
+    // The first CAS write observes another tab of the same device landing an
+    // append between the read and the write.
+    rb.registrySetIf = async (namespace, name, cid, when) => {
+      if (!raced) {
+        raced = true;
+        await appendEntry(rb, "ns", "tracks", bytes("other"), { auth });
+
+        return { ok: false, current: rb.registry.get(namespace).get(name) ?? null };
+      }
+
+      return registrySetIf(namespace, name, cid, when);
+    };
+
+    const result = await appendEntry(rb, "ns", "tracks", bytes("mine"), {
+      auth,
+    });
+    const entries = await read(rb, "tracks", auth);
+
+    expect(result.appended).toBe(true);
+    expect(entries.map((entry) => text(rb.blobs.get(entry.cid))).sort())
+      .toEqual(["mine", "one", "other"]);
   });
 
   it("bumps the sequence on every write", async () => {

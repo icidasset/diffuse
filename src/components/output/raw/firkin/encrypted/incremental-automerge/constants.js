@@ -46,6 +46,13 @@ export const NOT_READY_GRACE_MS = 750;
 export const FIRST_READ_TIMEOUT_MS = 1_500;
 
 /**
+ * Attempts at a compare-and-swap manifest write before giving up. A conflict
+ * means another tab of this same device appended in between; re-reading and
+ * rebuilding resolves it.
+ */
+export const MANIFEST_CAS_RETRIES = 5;
+
+/**
  * IndexedDB prefixes. Documents, push cursors and the actor id are per device;
  * pack and floor caches are shared by every instance using the same namespace.
  */

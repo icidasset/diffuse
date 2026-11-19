@@ -63,17 +63,20 @@ export function parseHint(data) {
  * @param {string} options.device - Ignore our own hints.
  * @param {() => Promise<string | undefined>} options.url
  * @param {(collection: string) => void} options.onHint
+ * @param {() => void} [options.onReconnect] - Called when a dropped channel is
+ *   re-established, so the caller can catch up on hints it missed.
  * @param {typeof WebSocket} [options.WebSocketImpl] - Injectable for tests.
  * @returns {{ send(collection: string): void; close(): void }}
  */
 export function openHintChannel(
-  { device, url, onHint, WebSocketImpl = WebSocket },
+  { device, url, onHint, onReconnect, WebSocketImpl = WebSocket },
 ) {
   /** @type {WebSocket | undefined} */
   let socket;
 
   let closed = false;
   let retries = 0;
+  let openedBefore = false;
   /** @type {ReturnType<typeof setTimeout> | undefined} */
   let reconnect;
 
@@ -88,6 +91,11 @@ export function openHintChannel(
 
     opened.addEventListener("open", () => {
       retries = 0;
+
+      // A reconnect means hints may have been missed while the socket was
+      // down; the first open follows the initial pull and needs no catch-up.
+      if (openedBefore) onReconnect?.();
+      openedBefore = true;
     });
 
     opened.addEventListener("message", (event) => {

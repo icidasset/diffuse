@@ -173,6 +173,37 @@ describe("common/firkin/channel", () => {
     channel.close();
   });
 
+  it("reports a reconnected channel so missed hints can be recovered", async () => {
+    FakeSocket.reset();
+
+    let reconnects = 0;
+
+    const channel = openHintChannel({
+      device: "mine",
+      url: async () => "ws://test/4",
+      onHint: () => {},
+      onReconnect: () => reconnects++,
+      WebSocketImpl: FakeSocket,
+    });
+
+    await flush();
+    const first = FakeSocket.instances[0];
+    first.open();
+
+    // The first open follows the initial pull; no catch-up is needed.
+    expect(reconnects).toBe(0);
+
+    first.close();
+    await new Promise((resolve) => setTimeout(resolve, 700));
+
+    const second = FakeSocket.instances[1];
+    expect(second).toBeDefined();
+    second.open();
+
+    expect(reconnects).toBe(1);
+    channel.close();
+  });
+
   it("debounces bursts per collection", () => {
     expect(HINT_DEBOUNCE_MS).toBeGreaterThan(0);
   });

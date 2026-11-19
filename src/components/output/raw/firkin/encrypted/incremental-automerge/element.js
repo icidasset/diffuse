@@ -208,12 +208,9 @@ class FirkinAutomergeOutput extends BroadcastedOutputElement {
       this.#settle = undefined;
 
       // A save made before the output was usable (e.g. an edit made before the
-      // encryption key arrived) only reached the local cache. Now that it can
-      // be written, push it.
-      for (const name of this.#dirty) {
-        const doc = this.#docs.get(name);
-        if (doc) this.#enqueuePush(name, doc);
-      }
+      // encryption key arrived), a push that failed, or one interrupted by a
+      // reload only reached the local cache. Now that it can write, push it.
+      void this.#pushUnpushed();
 
       void this.#pull();
     });
@@ -249,6 +246,8 @@ class FirkinAutomergeOutput extends BroadcastedOutputElement {
 
     globalThis.addEventListener("online", this.#online);
     globalThis.addEventListener("offline", this.#offline);
+    document.addEventListener("visibilitychange", this.#visibilityChange);
+    globalThis.addEventListener("pageshow", this.#pageShow);
 
     void this.#initialise();
     void this.#refreshConnected();
@@ -258,6 +257,8 @@ class FirkinAutomergeOutput extends BroadcastedOutputElement {
   disconnectedCallback() {
     globalThis.removeEventListener("online", this.#online);
     globalThis.removeEventListener("offline", this.#offline);
+    document.removeEventListener("visibilitychange", this.#visibilityChange);
+    globalThis.removeEventListener("pageshow", this.#pageShow);
 
     this.#closeChannel();
 
@@ -273,6 +274,43 @@ class FirkinAutomergeOutput extends BroadcastedOutputElement {
     this.#isOnline.set(true);
     void this.#refreshConnected();
   };
+
+  /**
+   * A page switch on mobile suspends the page (and usually the hint socket)
+   * without unloading it. Anything written while hidden would otherwise wait
+   * for the next hint or a reload, so re-read the log when it is shown again.
+   */
+  #visibilityChange = () => {
+    if (document.visibilityState !== "visible") return;
+
+    this.#catchUp();
+  };
+
+  /** A page restored from the back/forward cache skipped its normal load. */
+  #pageShow = (/** @type {PageTransitionEvent} */ event) => {
+    if (!event.persisted) return;
+
+    this.#catchUp();
+  };
+
+  /**
+   * Re-read the log after the page was away or the connection was
+   * re-established. Hints are best effort, so a missed hint is recovered here
+   * rather than waiting for the next write or a reload.
+   */
+  #catchUp() {
+    if (!this.isConnected) return;
+
+    // The session check may be what is stale. A successful one flips `ready`,
+    // whose effect pulls.
+    if (!this.ready()) {
+      void this.#refreshConnected();
+      return;
+    }
+
+    this.#listings.clear();
+    void this.#pull();
+  }
 
   async #refreshConnected() {
     try {
@@ -326,6 +364,7 @@ class FirkinAutomergeOutput extends BroadcastedOutputElement {
         return await current.rb.channelUrl(name);
       },
       onHint: (collection) => this.#refreshCollection(collection),
+      onReconnect: () => this.#catchUp(),
     });
   }
 
@@ -423,6 +462,7 @@ class FirkinAutomergeOutput extends BroadcastedOutputElement {
               // sequence number.
               this.#docs.set(name, createDocument(await this.#actor()));
               await this.#resetCursor(name);
+              await this.#resetAppliedLog(name);
             }
           } catch (err) {
             console.warn(`Could not read the local '${name}' document:`, err);
@@ -545,6 +585,61 @@ class FirkinAutomergeOutput extends BroadcastedOutputElement {
     return run;
   }
 
+  /**
+   * The log applied to the local document: its ordered pack CIDs and the heads
+   * those packs produced. Written only after a complete read, so a missing pack
+   * or manifest is retried instead of being mistaken for "nothing changed".
+   *
+   * @param {CollectionName} name
+   */
+  #appliedLogKey(name) {
+    return `${IDB_DOCS}/${this.#namespace}/${name}/applied`;
+  }
+
+  /**
+   * @param {CollectionName} name
+   * @returns {Promise<{ packs: string; heads: string } | undefined>}
+   */
+  async #appliedLog(name) {
+    try {
+      const stored = await IDB.get(this.#appliedLogKey(name));
+
+      if (
+        stored && typeof stored === "object" &&
+        typeof stored.packs === "string" &&
+        typeof stored.heads === "string"
+      ) {
+        return { packs: stored.packs, heads: stored.heads };
+      }
+    } catch (err) {
+      console.warn(`Could not read the '${name}' applied log:`, err);
+    }
+
+    return undefined;
+  }
+
+  /**
+   * @param {CollectionName} name
+   * @param {string} packs - `;`-joined ordered pack CIDs.
+   * @param {string} heads - The document heads those packs produced.
+   */
+  async #setAppliedLog(name, packs, heads) {
+    try {
+      await IDB.set(this.#appliedLogKey(name), { packs, heads });
+    } catch (err) {
+      console.warn(`Could not persist the '${name}' applied log:`, err);
+    }
+  }
+
+  /** @param {CollectionName} name */
+  async #resetAppliedLog(name) {
+    try {
+      await IDB.del(this.#appliedLogKey(name));
+    } catch (err) {
+      console.warn(`Could not reset the '${name}' applied log:`, err);
+    }
+  }
+
   // REMOTE
 
   /** @param {CollectionName} name */
@@ -637,6 +732,43 @@ class FirkinAutomergeOutput extends BroadcastedOutputElement {
     })();
 
     return this.#actorPromise;
+  }
+
+  /**
+   * Whether the local document has changes the log hasn't acknowledged.
+   *
+   * The cursor holds the heads of the last successful push (and the heads a
+   * completed read proved the log has), so anything newer is local-only: a
+   * save whose push failed, or one interrupted before its queued push ran.
+   *
+   * @param {CollectionName} name
+   * @param {AutomergeDoc} doc
+   */
+  async #hasUnpushed(name, doc) {
+    const cursor = await this.#cursor(name);
+
+    return headsOf(doc).join(";") !== (cursor.heads ?? []).join(";");
+  }
+
+  /**
+   * Push every collection whose local document is ahead of the log.
+   *
+   * Saves are written locally first and pushed from memory, so closing the page
+   * (or a tab that navigates away) before the queued push runs would otherwise
+   * leave the change local-only until the next save of that collection. Checking
+   * the persisted cursor against the loaded document on startup is what makes
+   * an interrupted upload resume.
+   */
+  async #pushUnpushed() {
+    await this.#initialise();
+
+    for (const name of COLLECTIONS) {
+      const doc = this.#docs.get(name);
+      if (!doc) continue;
+      if (!(await this.#hasUnpushed(name, doc))) continue;
+
+      this.#enqueuePush(name, doc);
+    }
   }
 
   /**
@@ -743,25 +875,59 @@ class FirkinAutomergeOutput extends BroadcastedOutputElement {
    * Read and decrypt one collection's log, framed entry by entry.
    *
    * @param {CollectionName} name
-   * @returns {Promise<Uint8Array | undefined>}
+   * @param {AutomergeDoc} current
+   * @returns {Promise<{ data: Uint8Array | undefined; packs: string; unchanged: boolean; complete: boolean }>}
    */
-  async #readLog(name) {
+  async #readLog(name, current) {
     const client = await getSessionClient();
-    if (!client) return undefined;
+    if (!client) {
+      return { data: undefined, packs: "", unchanged: false, complete: false };
+    }
 
     const entries = await this.#entries(client, name);
-    if (entries.length === 0) return undefined;
+    const packs = entries.map((entry) => entry.cid).join(";");
 
-    const packs = await Promise.all(
+    // Content-addressed change detection: the ordered pack CIDs are the log's
+    // identity, and the stored heads prove the local document still has exactly
+    // the result of applying them. Nothing was appended, so skip the fetch,
+    // decrypt and replay entirely.
+    if (entries.length > 0) {
+      const applied = await this.#appliedLog(name);
+
+      if (
+        applied?.packs === packs &&
+        applied.heads === headsOf(current).join(";") &&
+        // The cursor must agree too, or a crash between recording the log and
+        // the push cursor would make this skip hide a pending push.
+        !(await this.#hasUnpushed(name, current))
+      ) {
+        return { data: undefined, packs, unchanged: true, complete: true };
+      }
+    }
+
+    if (entries.length === 0) {
+      return { data: undefined, packs, unchanged: false, complete: false };
+    }
+
+    const loaded = await Promise.all(
       entries.map((entry) => this.#readPack(client.rb, entry.cid)),
     );
-    const present = /** @type {Uint8Array[]} */ (packs.filter(Boolean));
-    if (present.length === 0) return undefined;
+    const present = /** @type {Uint8Array[]} */ (loaded.filter(Boolean));
+    if (present.length === 0) {
+      return { data: undefined, packs, unchanged: false, complete: false };
+    }
 
     const key = outputKey();
-    if (!key) return undefined;
+    if (!key) {
+      return { data: undefined, packs, unchanged: false, complete: false };
+    }
 
-    return frameEntries(await decryptLog(key, concat(present)));
+    return {
+      data: frameEntries(await decryptLog(key, concat(present))),
+      packs,
+      unchanged: false,
+      complete: present.length === entries.length,
+    };
   }
 
   /**
@@ -814,11 +980,12 @@ class FirkinAutomergeOutput extends BroadcastedOutputElement {
       await this.#serialize(async () => {
         if (!this.ready()) return;
 
-        const log = await this.#readLog(name);
+        const current = this.#docs.get(name) ?? createDocument();
+        const log = await this.#readLog(name, current);
 
         await this.#applyLocked(
           name,
-          { state: "loaded", data: log },
+          { state: "loaded", ...log },
           { bootstrap: true },
         );
       });
@@ -831,7 +998,7 @@ class FirkinAutomergeOutput extends BroadcastedOutputElement {
    * The shared body. Must be called inside `#serialize`.
    *
    * @param {CollectionName} name
-   * @param {{ state: "loading" } | { state: "loaded"; data: Uint8Array | undefined } | { state: "error" }} collection
+   * @param {{ state: "loading" } | { state: "loaded"; data: Uint8Array | undefined; packs: string; unchanged: boolean; complete: boolean } | { state: "error" }} collection
    * @param {{ bootstrap?: boolean }} [options] - `bootstrap` publishes our local
    *   document when the log has nothing yet; only safe right after a read.
    */
@@ -840,8 +1007,16 @@ class FirkinAutomergeOutput extends BroadcastedOutputElement {
     if (collection.state !== "loaded") return;
 
     try {
+      // The stored pack list says the local document already is this log.
+      if (collection.unchanged) return;
+
       const bytes = collection.data;
       const current = this.#docs.get(name) ?? createDocument();
+      const before = headsOf(current).join(";");
+
+      // Capture this before applying: if the local document has changes the log
+      // doesn't, the merged heads below must not be recorded as pushed.
+      const unpushed = await this.#hasUnpushed(name, current);
 
       if (!(bytes instanceof Uint8Array)) {
         // Nothing remote yet: publish what we have so the namespace exists and
@@ -856,15 +1031,38 @@ class FirkinAutomergeOutput extends BroadcastedOutputElement {
       // Replaying an unchanged log is wasted work; the output hands back the
       // same bytes, so remember what was applied.
       const fingerprint = fingerprintOf(bytes);
-      if (fingerprint === this.#applied.get(name)) return;
+      if (fingerprint === this.#applied.get(name)) {
+        if (
+          !unpushed && collection.complete && collection.packs.length > 0
+        ) {
+          await this.#setAppliedLog(name, collection.packs, before);
+        }
+        return;
+      }
 
-      const before = headsOf(current).join(";");
       const doc = applyLog(current, bytes, await this.#actor());
 
       this.#applied.set(name, fingerprint);
       this.#docs.set(name, doc);
 
-      if (headsOf(doc).join(";") === before) return;
+      // Only remember this as the document's log when it fully explains the
+      // document; otherwise a later pull would skip the retry of the local-only
+      // changes instead of pushing them.
+      if (!unpushed && collection.complete && collection.packs.length > 0) {
+        await this.#setAppliedLog(
+          name,
+          collection.packs,
+          headsOf(doc).join(";"),
+        );
+      }
+
+      if (headsOf(doc).join(";") === before) {
+        // The log added nothing. Retry a failed push now that something proved
+        // the server is reachable; without this a dirty collection would wait
+        // for its next save.
+        if (unpushed) this.#enqueuePush(name, doc);
+        return;
+      }
 
       this.#version.value++;
 
@@ -874,14 +1072,18 @@ class FirkinAutomergeOutput extends BroadcastedOutputElement {
         console.warn(`Could not cache the '${name}' document locally:`, err);
       }
 
-      // The log we just replayed holds everything we know about, so the remote
-      // already has these heads: the next save can append only what changed.
-      if (!this.#dirty.has(name)) {
+      // Only record these heads as remotely held when the local document was
+      // fully pushed before the merge. Otherwise the merged heads include
+      // local-only changes, and recording them would skip those changes on the
+      // next push.
+      if (!unpushed && !this.#dirty.has(name)) {
         const cursor = await this.#cursor(name);
         await this.#setCursor(name, {
           heads: headsOf(doc),
           pushes: cursor.pushes,
         });
+      } else {
+        this.#enqueuePush(name, doc);
       }
     } finally {
       this.#markReady(name);
@@ -891,6 +1093,11 @@ class FirkinAutomergeOutput extends BroadcastedOutputElement {
   // READ
 
   /**
+   * Read one pack from memory, IndexedDB, or the server.
+   *
+   * Caching each pack as it arrives is what makes an interrupted pull resume:
+   * the next read re-uses what was already fetched and only asks for the rest.
+   *
    * @param {Firkin} rb
    * @param {string} cid
    */

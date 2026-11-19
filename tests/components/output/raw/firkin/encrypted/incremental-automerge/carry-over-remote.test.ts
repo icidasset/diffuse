@@ -256,6 +256,33 @@ describe("components/output/raw/firkin/encrypted/incremental-automerge carry-ove
           await new Promise((resolve) => setTimeout(resolve, 50));
         }
 
+        // Wait for the carry-over pushes to finish and their cursors to be
+        // recorded before starting a second element. Both elements share this
+        // browser's device manifest, so starting one while the writer still has
+        // pushes queued would race it for that manifest.
+        const { IDB_DOCS } = await import(
+          "~/components/output/raw/firkin/encrypted/incremental-automerge/constants.js"
+        );
+
+        const cursorHeads = async (name) =>
+          (await IDB.get(`${IDB_DOCS}/firkin-automerge/${name}/cursor`))?.heads;
+
+        const settled = Date.now() + 5_000;
+        while (Date.now() < settled) {
+          const heads = await Promise.all([
+            cursorHeads("tracks"),
+            cursorHeads("facets"),
+          ]);
+
+          if (
+            heads.every((value) => Array.isArray(value) && value.length > 0)
+          ) {
+            break;
+          }
+
+          await new Promise((resolve) => setTimeout(resolve, 50));
+        }
+
         // Read the carried-over data back through a second, fresh instance.
         const reader = document.createElement("dob-firkin-automerge");
         reader.id = "option-carry-read";

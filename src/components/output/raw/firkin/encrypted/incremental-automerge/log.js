@@ -7,6 +7,7 @@ import { encodeFileName } from "~/common/firkin/files.js";
 import {
   CODEC_DAG_CBOR,
   CODEC_RAW,
+  MANIFEST_CAS_RETRIES,
   MANIFEST_VERSION,
   logName,
   registryNamespace,
@@ -124,6 +125,11 @@ export async function latestEntry(rb, namespace, name, options) {
  * Re-appending identical bytes is a no-op: the same bytes hash to the same CID,
  * and the CID is already in the log.
  *
+ * The manifest rewrite is a compare-and-swap (`If-Match` against the CID that
+ * was read). Two tabs of the same device share one ref, so an unconditional
+ * "read then write" could otherwise overwrite the other tab's append. A lost
+ * race re-reads and rebuilds on top of whatever landed first.
+ *
  * @param {Firkin} rb
  * @param {string} namespace
  * @param {string} name
@@ -137,32 +143,49 @@ export async function appendEntry(rb, namespace, name, bytes, options) {
   const { auth } = options;
   const { cid } = await rb.upload(bytes, { codec: CODEC_RAW });
 
-  // `registryLookup` returns only names that are set, so a device writing for
-  // the first time costs one request and no 404.
   const ref = logName(name, auth.device);
-  const found = await rb.registryLookup(registryNamespace(namespace), [ref]);
 
-  const current = await readManifest(rb, name, auth.device, found[ref], {
-    auth,
-    floors: options.floors,
-  });
+  for (let attempt = 0; attempt < MANIFEST_CAS_RETRIES; attempt++) {
+    // `registryLookup` returns only names that are set, so a device writing for
+    // the first time costs one request and no 404.
+    const found = await rb.registryLookup(registryNamespace(namespace), [ref]);
+    const when = found[ref] ?? null;
 
-  if (current?.packs.some((entry) => entry.cid === cid)) {
-    return { cid, appended: false };
+    const current = await readManifest(rb, name, auth.device, when, {
+      auth,
+      floors: options.floors,
+    });
+
+    if (current?.packs.some((entry) => entry.cid === cid)) {
+      return { cid, appended: false };
+    }
+
+    /** @type {LogEntry} */
+    const entry = { cid, at: Date.now() };
+
+    const packs = [...current?.packs ?? [], entry];
+    const keep = options.keep;
+    const trimmed = keep && keep > 0 && packs.length > keep
+      ? packs.slice(-keep)
+      : packs;
+
+    const written = await writeManifest(
+      rb,
+      namespace,
+      name,
+      auth,
+      trimmed,
+      (current?.seq ?? 0) + 1,
+      when,
+    );
+
+    if (written.ok) return { cid, appended: true };
+    // `written.current` is the manifest that won; the next pass appends to it.
   }
 
-  /** @type {LogEntry} */
-  const entry = { cid, at: Date.now() };
-
-  const packs = [...current?.packs ?? [], entry];
-  const keep = options.keep;
-  const trimmed = keep && keep > 0 && packs.length > keep
-    ? packs.slice(-keep)
-    : packs;
-
-  await writeManifest(rb, namespace, name, auth, trimmed, (current?.seq ?? 0) + 1);
-
-  return { cid, appended: true };
+  throw new Error(
+    `Could not append to the '${name}' log: its manifest kept changing`,
+  );
 }
 
 /**
@@ -232,8 +255,10 @@ async function readManifest(rb, name, device, cid, options) {
  * @param {LogEntry[]} packs
  * @param {number} seq - The caller already read the current manifest, so the
  *   write doesn't need a second read.
+ * @param {string | null} when - CID the name must still hold (`null`: unset).
+ * @returns {Promise<{ ok: true; cid: string } | { ok: false; current: string | null }>}
  */
-async function writeManifest(rb, namespace, name, auth, packs, seq) {
+async function writeManifest(rb, namespace, name, auth, packs, seq, when) {
 
   /** @type {LogManifestPayload} */
   const payload = {
@@ -251,9 +276,10 @@ async function writeManifest(rb, namespace, name, auth, packs, seq) {
     codec: CODEC_DAG_CBOR,
   });
 
-  await rb.registrySet(
+  return await rb.registrySetIf(
     registryNamespace(namespace),
     logName(name, auth.device),
     cid,
+    when,
   );
 }
