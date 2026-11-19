@@ -58,6 +58,14 @@ import { verifySignature } from "./verify.js";
  */
 
 /**
+ * @typedef {Object} BulkActions
+ * @property {(args: { bytes: Uint8Array; items: any[]; schema?: string }) => Promise<{ changed: boolean; deltas?: Uint8Array[] }>} applyLargeChange
+ */
+
+/** Yield to the event loop between applying the worker's deltas. */
+const yieldToMain = () => new Promise((resolve) => setTimeout(resolve, 0));
+
+/**
  * The userdata output: an **encrypted, incremental Automerge log on Firkin**,
  * in one component.
  *
@@ -91,6 +99,11 @@ import { verifySignature } from "./verify.js";
  */
 class FirkinAutomergeOutput extends BroadcastedOutputElement {
   static NAME = "diffuse/output/raw/firkin/encrypted/incremental-automerge";
+  static WORKER_URL =
+    "components/output/raw/firkin/encrypted/incremental-automerge/worker.js";
+
+  /** @type {import("~/common/worker.d.ts").ProxiedActions<BulkActions> | undefined} */
+  #bulkWorker;
 
   // SIGNALS
 
@@ -523,10 +536,29 @@ class FirkinAutomergeOutput extends BroadcastedOutputElement {
    *
    * @param {CollectionName} name
    * @param {AutomergeDoc} doc
+   * @param {{ compact?: boolean }} [options] - `compact` rewrites the base
+   *   instead of appending a delta (a bulk save's delta is as large as the
+   *   whole collection).
    */
-  async #persist(name, doc) {
+  async #persist(name, doc, options = {}) {
     const heads = headsOf(doc);
     const previous = this.#persistedHeads.get(name);
+
+    if (options.compact) {
+      await IDB.set(this.#docKey(name), encodeDocument(doc));
+
+      this.#hasBase.add(name);
+      this.#persistedHeads.set(name, heads);
+      this.#chunks.set(name, []);
+
+      try {
+        await IDB.del(this.#chunksKey(name));
+      } catch (err) {
+        console.warn(`Could not clear the '${name}' local changes:`, err);
+      }
+
+      return;
+    }
 
     if (!this.#hasBase.has(name) || previous === undefined) {
       await IDB.set(this.#docKey(name), encodeDocument(doc));
@@ -698,9 +730,33 @@ class FirkinAutomergeOutput extends BroadcastedOutputElement {
     return await this.#serialize(async () => {
       const current = this.#docs.get(name) ?? createDocument();
       const schema = collectionSchema(name);
-      const { doc, changed } = items.length >= BULK_SAVE_THRESHOLD
-        ? await changeDocumentBatched(current, items, { schema })
-        : changeDocument(current, items, { schema });
+      const bulk = items.length >= BULK_SAVE_THRESHOLD;
+
+      let doc;
+      let changed;
+
+      if (bulk) {
+        try {
+          ({ doc, changed } = await this.#applyLargeChange(
+            current,
+            items,
+            schema,
+          ));
+        } catch (err) {
+          console.warn(
+            "Could not apply the save in a worker; falling back:",
+            err,
+          );
+
+          ({ doc, changed } = await changeDocumentBatched(
+            current,
+            items,
+            { schema },
+          ));
+        }
+      } else {
+        ({ doc, changed } = changeDocument(current, items, { schema }));
+      }
 
       if (!changed) return;
 
@@ -710,7 +766,9 @@ class FirkinAutomergeOutput extends BroadcastedOutputElement {
       this.#persisted.delete(name);
 
       try {
-        await this.#persist(name, doc);
+        // A bulk save's delta would be as large as the collection; rewrite the
+        // base instead of appending it as a chunk.
+        await this.#persist(name, doc, { compact: bulk });
         this.#persisted.add(name);
       } catch (err) {
         console.warn(`Could not cache the '${name}' document locally:`, err);
@@ -718,6 +776,40 @@ class FirkinAutomergeOutput extends BroadcastedOutputElement {
 
       this.#schedulePush(name);
     });
+  }
+
+  #bulkProxy() {
+    this.#bulkWorker ??= this.workerProxy();
+    return this.#bulkWorker;
+  }
+
+  /**
+   * Apply a large save in the worker, which returns one delta per batch. The
+   * deltas are applied here with yields, so neither the Automerge change nor
+   * the resulting document update blocks the page.
+   *
+   * @param {AutomergeDoc} current
+   * @param {any[]} items
+   * @param {string} schema
+   * @returns {Promise<{ doc: AutomergeDoc; changed: boolean }>}
+   */
+  async #applyLargeChange(current, items, schema) {
+    const result = await this.#bulkProxy().applyLargeChange({
+      bytes: encodeDocument(current),
+      items,
+      schema,
+    });
+
+    if (!result.changed) return { doc: current, changed: false };
+
+    let doc = current;
+
+    for (const delta of result.deltas ?? []) {
+      doc = applyIncremental(doc, delta);
+      await yieldToMain();
+    }
+
+    return { doc, changed: true };
   }
 
   /**

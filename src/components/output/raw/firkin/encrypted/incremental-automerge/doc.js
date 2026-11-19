@@ -142,6 +142,8 @@ const BATCH_START = 200;
  * @param {any[]} items
  * @param {{ schema?: string }} [options]
  * @param {() => Promise<void>} [yieldToMain]
+ * @param {(doc: AutomergeDoc) => void} [onBatch] - Called with the document
+ *   after every change, so a worker can hand the caller one delta per batch.
  * @returns {Promise<{ doc: AutomergeDoc; changed: boolean }>}
  */
 export async function changeDocumentBatched(
@@ -149,6 +151,7 @@ export async function changeDocumentBatched(
   items,
   options = {},
   yieldToMain = yieldToEventLoop,
+  onBatch,
 ) {
   /** @type {string[]} */
   const order = [];
@@ -195,6 +198,7 @@ export async function changeDocumentBatched(
       if (!sameArray(d.order, order)) d.order = order;
     });
 
+    onBatch?.(nextDoc);
     await yieldToMain();
   }
 
@@ -211,6 +215,8 @@ export async function changeDocumentBatched(
       const start = performance.now();
 
       nextDoc = Automerge.change(nextDoc, mutate(batch));
+
+      onBatch?.(nextDoc);
 
       index += batch.length;
 

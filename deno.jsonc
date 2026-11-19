@@ -219,6 +219,7 @@
     "./components/output/raw/firkin/encrypted/incremental-automerge/element.js": "./src/components/output/raw/firkin/encrypted/incremental-automerge/element.js",
     "./components/output/raw/firkin/encrypted/incremental-automerge/log.js": "./src/components/output/raw/firkin/encrypted/incremental-automerge/log.js",
     "./components/output/raw/firkin/encrypted/incremental-automerge/verify.js": "./src/components/output/raw/firkin/encrypted/incremental-automerge/verify.js",
+    "./components/output/raw/firkin/encrypted/incremental-automerge/worker.js": "./src/components/output/raw/firkin/encrypted/incremental-automerge/worker.js",
     "./components/supplement/atproto-publish/common.js": "./src/components/supplement/atproto-publish/common.js",
     "./components/supplement/atproto-publish/element.js": "./src/components/supplement/atproto-publish/element.js",
     "./components/supplement/last.fm/element.js": "./src/components/supplement/last.fm/element.js",
