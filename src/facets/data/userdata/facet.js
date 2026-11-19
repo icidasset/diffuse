@@ -23,16 +23,11 @@ await customElements.whenDefined(outputOrchestrator.localName);
 // re-loads the selected output via `loadSelected()` which is async.
 // Wait for that to settle before rendering the UI, otherwise
 // `selected()` is still null here and the active-method badge would be
-// wrong.
+// wrong. Bounded: if the selected method no longer exists in this build
+// the configurator drops the stale selection and `waitForSelected()`
+// resolves with `null`, so the page can't stay on its loader forever.
 if (outputOrchestrator.hasSelected() && !outputOrchestrator.selected()) {
-  await new Promise((resolve) => {
-    const stop = effect(() => {
-      if (outputOrchestrator.selected()) {
-        stop();
-        resolve(undefined);
-      }
-    });
-  });
+  await outputOrchestrator.waitForSelected();
 }
 
 /** @type {Record<string, string>} */

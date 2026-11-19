@@ -133,16 +133,11 @@ async function handleScanClick() {
 // Wait for that to settle before rendering the UI, otherwise
 // `selected()` is still null here and the "Use as userdata storage"
 // button would show even though S3 is already configured as the
-// user's output.
+// user's output. Bounded: a selected method that no longer exists in
+// this build is dropped by the configurator, and `waitForSelected()`
+// then resolves with `null` instead of hanging.
 if (outputOrchestrator.hasSelected() && !outputOrchestrator.selected()) {
-  await new Promise((resolve) => {
-    const stop = effect(() => {
-      if (outputOrchestrator.selected()) {
-        stop();
-        resolve(undefined);
-      }
-    });
-  });
+  await outputOrchestrator.waitForSelected();
 }
 
 ////////////////////////////////////////////

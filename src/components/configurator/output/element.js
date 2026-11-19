@@ -1,5 +1,8 @@
-import { BroadcastableDiffuseElement, defineElement } from "~/common/element.js";
-import { batch, computed, signal } from "~/common/signal.js";
+import {
+  BroadcastableDiffuseElement,
+  defineElement,
+} from "~/common/element.js";
+import { batch, computed, effect, signal } from "~/common/signal.js";
 
 import { PRELUDE_BASE, STARTING_SET_URIS } from "~/common/facets/constants.js";
 import { buildFacets } from "~/common/facets/utils.js";
@@ -29,6 +32,23 @@ const STORAGE_PREFIX = "diffuse/configurator/output";
  * usable fall back immediately.
  */
 const DISCONNECT_GRACE_MS = 5_000;
+
+/**
+ * How long to wait after the output options settle before treating a stored
+ * selection that still doesn't resolve as stale.
+ *
+ * Options are appended asynchronously by the output preludes during bootstrap,
+ * so the check can't run immediately. A selection whose element exists is
+ * never dropped: resolving it awaits the element's upgrade, so a slow module
+ * load can't be mistaken for a removed option.
+ */
+const STALE_SELECTION_SETTLE_MS = 1_000;
+
+/**
+ * Upper bound for `waitForSelected()`. The stale-selection check normally
+ * settles it first; the bound only matters when that check can't complete.
+ */
+const SELECTION_WAIT_MS = 5_000;
 
 const COLLECTIONS = /** @type {const} */ ([
   "collaborations",
@@ -447,6 +467,75 @@ class OutputConfigurator extends BroadcastableDiffuseElement {
   }
 
   /**
+   * Watch the configurator's children, which is where output options are
+   * appended. A stored selection that points at an option missing from this
+   * build can then be re-resolved if the option shows up, and dropped once
+   * the options have settled.
+   */
+  #watchOptions() {
+    this.#optionsObserver = new MutationObserver(() =>
+      this.#scheduleStaleCheck()
+    );
+
+    this.#optionsObserver.observe(this, { childList: true });
+    this.#scheduleStaleCheck();
+  }
+
+  #stopWatchingOptions() {
+    this.#optionsObserver?.disconnect();
+    this.#optionsObserver = undefined;
+
+    this.#clearStaleSelectionTimer();
+  }
+
+  #clearStaleSelectionTimer() {
+    if (this.#staleSelectionTimer === undefined) return;
+
+    clearTimeout(this.#staleSelectionTimer);
+    this.#staleSelectionTimer = undefined;
+  }
+
+  /**
+   * (Re)start the timer that drops a stored selection which can't be resolved
+   * to an output element. Restarting on every option change treats a burst of
+   * appended options as one settle instead of checking between them.
+   */
+  #scheduleStaleCheck() {
+    this.#clearStaleSelectionTimer();
+
+    if (!this.isConnected) return;
+    if (!this.#selectedOutputId() || this.#selected.value) return;
+
+    this.#staleSelectionTimer = setTimeout(() => {
+      this.#staleSelectionTimer = undefined;
+      void this.#dropStaleSelection();
+    }, STALE_SELECTION_SETTLE_MS);
+  }
+
+  /**
+   * Drop a stored selection whose option no longer exists, leaving the app on
+   * the default output instead of a selection that can never resolve.
+   *
+   * Resolving here rather than checking `localStorage` / `querySelector` also
+   * covers an option element that was appended but whose module is still
+   * loading, because `#findOutput()` waits for the element to upgrade.
+   */
+  async #dropStaleSelection() {
+    const id = this.#selectedOutputId();
+    if (!id || this.#selected.value) return;
+    if (await this.#findOutput(id)) return;
+
+    // The selection may have changed while the lookup was pending.
+    if (this.#selectedOutputId() !== id || this.#selected.value) return;
+
+    console.warn(
+      `Stored output selection "${id}" no longer exists; falling back to the default output.`,
+    );
+
+    await this.deselect();
+  }
+
+  /**
    * Whether the selected output is completely empty and has never been used.
    * Only then should its contents be carried over from the default output.
    *
@@ -555,6 +644,13 @@ class OutputConfigurator extends BroadcastableDiffuseElement {
   );
 
   /**
+   * Bumped when the stored selection changes, so `waitForSelected()` re-checks
+   * even when the selected element stays `null` (a stale selection being
+   * dropped doesn't change the `#selected` signal's value).
+   */
+  #selectionChanged = signal(0);
+
+  /**
    * Output ids whose contents are being copied from the default output, so the
    * effect above doesn't start a second copy while the first is in flight.
    *
@@ -568,6 +664,12 @@ class OutputConfigurator extends BroadcastableDiffuseElement {
 
   /** @type {ReturnType<typeof setTimeout> | undefined} */
   #disconnectTimer;
+
+  /** @type {ReturnType<typeof setTimeout> | undefined} */
+  #staleSelectionTimer;
+
+  /** @type {MutationObserver | undefined} */
+  #optionsObserver;
 
   /** @type {Output | null | undefined} */
   #readinessOutput;
@@ -637,6 +739,10 @@ class OutputConfigurator extends BroadcastableDiffuseElement {
       this.#defaultOutput.value = defaultOutput;
       this.#setupFinished.value = true;
     });
+
+    // The element may have been disconnected while its initial lookups were
+    // pending; only watch for option changes while it is still connected.
+    if (this.isConnected) this.#watchOptions();
   }
 
   /** @override */
@@ -645,6 +751,7 @@ class OutputConfigurator extends BroadcastableDiffuseElement {
     globalThis.removeEventListener("offline", this.#handleOffline);
 
     this.#clearDisconnectTimer();
+    this.#stopWatchingOptions();
     super.disconnectedCallback();
   }
 
@@ -726,6 +833,7 @@ class OutputConfigurator extends BroadcastableDiffuseElement {
 
   deselect = async () => {
     localStorage.removeItem(`${STORAGE_PREFIX}/selected/id`);
+    this.#selectionChanged.value++;
     await this.#selectOutput(null);
   };
 
@@ -740,6 +848,8 @@ class OutputConfigurator extends BroadcastableDiffuseElement {
   loadSelected = async () => {
     const selectedOutput = await this.#findOutput(this.#selectedOutputId());
     this.#selected.value = selectedOutput;
+
+    this.#scheduleStaleCheck();
   };
 
   options = async () => {
@@ -760,7 +870,56 @@ class OutputConfigurator extends BroadcastableDiffuseElement {
    */
   select = async (id) => {
     localStorage.setItem(`${STORAGE_PREFIX}/selected/id`, id);
+    this.#selectionChanged.value++;
     await this.#selectOutput(id);
+
+    this.#scheduleStaleCheck();
+  };
+
+  /**
+   * Wait for the selected output element to resolve.
+   *
+   * Resolves with the selected element, or with `null` once the stored
+   * selection has been dropped as stale or when `timeoutMs` elapses. Callers
+   * should prefer this over waiting on `selected()` directly, which never
+   * resolves when the stored selection points at an option that no longer
+   * exists in this build.
+   *
+   * @param {number} [timeoutMs]
+   * @returns {Promise<Output | null>}
+   */
+  waitForSelected = (timeoutMs = SELECTION_WAIT_MS) => {
+    /** @returns {boolean} */
+    const settled = () => this.selected() !== null || !this.hasSelected();
+
+    if (settled()) return Promise.resolve(this.selected());
+
+    return new Promise((resolve) => {
+      let done = false;
+      /** @type {ReturnType<typeof setTimeout> | undefined} */
+      let timer = undefined;
+      /** @type {() => void} */
+      let stop = () => {};
+
+      const finish = () => {
+        if (done) return;
+        done = true;
+
+        if (timer !== undefined) clearTimeout(timer);
+        stop();
+        resolve(this.selected());
+      };
+
+      stop = effect(() => {
+        this.#selectionChanged.get();
+
+        // Re-check at the end of the effect so the dependency reads above are
+        // registered before it can settle.
+        if (this.selected() !== null || !this.hasSelected()) finish();
+      });
+
+      timer = setTimeout(finish, timeoutMs);
+    });
   };
 
   /**

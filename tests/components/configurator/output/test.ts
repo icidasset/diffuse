@@ -244,4 +244,123 @@ describe("components/configurator/output", () => {
 
     expect(result).toEqual([]);
   });
+
+  it("drops a stored selection whose option no longer exists", async () => {
+    const result = await testWeb(async () => {
+      const { CLASS } = await import(
+        "~/components/configurator/output/element.js"
+      );
+
+      localStorage.setItem(
+        "diffuse/configurator/output/selected/id",
+        "gone-output",
+      );
+
+      const configurator = new CLASS();
+      document.body.append(configurator);
+
+      // The wait is bounded, so a missing option can't hang it.
+      const selected = await configurator.waitForSelected(100);
+      const storedBeforeCleanup = localStorage.getItem(
+        "diffuse/configurator/output/selected/id",
+      );
+
+      // The configurator then drops the stale selection once the options have
+      // settled.
+      await new Promise((resolve) => setTimeout(resolve, 1_500));
+
+      return {
+        selected: selected?.id ?? null,
+        storedBeforeCleanup,
+        stored: localStorage.getItem(
+          "diffuse/configurator/output/selected/id",
+        ),
+        hasSelected: configurator.hasSelected(),
+      };
+    });
+
+    expect(result).toEqual({
+      selected: null,
+      storedBeforeCleanup: "gone-output",
+      stored: null,
+      hasSelected: false,
+    });
+  });
+
+  it("keeps a stored selection whose option exists", async () => {
+    const result = await testWeb(async () => {
+      const idb = await import(
+        "~/components/output/polymorphic/indexed-db/element.js"
+      );
+      const { CLASS } = await import(
+        "~/components/configurator/output/element.js"
+      );
+
+      localStorage.setItem(
+        "diffuse/configurator/output/selected/id",
+        "kept-output",
+      );
+
+      const out = new idb.CLASS();
+      out.id = "kept-output";
+      out.setAttribute("namespace", `kept-output-${crypto.randomUUID()}`);
+
+      const configurator = new CLASS();
+      configurator.append(out);
+      document.body.append(configurator);
+
+      // Wait past the stale-selection settle window.
+      await new Promise((resolve) => setTimeout(resolve, 1_500));
+
+      return {
+        selected: configurator.selected()?.id ?? null,
+        stored: localStorage.getItem(
+          "diffuse/configurator/output/selected/id",
+        ),
+        hasSelected: configurator.hasSelected(),
+      };
+    });
+
+    expect(result).toEqual({
+      selected: "kept-output",
+      stored: "kept-output",
+      hasSelected: true,
+    });
+  });
+
+  it("waitForSelected resolves once the option is added and re-loaded", async () => {
+    const result = await testWeb(async () => {
+      const idb = await import(
+        "~/components/output/polymorphic/indexed-db/element.js"
+      );
+      const { CLASS } = await import(
+        "~/components/configurator/output/element.js"
+      );
+
+      localStorage.setItem(
+        "diffuse/configurator/output/selected/id",
+        "late-output",
+      );
+
+      const configurator = new CLASS();
+      document.body.append(configurator);
+
+      const pending = configurator.waitForSelected(3_000);
+
+      // The prelude appends the option, then re-loads the selection.
+      await new Promise((resolve) => setTimeout(resolve, 50));
+
+      const out = new idb.CLASS();
+      out.id = "late-output";
+      out.setAttribute("namespace", `late-output-${crypto.randomUUID()}`);
+      configurator.append(out);
+      await configurator.loadSelected();
+
+      const selected = await pending;
+
+      return { selected: selected?.id ?? null };
+    });
+
+    expect(result).toEqual({ selected: "late-output" });
+  });
 });

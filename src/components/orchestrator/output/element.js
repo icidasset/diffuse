@@ -123,6 +123,12 @@ class OutputOrchestrator extends DiffuseElement {
     return this.outputConfigurator.waitForOption.bind(this.outputConfigurator);
   }
 
+  get waitForSelected() {
+    return this.outputConfigurator.waitForSelected.bind(
+      this.outputConfigurator,
+    );
+  }
+
   // RENDER
 
   /**

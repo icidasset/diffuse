@@ -11,6 +11,7 @@ export type OutputConfiguratorElement<ElementType = OutputElement> =
     options: () => Promise<Array<OutputOption<ElementType>>>;
     select: (id: string) => Promise<void>;
     waitForOption: (label: string) => Promise<OutputOption<ElementType>>;
+    waitForSelected: (timeoutMs?: number) => Promise<ElementType | null>;
 
     /** Output-element ids that have been selected earlier. */
     activated: SignalReader<Set<string>>;
