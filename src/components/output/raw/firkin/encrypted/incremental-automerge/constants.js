@@ -67,6 +67,13 @@ export const PUSH_COALESCE_MS = 750;
 export const LOCAL_COMPACT_EVERY = 32;
 
 /**
+ * Collections at least this large are saved in yielding batches, because one
+ * `Automerge.change` with tens of thousands of writes blocks the page (and is
+ * slower than the same writes split into changes).
+ */
+export const BULK_SAVE_THRESHOLD = 500;
+
+/**
  * IndexedDB prefixes. Documents, push cursors and the actor id are per device;
  * pack and floor caches are shared by every instance using the same namespace.
  */

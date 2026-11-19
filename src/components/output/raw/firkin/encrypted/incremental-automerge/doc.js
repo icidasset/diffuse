@@ -122,6 +122,130 @@ export function applyIncremental(doc, bytes) {
   return Automerge.loadIncremental(doc, bytes);
 }
 
+/** Yield to the event loop so a large change doesn't block the page. */
+const yieldToEventLoop = () => new Promise((resolve) => setTimeout(resolve, 0));
+
+/** Batch sizing for a chunked change. */
+const BATCH_MIN = 100;
+const BATCH_MAX = 2_000;
+const BATCH_START = 200;
+
+/**
+ * `changeDocument` for a large collection, applied in batches.
+ *
+ * One huge `Automerge.change` is both slow (it is superlinear in the number of
+ * writes) and blocking. Applying the same per-record writes in adaptive batches
+ * is faster and yields between them, so importing a large library keeps the
+ * page responsive.
+ *
+ * @param {AutomergeDoc} doc
+ * @param {any[]} items
+ * @param {{ schema?: string }} [options]
+ * @param {() => Promise<void>} [yieldToMain]
+ * @returns {Promise<{ doc: AutomergeDoc; changed: boolean }>}
+ */
+export async function changeDocumentBatched(
+  doc,
+  items,
+  options = {},
+  yieldToMain = yieldToEventLoop,
+) {
+  /** @type {string[]} */
+  const order = [];
+  const ids = new Set();
+
+  for (const item of items) {
+    if (ids.has(item.id)) continue;
+
+    ids.add(item.id);
+    order.push(item.id);
+  }
+
+  const oldIds = Object.keys(doc.records);
+
+  let changed = !sameArray(doc.order, order) ||
+    doc.$schema !== options.schema;
+
+  /** @type {Map<string, any>} */
+  const changedRecords = new Map();
+  let scanned = 0;
+
+  for (const item of items) {
+    if (!sameRecord(doc.records[item.id], item)) {
+      changedRecords.set(
+        item.id,
+        withoutUndefined(recursivelyCloneRecords(item)),
+      );
+      changed = true;
+    }
+
+    if (++scanned % 500 === 0) await yieldToMain();
+  }
+
+  if (!changed && oldIds.length !== order.length) changed = true;
+  if (!changed) return { doc, changed: false };
+
+  let nextDoc = doc;
+
+  // Order/schema are a single list/value write; do them once up front.
+  const sameOrder = sameArray(doc.order, order);
+  if (!sameOrder || doc.$schema !== options.schema) {
+    nextDoc = Automerge.change(nextDoc, (d) => {
+      if (options.schema) d.$schema = options.schema;
+      if (!sameArray(d.order, order)) d.order = order;
+    });
+
+    await yieldToMain();
+  }
+
+  /**
+   * @param {any[]} entries
+   * @param {(batch: any[]) => (d: any) => void} mutate
+   */
+  const applyBatches = async (entries, mutate) => {
+    let index = 0;
+    let size = BATCH_START;
+
+    while (index < entries.length) {
+      const batch = entries.slice(index, index + size);
+      const start = performance.now();
+
+      nextDoc = Automerge.change(nextDoc, mutate(batch));
+
+      index += batch.length;
+
+      // Aim for a few hundred milliseconds of work per batch: desktop grows
+      // the batch for throughput, a phone shrinks it for responsiveness.
+      const elapsed = performance.now() - start;
+      if (elapsed < 100 && size < BATCH_MAX) {
+        size = Math.min(BATCH_MAX, Math.round(size * 1.5));
+      } else if (elapsed > 400 && size > BATCH_MIN) {
+        size = Math.max(BATCH_MIN, Math.round(size / 2));
+      }
+
+      await yieldToMain();
+    }
+  };
+
+  const deleted = oldIds.filter((id) => !ids.has(id));
+
+  await applyBatches(
+    deleted,
+    (batch) => (d) => {
+      for (const id of batch) delete d.records[id];
+    },
+  );
+
+  await applyBatches(
+    [...changedRecords],
+    (batch) => (d) => {
+      for (const [id, item] of batch) d.records[id] = item;
+    },
+  );
+
+  return { doc: nextDoc, changed: true };
+}
+
 /**
  * @param {AutomergeDoc} doc
  * @returns {any[]}

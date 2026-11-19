@@ -10,6 +10,7 @@ import {
   applyLog,
   applyPack,
   changeDocument,
+  changeDocumentBatched,
   changesSince,
   createDocument,
   encodeDocument,
@@ -34,6 +35,43 @@ describe("components/output/raw/firkin/encrypted/incremental-automerge/doc", () 
     expect(doc.$schema).toBe("sh.diffuse.output.track");
     expect(doc.order).toEqual(["a", "b"]);
     expect(recordsOf(doc)).toEqual(items);
+  });
+
+  it("applies a large collection in batches with the same result", async () => {
+    const items = Array.from({ length: 1_200 }, (_, index) =>
+      track(`t${index}`)
+    );
+    const base = createDocument();
+
+    const { doc, changed } = await changeDocumentBatched(base, items, {
+      schema: "sh.diffuse.output.track",
+    });
+
+    expect(changed).toBe(true);
+    expect(doc.$schema).toBe("sh.diffuse.output.track");
+    expect(doc.order).toEqual(items.map((item) => item.id));
+    expect(recordsOf(doc)).toEqual(items);
+
+    // Batching must not create a new document identity: the root and actor
+    // stay the ones already in the log.
+    expect(Automerge.getActorId(doc)).toBe(Automerge.getActorId(base));
+  });
+
+  it("keeps concurrent additions across batched changes", async () => {
+    const base = createDocument();
+
+    const left = (await changeDocumentBatched(
+      Automerge.clone(base, { actor: "a".repeat(64) }),
+      [track("a")],
+    )).doc;
+    const right = (await changeDocumentBatched(
+      Automerge.clone(base, { actor: "b".repeat(64) }),
+      [track("b")],
+    )).doc;
+
+    const merged = Automerge.merge(left, right);
+
+    expect(recordsOf(merged).map((item) => item.id).sort()).toEqual(["a", "b"]);
   });
 
   it("drops undefined values instead of throwing", () => {

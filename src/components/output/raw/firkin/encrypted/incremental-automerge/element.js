@@ -14,6 +14,7 @@ import {
 import { outputKey } from "~/common/firkin/output-key.js";
 
 import {
+  BULK_SAVE_THRESHOLD,
   COLLECTIONS,
   FIRST_READ_TIMEOUT_MS,
   IDB_ACTOR,
@@ -32,6 +33,7 @@ import {
   applyIncremental,
   applyLog,
   changeDocument,
+  changeDocumentBatched,
   changesSince,
   createDocument,
   deltaSince,
@@ -695,9 +697,10 @@ class FirkinAutomergeOutput extends BroadcastedOutputElement {
 
     return await this.#serialize(async () => {
       const current = this.#docs.get(name) ?? createDocument();
-      const { doc, changed } = changeDocument(current, items, {
-        schema: collectionSchema(name),
-      });
+      const schema = collectionSchema(name);
+      const { doc, changed } = items.length >= BULK_SAVE_THRESHOLD
+        ? await changeDocumentBatched(current, items, { schema })
+        : changeDocument(current, items, { schema });
 
       if (!changed) return;
 
