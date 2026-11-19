@@ -23,6 +23,13 @@ import {
 
 const STORAGE_PREFIX = "diffuse/configurator/output";
 
+/**
+ * How long a newly selected output gets to finish its initial connection
+ * check before it is treated as disconnected. Outputs that were already
+ * usable fall back immediately.
+ */
+const DISCONNECT_GRACE_MS = 5_000;
+
 const COLLECTIONS = /** @type {const} */ ([
   "collaborations",
   "facets",
@@ -366,6 +373,77 @@ class OutputConfigurator extends BroadcastableDiffuseElement {
       this.#carryingOver.add(id);
       void this.#carryOver(out, def, id);
     });
+
+    /**
+     * Fall back to the default output when the selected one can't read or
+     * write: a remote output reports `ready: false` when its credentials or
+     * session are gone, or when the browser is offline. Without this the UI
+     * keeps presenting a disconnected store as the one in use.
+     *
+     * A previously usable output is replaced immediately. On boot the output
+     * gets a grace period, because its connection check is asynchronous and
+     * `ready` starts out false.
+     */
+    this.effect(() => {
+      const out = this.#selected.value;
+      const online = this.#isOnline.value;
+
+      if (out !== this.#readinessOutput) {
+        this.#readinessOutput = out;
+        this.#readiness = undefined;
+      }
+
+      const ready = out ? (out.ready?.() ?? true) : true;
+      const becameUnready = this.#readiness === true && !ready;
+      this.#readiness = ready;
+
+      this.#clearDisconnectTimer();
+
+      if (!out || out === this.#defaultOutput.value) return;
+      if (ready || !online) return;
+
+      if (becameUnready) {
+        void this.#fallBackToDefault(out);
+        return;
+      }
+
+      this.#disconnectTimer = setTimeout(() => {
+        this.#disconnectTimer = undefined;
+
+        const current = this.#selected.value;
+        if (!current || current === this.#defaultOutput.value) return;
+        if (current.ready?.() ?? true) return;
+        if (!this.#isOnline.value) return;
+
+        void this.#fallBackToDefault(current);
+      }, DISCONNECT_GRACE_MS);
+    });
+  }
+
+  /**
+   * Stop using a selected output that isn't usable, falling back to the
+   * default (local) output. Clearing the selection matches a manual
+   * disconnect, so the choice isn't silently re-applied while the output is
+   * still unavailable.
+   *
+   * @param {Output} out
+   */
+  async #fallBackToDefault(out) {
+    if (this.#selected.value !== out) return;
+    if (out.ready?.() ?? true) return;
+
+    console.warn(
+      `Output "${out.id}" is not ready; falling back to the default output.`,
+    );
+
+    await this.deselect();
+  }
+
+  #clearDisconnectTimer() {
+    if (this.#disconnectTimer === undefined) return;
+
+    clearTimeout(this.#disconnectTimer);
+    this.#disconnectTimer = undefined;
   }
 
   /**
@@ -486,6 +564,20 @@ class OutputConfigurator extends BroadcastableDiffuseElement {
 
   #setupFinished = signal(false);
 
+  #isOnline = signal(navigator.onLine);
+
+  /** @type {ReturnType<typeof setTimeout> | undefined} */
+  #disconnectTimer;
+
+  /** @type {Output | null | undefined} */
+  #readinessOutput;
+
+  /** @type {boolean | undefined} */
+  #readiness;
+
+  #handleOnline = () => this.#isOnline.value = true;
+  #handleOffline = () => this.#isOnline.value = false;;
+
   // STATE
 
   activated = this.#activated.get;
@@ -513,6 +605,9 @@ class OutputConfigurator extends BroadcastableDiffuseElement {
 
     // Super
     super.connectedCallback();
+
+    globalThis.addEventListener("online", this.#handleOnline);
+    globalThis.addEventListener("offline", this.#handleOffline);
 
     // Outputs
     const def_ault = this.getAttribute("default");
@@ -542,6 +637,15 @@ class OutputConfigurator extends BroadcastableDiffuseElement {
       this.#defaultOutput.value = defaultOutput;
       this.#setupFinished.value = true;
     });
+  }
+
+  /** @override */
+  disconnectedCallback() {
+    globalThis.removeEventListener("online", this.#handleOnline);
+    globalThis.removeEventListener("offline", this.#handleOffline);
+
+    this.#clearDisconnectTimer();
+    super.disconnectedCallback();
   }
 
   // MISC

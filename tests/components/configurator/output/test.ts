@@ -142,6 +142,75 @@ describe("components/configurator/output", () => {
     expect(result).toBe(false);
   });
 
+  it("falls back to the default output when the selected output disconnects", async () => {
+    const result = await testWeb(async () => {
+      const idb = await import(
+        "~/components/output/polymorphic/indexed-db/element.js"
+      );
+      const { CLASS } = await import(
+        "~/components/configurator/output/element.js"
+      );
+      const { signal } = await import("~/common/signal.js");
+
+      const suffix = crypto.randomUUID();
+      const ready = signal(true);
+
+      const def = new idb.CLASS();
+      def.id = "disconnect-default";
+      def.setAttribute("namespace", `disconnect-default-${suffix}`);
+
+      const remote = new idb.CLASS();
+      remote.id = "disconnect-remote";
+      remote.setAttribute("namespace", `disconnect-remote-${suffix}`);
+      remote.ready = () => ready.get();
+
+      const configurator = new CLASS();
+      configurator.setAttribute("default", def.id);
+      configurator.append(def, remote);
+      document.body.append(configurator);
+
+      // Let the configurator finish its initial (async) setup before changing
+      // the selection, or its connectedCallback would overwrite it.
+      await new Promise((resolve) => setTimeout(resolve, 100));
+
+      const waitFor = async (predicate: () => boolean) => {
+        const deadline = Date.now() + 3_000;
+        while (Date.now() < deadline) {
+          if (predicate()) return true;
+          await new Promise((resolve) => setTimeout(resolve, 20));
+        }
+
+        return predicate();
+      };
+
+      await configurator.select(remote.id);
+
+      const selectedRemote = await waitFor(() =>
+        configurator.selected()?.id === remote.id
+      );
+
+      ready.set(false);
+
+      const fellBack = await waitFor(() =>
+        configurator.selected() === null && configurator.hasSelected() === false
+      );
+
+      return {
+        selectedRemote,
+        fellBack,
+        selected: configurator.selected()?.id ?? null,
+        hasSelected: configurator.hasSelected(),
+      };
+    });
+
+    expect(result).toEqual({
+      selectedRemote: true,
+      fellBack: true,
+      selected: null,
+      hasSelected: false,
+    });
+  });
+
   it("options lists child elements by id and label", async () => {
     const result = await testWeb(async () => {
       const mod = await import(
