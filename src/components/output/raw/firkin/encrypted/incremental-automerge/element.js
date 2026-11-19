@@ -90,6 +90,12 @@ class FirkinAutomergeOutput extends BroadcastedOutputElement {
   #isOnline = signal(navigator.onLine);
   #connected = signal(false);
 
+  /** @type {Promise<void> | undefined} */
+  #refreshing;
+
+  /** Set when a check is requested while one is already in flight. */
+  #refreshAgain = false;
+
   /** Loaded from local storage; collections stay `loading` until then. */
   #loaded = signal(false);
 
@@ -193,6 +199,16 @@ class FirkinAutomergeOutput extends BroadcastedOutputElement {
       this.#isOnline.value &&
       outputKey() !== undefined
     );
+
+    // The session and the output encryption key are stored asynchronously, and
+    // sign-in can happen after this element connected (the connect facet adds
+    // the option first). Re-check when the key appears, or `ready` stays false
+    // until an unrelated online event and the configurator falls back.
+    this.effect(() => {
+      if (outputKey() === undefined) return;
+
+      void this.#refreshConnected();
+    });
 
     // Pull once the output is usable (signed in, key present, online). Retries
     // whenever that flips back to true after a failure.
@@ -312,7 +328,28 @@ class FirkinAutomergeOutput extends BroadcastedOutputElement {
     void this.#pull();
   }
 
-  async #refreshConnected() {
+  #refreshConnected() {
+    // A call can arrive while a check is in flight (the key and the session
+    // land separately). Queue one more pass instead of dropping it: the
+    // in-flight check may have started before the session was stored.
+    if (this.#refreshing) {
+      this.#refreshAgain = true;
+      return this.#refreshing;
+    }
+
+    this.#refreshing = (async () => {
+      do {
+        this.#refreshAgain = false;
+        await this.#checkConnected();
+      } while (this.#refreshAgain);
+    })().finally(() => {
+      this.#refreshing = undefined;
+    });
+
+    return this.#refreshing;
+  }
+
+  async #checkConnected() {
     try {
       const client = await getSessionClient();
       if (!client) {
