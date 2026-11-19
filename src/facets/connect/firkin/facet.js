@@ -336,10 +336,6 @@ async function addInput() {
  * Sign in: derive the account key from the passkey, mint a one-year session
  * delegation for this browser, and verify that the account is registered.
  */
-/**
- * Sign in: derive the account key from the passkey, mint a one-year session
- * delegation for this browser, and verify that the account is registered.
- */
 async function connect() {
   const apiBase = apiInput.value.trim() || undefined;
   const result = await signInAccount({ apiBase });

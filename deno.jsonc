@@ -115,6 +115,7 @@
     "./common/foundation.js": "./src/common/foundation.js",
     "./common/facets/utils.js": "./src/common/facets/utils.js",
     "./common/element.js": "./src/common/element.js",
+    "./common/passkey.js": "./src/common/passkey.js",
     "./common/signal.js": "./src/common/signal.js",
     "./common/worker.js": "./src/common/worker.js",
     "./common/worker/rpc-channel.js": "./src/common/worker/rpc-channel.js",
