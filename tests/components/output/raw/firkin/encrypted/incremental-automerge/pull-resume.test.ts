@@ -275,6 +275,7 @@ describe("components/output/raw/firkin/encrypted/incremental-automerge pull resu
           await IDB.del(docKey(namespace, name));
           await IDB.del(`${docKey(namespace, name)}/cursor`);
           await IDB.del(`${docKey(namespace, name)}/applied`);
+          await IDB.del(`${docKey(namespace, name)}/changes`);
         };
 
         const cursorHeads = async (namespace, name) =>

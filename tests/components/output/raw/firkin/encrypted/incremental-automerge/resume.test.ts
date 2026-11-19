@@ -315,6 +315,15 @@ describe("components/output/raw/firkin/encrypted/incremental-automerge resume", 
         const manifestAfterFailure = trackManifestCid();
         const uploadsAfterFailure = uploads;
 
+        // The interrupted save is still durable locally: the base document plus
+        // an incremental change chunk that a reloaded element must replay.
+        const localChanges = await IDB.get(
+          `${IDB_DOCS}/${namespace}/tracks/changes`,
+        );
+        const localChunks = Array.isArray(localChanges)
+          ? localChanges.length
+          : 0;
+
         // 3. A fresh element with the same namespace is what a reload does: it
         //    loads the local document and must notice the unpushed heads.
         const reloaded = makeOption("resume-reloaded");
@@ -337,6 +346,7 @@ describe("components/output/raw/firkin/encrypted/incremental-automerge resume", 
 
         return {
           failed,
+          localChunks,
           manifestBefore,
           manifestAfterFailure,
           resumed: manifestAfterResume !== undefined &&
@@ -359,6 +369,7 @@ describe("components/output/raw/firkin/encrypted/incremental-automerge resume", 
     console.log("RESUME_RESULT", JSON.stringify(result, null, 2));
 
     expect(result.failed).toBe(true);
+    expect(result.localChunks).toBeGreaterThan(0);
     expect(result.manifestAfterFailure).toBe(result.manifestBefore);
     expect(result.resumed).toBe(true);
     expect(result.warnings).toEqual([]);

@@ -20,6 +20,7 @@ import {
   IDB_DOCS,
   IDB_FLOORS,
   IDB_PACKS,
+  LOCAL_COMPACT_EVERY,
   NAMES_TTL_MS,
   NOT_CONNECTED,
   NOT_READY_GRACE_MS,
@@ -28,10 +29,12 @@ import {
 } from "./constants.js";
 import { decryptLog, encryptEntry, frameEntries } from "./crypto.js";
 import {
+  applyIncremental,
   applyLog,
   changeDocument,
   changesSince,
   createDocument,
+  deltaSince,
   encodeDocument,
   hasRecords,
   headsOf,
@@ -123,6 +126,16 @@ class FirkinAutomergeOutput extends BroadcastedOutputElement {
 
   /** @type {Map<string, AutomergeDoc>} */
   #docs = new Map();
+
+  /** Incremental local-cache deltas appended since the base document. */
+  /** @type {Map<string, Uint8Array[]>} */
+  #chunks = new Map();
+
+  /** Heads covered by the local cache (base + chunks). @type {Map<string, Heads>} */
+  #persistedHeads = new Map();
+
+  /** Collections with a full base document in IndexedDB. */
+  #hasBase = new Set();
 
   /** @type {Map<string, { heads?: Heads; pushes: number }>} */
   #cursors = new Map();
@@ -494,6 +507,103 @@ class FirkinAutomergeOutput extends BroadcastedOutputElement {
     return `${IDB_DOCS}/${this.#namespace}/${name}`;
   }
 
+  /** @param {CollectionName} name */
+  #chunksKey(name) {
+    return `${this.#docKey(name)}/changes`;
+  }
+
+  /**
+   * Persist a collection's document.
+   *
+   * The first write (and periodic compaction) stores the whole document. Other
+   * writes append the delta since the previous save, so a save doesn't serialise
+   * the entire library. Loading replays the base and then the chunks.
+   *
+   * @param {CollectionName} name
+   * @param {AutomergeDoc} doc
+   */
+  async #persist(name, doc) {
+    const heads = headsOf(doc);
+    const previous = this.#persistedHeads.get(name);
+
+    if (!this.#hasBase.has(name) || previous === undefined) {
+      await IDB.set(this.#docKey(name), encodeDocument(doc));
+
+      this.#hasBase.add(name);
+      this.#persistedHeads.set(name, heads);
+      this.#chunks.set(name, []);
+
+      try {
+        await IDB.del(this.#chunksKey(name));
+      } catch (err) {
+        console.warn(`Could not clear the '${name}' local changes:`, err);
+      }
+
+      return;
+    }
+
+    if (heads.join(";") === previous.join(";")) return;
+
+    const delta = deltaSince(doc, previous);
+
+    // The document no longer shares the cached base's history (for example an
+    // empty local document adopted a remote root). A delta chunk couldn't be
+    // replayed, so replace the base instead.
+    if (delta === undefined) {
+      await IDB.set(this.#docKey(name), encodeDocument(doc));
+
+      this.#persistedHeads.set(name, heads);
+      this.#chunks.set(name, []);
+
+      try {
+        await IDB.del(this.#chunksKey(name));
+      } catch (err) {
+        console.warn(`Could not clear the '${name}' local changes:`, err);
+      }
+
+      return;
+    }
+
+    if (delta.length === 0) {
+      this.#persistedHeads.set(name, heads);
+      return;
+    }
+
+    const chunks = [...(this.#chunks.get(name) ?? []), delta];
+
+    if (chunks.length >= LOCAL_COMPACT_EVERY) {
+      await IDB.set(this.#docKey(name), encodeDocument(doc));
+
+      this.#persistedHeads.set(name, heads);
+      this.#chunks.set(name, []);
+
+      try {
+        await IDB.del(this.#chunksKey(name));
+      } catch (err) {
+        console.warn(`Could not clear the '${name}' local changes:`, err);
+      }
+
+      return;
+    }
+
+    await IDB.set(this.#chunksKey(name), chunks);
+
+    this.#chunks.set(name, chunks);
+    this.#persistedHeads.set(name, heads);
+  }
+
+  /** @param {CollectionName} name */
+  async #resetChunks(name) {
+    this.#chunks.delete(name);
+    this.#hasBase.delete(name);
+
+    try {
+      await IDB.del(this.#chunksKey(name));
+    } catch (err) {
+      console.warn(`Could not reset the '${name}' local changes:`, err);
+    }
+  }
+
   /**
    * Load the cached documents. Runs once; subsequent calls await the same work.
    */
@@ -503,13 +613,43 @@ class FirkinAutomergeOutput extends BroadcastedOutputElement {
         await Promise.all(COLLECTIONS.map(async (name) => {
           try {
             const stored = await IDB.get(this.#docKey(name));
-            const doc = stored instanceof Uint8Array
+            let doc = stored instanceof Uint8Array
               ? loadDocument(stored)
               : undefined;
 
             if (doc) {
+              this.#hasBase.add(name);
+
+              // Replay the deltas appended since the base was written.
+              try {
+                const storedChunks = await IDB.get(this.#chunksKey(name));
+                const chunks = Array.isArray(storedChunks)
+                  ? storedChunks.filter((chunk) => chunk instanceof Uint8Array)
+                  : [];
+                /** @type {Uint8Array[]} */
+                const applied = [];
+
+                for (const chunk of chunks) {
+                  try {
+                    doc = applyIncremental(doc, chunk);
+                    applied.push(chunk);
+                  } catch (err) {
+                    console.warn(
+                      `Could not apply a cached '${name}' change:`,
+                      err,
+                    );
+                    break;
+                  }
+                }
+
+                this.#chunks.set(name, applied);
+              } catch (err) {
+                console.warn(`Could not read the '${name}' local changes:`, err);
+              }
+
               this.#docs.set(name, doc);
               this.#persisted.add(name);
+              this.#persistedHeads.set(name, headsOf(doc));
 
               // Local-first: a collection we have synced before can be shown
               // straight away — even when it is empty, because then "empty" is
@@ -522,10 +662,15 @@ class FirkinAutomergeOutput extends BroadcastedOutputElement {
               // Nothing cached: start from an empty document of our own, under
               // this device's actor so concurrent writers never share a
               // sequence number.
-              this.#docs.set(name, createDocument(await this.#actor()));
+              const empty = createDocument(await this.#actor());
+
+              this.#docs.set(name, empty);
               this.#persisted.delete(name);
+              this.#persistedHeads.set(name, headsOf(empty));
+
               await this.#resetCursor(name);
               await this.#resetAppliedLog(name);
+              await this.#resetChunks(name);
             }
           } catch (err) {
             console.warn(`Could not read the local '${name}' document:`, err);
@@ -562,7 +707,7 @@ class FirkinAutomergeOutput extends BroadcastedOutputElement {
       this.#persisted.delete(name);
 
       try {
-        await IDB.set(this.#docKey(name), encodeDocument(doc));
+        await this.#persist(name, doc);
         this.#persisted.add(name);
       } catch (err) {
         console.warn(`Could not cache the '${name}' document locally:`, err);
@@ -1231,7 +1376,7 @@ class FirkinAutomergeOutput extends BroadcastedOutputElement {
       this.#persisted.delete(name);
 
       try {
-        await IDB.set(this.#docKey(name), encodeDocument(doc));
+        await this.#persist(name, doc);
         this.#persisted.add(name);
         stored = true;
       } catch (err) {
