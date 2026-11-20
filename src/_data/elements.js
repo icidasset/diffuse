@@ -330,6 +330,12 @@ export default {
 
   transformers: [
     {
+      url: "components/transformer/output/bundles/element.js",
+      title: "Output / Bundles",
+      desc:
+        "Exposes an output's collections as bundles: one per playlist, and one per track source (an S3 bucket, a Subsonic server, a directory, …). Without an input to name the source, tracks fall back to their URI scheme. Other collections pass through unchanged, and saving bundles flattens them back into the wrapped output.",
+    },
+    {
       url: "components/transformer/output/bytes/dasl-sync/element.js",
       title: "Output / Bytes / DASL Sync",
       desc:

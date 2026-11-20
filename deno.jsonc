@@ -104,6 +104,7 @@
   "exports": {
     // .js
     "./common/atproto.js": "./src/common/atproto.js",
+    "./common/bundles.js": "./src/common/bundles.js",
     "./oauth/atproto.js": "./src/oauth/atproto.js",
     "./common/firkin/account.js": "./src/common/firkin/account.js",
     "./common/firkin/channel.js": "./src/common/firkin/channel.js",
@@ -228,6 +229,7 @@
     "./components/supplement/session.js": "./src/components/supplement/session.js",
     "./components/transformer/output/base.js": "./src/components/transformer/output/base.js",
     "./components/transformer/output/bytes/dasl-sync/constants.js": "./src/components/transformer/output/bytes/dasl-sync/constants.js",
+    "./components/transformer/output/bundles/element.js": "./src/components/transformer/output/bundles/element.js",
     "./components/transformer/output/bytes/dasl-sync/element.js": "./src/components/transformer/output/bytes/dasl-sync/element.js",
     "./components/transformer/output/bytes/json/element.js": "./src/components/transformer/output/bytes/json/element.js",
     "./components/transformer/output/refiner/default/element.js": "./src/components/transformer/output/refiner/default/element.js",
@@ -241,6 +243,7 @@
     "./components/upload/dropbox/worker.js": "./src/components/upload/dropbox/worker.js",
 
     // .d.ts
+    "./common/bundles.d.ts": "./src/common/bundles.d.ts",
     "./common/element.d.ts": "./src/common/element.d.ts",
     "./common/signal.d.ts": "./src/common/signal.d.ts",
     "./common/worker.d.ts": "./src/common/worker.d.ts",

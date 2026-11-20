@@ -1,5 +1,11 @@
-import { encode } from "@atcute/cbor";
 import { xxh32r } from "xxh32/dist/raw.js";
+
+import { bundle, bundleId, byField } from "~/common/bundles.js";
+
+/**
+ * @import {Bundle} from "~/common/bundles.d.ts"
+ * @import {PlaylistItem} from "~/definitions/types.d.ts"
+ */
 
 /**
  * Small, pure helpers shared by the AT Protocol publish element.
@@ -68,55 +74,45 @@ export function stableStringify(value) {
 }
 
 /**
- * Group playlist items by the playlist they belong to.
+ * Group playlist items into the bundles that are published to an account.
  *
- * Ephemeral items (temporary playlists such as queues) are skipped: they are
- * device-local and should never be published to an account.
+ * Each bundle becomes one `sh.diffuse.output.playlistItemBundle` record, keyed
+ * by {@link playlistRkey}. Ephemeral items (temporary playlists such as queues)
+ * are skipped: they are device-local and should never be published.
  *
- * @template {{ playlist?: string; ephemeral?: boolean }} T
- * @param {T[]} items
- * @returns {Map<string, T[]>}
+ * @param {PlaylistItem[]} items
+ * @returns {Bundle<PlaylistItem>[]}
  *
  * @example Groups by playlist and skips ephemeral items
  * ```js
- * import { groupPlaylistItems } from "~/components/supplement/atproto-publish/common.js";
+ * import { bundlePlaylistItems } from "~/components/supplement/atproto-publish/common.js";
  *
- * const groups = groupPlaylistItems([
- *   { id: "a", playlist: "Mix" },
- *   { id: "b", playlist: "Mix" },
- *   { id: "c", playlist: "Other" },
- *   { id: "d", playlist: "Mix", ephemeral: true },
- *   { id: "e" },
+ * const bundles = bundlePlaylistItems([
+ *   { $type: "sh.diffuse.output.playlistItem", id: "a", playlist: "Mix", criteria: [] },
+ *   { $type: "sh.diffuse.output.playlistItem", id: "b", playlist: "Mix", criteria: [] },
+ *   { $type: "sh.diffuse.output.playlistItem", id: "c", playlist: "Other", criteria: [] },
+ *   { $type: "sh.diffuse.output.playlistItem", id: "d", playlist: "Mix", criteria: [], ephemeral: true },
  * ]);
  *
- * if (groups.get("Mix")?.length !== 2) throw new Error("expected two Mix items");
- * if (groups.get("Other")?.length !== 1) throw new Error("expected one Other item");
- * if (groups.size !== 2) throw new Error("expected exactly two playlists");
+ * if (bundles.length !== 2) throw new Error("expected exactly two playlists");
+ * if (bundles[0].key !== "Mix") throw new Error("expected Mix first");
+ * if (bundles[0].items.length !== 2) throw new Error("expected two Mix items");
+ * if (bundles[1].items.length !== 1) throw new Error("expected one Other item");
  * ```
  *
- * @example Returns an empty map for an empty list
+ * @example Returns no bundles for an empty list
  * ```js
- * import { groupPlaylistItems } from "~/components/supplement/atproto-publish/common.js";
+ * import { bundlePlaylistItems } from "~/components/supplement/atproto-publish/common.js";
  *
- * if (groupPlaylistItems([]).size !== 0) throw new Error("expected no groups");
+ * if (bundlePlaylistItems([]).length !== 0) throw new Error("expected no bundles");
  * ```
  */
-export function groupPlaylistItems(items) {
-  /** @type {Map<string, T[]>} */
-  const groups = new Map();
-
-  for (const item of items) {
-    if (item.ephemeral) continue;
-
-    const playlist = item.playlist;
-    if (typeof playlist !== "string") continue;
-
-    const group = groups.get(playlist);
-    if (group) group.push(item);
-    else groups.set(playlist, [item]);
-  }
-
-  return groups;
+export function bundlePlaylistItems(items) {
+  return bundle(items, {
+    by: byField("playlist"),
+    skip: (item) => Boolean(item.ephemeral),
+    id: playlistRkey,
+  });
 }
 
 /**
@@ -124,7 +120,7 @@ export function groupPlaylistItems(items) {
  *
  * This mirrors the AT Protocol output so both elements address the same record
  * for the same playlist: the key is the hash of the playlist name encoded as
- * CBOR (a plain CBOR text string).
+ * CBOR (a plain CBOR text string), which is {@link bundleId}.
  *
  * @param {string} playlist
  * @returns {string}
@@ -138,7 +134,7 @@ export function groupPlaylistItems(items) {
  * ```
  */
 export function playlistRkey(playlist) {
-  return xxh32r(encode(playlist)).toString(16);
+  return bundleId(playlist);
 }
 
 /**

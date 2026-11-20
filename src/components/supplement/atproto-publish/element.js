@@ -7,6 +7,7 @@ import {
   queryOptional,
 } from "~/common/element.js";
 import { computed, signal } from "~/common/signal.js";
+import { flattenBundles, isBundleArray } from "~/common/bundles.js";
 
 import {
   clearStoredSession,
@@ -19,9 +20,8 @@ import {
 } from "~/oauth/atproto.js";
 
 import {
+  bundlePlaylistItems,
   bytesHash,
-  groupPlaylistItems,
-  playlistRkey,
   stableHash,
 } from "./common.js";
 
@@ -476,14 +476,16 @@ class ATProtoPublish extends BroadcastableDiffuseElement {
     if (collaborationCollection.state !== "loaded") return;
 
     const playlistItems = /** @type {PlaylistItem[]} */ (
-      playlistCollection.data ?? []
+      isBundleArray(playlistCollection.data)
+        ? flattenBundles(playlistCollection.data)
+        : playlistCollection.data ?? []
     );
     const facets = /** @type {Facet[]} */ (facetCollection.data ?? []);
     const collaborations = /** @type {Collaboration[]} */ (
       collaborationCollection.data ?? []
     );
 
-    const groups = groupPlaylistItems(playlistItems);
+    const bundles = bundlePlaylistItems(playlistItems);
     const previous = this.#readState(did);
 
     /** @type {PlaylistUpsert[]} */
@@ -491,19 +493,16 @@ class ATProtoPublish extends BroadcastableDiffuseElement {
     /** @type {Record<string, PublishedRecord>} */
     const nextPlaylists = { ...previous.playlists };
 
-    for (const [playlist, items] of groups) {
+    for (const { id: rkey, key: playlist, items } of bundles) {
       const bytes = encode(items);
       const hash = bytesHash(bytes);
-      const rkey = playlistRkey(playlist);
 
       if (previous.playlists[rkey]?.hash === hash) continue;
 
       playlistUpserts.push({ rkey, playlist, bytes, hash });
     }
 
-    const desiredPlaylistKeys = new Set(
-      [...groups.keys()].map((playlist) => playlistRkey(playlist)),
-    );
+    const desiredPlaylistKeys = new Set(bundles.map((bundle) => bundle.id));
     const playlistDeletes = Object.keys(previous.playlists).filter(
       (rkey) => !desiredPlaylistKeys.has(rkey),
     );
