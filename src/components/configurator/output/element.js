@@ -31,7 +31,7 @@ const STORAGE_PREFIX = "diffuse/configurator/output";
  * check before it is treated as disconnected. Outputs that were already
  * usable fall back immediately.
  */
-const DISCONNECT_GRACE_MS = 5_000;
+const DISCONNECT_GRACE_MS = 60_000;
 
 /**
  * How long to wait after the output options settle before treating a stored
