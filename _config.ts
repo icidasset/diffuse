@@ -13,6 +13,7 @@ import { existsSync } from "@std/fs/exists";
 import { walkSync } from "@std/fs/walk";
 import { buildTileCar } from "./tasks/tile-car.ts";
 import { nodeModulesPolyfillPlugin } from "esbuild-plugins-node-modules-polyfill";
+import { wasmLoader } from "esbuild-plugin-wasm";
 import autoprefixer from "autoprefixer";
 import cssnano from "cssnano";
 
@@ -197,10 +198,43 @@ site.use(esbuild({
           }));
         },
       },
+      // WNFS (`@wnfs-wg/nest`) resolves through `@deno/loader`'s default Node
+      // platform, so force the browser/WASM bundler target. The package also
+      // imports a Node `crypto` shim internally; swap in the browser module.
+      {
+        name: "wnfs-browser-target",
+        setup(build) {
+          build.onResolve({ filter: /^wnfs$/ }, () => ({
+            path: path.fromFileUrl(
+              import.meta.resolve(
+                "./node_modules/wnfs/dist/bundler/wnfs_wasm.js",
+              ),
+            ),
+            namespace: "file",
+          }));
+
+          build.onLoad(
+            { filter: /@wnfs-wg[+/]nest.*crypto\.js$/ },
+            async (args) => {
+              const browserPath = args.path.replace(
+                /crypto\.js$/,
+                "crypto-browser.js",
+              );
+              const contents = await Deno.readTextFile(browserPath);
+              return { contents, loader: "js" };
+            },
+          );
+        },
+      },
       nodeModulesPolyfillPlugin({
         fallback: "empty",
         modules: [],
       }),
+      // `esbuild-plugin-wasm` emits the WNFS WASM as a separate hashed file.
+      // Lume's esbuild integration writes binary output files through `.text`,
+      // which corrupts them; `fixWnfsWasm` restores the original bytes after
+      // the build.
+      wasmLoader(),
     ],
     splitting: true,
     target: "esnext",
@@ -562,6 +596,47 @@ async function writeFileTree() {
 
 site.addEventListener("afterBuild", writeFileTree);
 site.addEventListener("afterUpdate", writeFileTree);
+
+////////////////////////////////////////////
+// FIX WNFS WASM
+////////////////////////////////////////////
+
+// `esbuild-plugin-wasm` emits the WNFS WASM as a separate hashed file. Lume's
+// esbuild integration writes binary output files through `.text`, which decodes
+// (and therefore corrupts) `.wasm` bytes. Restore the original bytes (and
+// refresh its brotli sidecar) before the service-worker file tree is hashed
+// below.
+function fixWnfsWasm() {
+  let source: string;
+  try {
+    source = path.fromFileUrl(
+      import.meta.resolve("./node_modules/wnfs/dist/bundler/wnfs_wasm_bg.wasm"),
+    );
+  } catch {
+    return;
+  }
+
+  const bytes = Deno.readFileSync(source);
+
+  for (const entry of walkSync("./dist", { includeDirs: false })) {
+    if (
+      !entry.path.endsWith(".wasm") ||
+      !path.basename(entry.path).startsWith("wnfs_wasm_bg-")
+    ) {
+      continue;
+    }
+
+    Deno.writeFileSync(entry.path, bytes);
+
+    const brPath = `${entry.path}.br`;
+    if (existsSync(brPath)) {
+      Deno.writeFileSync(brPath, compressBrotli(bytes, undefined, 6));
+    }
+  }
+}
+
+site.addEventListener("afterBuild", fixWnfsWasm);
+site.addEventListener("afterUpdate", fixWnfsWasm);
 
 ////////////////////////////////////////////
 // BUILD TILE CARS FOR FACETS

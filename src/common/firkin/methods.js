@@ -17,21 +17,30 @@ export const CONNECT_URL = "facets/connect/firkin/index.tile";
 
 /**
  * @typedef {Object} FirkinMethod
+ * @property {"automerge" | "wnfs"} kind - The output implementation.
  * @property {string} id - Stable slug; also the log namespace and id suffix.
  * @property {string} label - Output option label; must be unique.
  * @property {string} provider - Display name shared by a provider's methods;
  *   the userdata facet collapses them into one row.
- * @property {number} keep - Entries retained per device and collection. Must
- *   exceed the element's snapshot cadence (32).
+ * @property {number} [keep] - Entries retained per device and collection. Must
+ *   exceed the element's snapshot cadence (32). Only used by the Automerge
+ *   output.
  */
 
 /** @type {FirkinMethod[]} */
 export const FIRKIN_METHODS = [
   {
+    kind: "automerge",
     id: "firkin-automerge",
     label: "Firkin (Automerge)",
     provider: "Firkin",
     keep: 64,
+  },
+  {
+    kind: "wnfs",
+    id: "wnfs-firkin",
+    label: "Firkin (WNFS)",
+    provider: "Firkin",
   },
 ];
 

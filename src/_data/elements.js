@@ -302,6 +302,12 @@ export default {
       desc:
         "Store output data on AWS S3 or compatible services such as Cloudflare R2.",
     },
+    {
+      url: "components/output/bytes/wnfs/element.js",
+      title: "Bytes / WNFS (Firkin)",
+      desc:
+        "Stores user data in a private WNFS on a Firkin instance, with all blocks held by the account. Playlist items and tracks are written as one file per bundle (per playlist or input source), so a save only rewrites the bundle that changed. Requires a passkey-backed Firkin account.",
+    },
   ],
 
   supplements: [

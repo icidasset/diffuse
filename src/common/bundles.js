@@ -283,3 +283,68 @@ export function byUriScheme() {
     return colon > 0 ? uri.slice(0, colon) : undefined;
   };
 }
+
+/**
+ * Group items by the source their provider reports.
+ *
+ * The provider map is keyed by URI scheme. Each provider is asked for the
+ * source of one item at a time, so the answer comes from that provider's own
+ * parser: two S3 buckets, two Subsonic servers, two WebDAV directories or two
+ * local folders stay distinct even when they share a scheme. Items whose
+ * provider cannot name a source fall back to their scheme.
+ *
+ * This is a generic structural helper. It does not know about input elements;
+ * a composition layer that does can build the provider map and hand the
+ * selector to an output or transformer.
+ *
+ * @template {{ uri: string }} T
+ * @param {Record<string, { sources?: (items: T[]) => { uri: string }[] }>} providers
+ * @returns {(item: T) => string | undefined}
+ *
+ * @example Groups tracks by the source their provider reports
+ * ```ts
+ * import { bySourceProvider } from "~/common/bundles.js";
+ *
+ * const providers = {
+ *   https: {
+ *     sources: (tracks: Array<{ uri: string }>) =>
+ *       tracks.map((track: { uri: string }) => ({
+ *         label: new URL(track.uri).host,
+ *         uri: `https://${new URL(track.uri).host}`,
+ *       })),
+ *   },
+ * };
+ *
+ * const select = bySourceProvider(providers);
+ *
+ * if (select({ uri: "https://a.example/1.mp3" }) !== "https://a.example") {
+ *   throw new Error("expected the provider source");
+ * }
+ * if (select({ uri: "s3://bucket/2.flac" }) !== "s3") {
+ *   throw new Error("expected the scheme fallback");
+ * }
+ * ```
+ */
+export function bySourceProvider(providers) {
+  return (item) => {
+    const uri = item?.uri;
+    if (typeof uri !== "string") return undefined;
+
+    const colon = uri.indexOf(":");
+    if (colon <= 0) return undefined;
+
+    const scheme = uri.slice(0, colon);
+    const provider = providers[scheme];
+
+    if (!provider || typeof provider.sources !== "function") return scheme;
+
+    try {
+      const source = provider.sources([item])[0];
+      return typeof source?.uri === "string" && source.uri.length > 0
+        ? source.uri
+        : scheme;
+    } catch {
+      return scheme;
+    }
+  };
+}

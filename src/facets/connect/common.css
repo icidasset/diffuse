@@ -1,5 +1,10 @@
 @import "../../styles/diffuse/facet.css";
 
+#connect-dialog[data-mode="input"] .connect-output-only,
+#connect-dialog[data-mode="output"] .connect-input-only {
+  display: none;
+}
+
 .connect-list {
   display: flex;
   flex-direction: column;

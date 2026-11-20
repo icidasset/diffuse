@@ -17,6 +17,10 @@ import foundation from "~/common/foundation.js";
 
 import { setup, waitForOutputOption } from "~/facets/connect/common.js";
 
+/**
+ * @import {WnfsFirkinOutputElement} from "@specs/components/output/bytes/wnfs/types.d.ts"
+ */
+
 foundation.setup({ title: "Connect Firkin" });
 
 ////////////////////////////////////////////
@@ -67,15 +71,35 @@ await Promise.all(
   }),
 );
 
-/** Whether the userdata output option exists, i.e. the feature facet is on. */
-const canUseOutput = firkinOptions.size === FIRKIN_METHODS.length;
+/** Whether at least one userdata output option exists, i.e. a feature facet is on. */
+const availableMethods = FIRKIN_METHODS.filter((method) =>
+  firkinOptions.has(method.id)
+);
+const canUseOutput = availableMethods.length > 0;
 
 const FIRKIN_OPTION_IDS = new Set(
   [...firkinOptions.values()].map((option) => option.id),
 );
 
+/** The WNFS output element, when that optional feature is enabled. */
+const WNFS_OUTPUT_NAME = "dob-wnfs-firkin";
+
+/** @returns {WnfsFirkinOutputElement | null} */
+function wnfsOutput() {
+  const element = outputOrchestrator.root().querySelector(WNFS_OUTPUT_NAME);
+  if (!element) return null;
+
+  // The element may exist before its custom-element class is upgraded.
+  if (typeof /** @type {any} */ (element).dataRoot !== "function") return null;
+
+  return /** @type {WnfsFirkinOutputElement} */ (
+    /** @type {unknown} */ (element)
+  );
+}
+
 /**
- * The method the dialog is set to. With one method there is no chooser.
+ * The method the dialog is set to. With one available method there is no
+ * chooser.
  *
  * @returns {import("~/common/firkin/methods.js").FirkinMethod}
  */
@@ -83,7 +107,8 @@ function chosenMethod() {
   const select = document.querySelector("#rb-method");
   const id = select instanceof HTMLSelectElement ? select.value : "";
 
-  return FIRKIN_METHODS.find((method) => method.id === id) ?? FIRKIN_METHODS[0];
+  return availableMethods.find((method) => method.id === id) ??
+    availableMethods[0] ?? FIRKIN_METHODS[0];
 }
 
 /**
@@ -123,12 +148,12 @@ const { setItems, setError, setDialogError } = setup({
 
   formFields: html`
     ${
-    FIRKIN_METHODS.length > 1
+    availableMethods.length > 1
       ? html`
-        <label>
+        <label class="connect-output-only">
           Storage method
           <select id="rb-method">
-            ${FIRKIN_METHODS.map((method) =>
+            ${availableMethods.map((method) =>
               html`<option value="${method.id}">${method.label}</option>`
             )}
           </select>
@@ -281,11 +306,39 @@ async function refreshAccount() {
  * key is missing, because the key is only ever derived by the passkey step.
  * Without this a restored session can never recover the key, leaving the output
  * with nothing to read or write.
+ *
+ * @param {'input' | 'output'} mode
  */
-async function ensureAccount() {
+async function ensureAccount(mode) {
+  // Adding an audio input only needs the shared account session. The output
+  // method select is not part of that flow, so never let it trigger the WNFS
+  // setup as a side effect.
+  if (mode === "input") {
+    if (account.get() && outputKey() !== undefined) return;
+    await connectWithDid(mode);
+    return;
+  }
+
+  const method = chosenMethod();
+
+  // The WNFS output owns its own storage root and exchange key, which only its
+  // own `signIn()` creates. A shared account session is not enough to make the
+  // output readable.
+  if (method.kind === "wnfs") {
+    const wnfs = wnfsOutput();
+    if (wnfs) {
+      await wnfs.whenRestored();
+      if (account.get() && outputKey() !== undefined && wnfs.dataRoot()) {
+        return;
+      }
+      await connectWithDid(mode);
+      return;
+    }
+  }
+
   if (account.get() && outputKey() !== undefined) return;
 
-  await connectWithDid();
+  await connectWithDid(mode);
 }
 
 /**
@@ -297,7 +350,7 @@ async function ensureAccount() {
  * @param {'input' | 'output'} mode
  */
 async function addFirkin(mode) {
-  await ensureAccount();
+  await ensureAccount(mode);
 
   if (mode === "input") {
     await addInput();
@@ -335,9 +388,36 @@ async function addInput() {
 /**
  * Sign in: derive the account key from the passkey, mint a one-year session
  * delegation for this browser, and verify that the account is registered.
+ *
+ * @param {'input' | 'output'} mode
  */
-async function connect() {
+async function connect(mode) {
   const apiBase = apiInput.value.trim() || undefined;
+  const method = chosenMethod();
+
+  // Delegate to the WNFS output when it owns the selected method, so it also
+  // creates/mounts its encrypted userdata and seeds it from the local output.
+  // Inputs only need the shared account, even if WNFS is the stored choice.
+  if (mode === "output" && method.kind === "wnfs") {
+    const wnfs = wnfsOutput();
+    if (wnfs) {
+      const result = await wnfs.signIn({ apiBase });
+      account.value = {
+        did: result.did,
+        apiBase: wnfs.apiBase() ?? apiBase ?? DEFAULT_API_BASE,
+      };
+
+      if (wnfs.id && !outputOrchestrator.hasSelected()) {
+        try {
+          await outputOrchestrator.select(wnfs.id);
+        } catch {
+          // The option may not be registered yet; the user can select it.
+        }
+      }
+      return;
+    }
+  }
+
   const result = await signInAccount({ apiBase });
   account.value = { did: result.did, apiBase: result.apiBase };
 
@@ -358,10 +438,12 @@ async function connect() {
 /**
  * Sign in, surfacing the passkey's DID when that is the way forward: an
  * unregistered account needs its DID registered before anything else works.
+ *
+ * @param {'input' | 'output'} mode
  */
-async function connectWithDid() {
+async function connectWithDid(mode) {
   try {
-    await connect();
+    await connect(mode);
   } catch (err) {
     if (err instanceof UnregisteredAccountError) showDid(err.did);
     throw err;
@@ -385,14 +467,27 @@ function showDid(did, hint = DEFAULT_DID_HINT) {
 async function disconnect() {
   setError(null);
   try {
-    // Without a session the output has nothing to read, so stop using it
-    // before dropping the account.
-    const selectedId = outputOrchestrator.selected()?.id;
-    if (selectedId !== undefined && FIRKIN_OPTION_IDS.has(selectedId)) {
-      await outputOrchestrator.deselect();
-    }
+    const wnfs = wnfsOutput();
 
-    await signOutAccount();
+    if (wnfs) {
+      // The WNFS output also clears the shared session; stop using any Firkin
+      // output before dropping it.
+      const selectedId = outputOrchestrator.selected()?.id;
+      if (selectedId !== undefined && FIRKIN_OPTION_IDS.has(selectedId)) {
+        await outputOrchestrator.deselect();
+      }
+
+      await wnfs.signOut();
+    } else {
+      // Without a session the output has nothing to read, so stop using it
+      // before dropping the account.
+      const selectedId = outputOrchestrator.selected()?.id;
+      if (selectedId !== undefined && FIRKIN_OPTION_IDS.has(selectedId)) {
+        await outputOrchestrator.deselect();
+      }
+
+      await signOutAccount();
+    }
 
     account.value = null;
   } catch (err) {
@@ -412,7 +507,10 @@ showDidBtn?.addEventListener("click", async () => {
   if (didResult) didResult.hidden = true;
 
   try {
-    showDid(await derivePasskeyDid());
+    const wnfs = wnfsOutput();
+    showDid(
+      wnfs ? await wnfs.passkeyDid() : await derivePasskeyDid(),
+    );
   } catch (err) {
     setDialogError(
       err instanceof Error ? err.message : "Could not derive the DID",
@@ -450,7 +548,10 @@ document
     setDialogError(null);
 
     try {
-      const did = await derivePasskeyDid({ create: true });
+      const wnfs = wnfsOutput();
+      const did = wnfs
+        ? await wnfs.passkeyDid({ create: true })
+        : await derivePasskeyDid({ create: true });
 
       showDid(
         did,

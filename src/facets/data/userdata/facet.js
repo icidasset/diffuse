@@ -79,7 +79,26 @@ function compareOptions(a, b) {
   return a.label.localeCompare(b.label);
 }
 
-options.value = (await outputOrchestrator.options()).sort(compareOptions);
+let optionsRevision = 0;
+
+/**
+ * Re-read the output options. Feature facets can append their option after this
+ * page has initialized (the WNFS option is imported lazily), so the list is not
+ * a one-time snapshot.
+ */
+async function refreshOptions() {
+  const revision = ++optionsRevision;
+  const next = (await outputOrchestrator.options()).sort(compareOptions);
+
+  if (revision === optionsRevision) options.value = next;
+}
+
+await refreshOptions();
+
+new MutationObserver(() => void refreshOptions()).observe(
+  outputOrchestrator.outputConfigurator,
+  { childList: true },
+);
 
 const defaultId = outputOrchestrator.outputConfigurator.getAttribute(
   "default",

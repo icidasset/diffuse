@@ -31,6 +31,8 @@ effect(() => {
   if (!output) return;
 
   for (const method of FIRKIN_METHODS) {
+    if (method.kind !== "automerge") continue;
+
     // The effect can re-run; never append the same option twice.
     if (document.getElementById(optionId(method))) continue;
 
@@ -53,6 +55,7 @@ effect(() => {
   previouslyActivated = set;
 
   for (const method of FIRKIN_METHODS) {
+    if (method.kind !== "automerge") continue;
     if (!newlyActivated.has(optionId(method))) continue;
 
     import(
@@ -72,7 +75,9 @@ function optionElement(method) {
   element.setAttribute("group", foundation.GROUP);
   element.setAttribute("id", optionId(method));
   element.setAttribute("namespace", method.id);
-  element.setAttribute("keep", String(method.keep));
+  if (method.keep !== undefined) {
+    element.setAttribute("keep", String(method.keep));
+  }
   element.setAttribute("label", method.label);
   element.setAttribute("connect", CONNECT_URL);
   element.setAttribute("provider", method.provider);

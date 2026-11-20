@@ -196,6 +196,7 @@ export function setup(
   /** @param {'input' | 'output'} m */
   const openDialog = (m) => {
     mode = m;
+    dialog.dataset.mode = m;
     dialogTitleEl.textContent = m === "input"
       ? "Add audio input"
       : outputTitle;

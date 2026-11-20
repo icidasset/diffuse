@@ -39,6 +39,7 @@ import * as _OrchestratorScopedTracks from "./orchestrator/scoped-tracks/element
 import * as _OrchestratorScrobbleAudio from "./orchestrator/scrobble-audio/element.js"
 import * as _OrchestratorSources from "./orchestrator/sources/element.js"
 import * as _OutputBytesS3 from "./output/bytes/s3/element.js"
+import * as _OutputBytesWnfs from "./output/bytes/wnfs/element.js"
 import * as _OutputPolymorphicIndexedDb from "./output/polymorphic/indexed-db/element.js"
 import * as _OutputRawFirkinEncryptedIncrementalAutomerge from "./output/raw/firkin/encrypted/incremental-automerge/element.js"
 import * as _SupplementAtprotoPublish from "./supplement/atproto-publish/element.js"
@@ -121,6 +122,7 @@ export const orchestrator = {
 export const output = {
   bytes: {
     s3: _OutputBytesS3,
+    wnfs: _OutputBytesWnfs,
   },
   polymorphic: {
     indexedDb: _OutputPolymorphicIndexedDb,

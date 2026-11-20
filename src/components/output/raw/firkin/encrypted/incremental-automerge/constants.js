@@ -82,8 +82,14 @@ export const IDB_ACTOR = `${IDB_DOCS}/actor`;
 export const IDB_FLOORS = "diffuse/output/firkin/encrypted/incremental-automerge/floors";
 export const IDB_PACKS = "diffuse/output/firkin/encrypted/incremental-automerge/packs";
 
-/** Prefix of the registry namespace holding each output's append logs. */
-export const REGISTRY_NAMESPACE_PREFIX = "diffuse.output.firkin";
+/**
+ * Prefix of the registry namespace holding each output's append logs.
+ *
+ * Follows the shared output scheme, `diffuse.output.<kind>`, so the registry
+ * stays organised by what owns each entry. The element's `namespace` attribute
+ * is appended so separate outputs don't share a log.
+ */
+export const REGISTRY_NAMESPACE_PREFIX = "diffuse.output.automerge.incremental";
 
 /** Raw block codec for log entries. */
 export const CODEC_RAW = 0x55;

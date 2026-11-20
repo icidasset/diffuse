@@ -146,9 +146,14 @@ describe("components/transformer/output/bundles", () => {
       output.id = "test-bundles-source";
       document.body.append(output);
 
-      const provider = document.createElement("div") as any;
-      provider.id = "test-bundles-source-provider";
-      provider.inputs = () => ({
+      const { bySourceProvider } = await import("~/common/bundles.js");
+
+      const t = new mod.CLASS();
+      t.setAttribute("output-selector", "#test-bundles-source");
+
+      // The composition layer supplies the input-aware grouping. The
+      // transformer itself never looks for input elements.
+      t.tracksBy = bySourceProvider({
         https: {
           SCHEME: "https",
           sources: (tracks: Array<{ uri: string }>) =>
@@ -168,12 +173,8 @@ describe("components/transformer/output/bundles", () => {
               return { label: bucket, uri: `${base}?bucketName=${bucket}` };
             }),
         },
-      });
-      document.body.append(provider);
+      } as any);
 
-      const t = new mod.CLASS();
-      t.setAttribute("output-selector", "#test-bundles-source");
-      t.setAttribute("input-selector", "#test-bundles-source-provider");
       document.body.append(t);
 
       await t.tracks.save([

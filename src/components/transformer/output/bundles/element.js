@@ -1,4 +1,4 @@
-import { computed, signal } from "~/common/signal.js";
+import { computed } from "~/common/signal.js";
 import {
   bundle,
   byField,
@@ -7,11 +7,10 @@ import {
   isBundle,
 } from "~/common/bundles.js";
 import { OutputTransformer } from "../base.js";
-import { defineElement, queryOptional } from "~/common/element.js";
+import { defineElement } from "~/common/element.js";
 
 /**
  * @import {BundleSelector} from "~/common/bundles.d.ts"
- * @import {InputElement} from "@specs/components/input/types.d.ts"
  * @import {Track} from "~/definitions/types.d.ts"
  */
 
@@ -20,9 +19,10 @@ import { defineElement, queryOptional } from "~/common/element.js";
 /**
  * The collections that have an obvious "smaller piece" and how to find it.
  *
- * Playlist items belong to a playlist. Tracks are grouped by the source of the
- * input that owns them (see {@link bySource}), falling back to their URI scheme
- * when no input provider is available.
+ * Playlist items belong to a playlist. Tracks are grouped by their URI scheme
+ * by default; a composer that knows about inputs can set `tracksBy` to
+ * `bySourceProvider(inputs)` (see `~/common/bundles.js`) to group by the
+ * input's source instead.
  *
  * The other collections are already one record per item (a facet, a
  * collaboration, a setting), so grouping them would only produce one-item
@@ -50,13 +50,12 @@ const BUNDLEABLE = {
  * The element bundles automatically wherever that is meaningful:
  *
  * - `playlistItems` by their `playlist`
- * - `tracks` by the source of the input that owns them
+ * - `tracks` by their URI scheme
  *
- * A track's source is resolved through the input itself (an S3 bucket, a
- * Subsonic server, a WebDAV directory, a local folder, …). The input configurator
- * is found through the optional `input-selector` attribute, or the document's
- * `dc-input` when there is one. Without an input (for example in a standalone
- * page), tracks fall back to their URI scheme.
+ * A composer that knows about inputs can set `tracksBy` to a selector that
+ * groups tracks by their input source instead (for example
+ * `bySourceProvider(inputs)` from `~/common/bundles.js`). The element itself
+ * never looks for inputs.
  *
  * Every other collection passes through unchanged. A bundled collection is
  * returned from `collection()` as `Bundle<T>[]`; its `save()` accepts bundles
@@ -77,12 +76,12 @@ class BundlesTransformer extends OutputTransformer {
   static NAME = "diffuse/transformer/output/bundles";
 
   /**
-   * @override
+   * Optional grouping rule for tracks, supplied by the composition layer.
+   * When absent, tracks are grouped by their URI scheme.
+   *
+   * @type {BundleSelector<Track> | undefined}
    */
-  static observedAttributes = ["output-selector", "input-selector"];
-
-  /** Bumped when `input-selector` changes, so the bundle view re-resolves. */
-  #inputsRevision = signal(0);
+  tracksBy = undefined;
 
   constructor() {
     super();
@@ -102,9 +101,6 @@ class BundlesTransformer extends OutputTransformer {
           const data = Array.isArray(collection.data)
             ? /** @type {any[]} */ (collection.data)
             : [];
-
-          // Re-resolve the input provider when `input-selector` is rewired.
-          this.#inputsRevision.get();
 
           const by = name === "tracks"
             ? this.#trackSelector()
@@ -147,93 +143,17 @@ class BundlesTransformer extends OutputTransformer {
     this.ready = base.ready;
   }
 
-  /**
-   * @override
-   * @param {string} name
-   * @param {string} oldValue
-   * @param {string} newValue
-   */
-  attributeChangedCallback(name, oldValue, newValue) {
-    super.attributeChangedCallback(name, oldValue, newValue);
-
-    if (name === "input-selector") {
-      this.#inputsRevision.value = this.#inputsRevision.value + 1;
-    }
-  }
-
-  /**
-   * The input elements that can name a track's source.
-   *
-   * The explicit `input-selector` wins; otherwise the document's `dc-input`
-   * configurator is used (the foundation mounts one). Returns `undefined` when
-   * there is no usable provider, in which case tracks fall back to their URI
-   * scheme.
-   *
-   * @returns {Record<string, InputElement> | undefined}
-   */
-  #inputs() {
-    const provider = queryOptional(this, "input-selector") ??
-      document.querySelector("dc-input");
-    if (!provider) return undefined;
-
-    const element = /** @type {any} */ (provider);
-
-    if (typeof element.inputs === "function") {
-      const inputs = element.inputs();
-      return inputs && typeof inputs === "object" ? inputs : undefined;
-    }
-
-    if (
-      typeof element.SCHEME === "string" &&
-      typeof element.sources === "function"
-    ) {
-      return { [element.SCHEME]: /** @type {InputElement} */ (provider) };
-    }
-
-    return undefined;
-  }
-
-  /** @returns {BundleSelector<Track>} */
+  /** Resolves the track grouping rule, preferring the composer's override. */
   #trackSelector() {
-    const inputs = this.#inputs();
-    return inputs ? bySource(inputs) : byUriScheme();
+    const custom = this.tracksBy;
+    if (!custom) return BUNDLEABLE.tracks;
+
+    const fallback = BUNDLEABLE.tracks;
+
+    /** @type {BundleSelector<Track>} */
+    const selector = (track) => custom(track) ?? fallback(track);
+    return selector;
   }
-}
-
-/**
- * Derive a track's bundle key from the input that owns it.
- *
- * Each input is asked for the source of one track at a time, so the answer
- * always comes from that input's own parser. Two S3 buckets, two Subsonic
- * servers, two WebDAV directories or two local folders therefore stay distinct
- * even when they share a URI scheme. Tracks whose input cannot name a source
- * fall back to their scheme, so nothing is dropped from the bundle view.
- *
- * @param {Record<string, InputElement>} inputs
- * @returns {BundleSelector<Track>}
- */
-function bySource(inputs) {
-  return (track) => {
-    const uri = track?.uri;
-    if (typeof uri !== "string") return undefined;
-
-    const colon = uri.indexOf(":");
-    if (colon <= 0) return undefined;
-
-    const scheme = uri.slice(0, colon);
-    const input = inputs[scheme];
-
-    if (!input || typeof input.sources !== "function") return scheme;
-
-    try {
-      const source = input.sources([track])[0];
-      return typeof source?.uri === "string" && source.uri.length > 0
-        ? source.uri
-        : scheme;
-    } catch {
-      return scheme;
-    }
-  };
 }
 
 export default BundlesTransformer;
