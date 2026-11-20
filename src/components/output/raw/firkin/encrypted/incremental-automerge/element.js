@@ -59,7 +59,30 @@ import { verifySignature } from "./verify.js";
 
 /**
  * @typedef {Object} BulkActions
- * @property {(args: { bytes: Uint8Array; items: any[]; schema?: string }) => Promise<{ changed: boolean; deltas?: Uint8Array[] }>} applyLargeChange
+ * @property {(args: {
+ *   bytes: Uint8Array;
+ *   items: any[];
+ *   schema?: string;
+ *   pushHeads?: string[];
+ *   snapshot?: boolean;
+ * }) => Promise<{
+ *   changed: boolean;
+ *   deltas?: Uint8Array[];
+ *   docBytes?: Uint8Array;
+ *   pushBytes?: Uint8Array;
+ *   heads?: string[];
+ * }>} applyLargeChange
+ */
+
+/**
+ * A push whose entry bytes were prepared off the main thread. It is only used
+ * while the document and cursor still match what the worker saw.
+ *
+ * @typedef {Object} PreparedPush
+ * @property {Uint8Array} bytes
+ * @property {string[]} heads
+ * @property {string} cursorHeads
+ * @property {boolean} snapshot
  */
 
 /** Yield to the event loop between applying the worker's deltas. */
@@ -105,10 +128,16 @@ class FirkinAutomergeOutput extends BroadcastedOutputElement {
   /** @type {import("~/common/worker.d.ts").ProxiedActions<BulkActions> | undefined} */
   #bulkWorker;
 
+  /** @type {Map<string, PreparedPush>} */
+  #preparedPushes = new Map();
+
   // SIGNALS
 
   #isOnline = signal(navigator.onLine);
   #connected = signal(false);
+
+  /** Whether a connection check has finished (it may have found no session). */
+  #connectionChecked = false;
 
   /** @type {Promise<void> | undefined} */
   #refreshing;
@@ -389,6 +418,8 @@ class FirkinAutomergeOutput extends BroadcastedOutputElement {
       return this.#refreshing;
     }
 
+    this.#connectionChecked = false;
+
     this.#refreshing = (async () => {
       do {
         this.#refreshAgain = false;
@@ -396,6 +427,12 @@ class FirkinAutomergeOutput extends BroadcastedOutputElement {
       } while (this.#refreshAgain);
     })().finally(() => {
       this.#refreshing = undefined;
+      this.#connectionChecked = true;
+
+      // The check may have concluded that nothing is usable. The ready effect
+      // won't re-run if no signal changed, so settle this state explicitly
+      // (after the grace period) instead of leaving the UI loading forever.
+      if (this.isConnected && !this.ready()) this.#scheduleSettle();
     });
 
     return this.#refreshing;
@@ -536,16 +573,20 @@ class FirkinAutomergeOutput extends BroadcastedOutputElement {
    *
    * @param {CollectionName} name
    * @param {AutomergeDoc} doc
-   * @param {{ compact?: boolean }} [options] - `compact` rewrites the base
-   *   instead of appending a delta (a bulk save's delta is as large as the
-   *   whole collection).
+   * @param {{ compact?: boolean; bytes?: Uint8Array }} [options] - `compact`
+   *   rewrites the base instead of appending a delta (a bulk save's delta is as
+   *   large as the whole collection); `bytes` supplies the already-encoded base
+   *   (prepared by the worker).
    */
   async #persist(name, doc, options = {}) {
     const heads = headsOf(doc);
     const previous = this.#persistedHeads.get(name);
 
     if (options.compact) {
-      await IDB.set(this.#docKey(name), encodeDocument(doc));
+      await IDB.set(
+        this.#docKey(name),
+        options.bytes ?? encodeDocument(doc),
+      );
 
       this.#hasBase.add(name);
       this.#persistedHeads.set(name, heads);
@@ -734,14 +775,38 @@ class FirkinAutomergeOutput extends BroadcastedOutputElement {
 
       let doc;
       let changed;
+      /** @type {Uint8Array | undefined} */
+      let docBytes;
+      /** @type {PreparedPush | undefined} */
+      let prepared;
 
       if (bulk) {
         try {
-          ({ doc, changed } = await this.#applyLargeChange(
+          const cursor = await this.#cursor(name);
+          const snapshot = cursor.pushes > 0 &&
+            cursor.pushes % SNAPSHOT_EVERY === 0;
+
+          const result = await this.#applyLargeChange(
             current,
             items,
             schema,
-          ));
+            cursor.heads,
+            snapshot,
+          );
+
+          if (!result.changed) return;
+
+          doc = result.doc;
+          changed = true;
+          docBytes = result.docBytes;
+          prepared = result.pushBytes && result.heads
+            ? {
+              bytes: result.pushBytes,
+              heads: result.heads,
+              cursorHeads: (cursor.heads ?? []).join(";"),
+              snapshot,
+            }
+            : undefined;
         } catch (err) {
           console.warn(
             "Could not apply the save in a worker; falling back:",
@@ -768,13 +833,13 @@ class FirkinAutomergeOutput extends BroadcastedOutputElement {
       try {
         // A bulk save's delta would be as large as the collection; rewrite the
         // base instead of appending it as a chunk.
-        await this.#persist(name, doc, { compact: bulk });
+        await this.#persist(name, doc, { compact: bulk, bytes: docBytes });
         this.#persisted.add(name);
       } catch (err) {
         console.warn(`Could not cache the '${name}' document locally:`, err);
       }
 
-      this.#schedulePush(name);
+      this.#schedulePush(name, prepared);
     });
   }
 
@@ -786,18 +851,29 @@ class FirkinAutomergeOutput extends BroadcastedOutputElement {
   /**
    * Apply a large save in the worker, which returns one delta per batch. The
    * deltas are applied here with yields, so neither the Automerge change nor
-   * the resulting document update blocks the page.
+   * the resulting document update blocks the page. The worker also prepares
+   * the push entry and the compact base bytes.
    *
    * @param {AutomergeDoc} current
    * @param {any[]} items
    * @param {string} schema
-   * @returns {Promise<{ doc: AutomergeDoc; changed: boolean }>}
+   * @param {Heads | undefined} pushHeads
+   * @param {boolean} snapshot
+   * @returns {Promise<{
+   *   doc: AutomergeDoc;
+   *   changed: boolean;
+   *   docBytes?: Uint8Array;
+   *   pushBytes?: Uint8Array;
+   *   heads?: string[];
+   * }>}
    */
-  async #applyLargeChange(current, items, schema) {
+  async #applyLargeChange(current, items, schema, pushHeads, snapshot) {
     const result = await this.#bulkProxy().applyLargeChange({
       bytes: encodeDocument(current),
       items,
       schema,
+      pushHeads,
+      snapshot,
     });
 
     if (!result.changed) return { doc: current, changed: false };
@@ -809,7 +885,13 @@ class FirkinAutomergeOutput extends BroadcastedOutputElement {
       await yieldToMain();
     }
 
-    return { doc, changed: true };
+    return {
+      doc,
+      changed: true,
+      docBytes: result.docBytes,
+      pushBytes: result.pushBytes,
+      heads: result.heads,
+    };
   }
 
   /**
@@ -818,9 +900,10 @@ class FirkinAutomergeOutput extends BroadcastedOutputElement {
    *
    * @param {CollectionName} name
    * @param {AutomergeDoc} doc
+   * @param {PreparedPush} [prepared]
    */
-  #enqueuePush(name, doc) {
-    const run = () => this.#push(name, doc);
+  #enqueuePush(name, doc, prepared) {
+    const run = () => this.#push(name, doc, prepared);
 
     this.#pushQueue = this.#pushQueue.then(run, run).then(
       () => {},
@@ -834,8 +917,11 @@ class FirkinAutomergeOutput extends BroadcastedOutputElement {
    * per save. Appends triggered by a pull stay immediate.
    *
    * @param {CollectionName} name
+   * @param {PreparedPush} [prepared]
    */
-  #schedulePush(name) {
+  #schedulePush(name, prepared) {
+    if (prepared) this.#preparedPushes.set(name, prepared);
+
     const pending = this.#pushTimers.get(name);
     if (pending !== undefined) clearTimeout(pending);
 
@@ -845,7 +931,10 @@ class FirkinAutomergeOutput extends BroadcastedOutputElement {
         this.#pushTimers.delete(name);
 
         const doc = this.#docs.get(name);
-        if (doc) this.#enqueuePush(name, doc);
+        const prepared = this.#preparedPushes.get(name);
+        this.#preparedPushes.delete(name);
+
+        if (doc) this.#enqueuePush(name, doc, prepared);
       }, PUSH_COALESCE_MS),
     );
   }
@@ -856,10 +945,13 @@ class FirkinAutomergeOutput extends BroadcastedOutputElement {
       clearTimeout(timer);
 
       const doc = this.#docs.get(name);
-      if (doc) this.#enqueuePush(name, doc);
+      const prepared = this.#preparedPushes.get(name);
+
+      if (doc) this.#enqueuePush(name, doc, prepared);
     }
 
     this.#pushTimers.clear();
+    this.#preparedPushes.clear();
   }
 
   /** @type {ReturnType<typeof setTimeout> | undefined} */
@@ -885,11 +977,19 @@ class FirkinAutomergeOutput extends BroadcastedOutputElement {
       if (!this.#isOnline.value) {
         state = "offline — it reads again once the connection is back";
       } else if (!this.#connected.value) {
+        // A check may simply still be in flight (a large local cache is loaded
+        // in parallel); don't report the user as signed out before it answers.
+        if (!this.#connectionChecked) return;
+
         state = "not signed in on this browser; sign in on Connect → Firkin";
-      } else {
+      } else if (outputKey() === undefined) {
         state = "signed in, but this browser has no output encryption key " +
           "(it is derived from your passkey at sign-in) — sign in again on " +
           "this device to derive it";
+      } else {
+        // Everything is present: a large local cache is simply still being
+        // read. It resolves on its own; don't claim the key is missing.
+        return;
       }
 
       console.warn(
@@ -1130,8 +1230,9 @@ class FirkinAutomergeOutput extends BroadcastedOutputElement {
    *
    * @param {CollectionName} name
    * @param {AutomergeDoc} doc
+   * @param {PreparedPush} [prepared]
    */
-  async #push(name, doc) {
+  async #push(name, doc, prepared) {
     // Only the group leader writes; other tabs read their changes back from the
     // log like any other device.
     if (!(await this.isLeader())) return;
@@ -1147,8 +1248,24 @@ class FirkinAutomergeOutput extends BroadcastedOutputElement {
 
     const cursor = await this.#cursor(name);
     const snapshot = cursor.pushes > 0 && cursor.pushes % SNAPSHOT_EVERY === 0;
+    const heads = headsOf(doc);
 
-    const bytes = snapshot ? encodeDocument(doc) : changesSince(doc, cursor.heads);
+    // Use the worker's precomputed entry only while the document and cursor
+    // still match what it saw; otherwise compute it here.
+    /** @type {Uint8Array} */
+    let bytes;
+
+    if (
+      prepared &&
+      prepared.snapshot === snapshot &&
+      prepared.cursorHeads === (cursor.heads ?? []).join(";") &&
+      prepared.heads.join(";") === heads.join(";")
+    ) {
+      bytes = prepared.bytes;
+    } else {
+      bytes = snapshot ? encodeDocument(doc) : changesSince(doc, cursor.heads);
+    }
+
     if (bytes.length === 0) return;
 
     try {
@@ -1161,7 +1278,7 @@ class FirkinAutomergeOutput extends BroadcastedOutputElement {
 
     this.#dirty.delete(name);
     await this.#setCursor(name, {
-      heads: headsOf(doc),
+      heads,
       pushes: cursor.pushes + 1,
     });
   }

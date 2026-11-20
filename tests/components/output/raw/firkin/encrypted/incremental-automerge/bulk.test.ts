@@ -202,6 +202,10 @@ describe("components/output/raw/firkin/encrypted/incremental-automerge bulk save
           "~/components/output/raw/firkin/encrypted/incremental-automerge/element.js"
         );
 
+        const { IDB_DOCS, logName, registryNamespace } = await import(
+          "~/components/output/raw/firkin/encrypted/incremental-automerge/constants.js"
+        );
+
         const option = document.createElement("dob-firkin-automerge");
         option.id = "bulk-output";
         option.setAttribute("namespace", "bulk-output");
@@ -246,15 +250,50 @@ describe("components/output/raw/firkin/encrypted/incremental-automerge bulk save
           return col.state === "loaded" && col.data.length === items.length;
         });
 
+        // The worker also prepared the push entry. Wait for it, then read it
+        // back with no local cache to prove the entry is valid.
+        const tracksRef = `${registryNamespace("bulk-output")}/${
+          logName("tracks", hex(sessionSigner.pubkeyBytes))
+        }`;
+        const pushed = await until(
+          () => registry.get(tracksRef) !== undefined,
+          15_000,
+        );
+
+        option.remove();
+        reloaded.remove();
+
+        const docKey = `${IDB_DOCS}/bulk-output/tracks`;
+        await IDB.del(docKey);
+        await IDB.del(`${docKey}/cursor`);
+        await IDB.del(`${docKey}/applied`);
+        await IDB.del(`${docKey}/changes`);
+
+        const remoteReader = document.createElement("dob-firkin-automerge");
+        remoteReader.id = "bulk-output-remote";
+        remoteReader.setAttribute("namespace", "bulk-output");
+        remoteReader.setAttribute("keep", "64");
+        document.body.append(remoteReader);
+
+        const remoteCount = await until(() => {
+          const col = remoteReader.tracks.collection();
+          return col.state === "loaded" && col.data.length === items.length;
+        }, 20_000);
+
         return {
           ready: option.ready(),
           workers,
           saveMs,
           ids,
           reloadedCount,
+          pushed,
+          remoteCount,
           warnings: warnings.filter((warning) =>
             !warning.includes("initSync") &&
-            !warning.includes("Could not push the")
+            !warning.includes("Could not push the") &&
+            // Two elements share this browser's device key, so full documents
+            // can repeat a change; applying the duplicate is a no-op.
+            !warning.includes("Dropping a log entry")
           ),
         };
       } finally {
@@ -271,6 +310,8 @@ describe("components/output/raw/firkin/encrypted/incremental-automerge bulk save
     expect(result.workers).toBeGreaterThan(0);
     expect(result.ids).toHaveLength(1_000);
     expect(result.reloadedCount).toBe(true);
+    expect(result.pushed).toBe(true);
+    expect(result.remoteCount).toBe(true);
     expect(result.warnings).toEqual([]);
   });
 });
