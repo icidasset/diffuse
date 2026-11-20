@@ -311,7 +311,6 @@ class FirkinAutomergeOutput extends BroadcastedOutputElement {
     return {
       collection: computed(() => {
         this.#versions.get(name)?.get();
-        if (!this.#loaded.value) return { state: "loading" };
         if (!this.#ready.value.has(name)) return { state: "loading" };
 
         return {
@@ -446,18 +445,24 @@ class FirkinAutomergeOutput extends BroadcastedOutputElement {
         return;
       }
 
+      // A stored session is enough to start the local-first path. Validate it
+      // in the background: a slow registry round trip must not hold the page's
+      // first render (or the first pull) hostage. The pull surfaces real
+      // connectivity errors on its own.
+      this.#connected.value = true;
+      this.#ensureChannel(client);
+
       try {
         // A cheap authenticated read proves the session (and account) works.
         await client.rb.registryList();
-        this.#connected.value = true;
-
-        this.#ensureChannel(client);
       } catch (err) {
         // Unauthorized/forbidden means the account is unregistered or the
         // delegation was revoked; other errors are treated optimistically.
-        this.#connected.value = !(
+        if (
           err instanceof ApiError && (err.status === 401 || err.status === 403)
-        );
+        ) {
+          this.#connected.value = false;
+        }
       }
     } catch {
       this.#connected.value = false;

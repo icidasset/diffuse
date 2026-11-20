@@ -1,5 +1,5 @@
 import foundation from "~/common/foundation.js";
-import { data } from "~/common/output.js";
+import { effect } from "~/common/signal.js";
 
 // Move #bg-overlay to document.body so it's not inside #container.
 // #container fades in via an opacity transition (0→1), which creates an
@@ -52,19 +52,48 @@ const BACKGROUND_MIX_KEY = "sh.diffuse.theme.blur.background-mix";
 const BG_IMAGE_COUNT = 30;
 
 const output = await foundation.orchestrator.output();
-await data(output.settings);
 
-// Apply stored image and color before fading in (with defaults for first run)
-const storedBg = getSettingValue(BACKGROUND_KEY);
-const storedBgColor = getSettingValue(BACKGROUND_COLOR_KEY);
-const storedBgMix = getSettingValue(BACKGROUND_MIX_KEY);
+// Apply the stored background as soon as the settings collection has an
+// answer. Waiting for the remote log here would block the whole page on a cold
+// start; the effect also lets settings that arrive from the log later apply.
+let appliedBg = "";
+let appliedColor = "";
+/** @type {boolean | undefined} */
+let appliedMix;
 
-const activeBg = storedBg ?? "builtin:7";
-const activeMix = storedBgMix !== null ? storedBgMix === "true" : false;
+let activeBg = "";
+/** @type {string | null} */
+let storedBgColor = null;
+/** @type {boolean} */
+let activeMix = false;
 
-applyBackgroundMix(activeMix);
-if (storedBgColor) applyBackgroundColor(storedBgColor);
-applyBackgroundImage(activeBg);
+effect(() => {
+  if (output.settings.collection().state !== "loaded") return;
+
+  activeBg = getSettingValue(BACKGROUND_KEY) ?? "builtin:7";
+  storedBgColor = getSettingValue(BACKGROUND_COLOR_KEY);
+  const storedBgMix = getSettingValue(BACKGROUND_MIX_KEY);
+  activeMix = storedBgMix !== null ? storedBgMix === "true" : false;
+
+  if (activeMix !== appliedMix) {
+    applyBackgroundMix(activeMix);
+    appliedMix = activeMix;
+  }
+
+  if (storedBgColor && storedBgColor !== appliedColor) {
+    applyBackgroundColor(storedBgColor);
+    appliedColor = storedBgColor;
+  }
+
+  if (activeBg !== appliedBg) {
+    void applyBackgroundImage(activeBg);
+    appliedBg = activeBg;
+  }
+
+  updateImageSelected(activeBg);
+  updateColorSelected(storedBgColor);
+  updateMixSelected(activeMix);
+});
 
 ////////////////////////////////////////////
 // SHORTCUTS
