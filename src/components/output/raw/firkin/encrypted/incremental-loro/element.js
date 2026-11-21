@@ -96,6 +96,22 @@ import { verifySignature } from "./verify.js";
 /** Yield to the event loop between applying the worker's deltas. */
 const yieldToMain = () => new Promise((resolve) => setTimeout(resolve, 0));
 
+/**
+ * The client's block cache, backed by the same IndexedDB entries the output
+ * already keeps. `dagPull` uses it as a Bloom filter: blocks this device has
+ * read before are not fetched again.
+ */
+const blockCache = {
+  /** @param {string} cid */
+  get: (cid) => IDB.get(`${IDB_PACKS}/${cid}`),
+  /** @param {string} cid; @param {Uint8Array} bytes */
+  set: (cid, bytes) => IDB.set(`${IDB_PACKS}/${cid}`, bytes),
+  keys: async () =>
+    (await IDB.keys())
+      .filter((key) => typeof key === "string" && key.startsWith(`${IDB_PACKS}/`))
+      .map((key) => /** @type {string} */ (key).slice(IDB_PACKS.length + 1)),
+};
+
 /** Bundle key for items without a grouping key; keeps them instead of dropping. */
 const UNKEYED = "unkeyed";
 
@@ -524,7 +540,7 @@ class FirkinLoroOutput extends BroadcastedOutputElement {
 
   async #checkConnected() {
     try {
-      const client = await getSessionClient();
+      const client = await getSessionClient({ cache: blockCache });
       if (!client) {
         this.#connected.value = false;
         return;
@@ -574,7 +590,7 @@ class FirkinLoroOutput extends BroadcastedOutputElement {
     this.#channel = openHintChannel({
       device,
       url: async () => {
-        const current = await getSessionClient();
+        const current = await getSessionClient({ cache: blockCache });
         if (!current) return undefined;
 
         return await current.rb.channelUrl(name);
@@ -1384,7 +1400,7 @@ class FirkinLoroOutput extends BroadcastedOutputElement {
    */
   #append(name, entry) {
     const run = async () => {
-      const client = await getSessionClient();
+      const client = await getSessionClient({ cache: blockCache });
       if (!client) throw new Error(NOT_CONNECTED);
 
       const key = outputKey();
@@ -1443,7 +1459,7 @@ class FirkinLoroOutput extends BroadcastedOutputElement {
    * @returns {Promise<{ data: Uint8Array | undefined; packs: string; unchanged: boolean; complete: boolean; incremental: boolean }>}
    */
   async #readLog(name, current) {
-    const client = await getSessionClient();
+    const client = await getSessionClient({ cache: blockCache });
     if (!client) {
       return {
         data: undefined,

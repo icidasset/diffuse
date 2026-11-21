@@ -137,6 +137,39 @@ describe("components/output/raw/firkin/encrypted/incremental-loro carry-over", (
           return new Response(bytes, { status: 200 });
         }
 
+        if (path === "/v1/car" && method === "POST") {
+          const { parseCarBlocks } = await import("~/vendor/firkin/index.js");
+          const blocks = parseCarBlocks(
+            new Uint8Array(await new Response(init.body).arrayBuffer()),
+          );
+          for (const [cid, bytes] of blocks) blobs.set(cid, bytes);
+
+          return json({
+            blocks: blocks.size,
+            stored: blocks.size,
+            already: 0,
+            failed_total: 0,
+            failed: [],
+          });
+        }
+
+        if (path.startsWith("/v1/dag/pull/") && method === "POST") {
+          const { carFile } = await import("~/vendor/firkin/index.js");
+          const { CID } = await import("~/vendor/multiformats/cid.js");
+          const root = path.slice("/v1/dag/pull/".length);
+          if (!blobs.has(root)) return new Response("missing", { status: 404 });
+
+          const car = carFile(
+            CID.parse(root),
+            [...blobs].map(([cid, data]) => [CID.parse(cid), data]),
+          );
+
+          return new Response(car, {
+            status: 200,
+            headers: { "Content-Type": "application/vnd.ipld.car" },
+          });
+        }
+
         throw new Error(`unexpected call: ${method} ${path}`);
       };
 
@@ -334,7 +367,9 @@ describe("components/output/raw/firkin/encrypted/incremental-loro carry-over", (
 
         return {
           carried: [...carried].sort(),
-          uploads: calls.filter((call) => call.startsWith("PUT /v1/blob/")).length,
+          uploads: calls.filter((call) =>
+            call.startsWith("PUT /v1/blob/") || call.startsWith("POST /v1/car")
+          ).length,
           tracks: tracks.state === "loaded"
             ? tracks.data.map((item) => item.id)
             : tracks.state,

@@ -4,8 +4,12 @@ import { describe, it } from "@std/testing/bdd";
 import { expect } from "@std/expect";
 
 import * as DagCBOR from "@ipld/dag-cbor";
+import { CID } from "multiformats/cid";
 import { ApiError } from "@tokono.ma/firkin";
-import { cidForBytes } from "~/vendor/firkin/index.js";
+import {
+  cidForBytes,
+  parseCarBlocks,
+} from "~/vendor/firkin/index.js";
 
 import {
   INLINE_ENTRY_MAX_BYTES,
@@ -113,6 +117,63 @@ function fakeClient() {
           return cid === undefined ? [] : [[name, cid]];
         }),
       );
+    },
+
+    /** @param {Uint8Array} car */
+    async ingestCar(car) {
+      const blocks = parseCarBlocks(car);
+      for (const [cid, value] of blocks) blobs.set(cid, value);
+
+      return {
+        blocks: blocks.size,
+        stored: blocks.size,
+        already: 0,
+        failed_total: 0,
+        failed: [],
+      };
+    },
+
+    /** @param {string} root */
+    async dagPull(root) {
+      const found = new Map();
+      const queue = [root];
+      const seen = new Set();
+
+      while (queue.length > 0) {
+        const cid = queue.shift();
+        if (cid === undefined || seen.has(cid)) continue;
+        seen.add(cid);
+
+        const value = blobs.get(cid);
+        if (value === undefined) throw new ApiError("Not found", 404);
+
+        found.set(cid, value);
+
+        let decoded;
+        try {
+          decoded = DagCBOR.decode(value);
+        } catch {
+          continue;
+        }
+
+        const visit = (node) => {
+          const link = CID.asCID(node);
+          if (link) {
+            queue.push(link.toString());
+            return;
+          }
+          if (Array.isArray(node)) {
+            node.forEach(visit);
+            return;
+          }
+          if (node && typeof node === "object") {
+            Object.values(node).forEach(visit);
+          }
+        };
+        visit(decoded);
+      }
+
+      return found;
     },
   };
 
@@ -378,14 +439,22 @@ describe("components/output/raw/firkin/encrypted/incremental-loro/log", () => {
     const envelope = DagCBOR.decode(rb.blobs.get(cid));
 
     /** @type {any} */
-    const payload = DagCBOR.decode(envelope.p);
-    payload.packs = [{ cid: "bafkreiforged", at: 1 }];
+    const payload = DagCBOR.decode(rb.blobs.get(envelope.p.toString()));
+    payload.packs = [
+      { cid: CID.parse(cidForBytes(new Uint8Array([1, 2, 3]))), at: 1 },
+    ];
+
+    const tamperedPayload = DagCBOR.encode(payload);
+    const tamperedPayloadCid = cidForBytes(tamperedPayload, { codec: 0x71 });
+    rb.blobs.set(tamperedPayloadCid, tamperedPayload);
 
     const tampered = DagCBOR.encode({
-      p: DagCBOR.encode(payload),
+      v: MANIFEST_VERSION,
+      p: CID.parse(tamperedPayloadCid),
       s: envelope.s,
     });
-    const { cid: tamperedCid } = await rb.upload(tampered);
+    const tamperedCid = cidForBytes(tampered, { codec: 0x71 });
+    rb.blobs.set(tamperedCid, tampered);
     await rb.registrySet(
       registryNamespace("ns"),
       logName("tracks", deviceA),
@@ -512,19 +581,97 @@ describe("components/output/raw/firkin/encrypted/incremental-loro/log", () => {
     expect(entry.bytes instanceof Uint8Array).toBe(true);
   });
 
+  it("appends a large entry in one CAR as well", async () => {
+    const rb = fakeClient();
+    const auth = fakeAuth(deviceA);
+
+    const first = await appendEntry(rb, "ns", "tracks", bytes("one"), { auth });
+
+    let ingests = 0;
+    let uploads = 0;
+    let cas = 0;
+    const originalIngest = rb.ingestCar;
+    const originalUpload = rb.upload;
+    const originalSetIf = rb.registrySetIf;
+    rb.ingestCar = (...args) => {
+      ingests += 1;
+      return originalIngest(...args);
+    };
+    rb.upload = (...args) => {
+      uploads += 1;
+      return originalUpload(...args);
+    };
+    rb.registrySetIf = (...args) => {
+      cas += 1;
+      return originalSetIf(...args);
+    };
+
+    await appendEntry(
+      rb,
+      "ns",
+      "tracks",
+      bytes("x".repeat(INLINE_ENTRY_MAX_BYTES + 1)),
+      { auth, current: first.manifest },
+    );
+
+    // Manifest and entry ride in one CAR; no separate blob upload.
+    expect(ingests).toBe(1);
+    expect(uploads).toBe(0);
+    expect(cas).toBe(1);
+  });
+
+  it("reads a whole log through one DAG pull", async () => {
+    const rb = fakeClient();
+    const auth = fakeAuth(deviceA);
+
+    for (let index = 0; index < 3; index++) {
+      await appendEntry(
+        rb,
+        "ns",
+        "tracks",
+        bytes(`entry-${index}-${"x".repeat(INLINE_ENTRY_MAX_BYTES)}`),
+        { auth },
+      );
+    }
+
+    let pulls = 0;
+    let gets = 0;
+    const originalPull = rb.dagPull;
+    const originalGet = rb.get;
+    rb.dagPull = (...args) => {
+      pulls += 1;
+      return originalPull(...args);
+    };
+    rb.get = (...args) => {
+      gets += 1;
+      return originalGet(...args);
+    };
+
+    const entries = await read(rb, "tracks", auth);
+
+    expect(entries.length).toBe(3);
+    expect(entries.every((entry) => entry.bytes instanceof Uint8Array))
+      .toBe(true);
+
+    // The manifest and its entry blocks arrive in one DAG pull, so no block is
+    // fetched individually.
+    expect(pulls).toBe(1);
+    expect(gets).toBe(0);
+  });
+
   it("appends a small entry in one upload and one registry write", async () => {
     const rb = fakeClient();
     const auth = fakeAuth(deviceA);
 
     const first = await appendEntry(rb, "ns", "tracks", bytes("one"), { auth });
 
-    let uploads = 0;
+    let ingests = 0;
     let cas = 0;
-    const originalUpload = rb.upload;
+    const originalIngest = rb.ingestCar;
     const originalSetIf = rb.registrySetIf;
-    rb.upload = (...args) => {
-      uploads += 1;
-      return originalUpload(...args);
+    rb.ingestCar = (...args) => {
+      ingests += 1;
+      return originalIngest(...args);
     };
     rb.registrySetIf = (...args) => {
       cas += 1;
@@ -536,9 +683,9 @@ describe("components/output/raw/firkin/encrypted/incremental-loro/log", () => {
       current: first.manifest,
     });
 
-    // The entry is inline, the manifest is the only blob, and the registry
-    // write is the compare-and-swap.
-    expect(uploads).toBe(1);
+    // The entry is inline: the manifest's two blocks go up in one CAR, and
+    // the registry write is the compare-and-swap.
+    expect(ingests).toBe(1);
     expect(cas).toBe(1);
   });
 
@@ -553,7 +700,8 @@ describe("components/output/raw/firkin/encrypted/incremental-loro/log", () => {
 
     const [entry] = await read(rb, "tracks", auth);
 
-    expect(entry.bytes).toBe(undefined);
+    // The reader still gets the bytes — through the manifest's DAG, not
+    // through the payload's inline field.
     expect(text(entryBytes(rb, entry))).toBe(text(large));
   });
 
@@ -616,7 +764,7 @@ describe("components/output/raw/firkin/encrypted/incremental-loro/log", () => {
     /** @type {{ p: Uint8Array }} */
     const envelope = DagCBOR.decode(rb.blobs.get(cid));
     /** @type {any} */
-    const payload = DagCBOR.decode(envelope.p);
+    const payload = DagCBOR.decode(rb.blobs.get(envelope.p.toString()));
 
     expect(payload.v).toBe(MANIFEST_VERSION);
     expect(payload.device).toBe(deviceA);

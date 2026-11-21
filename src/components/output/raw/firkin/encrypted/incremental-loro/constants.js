@@ -89,8 +89,14 @@ export const CODEC_RAW = 0x55;
 /** dag-cbor codec for the per-device manifests. */
 export const CODEC_DAG_CBOR = 0x71;
 
-/** Version of the manifest payload written to the registry. */
-export const MANIFEST_VERSION = 3;
+/**
+ * Version of the manifest payload written to the registry.
+ *
+ * The manifest is a DAG: the registry points at an envelope block that links
+ * the signed payload, which links the entries stored as blocks. Version 4 is
+ * the link-shaped payload (version 3 embedded it as one blob).
+ */
+export const MANIFEST_VERSION = 4;
 
 /**
  * Entries at most this large are carried inside the signed manifest instead of

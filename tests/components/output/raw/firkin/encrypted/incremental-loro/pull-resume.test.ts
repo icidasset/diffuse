@@ -166,6 +166,39 @@ describe("components/output/raw/firkin/encrypted/incremental-loro pull resume", 
           return new Response(bytes, { status: 200 });
         }
 
+        if (path === "/v1/car" && method === "POST") {
+          const { parseCarBlocks } = await import("~/vendor/firkin/index.js");
+          const blocks = parseCarBlocks(
+            new Uint8Array(await new Response(init.body).arrayBuffer()),
+          );
+          for (const [cid, bytes] of blocks) blobs.set(cid, bytes);
+
+          return json({
+            blocks: blocks.size,
+            stored: blocks.size,
+            already: 0,
+            failed_total: 0,
+            failed: [],
+          });
+        }
+
+        if (path.startsWith("/v1/dag/pull/") && method === "POST") {
+          const { carFile } = await import("~/vendor/firkin/index.js");
+          const { CID } = await import("~/vendor/multiformats/cid.js");
+          const root = path.slice("/v1/dag/pull/".length);
+          if (!blobs.has(root)) return new Response("missing", { status: 404 });
+
+          const car = carFile(
+            CID.parse(root),
+            [...blobs].map(([cid, data]) => [CID.parse(cid), data]),
+          );
+
+          return new Response(car, {
+            status: 200,
+            headers: { "Content-Type": "application/vnd.ipld.car" },
+          });
+        }
+
         throw new Error(`unexpected call: ${method} ${path}`);
       };
 
@@ -221,6 +254,13 @@ describe("components/output/raw/firkin/encrypted/incremental-loro pull resume", 
           if (countGets) getCids.push(cid);
           if (failGets) throw new Error("simulated read interruption");
           return await ogGet.call(this, cid);
+        };
+
+        const ogDagPull = Firkin.prototype.dagPull;
+        Firkin.prototype.dagPull = async function (root) {
+          if (countGets) getCids.push(root);
+          if (failGets) throw new Error("simulated read interruption");
+          return await ogDagPull.call(this, root);
         };
 
         // --- The output elements ----------------------------------------------
