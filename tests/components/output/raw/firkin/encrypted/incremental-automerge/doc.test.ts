@@ -57,6 +57,30 @@ describe("components/output/raw/firkin/encrypted/incremental-automerge/doc", () 
     expect(Automerge.getActorId(doc)).toBe(Automerge.getActorId(base));
   });
 
+  it("spreads a first import too large for one change over several", async () => {
+    // Automerge panics ("splice range out of bounds") on a change that writes
+    // roughly 20 MB of new values, and a panic leaves the wasm module unusable.
+    // A first import past the size budget must therefore go through the batched
+    // path instead of one whole-map change.
+    const items = Array.from({ length: 350 }, (_, index) => ({
+      ...track(`t${index}`),
+      blob: "x".repeat(20_000),
+    }));
+
+    let batches = 0;
+    const { doc, changed } = await changeDocumentBatched(
+      createDocument(),
+      items,
+      {},
+      async () => {},
+      () => batches++,
+    );
+
+    expect(changed).toBe(true);
+    expect(batches).toBeGreaterThan(1);
+    expect(recordsOf(doc)).toHaveLength(items.length);
+  });
+
   it("keeps concurrent additions across batched changes", async () => {
     const base = createDocument();
 
@@ -69,7 +93,10 @@ describe("components/output/raw/firkin/encrypted/incremental-automerge/doc", () 
       [track("b")],
     )).doc;
 
-    const merged = Automerge.merge(left, right);
+    // A first import replaces the empty record map, so a plain
+    // `Automerge.merge` keeps one side's map. `mergeDocuments` is the merge the
+    // output performs when it combines log entries.
+    const merged = mergeDocuments(left, right);
 
     expect(recordsOf(merged).map((item) => item.id).sort()).toEqual(["a", "b"]);
   });

@@ -163,12 +163,27 @@ const BATCH_MAX = 2_000;
 const BATCH_START = 200;
 
 /**
+ * Largest amount of record data one Automerge change may write.
+ *
+ * Not a tuning knob: Automerge panics (`splice range out of bounds`) on a change
+ * that writes roughly 20 MB of new values in one go, and the panic leaves the
+ * wasm module unusable — every later call throws "Module terminated". The
+ * budget stays far below that boundary, so a large import is always spread over
+ * several changes.
+ */
+const CHANGE_MAX_BYTES = 6 * 1024 * 1024;
+
+/**
  * `changeDocument` for a large collection, applied in batches.
  *
  * One huge `Automerge.change` is both slow (it is superlinear in the number of
- * writes) and blocking. Applying the same per-record writes in adaptive batches
- * is faster and yields between them, so importing a large library keeps the
- * page responsive.
+ * writes) and blocking, and past `CHANGE_MAX_BYTES` of new values it panics the
+ * wasm module outright. Applying the same writes in adaptive batches is faster,
+ * stays under that limit, and yields between them, so importing a large library
+ * keeps the page responsive.
+ *
+ * A first import that fits in one change still takes the whole-map path, which
+ * is the fastest way to create a document.
  *
  * @param {AutomergeDoc} doc
  * @param {any[]} items
@@ -203,11 +218,14 @@ export async function changeDocumentBatched(
 
   /** @type {Map<string, any>} */
   const changedRecords = new Map();
+  let totalBytes = 0;
   let scanned = 0;
 
   for (const item of items) {
     if (!sameRecord(doc.records[item.id], item, options.versioned)) {
-      changedRecords.set(item.id, encodeRecord(item));
+      const encoded = encodeRecord(item);
+      changedRecords.set(item.id, encoded);
+      totalBytes += encoded.length;
       changed = true;
     }
 
@@ -216,6 +234,34 @@ export async function changeDocumentBatched(
 
   if (!changed && oldIds.length !== order.length) changed = true;
   if (!changed) return { doc, changed: false };
+
+  // The first write into a document creates its records from scratch. Build
+  // the whole map in JavaScript and assign it once: Automerge applies that
+  // several times faster than the same keys written one by one, the change is
+  // one delta instead of many, and there is no history to preserve yet. The
+  // output interface hands over the complete collection, so replacing the empty
+  // map loses nothing.
+  //
+  // This is only safe while the collection fits in a single change; past
+  // `CHANGE_MAX_BYTES` Automerge panics, so the batched path below takes over.
+  if (
+    oldIds.length === 0 && order.length > 0 &&
+    totalBytes <= CHANGE_MAX_BYTES
+  ) {
+    const records = Object.fromEntries(
+      order.map((id) => [id, changedRecords.get(id)]),
+    );
+
+    const nextDoc = Automerge.change(doc, (d) => {
+      if (options.schema) d.$schema = options.schema;
+      d.records = records;
+      d.order = order;
+    });
+
+    onBatch?.(nextDoc);
+
+    return { doc: nextDoc, changed: true };
+  }
 
   let nextDoc = doc;
 
@@ -238,6 +284,7 @@ export async function changeDocumentBatched(
   const applyBatches = async (entries, mutate) => {
     let index = 0;
     let size = BATCH_START;
+    const cap = maxRecordsPerChange(totalBytes, changedRecords.size);
 
     while (index < entries.length) {
       const batch = entries.slice(index, index + size);
@@ -252,8 +299,8 @@ export async function changeDocumentBatched(
       // Aim for a few hundred milliseconds of work per batch: desktop grows
       // the batch for throughput, a phone shrinks it for responsiveness.
       const elapsed = performance.now() - start;
-      if (elapsed < 100 && size < BATCH_MAX) {
-        size = Math.min(BATCH_MAX, Math.round(size * 1.5));
+      if (elapsed < 100 && size < cap) {
+        size = Math.min(cap, Math.round(size * 1.5));
       } else if (elapsed > 400 && size > BATCH_MIN) {
         size = Math.max(BATCH_MIN, Math.round(size / 2));
       }
@@ -412,11 +459,14 @@ export function changeDocument(doc, items, options = {}) {
   // were identical, which made saving a large library quadratic-ish in practice.
   /** @type {Map<string, any>} */
   const changedRecords = new Map();
+  let changedBytes = 0;
 
   for (const item of items) {
     if (sameRecord(doc.records[item.id], item, options.versioned)) continue;
 
-    changedRecords.set(item.id, encodeRecord(item));
+    const encoded = encodeRecord(item);
+    changedRecords.set(item.id, encoded);
+    changedBytes += encoded.length;
     changed = true;
   }
 
@@ -424,19 +474,20 @@ export function changeDocument(doc, items, options = {}) {
   if (!changed) return { doc, changed: false };
 
   // The first write into a document creates its records from scratch. Build
-  // the whole map in JavaScript and assign it once: Automerge charges far more
-  // per key when the keys are written one by one (about 6x for a library-sized
-  // import), and there is no history to preserve yet. The output interface
-  // hands over the complete collection, so replacing the empty map loses
-  // nothing.
-  if (oldIds.length === 0 && order.length > 0) {
-    const byId = new Map();
-    for (const item of items) {
-      if (!byId.has(item.id)) byId.set(item.id, item);
-    }
-
+  // the whole map in JavaScript and assign it once: Automerge applies that
+  // several times faster than the same keys written one by one, and there is no
+  // history to preserve yet. The output interface hands over the complete
+  // collection, so replacing the empty map loses nothing.
+  //
+  // A collection past `CHANGE_MAX_BYTES` must not go into one change: Automerge
+  // panics and the wasm module cannot recover. The output routes large saves to
+  // `changeDocumentBatched`, which builds the map only when it fits.
+  if (
+    oldIds.length === 0 && order.length > 0 &&
+    changedBytes <= CHANGE_MAX_BYTES
+  ) {
     const records = Object.fromEntries(
-      order.map((id) => [id, encodeRecord(byId.get(id))]),
+      order.map((id) => [id, changedRecords.get(id)]),
     );
 
     return {
@@ -471,6 +522,29 @@ export function changeDocument(doc, items, options = {}) {
   });
 
   return { doc: nextDoc, changed: true };
+}
+
+/**
+ * How many records one batch may carry while staying under
+ * `CHANGE_MAX_BYTES`.
+ *
+ * Batches were previously sized by count alone, which is fine for small records
+ * but can put tens of megabytes into a single change for a library whose
+ * records are large. Automerge panics past that point, so the batch count is
+ * capped by the average record size.
+ *
+ * @param {number} totalBytes
+ * @param {number} count
+ */
+function maxRecordsPerChange(totalBytes, count) {
+  if (count === 0 || totalBytes <= CHANGE_MAX_BYTES) return BATCH_MAX;
+
+  const average = totalBytes / count;
+
+  return Math.max(
+    1,
+    Math.min(BATCH_MAX, Math.floor(CHANGE_MAX_BYTES / average)),
+  );
 }
 
 

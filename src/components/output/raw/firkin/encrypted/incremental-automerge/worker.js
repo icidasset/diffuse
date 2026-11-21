@@ -1,11 +1,9 @@
 import { ostiary, rpc } from "~/common/worker.js";
 
 import {
-  changeDocument,
   changeDocumentBatched,
   changesSince,
   encodeDocument,
-  hasRecords,
   headsOf,
   loadDocument,
 } from "./doc.js";
@@ -35,29 +33,10 @@ async function applyLargeChange(
   const deltas = [];
   let previous = headsOf(doc);
 
-  // The first import into a document is written as one change: `changeDocument`
-  // assigns the whole record map at once, which is several times faster than
-  // writing keys one by one and needs no batching. Later saves are patches of
-  // an existing map, where batching is what keeps the cost down.
-  if (!hasRecords(doc)) {
-    const result = changeDocument(doc, items, { schema, versioned });
-
-    if (!result.changed) return { changed: false };
-
-    const next = result.doc;
-    const docBytes = encodeDocument(next);
-    const pushBytes = snapshot ? docBytes : changesSince(next, pushHeads ?? []);
-
-    return {
-      changed: true,
-      deltas: [changesSince(next, previous)],
-      docBytes,
-      pushBytes,
-      heads: headsOf(next),
-    };
-  }
-
-  // No yielding is needed here: the worker is already off the main thread.
+  // `changeDocumentBatched` writes a first import as a single whole-map change
+  // when it fits under the size budget, and spreads anything larger over several
+  // changes. No yielding is needed here: the worker is already off the main
+  // thread.
   const { doc: next, changed } = await changeDocumentBatched(
     doc,
     items,

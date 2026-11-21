@@ -1073,11 +1073,22 @@ class FirkinAutomergeOutput extends BroadcastedOutputElement {
 
     if (!result.changed) return { doc: current, changed: false };
 
+    // A first import replaces the document's whole contents, so the worker's
+    // result *is* the answer. Loading it once is cheaper than replaying every
+    // delta on top of an empty document (the same records, materialised twice
+    // otherwise).
     let doc = current;
+    const adopted = !hasRecords(current) && result.docBytes
+      ? loadDocument(result.docBytes)
+      : undefined;
 
-    for (const delta of result.deltas ?? []) {
-      doc = applyIncremental(doc, delta);
-      await yieldToMain();
+    if (adopted) {
+      doc = adopted;
+    } else {
+      for (const delta of result.deltas ?? []) {
+        doc = applyIncremental(doc, delta);
+        await yieldToMain();
+      }
     }
 
     return {
