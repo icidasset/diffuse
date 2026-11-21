@@ -4,6 +4,12 @@ import * as IDB from "idb-keyval";
 import { computed, signal } from "~/common/signal.js";
 import { BroadcastedOutputElement } from "../../../../common.js";
 import { defineElement } from "~/common/element.js";
+import {
+  bundle,
+  bundleId,
+  byField,
+  byUriScheme,
+} from "~/common/bundles.js";
 import { collectionSchema } from "~/common/self-describing.js";
 import { getSessionClient } from "~/common/firkin/session.js";
 import {
@@ -35,6 +41,7 @@ import {
   changeDocument,
   changeDocumentBatched,
   changesSince,
+  countChanges,
   createDocument,
   deltaSince,
   encodeDocument,
@@ -49,7 +56,9 @@ import { verifySignature } from "./verify.js";
 /**
  * @import { SignalReader } from "~/common/signal.d.ts";
  * @import { OutputElement } from "@specs/components/output/types.d.ts";
+ * @import { BundleSelector } from "~/common/bundles.d.ts";
  * @import { CollectionName } from "~/common/self-describing.js";
+ * @import { Track } from "~/definitions/types.d.ts";
  * @import { Heads } from "@automerge/automerge";
  * @import { Session } from "~/common/firkin/session.js";
  * @import { LogAuth } from "./log.js";
@@ -63,6 +72,7 @@ import { verifySignature } from "./verify.js";
  *   bytes: Uint8Array;
  *   items: any[];
  *   schema?: string;
+ *   versioned?: boolean;
  *   pushHeads?: string[];
  *   snapshot?: boolean;
  * }) => Promise<{
@@ -88,6 +98,9 @@ import { verifySignature } from "./verify.js";
 /** Yield to the event loop between applying the worker's deltas. */
 const yieldToMain = () => new Promise((resolve) => setTimeout(resolve, 0));
 
+/** Bundle key for items without a grouping key; keeps them instead of dropping. */
+const UNKEYED = "unkeyed";
+
 /**
  * The userdata output: an **encrypted, incremental Automerge log on Firkin**,
  * in one component.
@@ -104,6 +117,9 @@ const yieldToMain = () => new Promise((resolve) => setTimeout(resolve, 0));
  *
  * - **Collections** are Automerge documents (see `doc.js`): records live in a
  *   map keyed by `id`, so concurrent edits to different records merge.
+ * - **Bundled mode** (`bundled`) keeps playlist items and tracks in one
+ *   document per playlist/source, with a small manifest document naming them.
+ *   Saves therefore touch only the affected bundle documents.
  * - **Saves** append only the changes since the log last saw them; a whole
  *   document is appended every `SNAPSHOT_EVERY` saves so the log stays
  *   replayable after `keep` trims old entries.
@@ -127,6 +143,14 @@ class FirkinAutomergeOutput extends BroadcastedOutputElement {
 
   /** @type {import("~/common/worker.d.ts").ProxiedActions<BulkActions> | undefined} */
   #bulkWorker;
+
+  /**
+   * Optional grouping rule for tracks, supplied by the composition layer.
+   * Only used in bundled mode; when absent, tracks group by URI scheme.
+   *
+   * @type {BundleSelector<Track> | undefined}
+   */
+  tracksBy = undefined;
 
   /** @type {Map<string, PreparedPush>} */
   #preparedPushes = new Map();
@@ -305,7 +329,7 @@ class FirkinAutomergeOutput extends BroadcastedOutputElement {
   // ENTRIES
 
   /**
-   * @param {CollectionName} name
+   * @param {string} name
    */
   #entry(name) {
     return {
@@ -315,12 +339,76 @@ class FirkinAutomergeOutput extends BroadcastedOutputElement {
 
         return {
           state: "loaded",
-          data: recordsOf(this.#docs.get(name) ?? createDocument()),
+          data: this.#records(name),
         };
       }),
-      reload: () => this.#pullCollection(name),
+      reload: () =>
+        this.#isBundled(name)
+          ? this.#pullBundled(name)
+          : this.#pullCollection(name),
       save: (/** @type {any[]} */ items) => this.#save(name, items),
     };
+  }
+
+  // BUNDLED COLLECTIONS
+
+  /** @param {string} name */
+  #isBundled(name) {
+    if (!this.hasAttribute("bundled")) return false;
+
+    return name === "playlistItems" || name === "tracks";
+  }
+
+  /** @param {string} name */
+  #manifestName(name) {
+    return `${name}#manifest`;
+  }
+
+  /** @param {string} name; @param {string} id */
+  #bundleName(name, id) {
+    return `${name}#${id}`;
+  }
+
+  /**
+   * The outward records of a collection. In bundled mode this is the manifest's
+   * bundle order, with each bundle's records in their own order. Interleaving
+   * between bundles is not preserved (playlist items and source-grouped tracks
+   * do not depend on it).
+   *
+   * @param {string} name
+   */
+  #records(name) {
+    if (!this.#isBundled(name)) {
+      return recordsOf(this.#docs.get(name) ?? createDocument());
+    }
+
+    const manifestName = this.#manifestName(name);
+    const manifest = this.#docs.get(manifestName);
+    const ids = manifest
+      ? recordsOf(manifest).map((record) => String(record.id))
+      : [];
+
+    // Before the first bundled save the old single document is the source of
+    // truth. An empty manifest that was never persisted is only a placeholder
+    // created while loading; only a manifest with records (or one already on
+    // disk from a previous save) means the bundled layout is in use.
+    if (
+      !manifest ||
+      (ids.length === 0 && !this.#persisted.has(manifestName))
+    ) {
+      const legacy = this.#docs.get(name);
+      return legacy ? recordsOf(legacy) : [];
+    }
+
+    /** @type {any[]} */
+    const items = [];
+
+    for (const id of ids) {
+      const doc = this.#docs.get(this.#bundleName(name, id));
+      if (doc) items.push(...recordsOf(doc));
+    }
+
+    return items;
   }
 
   // LIFECYCLE
@@ -526,7 +614,11 @@ class FirkinAutomergeOutput extends BroadcastedOutputElement {
         // Another device wrote something: don't trust the cached listing.
         this.#listings.clear();
 
-        void this.#pullCollection(/** @type {CollectionName} */ (collection))
+        const name = /** @type {CollectionName} */ (collection);
+
+        void (this.#isBundled(name)
+          ? this.#pullBundled(name)
+          : this.#pullCollection(name))
           .catch((err) => {
             console.warn(
               `Could not refresh '${collection}' after a hint:`,
@@ -559,12 +651,12 @@ class FirkinAutomergeOutput extends BroadcastedOutputElement {
 
   // LOCAL
 
-  /** @param {CollectionName} name */
+  /** @param {string} name */
   #docKey(name) {
     return `${IDB_DOCS}/${this.#namespace}/${name}`;
   }
 
-  /** @param {CollectionName} name */
+  /** @param {string} name */
   #chunksKey(name) {
     return `${this.#docKey(name)}/changes`;
   }
@@ -576,7 +668,7 @@ class FirkinAutomergeOutput extends BroadcastedOutputElement {
    * writes append the delta since the previous save, so a save doesn't serialise
    * the entire library. Loading replays the base and then the chunks.
    *
-   * @param {CollectionName} name
+   * @param {string} name
    * @param {AutomergeDoc} doc
    * @param {{ compact?: boolean; bytes?: Uint8Array }} [options] - `compact`
    *   rewrites the base instead of appending a delta (a bulk save's delta is as
@@ -672,7 +764,7 @@ class FirkinAutomergeOutput extends BroadcastedOutputElement {
     this.#persistedHeads.set(name, heads);
   }
 
-  /** @param {CollectionName} name */
+  /** @param {string} name */
   async #resetChunks(name) {
     this.#chunks.delete(name);
     this.#hasBase.delete(name);
@@ -685,76 +777,99 @@ class FirkinAutomergeOutput extends BroadcastedOutputElement {
   }
 
   /**
+   * Load one document and its local delta chunks.
+   *
+   * @param {string} name
+   * @returns {Promise<boolean>} Whether the local document is an answer.
+   */
+  async #loadDoc(name) {
+    try {
+      const stored = await IDB.get(this.#docKey(name));
+      let doc = stored instanceof Uint8Array ? loadDocument(stored) : undefined;
+
+      if (doc) {
+        this.#hasBase.add(name);
+
+        // Replay the deltas appended since the base was written.
+        try {
+          const storedChunks = await IDB.get(this.#chunksKey(name));
+          const chunks = Array.isArray(storedChunks)
+            ? storedChunks.filter((chunk) => chunk instanceof Uint8Array)
+            : [];
+          /** @type {Uint8Array[]} */
+          const applied = [];
+
+          for (const chunk of chunks) {
+            try {
+              doc = applyIncremental(doc, chunk);
+              applied.push(chunk);
+            } catch (err) {
+              console.warn(`Could not apply a cached '${name}' change:`, err);
+              break;
+            }
+          }
+
+          this.#chunks.set(name, applied);
+        } catch (err) {
+          console.warn(`Could not read the '${name}' local changes:`, err);
+        }
+
+        this.#docs.set(name, doc);
+        this.#persisted.add(name);
+        this.#persistedHeads.set(name, headsOf(doc));
+
+        // Local-first: a collection we have synced before can be shown
+        // straight away — even when it is empty, because then "empty" is the
+        // truth rather than "unknown".
+        const cursor = await this.#cursor(name);
+        return hasRecords(doc) || cursor.heads !== undefined;
+      }
+
+      // Nothing cached: start from an empty document of our own, under this
+      // document's actor so concurrent writers never share a sequence number.
+      const empty = createDocument(await this.#actor(name));
+
+      this.#docs.set(name, empty);
+      this.#persisted.delete(name);
+      this.#persistedHeads.set(name, headsOf(empty));
+
+      await this.#resetCursor(name);
+      await this.#resetAppliedLog(name);
+      await this.#resetChunks(name);
+      return false;
+    } catch (err) {
+      console.warn(`Could not read the local '${name}' document:`, err);
+      return false;
+    }
+  }
+
+  /**
    * Load the cached documents. Runs once; subsequent calls await the same work.
    */
   #initialise() {
     this.#initialising ??= (async () => {
       try {
         await Promise.all(COLLECTIONS.map(async (name) => {
-          try {
-            const stored = await IDB.get(this.#docKey(name));
-            let doc = stored instanceof Uint8Array
-              ? loadDocument(stored)
-              : undefined;
-
-            if (doc) {
-              this.#hasBase.add(name);
-
-              // Replay the deltas appended since the base was written.
-              try {
-                const storedChunks = await IDB.get(this.#chunksKey(name));
-                const chunks = Array.isArray(storedChunks)
-                  ? storedChunks.filter((chunk) => chunk instanceof Uint8Array)
-                  : [];
-                /** @type {Uint8Array[]} */
-                const applied = [];
-
-                for (const chunk of chunks) {
-                  try {
-                    doc = applyIncremental(doc, chunk);
-                    applied.push(chunk);
-                  } catch (err) {
-                    console.warn(
-                      `Could not apply a cached '${name}' change:`,
-                      err,
-                    );
-                    break;
-                  }
-                }
-
-                this.#chunks.set(name, applied);
-              } catch (err) {
-                console.warn(`Could not read the '${name}' local changes:`, err);
-              }
-
-              this.#docs.set(name, doc);
-              this.#persisted.add(name);
-              this.#persistedHeads.set(name, headsOf(doc));
-
-              // Local-first: a collection we have synced before can be shown
-              // straight away — even when it is empty, because then "empty" is
-              // the truth rather than "unknown".
-              const cursor = await this.#cursor(name);
-              if (hasRecords(doc) || cursor.heads !== undefined) {
-                this.#markReady(name);
-              }
-            } else {
-              // Nothing cached: start from an empty document of our own, under
-              // this device's actor so concurrent writers never share a
-              // sequence number.
-              const empty = createDocument(await this.#actor());
-
-              this.#docs.set(name, empty);
-              this.#persisted.delete(name);
-              this.#persistedHeads.set(name, headsOf(empty));
-
-              await this.#resetCursor(name);
-              await this.#resetAppliedLog(name);
-              await this.#resetChunks(name);
-            }
-          } catch (err) {
-            console.warn(`Could not read the local '${name}' document:`, err);
+          if (!this.#isBundled(name)) {
+            if (await this.#loadDoc(name)) this.#markReady(name);
+            return;
           }
+
+          const legacy = await this.#loadDoc(name);
+          const manifest = await this.#loadDoc(this.#manifestName(name));
+          const manifestDoc = this.#docs.get(this.#manifestName(name));
+
+          let bundles = false;
+
+          if (manifestDoc) {
+            for (const record of recordsOf(manifestDoc)) {
+              const id = String(record.id);
+              const answer = await this.#loadDoc(this.#bundleName(name, id));
+              bundles = bundles || answer;
+            }
+          }
+
+          if (legacy || manifest || bundles) this.#markReady(name);
         }));
       } finally {
         // Whatever happened above, the interface must stop loading.
@@ -767,16 +882,85 @@ class FirkinAutomergeOutput extends BroadcastedOutputElement {
   }
 
   /**
-   * @param {CollectionName} name
+   * @param {string} name
    * @param {any[]} items
    */
   async #save(name, items) {
     await this.#initialise();
 
+    if (!this.#isBundled(name)) return this.#saveDoc(name, items);
+
+    return this.#saveBundled(name, items);
+  }
+
+  /** @param {string} name */
+  #selectorFor(name) {
+    if (name === "playlistItems") return byField("playlist");
+    if (name === "tracks") return this.tracksBy ?? byUriScheme();
+    return undefined;
+  }
+
+  /**
+   * Save a bundled collection as one document per bundle plus a manifest.
+   *
+   * @param {string} name
+   * @param {any[]} items
+   */
+  async #saveBundled(name, items) {
+    const selector = this.#selectorFor(name);
+    if (!selector) return this.#saveDoc(name, items);
+
+    /** @type {BundleSelector<any>} */
+    const by = (item) => selector(item) ?? UNKEYED;
+    const bundles = bundle(items, { by, id: bundleId });
+
+    const manifestName = this.#manifestName(name);
+    const manifest = this.#docs.get(manifestName);
+    const previous = manifest
+      ? recordsOf(manifest).map((record) => String(record.id))
+      : [];
+    const next = new Set(bundles.map((entry) => entry.id));
+
+    // Write the bundle documents first, then the manifest, so the manifest
+    // never points at a bundle whose data has not been applied yet.
+    for (const entry of bundles) {
+      await this.#saveDoc(this.#bundleName(name, entry.id), entry.items);
+    }
+
+    for (const id of previous) {
+      if (next.has(id)) continue;
+      await this.#saveDoc(this.#bundleName(name, id), []);
+    }
+
+    await this.#saveDoc(
+      manifestName,
+      bundles.map((entry) => ({ id: entry.id })),
+    );
+
+    // Migrate the old single-document log: its records are now represented by
+    // the manifest and bundles.
+    if (this.#docs.has(name)) {
+      await this.#saveDoc(name, []);
+    }
+  }
+
+  /**
+   * @param {string} name
+   * @param {any[]} items
+   */
+  async #saveDoc(name, items) {
     return await this.#serialize(async () => {
       const current = this.#docs.get(name) ?? createDocument();
-      const schema = collectionSchema(name);
-      const bulk = items.length >= BULK_SAVE_THRESHOLD;
+      const schema = collectionSchema(/** @type {CollectionName} */ (name));
+      // Track edits reliably bump `updatedAt`, so tracks can use the version
+      // fast path when deciding what changed. Other collections cannot.
+      const versioned = name === "tracks" || name.startsWith("tracks#");
+      // Choose the batched worker path by how much actually changed, not by
+      // the collection size: an import patch passes the whole collection even
+      // when only a handful of records are new.
+      const counts = countChanges(current, items, versioned);
+      const bulk =
+        counts.changed + counts.removed >= BULK_SAVE_THRESHOLD;
 
       let doc;
       let changed;
@@ -797,6 +981,7 @@ class FirkinAutomergeOutput extends BroadcastedOutputElement {
             schema,
             cursor.heads,
             snapshot,
+            versioned,
           );
 
           if (!result.changed) return;
@@ -821,11 +1006,14 @@ class FirkinAutomergeOutput extends BroadcastedOutputElement {
           ({ doc, changed } = await changeDocumentBatched(
             current,
             items,
-            { schema },
+            { schema, versioned },
           ));
         }
       } else {
-        ({ doc, changed } = changeDocument(current, items, { schema }));
+        ({ doc, changed } = changeDocument(current, items, {
+          schema,
+          versioned,
+        }));
       }
 
       if (!changed) return;
@@ -864,6 +1052,7 @@ class FirkinAutomergeOutput extends BroadcastedOutputElement {
    * @param {string} schema
    * @param {Heads | undefined} pushHeads
    * @param {boolean} snapshot
+   * @param {boolean} versioned
    * @returns {Promise<{
    *   doc: AutomergeDoc;
    *   changed: boolean;
@@ -872,11 +1061,12 @@ class FirkinAutomergeOutput extends BroadcastedOutputElement {
    *   heads?: string[];
    * }>}
    */
-  async #applyLargeChange(current, items, schema, pushHeads, snapshot) {
+  async #applyLargeChange(current, items, schema, pushHeads, snapshot, versioned) {
     const result = await this.#bulkProxy().applyLargeChange({
       bytes: encodeDocument(current),
       items,
       schema,
+      versioned,
       pushHeads,
       snapshot,
     });
@@ -903,7 +1093,7 @@ class FirkinAutomergeOutput extends BroadcastedOutputElement {
    * Queue a push, off the document queue: a slow or dead server must not block
    * reads, saves or other collections.
    *
-   * @param {CollectionName} name
+   * @param {string} name
    * @param {AutomergeDoc} doc
    * @param {PreparedPush} [prepared]
    */
@@ -921,7 +1111,7 @@ class FirkinAutomergeOutput extends BroadcastedOutputElement {
    * becomes one append of the latest document instead of one manifest rewrite
    * per save. Appends triggered by a pull stay immediate.
    *
-   * @param {CollectionName} name
+   * @param {string} name
    * @param {PreparedPush} [prepared]
    */
   #schedulePush(name, prepared) {
@@ -1005,22 +1195,22 @@ class FirkinAutomergeOutput extends BroadcastedOutputElement {
     }, NOT_READY_GRACE_MS);
   }
 
-  /**
-   * Record that a collection has an answer to show.
-   *
-   * @param {CollectionName} name
-   */
+  /** @param {string} name */
   #markReady(name) {
-    if (this.#ready.value.has(name)) return;
+    const base = name.split("#", 1)[0];
+    const target = this.#versions.has(base) ? base : name;
+
+    if (this.#ready.value.has(target)) return;
 
     const next = new Set(this.#ready.value);
-    next.add(name);
+    next.add(target);
     this.#ready.value = next;
   }
 
-  /** @param {CollectionName} name */
+  /** @param {string} name */
   #bump(name) {
-    const version = this.#versions.get(name);
+    const base = name.split("#", 1)[0];
+    const version = this.#versions.get(base) ?? this.#versions.get(name);
     if (version) version.value++;
   }
 
@@ -1045,14 +1235,14 @@ class FirkinAutomergeOutput extends BroadcastedOutputElement {
    * those packs produced. Written only after a complete read, so a missing pack
    * or manifest is retried instead of being mistaken for "nothing changed".
    *
-   * @param {CollectionName} name
+   * @param {string} name
    */
   #appliedLogKey(name) {
     return `${IDB_DOCS}/${this.#namespace}/${name}/applied`;
   }
 
   /**
-   * @param {CollectionName} name
+   * @param {string} name
    * @returns {Promise<{ packs: string; heads: string } | undefined>}
    */
   async #appliedLog(name) {
@@ -1074,7 +1264,7 @@ class FirkinAutomergeOutput extends BroadcastedOutputElement {
   }
 
   /**
-   * @param {CollectionName} name
+   * @param {string} name
    * @param {string} packs - `;`-joined ordered pack CIDs.
    * @param {string} heads - The document heads those packs produced.
    */
@@ -1086,7 +1276,7 @@ class FirkinAutomergeOutput extends BroadcastedOutputElement {
     }
   }
 
-  /** @param {CollectionName} name */
+  /** @param {string} name */
   async #resetAppliedLog(name) {
     try {
       await IDB.del(this.#appliedLogKey(name));
@@ -1097,7 +1287,7 @@ class FirkinAutomergeOutput extends BroadcastedOutputElement {
 
   // REMOTE
 
-  /** @param {CollectionName} name */
+  /** @param {string} name */
   #cursorKey(name) {
     return `${IDB_DOCS}/${this.#namespace}/${name}/cursor`;
   }
@@ -1106,7 +1296,7 @@ class FirkinAutomergeOutput extends BroadcastedOutputElement {
    * How far this device has pushed a collection: the heads the log already has,
    * and how many pushes happened since the document was started.
    *
-   * @param {CollectionName} name
+   * @param {string} name
    * @returns {Promise<{ heads?: Heads; pushes: number }>}
    */
   async #cursor(name) {
@@ -1132,7 +1322,7 @@ class FirkinAutomergeOutput extends BroadcastedOutputElement {
   }
 
   /**
-   * @param {CollectionName} name
+   * @param {string} name
    * @param {{ heads?: Heads; pushes: number }} cursor
    */
   async #setCursor(name, cursor) {
@@ -1145,7 +1335,7 @@ class FirkinAutomergeOutput extends BroadcastedOutputElement {
     }
   }
 
-  /** @param {CollectionName} name */
+  /** @param {string} name */
   async #resetCursor(name) {
     const cursor = { pushes: 0 };
     this.#cursors.set(name, cursor);
@@ -1157,36 +1347,47 @@ class FirkinAutomergeOutput extends BroadcastedOutputElement {
     }
   }
 
-  /** @type {Promise<string> | undefined} */
-  #actorPromise;
+  /** @type {Map<string, Promise<string>>} */
+  #actorPromises = new Map();
 
   /**
-   * This device's Automerge actor id, persisted so reloads keep writing under
-   * the same identity.
+   * An Automerge actor id per document, persisted so reloads keep writing under
+   * the same identity. Every document (collection, manifest, bundle) has its
+   * own actor: sharing one actor across documents makes a change from one
+   * document look like a conflicting duplicate sequence number in another.
    *
+   * @param {string} name
    * @returns {Promise<string>}
    */
-  #actor() {
-    this.#actorPromise ??= (async () => {
-      const key = `${IDB_ACTOR}/${this.#namespace}`;
+  #actor(name) {
+    const existing = this.#actorPromises.get(name);
+    if (existing) return existing;
 
-      const created = crypto.randomUUID().replace(/-/g, "");
+    const created = (async () => {
+      const key = `${IDB_ACTOR}/${this.#namespace}/${name}`;
 
       try {
         const stored = await IDB.get(key);
         if (typeof stored === "string" && /^[0-9a-f]{32}$/.test(stored)) {
           return stored;
         }
-
-        await IDB.set(key, created);
-      } catch (err) {
-        console.warn("Could not persist the Automerge actor id:", err);
+      } catch {
+        // Fall through to a new actor.
       }
 
-      return created;
+      const actor = crypto.randomUUID().replace(/-/g, "");
+
+      try {
+        await IDB.set(key, actor);
+      } catch (err) {
+        console.warn(`Could not persist the '${name}' actor:`, err);
+      }
+
+      return actor;
     })();
 
-    return this.#actorPromise;
+    this.#actorPromises.set(name, created);
+    return created;
   }
 
   /**
@@ -1196,13 +1397,33 @@ class FirkinAutomergeOutput extends BroadcastedOutputElement {
    * completed read proved the log has), so anything newer is local-only: a
    * save whose push failed, or one interrupted before its queued push ran.
    *
-   * @param {CollectionName} name
+   * @param {string} name
    * @param {AutomergeDoc} doc
    */
   async #hasUnpushed(name, doc) {
     const cursor = await this.#cursor(name);
 
     return headsOf(doc).join(";") !== (cursor.heads ?? []).join(";");
+  }
+
+  /**
+   * Every document that belongs to a collection. In bundled mode this is the
+   * manifest, the bundle documents currently in memory, and the old single
+   * document while it is being migrated.
+   *
+   * @param {string} name
+   */
+  #docNames(name) {
+    if (!this.#isBundled(name)) return [name];
+
+    /** @type {string[]} */
+    const names = [];
+
+    for (const key of this.#docs.keys()) {
+      if (key === name || key.startsWith(`${name}#`)) names.push(key);
+    }
+
+    return names;
   }
 
   /**
@@ -1218,11 +1439,13 @@ class FirkinAutomergeOutput extends BroadcastedOutputElement {
     await this.#initialise();
 
     for (const name of COLLECTIONS) {
-      const doc = this.#docs.get(name);
-      if (!doc) continue;
-      if (!(await this.#hasUnpushed(name, doc))) continue;
+      for (const docName of this.#docNames(name)) {
+        const doc = this.#docs.get(docName);
+        if (!doc) continue;
+        if (!(await this.#hasUnpushed(docName, doc))) continue;
 
-      this.#enqueuePush(name, doc);
+        this.#enqueuePush(docName, doc);
+      }
     }
   }
 
@@ -1233,7 +1456,7 @@ class FirkinAutomergeOutput extends BroadcastedOutputElement {
    * the cursor advance after a pull); otherwise `changesSince` returns a whole
    * document anyway.
    *
-   * @param {CollectionName} name
+   * @param {string} name
    * @param {AutomergeDoc} doc
    * @param {PreparedPush} [prepared]
    */
@@ -1291,7 +1514,7 @@ class FirkinAutomergeOutput extends BroadcastedOutputElement {
   /**
    * Append one plaintext entry to the log, sealing it first.
    *
-   * @param {CollectionName} name
+   * @param {string} name
    * @param {Uint8Array} entry
    * @returns {Promise<void>}
    */
@@ -1346,7 +1569,7 @@ class FirkinAutomergeOutput extends BroadcastedOutputElement {
   /**
    * Read and decrypt one collection's log, framed entry by entry.
    *
-   * @param {CollectionName} name
+   * @param {string} name
    * @param {AutomergeDoc} current
    * @returns {Promise<{ data: Uint8Array | undefined; packs: string; unchanged: boolean; complete: boolean; incremental: boolean }>}
    */
@@ -1458,7 +1681,9 @@ class FirkinAutomergeOutput extends BroadcastedOutputElement {
       try {
         await Promise.all(COLLECTIONS.map(async (name) => {
           try {
-            await this.#pullCollection(name);
+            await (this.#isBundled(name)
+              ? this.#pullBundled(name)
+              : this.#pullCollection(name));
           } catch (err) {
             console.warn(`Could not pull the '${name}' document:`, err);
             this.#markReady(name);
@@ -1475,9 +1700,31 @@ class FirkinAutomergeOutput extends BroadcastedOutputElement {
   }
 
   /**
+   * Pull a bundled collection: the legacy document, the manifest, then every
+   * bundle the manifest names.
+   *
+   * @param {string} name
+   */
+  async #pullBundled(name) {
+    // Data written before bundled mode is still in the old single document.
+    // Read it so it stays visible; the next save migrates and clears it.
+    await this.#pullCollection(name);
+    await this.#pullCollection(this.#manifestName(name));
+
+    const manifest = this.#docs.get(this.#manifestName(name));
+    if (!manifest) return;
+
+    const ids = recordsOf(manifest).map((record) => String(record.id));
+
+    await Promise.all(
+      ids.map((id) => this.#pullCollection(this.#bundleName(name, id))),
+    );
+  }
+
+  /**
    * Re-read one collection from the log and apply it.
    *
-   * @param {CollectionName} name
+   * @param {string} name
    */
   async #pullCollection(name) {
     await this.#initialise();
@@ -1513,7 +1760,7 @@ class FirkinAutomergeOutput extends BroadcastedOutputElement {
   /**
    * The shared body. Must be called inside `#serialize`.
    *
-   * @param {CollectionName} name
+   * @param {string} name
    * @param {{ state: "loading" } | { state: "loaded"; data: Uint8Array | undefined; packs: string; unchanged: boolean; complete: boolean; incremental: boolean } | { state: "error" }} collection
    * @param {{ bootstrap?: boolean }} [options] - `bootstrap` publishes our local
    *   document when the log has nothing yet; only safe right after a read.
@@ -1564,7 +1811,7 @@ class FirkinAutomergeOutput extends BroadcastedOutputElement {
         return;
       }
 
-      const doc = applyLog(current, bytes, await this.#actor());
+      const doc = applyLog(current, bytes, await this.#actor(name));
 
       this.#applied.set(name, fingerprint);
       this.#docs.set(name, doc);
@@ -1800,7 +2047,7 @@ class FirkinAutomergeOutput extends BroadcastedOutputElement {
    * accepted so a later replay can be recognised.
    *
    * @param {{ session: Session; rb: Firkin }} client
-   * @param {CollectionName} name
+   * @param {string} name
    */
   async #entries(client, name) {
     /** @type {Array<[string, number]>} */

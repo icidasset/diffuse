@@ -1,4 +1,5 @@
 import foundation from "~/common/foundation.js";
+import { bySourceProvider } from "~/common/bundles.js";
 import {
   CONNECT_URL,
   FIRKIN_METHODS,
@@ -60,7 +61,12 @@ effect(() => {
 
     import(
       "~/components/output/raw/firkin/encrypted/incremental-automerge/element.js"
-    ).catch((err) => {
+    ).then(async () => {
+      await customElements.whenDefined("dob-firkin-automerge");
+
+      const option = document.getElementById(optionId(method));
+      if (option) setTrackGrouping(option);
+    }).catch((err) => {
       console.error("Failed to load the Firkin output:", err);
     });
   }
@@ -78,10 +84,33 @@ function optionElement(method) {
   if (method.keep !== undefined) {
     element.setAttribute("keep", String(method.keep));
   }
+  element.setAttribute("bundled", "");
   element.setAttribute("label", method.label);
   element.setAttribute("connect", CONNECT_URL);
   element.setAttribute("provider", method.provider);
   element.setAttribute("provider-default", "");
 
+  // Set the grouping rule as soon as the class upgrades, before the
+  // configurator can select the output and carry local data into it.
+  customElements.whenDefined("dob-firkin-automerge").then(() => {
+    const option = document.getElementById(optionId(method));
+    if (option) setTrackGrouping(option);
+  });
+
   return element;
+}
+
+/**
+ * The output itself must not know about inputs. This facet is the composition
+ * layer, so it supplies the source-aware grouping used by bundled mode.
+ *
+ * @param {Element} element
+ */
+function setTrackGrouping(element) {
+  /** @type {any} */ (element).tracksBy = (/** @type {any} */ track) => {
+    const input = foundation.signals.configurator.input();
+    if (!input) return undefined;
+
+    return bySourceProvider(input.inputs())(track);
+  };
 }
