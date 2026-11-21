@@ -60,13 +60,6 @@ export const MANIFEST_CAS_RETRIES = 5;
 export const PUSH_COALESCE_MS = 750;
 
 /**
- * Number of incremental local-cache chunks before the base document is
- * rewritten and the chunks are dropped. Chunks are deltas since the previous
- * save, so a save doesn't serialise the whole library.
- */
-export const LOCAL_COMPACT_EVERY = 32;
-
-/**
  * Collections at least this large are saved in yielding batches, because one
  * `Automerge.change` with tens of thousands of writes blocks the page (and is
  * slower than the same writes split into changes).

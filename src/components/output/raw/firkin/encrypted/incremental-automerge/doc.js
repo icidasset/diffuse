@@ -127,24 +127,11 @@ export function hasRecords(doc) {
 }
 
 /**
- * The bytes of the changes added since `heads`, or `undefined` when the
- * document no longer contains those heads (a different root). Used for the
- * local cache, where a full document cannot be appended as a chunk.
- *
- * @param {AutomergeDoc} doc
- * @param {Heads} heads
- * @returns {Uint8Array | undefined}
- */
-export function deltaSince(doc, heads) {
-  try {
-    return Automerge.saveSince(doc, heads);
-  } catch {
-    return undefined;
-  }
-}
-
-/**
  * Apply a locally cached incremental chunk to a document.
+ *
+ * Only an older cache layout uses this (see `#loadDoc`); current caches store
+ * the compact document, because every call here materialises the whole
+ * document.
  *
  * @param {AutomergeDoc} doc
  * @param {Uint8Array} bytes

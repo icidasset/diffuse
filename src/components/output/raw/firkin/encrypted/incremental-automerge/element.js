@@ -27,7 +27,6 @@ import {
   IDB_DOCS,
   IDB_FLOORS,
   IDB_PACKS,
-  LOCAL_COMPACT_EVERY,
   NAMES_TTL_MS,
   NOT_CONNECTED,
   NOT_READY_GRACE_MS,
@@ -43,7 +42,6 @@ import {
   changesSince,
   countChanges,
   createDocument,
-  deltaSince,
   encodeDocument,
   hasRecords,
   headsOf,
@@ -194,16 +192,6 @@ class FirkinAutomergeOutput extends BroadcastedOutputElement {
 
   /** @type {Map<string, AutomergeDoc>} */
   #docs = new Map();
-
-  /** Incremental local-cache deltas appended since the base document. */
-  /** @type {Map<string, Uint8Array[]>} */
-  #chunks = new Map();
-
-  /** Heads covered by the local cache (base + chunks). @type {Map<string, Heads>} */
-  #persistedHeads = new Map();
-
-  /** Collections with a full base document in IndexedDB. */
-  #hasBase = new Set();
 
   /** @type {Map<string, { heads?: Heads; pushes: number }>} */
   #cursors = new Map();
@@ -664,111 +652,33 @@ class FirkinAutomergeOutput extends BroadcastedOutputElement {
   /**
    * Persist a collection's document.
    *
-   * The first write (and periodic compaction) stores the whole document. Other
-   * writes append the delta since the previous save, so a save doesn't serialise
-   * the entire library. Loading replays the base and then the chunks.
+   * The whole document is written every time, in its compact encoding.
+   * Appending a delta per save was meant to avoid serialising the library, but
+   * serialising is cheap (a fraction of a second for a large library) while
+   * replaying those deltas is not: Automerge copies the whole document on every
+   * `loadIncremental`, so a cache with N chunks cost N full materialisations on
+   * startup. One compact base is a single `load`.
    *
    * @param {string} name
    * @param {AutomergeDoc} doc
-   * @param {{ compact?: boolean; bytes?: Uint8Array }} [options] - `compact`
-   *   rewrites the base instead of appending a delta (a bulk save's delta is as
-   *   large as the whole collection); `bytes` supplies the already-encoded base
-   *   (prepared by the worker).
+   * @param {{ bytes?: Uint8Array }} [options] - `bytes` supplies the already
+   *   encoded base (prepared by the worker).
    */
   async #persist(name, doc, options = {}) {
-    const heads = headsOf(doc);
-    const previous = this.#persistedHeads.get(name);
+    await IDB.set(
+      this.#docKey(name),
+      options.bytes ?? encodeDocument(doc),
+    );
 
-    if (options.compact) {
-      await IDB.set(
-        this.#docKey(name),
-        options.bytes ?? encodeDocument(doc),
-      );
-
-      this.#hasBase.add(name);
-      this.#persistedHeads.set(name, heads);
-      this.#chunks.set(name, []);
-
-      try {
-        await IDB.del(this.#chunksKey(name));
-      } catch (err) {
-        console.warn(`Could not clear the '${name}' local changes:`, err);
-      }
-
-      return;
+    try {
+      await IDB.del(this.#chunksKey(name));
+    } catch (err) {
+      console.warn(`Could not clear the '${name}' local changes:`, err);
     }
-
-    if (!this.#hasBase.has(name) || previous === undefined) {
-      await IDB.set(this.#docKey(name), encodeDocument(doc));
-
-      this.#hasBase.add(name);
-      this.#persistedHeads.set(name, heads);
-      this.#chunks.set(name, []);
-
-      try {
-        await IDB.del(this.#chunksKey(name));
-      } catch (err) {
-        console.warn(`Could not clear the '${name}' local changes:`, err);
-      }
-
-      return;
-    }
-
-    if (heads.join(";") === previous.join(";")) return;
-
-    const delta = deltaSince(doc, previous);
-
-    // The document no longer shares the cached base's history (for example an
-    // empty local document adopted a remote root). A delta chunk couldn't be
-    // replayed, so replace the base instead.
-    if (delta === undefined) {
-      await IDB.set(this.#docKey(name), encodeDocument(doc));
-
-      this.#persistedHeads.set(name, heads);
-      this.#chunks.set(name, []);
-
-      try {
-        await IDB.del(this.#chunksKey(name));
-      } catch (err) {
-        console.warn(`Could not clear the '${name}' local changes:`, err);
-      }
-
-      return;
-    }
-
-    if (delta.length === 0) {
-      this.#persistedHeads.set(name, heads);
-      return;
-    }
-
-    const chunks = [...(this.#chunks.get(name) ?? []), delta];
-
-    if (chunks.length >= LOCAL_COMPACT_EVERY) {
-      await IDB.set(this.#docKey(name), encodeDocument(doc));
-
-      this.#persistedHeads.set(name, heads);
-      this.#chunks.set(name, []);
-
-      try {
-        await IDB.del(this.#chunksKey(name));
-      } catch (err) {
-        console.warn(`Could not clear the '${name}' local changes:`, err);
-      }
-
-      return;
-    }
-
-    await IDB.set(this.#chunksKey(name), chunks);
-
-    this.#chunks.set(name, chunks);
-    this.#persistedHeads.set(name, heads);
   }
 
   /** @param {string} name */
   async #resetChunks(name) {
-    this.#chunks.delete(name);
-    this.#hasBase.delete(name);
-
     try {
       await IDB.del(this.#chunksKey(name));
     } catch (err) {
@@ -777,7 +687,12 @@ class FirkinAutomergeOutput extends BroadcastedOutputElement {
   }
 
   /**
-   * Load one document and its local delta chunks.
+   * Load one document, plus the delta chunks an older cache may have written.
+   *
+   * Current versions store the compact document only. The replay is kept so a
+   * cache written before that still loads — it is expensive (every
+   * `loadIncremental` materialises the whole document), which is exactly why
+   * chunks are no longer written.
    *
    * @param {string} name
    * @returns {Promise<boolean>} Whether the local document is an answer.
@@ -788,35 +703,42 @@ class FirkinAutomergeOutput extends BroadcastedOutputElement {
       let doc = stored instanceof Uint8Array ? loadDocument(stored) : undefined;
 
       if (doc) {
-        this.#hasBase.add(name);
-
-        // Replay the deltas appended since the base was written.
+        // Replay the deltas an older cache appended since the base was written.
         try {
           const storedChunks = await IDB.get(this.#chunksKey(name));
           const chunks = Array.isArray(storedChunks)
             ? storedChunks.filter((chunk) => chunk instanceof Uint8Array)
             : [];
-          /** @type {Uint8Array[]} */
-          const applied = [];
 
           for (const chunk of chunks) {
             try {
               doc = applyIncremental(doc, chunk);
-              applied.push(chunk);
             } catch (err) {
               console.warn(`Could not apply a cached '${name}' change:`, err);
               break;
             }
           }
 
-          this.#chunks.set(name, applied);
+          // Write the compact base so the chunks aren't replayed again: every
+          // `applyIncremental` materialises the whole document, which makes a
+          // cache with many chunks slow to open. Done before the document is
+          // published, so it cannot race a save.
+          if (chunks.length > 0) {
+            try {
+              await this.#persist(name, doc);
+            } catch (err) {
+              console.warn(
+                `Could not compact the '${name}' local cache:`,
+                err,
+              );
+            }
+          }
         } catch (err) {
           console.warn(`Could not read the '${name}' local changes:`, err);
         }
 
         this.#docs.set(name, doc);
         this.#persisted.add(name);
-        this.#persistedHeads.set(name, headsOf(doc));
 
         // Local-first: a collection we have synced before can be shown
         // straight away — even when it is empty, because then "empty" is the
@@ -831,7 +753,6 @@ class FirkinAutomergeOutput extends BroadcastedOutputElement {
 
       this.#docs.set(name, empty);
       this.#persisted.delete(name);
-      this.#persistedHeads.set(name, headsOf(empty));
 
       await this.#resetCursor(name);
       await this.#resetAppliedLog(name);
@@ -1024,9 +945,9 @@ class FirkinAutomergeOutput extends BroadcastedOutputElement {
       this.#persisted.delete(name);
 
       try {
-        // A bulk save's delta would be as large as the collection; rewrite the
-        // base instead of appending it as a chunk.
-        await this.#persist(name, doc, { compact: bulk, bytes: docBytes });
+        // The worker already encoded the document; reuse those bytes instead of
+        // serialising it again here.
+        await this.#persist(name, doc, { bytes: docBytes });
         this.#persisted.add(name);
       } catch (err) {
         console.warn(`Could not cache the '${name}' document locally:`, err);
@@ -1073,19 +994,20 @@ class FirkinAutomergeOutput extends BroadcastedOutputElement {
 
     if (!result.changed) return { doc: current, changed: false };
 
-    // A first import replaces the document's whole contents, so the worker's
-    // result *is* the answer. Loading it once is cheaper than replaying every
-    // delta on top of an empty document (the same records, materialised twice
-    // otherwise).
+    // A first import replaces the document's whole contents, and a bulk save
+    // arrives as several deltas. Loading the worker's document once is cheaper
+    // than replaying those deltas here: Automerge copies the whole document for
+    // each `loadIncremental`, so N deltas cost N materialisations.
     let doc = current;
-    const adopted = !hasRecords(current) && result.docBytes
-      ? loadDocument(result.docBytes)
-      : undefined;
+    const deltas = result.deltas ?? [];
+    const adopt = (!hasRecords(current) || deltas.length > 1) &&
+      result.docBytes;
+    const adopted = adopt ? loadDocument(result.docBytes) : undefined;
 
     if (adopted) {
       doc = adopted;
     } else {
-      for (const delta of result.deltas ?? []) {
+      for (const delta of deltas) {
         doc = applyIncremental(doc, delta);
         await yieldToMain();
       }
