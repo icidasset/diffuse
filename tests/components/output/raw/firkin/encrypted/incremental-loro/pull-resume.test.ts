@@ -626,10 +626,11 @@ describe("components/output/raw/firkin/encrypted/incremental-loro pull resume", 
     expect(result.secondGets).toBeGreaterThan(0);
     expect(result.secondRead).toEqual(["t1"]);
 
-    // An appended entry pulls only the new pack, not the stored log's packs.
+    // An appended small entry rides inside the manifest, so it needs no pack
+    // fetch at all; the stored log's packs are not re-read either.
     expect(result.afterRead).toEqual(["t1", "t2"]);
     expect(result.oldPacksFetched).toBe(0);
-    expect(result.newPacksFetched).toBe(true);
+    expect(result.newPacksFetched).toBe(false);
 
     expect(result.warnings).toEqual([]);
     expect(result.errors).toEqual([]);

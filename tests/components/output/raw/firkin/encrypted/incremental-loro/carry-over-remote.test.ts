@@ -226,35 +226,55 @@ describe("components/output/raw/firkin/encrypted/incremental-loro carry-over", (
           { $type: "sh.diffuse.output.facet", id: "f1", name: "Carried" },
         ]);
 
+        const { registryNamespace, logName } = await import(
+          "~/components/output/raw/firkin/encrypted/incremental-loro/constants.js"
+        );
+        const names = [
+          "collaborations",
+          "facets",
+          "playlistItems",
+          "settings",
+          "tracks",
+        ];
+        const ref = (name) =>
+          `${registryNamespace("firkin-loro")}/${
+            logName(name, hex(sessionSigner.pubkeyBytes))
+          }`;
+        const manifestsBefore = new Map(
+          names.map((name) => [name, registry.get(ref(name)) ?? null]),
+        );
+
         await configurator.select(option.id);
 
         // Wait until every collection's log has a manifest on the remote —
-        // that is the carry-over having been pushed, not just cached.
+        // that is the carry-over having been pushed, not just cached. Each
+        // collection's manifest has to *change*: the startup bootstrap writes
+        // one too, and starting a second element while the carry-over push is
+        // still coalescing would hand leadership over before it lands.
         const deadline = Date.now() + 15_000;
-        let carried = new Set();
         while (Date.now() < deadline) {
-          carried = new Set(
-            [...registry.keys()].map((key) => {
-              // "<namespace>/<encoded-collection>.<device-hex>"
-              const [encoded] = key.split("/")[1].split(".");
-              return [...Array(encoded.length / 2)]
-                .map((_, i) =>
-                  parseInt(encoded.slice(i * 2, i * 2 + 2), 16)
-                )
-                .map((byte) => String.fromCharCode(byte))
-                .join("");
-            }),
-          );
+          const pushed = names.every((name) => {
+            const cid = registry.get(ref(name));
+            return cid !== undefined && cid !== manifestsBefore.get(name);
+          });
 
-          if (
-            ["collaborations", "facets", "playlistItems", "settings", "tracks"]
-              .every((name) => carried.has(name))
-          ) {
-            break;
-          }
+          if (pushed) break;
 
           await new Promise((resolve) => setTimeout(resolve, 50));
         }
+
+        const carried = new Set(
+          [...registry.keys()].map((key) => {
+            // "<namespace>/<encoded-collection>.<device-hex>"
+            const [encoded] = key.split("/")[1].split(".");
+            return [...Array(encoded.length / 2)]
+              .map((_, i) =>
+                parseInt(encoded.slice(i * 2, i * 2 + 2), 16)
+              )
+              .map((byte) => String.fromCharCode(byte))
+              .join("");
+          }),
+        );
 
         // Wait for the carry-over pushes to finish and their cursors to be
         // recorded before starting a second element. Both elements share this

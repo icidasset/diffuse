@@ -197,6 +197,15 @@ class FirkinLoroOutput extends BroadcastedOutputElement {
   #cursors = new Map();
 
   /**
+   * The last manifest read or written per log and device, so an append can skip
+   * the registry lookup and the manifest read and go straight to the
+   * compare-and-swap.
+   *
+   * @type {Map<string, import("./log.js").ManifestState>}
+   */
+  #manifests = new Map();
+
+  /**
    * Fingerprint of the log last applied per collection, so a reload that yields
    * the same bytes isn't replayed.
    *
@@ -1383,18 +1392,23 @@ class FirkinLoroOutput extends BroadcastedOutputElement {
       if (!entry || entry.length === 0) return;
 
       const sealed = await encryptEntry(key, entry);
+      const auth = this.#auth(client.session);
+      const cacheKey = `${name}\u0000${auth.device}`;
 
-      const { cid } = await appendEntry(
+      const { cid, manifest } = await appendEntry(
         client.rb,
         this.#namespace,
         name,
         sealed,
         {
-          auth: this.#auth(client.session),
+          auth,
           floors: await this.#floors(name),
           keep: this.keep,
+          current: this.#manifests.get(cacheKey),
         },
       );
+
+      this.#manifests.set(cacheKey, manifest);
 
       this.#packs.set(cid, sealed);
 
@@ -1487,7 +1501,9 @@ class FirkinLoroOutput extends BroadcastedOutputElement {
     const pending = entries.slice(incremental ? appliedPacks.length : 0);
 
     const loaded = await Promise.all(
-      pending.map((entry) => this.#readPack(client.rb, entry.cid)),
+      pending.map((entry) =>
+        entry.bytes ?? this.#readPack(client.rb, entry.cid)
+      ),
     );
     const present = /** @type {Uint8Array[]} */ (loaded.filter(Boolean));
     if (present.length === 0) {
@@ -1913,6 +1929,12 @@ class FirkinLoroOutput extends BroadcastedOutputElement {
       floors: await this.#floors(name),
       loadNames: this.#loadNames(client.rb),
       onAccept: (device, seq) => accepted.push([device, seq]),
+      onManifest: (device, manifestCid, payload) => {
+        this.#manifests.set(`${name}\u0000${device}`, {
+          cid: manifestCid,
+          payload,
+        });
+      },
     });
 
     await this.#recordFloors(name, accepted);

@@ -13,6 +13,12 @@ export type LogEntry = {
   cid: string;
   /** Unix milliseconds. */
   at: number;
+  /**
+   * The entry's bytes, when the writer inlined them in the manifest instead of
+   * storing a separate blob. Readers use them directly; writers never persist
+   * this field anywhere but the manifest.
+   */
+  bytes?: Uint8Array;
 };
 
 /**

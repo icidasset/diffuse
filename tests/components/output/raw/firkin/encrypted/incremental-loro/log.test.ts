@@ -8,6 +8,7 @@ import { ApiError } from "@tokono.ma/firkin";
 import { cidForBytes } from "~/vendor/firkin/index.js";
 
 import {
+  INLINE_ENTRY_MAX_BYTES,
   MANIFEST_VERSION,
   logName,
   registryNamespace,
@@ -171,6 +172,15 @@ const bytes = (text) => new TextEncoder().encode(text);
 const text = (value) => new TextDecoder().decode(value);
 
 /**
+ * An entry's bytes, whether the writer inlined them in the manifest or stored
+ * them as a blob.
+ *
+ * @param {any} rb
+ * @param {any} entry
+ */
+const entryBytes = (rb, entry) => entry.bytes ?? rb.blobs.get(entry.cid);
+
+/**
  * Read a log the way the element does.
  *
  * @param {any} rb
@@ -194,7 +204,7 @@ describe("components/output/raw/firkin/encrypted/incremental-loro/log", () => {
     const entries = await read(rb, "tracks", auth);
 
     expect(entries.length).toBe(2);
-    expect(entries.map((entry) => text(rb.blobs.get(entry.cid))).sort())
+    expect(entries.map((entry) => text(entryBytes(rb, entry))).sort())
       .toEqual(["a", "b"]);
   });
 
@@ -210,7 +220,7 @@ describe("components/output/raw/firkin/encrypted/incremental-loro/log", () => {
     const entry = await latestEntry(rb, "ns", "tracks", { auth });
 
     expect(entry?.cid).toBe(newest.cid);
-    expect(text(rb.blobs.get(entry.cid))).toBe("new");
+    expect(text(entryBytes(rb, entry))).toBe("new");
   });
 
   it("returns nothing for an empty log", async () => {
@@ -283,7 +293,7 @@ describe("components/output/raw/firkin/encrypted/incremental-loro/log", () => {
     const entries = await read(rb, "tracks", auth);
 
     expect(result.appended).toBe(true);
-    expect(entries.map((entry) => text(rb.blobs.get(entry.cid))).sort())
+    expect(entries.map((entry) => text(entryBytes(rb, entry))).sort())
       .toEqual(["mine", "one", "other"]);
   });
 
@@ -330,7 +340,7 @@ describe("components/output/raw/firkin/encrypted/incremental-loro/log", () => {
 
     const entries = await read(rb, "tracks", auth);
 
-    expect(entries.map((entry) => text(rb.blobs.get(entry.cid)))).toEqual([
+    expect(entries.map((entry) => text(entryBytes(rb, entry)))).toEqual([
       "mine again",
     ]);
   });
@@ -409,7 +419,7 @@ describe("components/output/raw/firkin/encrypted/incremental-loro/log", () => {
 
     expect(first.length).toBe(1);
     expect(second.length).toBe(2);
-    expect(replayed.map((entry) => text(rb.blobs.get(entry.cid)))).toEqual([
+    expect(replayed.map((entry) => text(entryBytes(rb, entry)))).toEqual([
       "one",
       "two",
     ]);
@@ -437,7 +447,7 @@ describe("components/output/raw/firkin/encrypted/incremental-loro/log", () => {
 
     const entries = await read(rb, "tracks", auth);
 
-    expect(entries.map((entry) => text(rb.blobs.get(entry.cid)))).toEqual([
+    expect(entries.map((entry) => text(entryBytes(rb, entry)))).toEqual([
       "2",
       "3",
     ]);
@@ -457,7 +467,7 @@ describe("components/output/raw/firkin/encrypted/incremental-loro/log", () => {
 
     const entries = await read(rb, "tracks", auth);
 
-    expect(entries.map((entry) => text(rb.blobs.get(entry.cid))).sort())
+    expect(entries.map((entry) => text(entryBytes(rb, entry))).sort())
       .toEqual(["a2", "b1"]);
   });
 
@@ -483,6 +493,103 @@ describe("components/output/raw/firkin/encrypted/incremental-loro/log", () => {
     rb.blobs.delete(manifestCid);
 
     expect(await read(rb, "tracks", auth)).toEqual([]);
+  });
+
+  it("carries a small entry inside the manifest", async () => {
+    const rb = fakeClient();
+    const auth = fakeAuth(deviceA);
+
+    const appended = await appendEntry(rb, "ns", "tracks", bytes("small"), {
+      auth,
+    });
+
+    // No blob of its own: the signed manifest carries the bytes.
+    expect(rb.blobs.has(appended.cid)).toBe(false);
+
+    const [entry] = await read(rb, "tracks", auth);
+
+    expect(text(entryBytes(rb, entry))).toBe("small");
+    expect(entry.bytes instanceof Uint8Array).toBe(true);
+  });
+
+  it("appends a small entry in one upload and one registry write", async () => {
+    const rb = fakeClient();
+    const auth = fakeAuth(deviceA);
+
+    const first = await appendEntry(rb, "ns", "tracks", bytes("one"), { auth });
+
+    let uploads = 0;
+    let cas = 0;
+    const originalUpload = rb.upload;
+    const originalSetIf = rb.registrySetIf;
+    rb.upload = (...args) => {
+      uploads += 1;
+      return originalUpload(...args);
+    };
+    rb.registrySetIf = (...args) => {
+      cas += 1;
+      return originalSetIf(...args);
+    };
+
+    await appendEntry(rb, "ns", "tracks", bytes("two"), {
+      auth,
+      current: first.manifest,
+    });
+
+    // The entry is inline, the manifest is the only blob, and the registry
+    // write is the compare-and-swap.
+    expect(uploads).toBe(1);
+    expect(cas).toBe(1);
+  });
+
+  it("keeps an entry larger than the inline limit as a blob", async () => {
+    const rb = fakeClient();
+    const auth = fakeAuth(deviceA);
+
+    const large = bytes("x".repeat(INLINE_ENTRY_MAX_BYTES + 1));
+    const appended = await appendEntry(rb, "ns", "tracks", large, { auth });
+
+    expect(rb.blobs.has(appended.cid)).toBe(true);
+
+    const [entry] = await read(rb, "tracks", auth);
+
+    expect(entry.bytes).toBe(undefined);
+    expect(text(entryBytes(rb, entry))).toBe(text(large));
+  });
+
+  it("appends from a cached manifest without reading the ref", async () => {
+    const rb = fakeClient();
+    const auth = fakeAuth(deviceA);
+
+    const first = await appendEntry(rb, "ns", "tracks", bytes("one"), { auth });
+
+    let lookups = 0;
+    let gets = 0;
+    const originalLookup = rb.registryLookup;
+    const originalGet = rb.get;
+    rb.registryLookup = (...args) => {
+      lookups += 1;
+      return originalLookup(...args);
+    };
+    rb.get = (...args) => {
+      gets += 1;
+      return originalGet(...args);
+    };
+
+    const second = await appendEntry(rb, "ns", "tracks", bytes("two"), {
+      auth,
+      current: first.manifest,
+    });
+
+    expect(second.appended).toBe(true);
+    expect(lookups).toBe(0);
+    expect(gets).toBe(0);
+
+    const entries = await read(rb, "tracks", auth);
+    expect(entries.map((entry) => text(entryBytes(rb, entry)))).toEqual([
+      "one",
+      "two",
+    ]);
   });
 
   it("writes lowercase registry names", async () => {

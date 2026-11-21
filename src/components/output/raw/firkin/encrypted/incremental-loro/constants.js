@@ -90,7 +90,19 @@ export const CODEC_RAW = 0x55;
 export const CODEC_DAG_CBOR = 0x71;
 
 /** Version of the manifest payload written to the registry. */
-export const MANIFEST_VERSION = 2;
+export const MANIFEST_VERSION = 3;
+
+/**
+ * Entries at most this large are carried inside the signed manifest instead of
+ * being uploaded and fetched as their own blob.
+ *
+ * A log entry is one save, and most saves are small (a settings edit, a bundle
+ * update). Inlining removes two requests for those: no upload on the write path
+ * and no fetch on the read path. The manifest is rewritten on every append, so
+ * the limit is kept low — with `keep` at 64 and this at 1 KB, a manifest tops
+ * out around 64 KB.
+ */
+export const INLINE_ENTRY_MAX_BYTES = 1024;
 
 /**
  * How long one namespace listing is reused.
