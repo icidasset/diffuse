@@ -83,7 +83,7 @@ class IndexedDBOutput extends BroadcastedOutputElement {
     if (stored === undefined) return undefined;
 
     // Bytes/strings were stored by a transformer above and are self-describing
-    // at that layer — it decodes them again (automerge binaries cannot be
+    // at that layer — it decodes them again (Loro binaries cannot be
     // CBOR-decoded here). Only envelopes from a standalone usage are decoded.
     if (stored instanceof Uint8Array || typeof stored === "string") {
       return stored;
@@ -98,7 +98,7 @@ class IndexedDBOutput extends BroadcastedOutputElement {
   /** @param {string} name; @param {any} data */
   #put = async (name, data) => {
     // Bytes/strings produced by a transformer above (bytes/json or string/json
-    // envelope bytes/JSON, or automerge/dasl binary) are already self-describing
+    // envelope bytes/JSON, or Loro/DASL binary) are already self-describing
     // at that layer, so they pass through as-is. Plain collections (arrays) are
     // wrapped so a standalone IndexedDB output is itself self-describing.
     const stored = data instanceof Uint8Array || typeof data === "string" ||

@@ -215,7 +215,7 @@ describe("firkin output facet on the real page", () => {
         await unlockOutputKeyWithPassphrase("test-passphrase");
 
         // --- Enable the feature facet the way "add software" does -----------
-        const optionId = "do-output__dc-output__firkin-automerge";
+        const optionId = "do-output__dc-output__firkin-loro";
 
         const deadlineBoot = Date.now() + 20_000;
         let output = null;
@@ -230,7 +230,7 @@ describe("firkin output facet on the real page", () => {
         const { insertPreludes } = await import("~/common/facets/prelude.js");
 
         const facet = buildFacets([
-          "facets/data/firkin-automerge/index.tile",
+          "facets/data/firkin-loro/index.tile",
         ])[0];
 
         const facetsCollection = output.facets.collection();
@@ -346,7 +346,7 @@ describe("firkin output facet on the real page", () => {
 
     expect(result.fatal).toBeUndefined();
     expect(result.errors).toEqual([]);
-    expect(result.selectedId).toBe("do-output__dc-output__firkin-automerge");
+    expect(result.selectedId).toBe("do-output__dc-output__firkin-loro");
     expect(result.uploads).toBeGreaterThan(0);
     expect(result.manifests.length).toBeGreaterThan(0);
     expect(result.facetsAfter).toContain(result.facetUri);

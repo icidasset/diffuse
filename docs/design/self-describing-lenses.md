@@ -55,7 +55,7 @@ The envelope is produced at the encoder, not the storage element:
 | `bytes/s3`, `bytes/dropbox` | raw bytes | transparent pass-through of envelope bytes |
 | `polymorphic/indexed-db` | IDB object | `encodeCollection` for arrays; bytes pass through |
 | `bytes/dasl-sync` | CBOR `Container` | `$schema` on the container |
-| `bytes/automerge` | Automerge binary | `$schema` field in the CRDT doc |
+| `output/raw/firkin/encrypted/incremental-loro` | Loro binary | `$schema` in the document's meta map |
 
 ## Modules
 

@@ -41,7 +41,7 @@ import * as _OrchestratorSources from "./orchestrator/sources/element.js"
 import * as _OutputBytesS3 from "./output/bytes/s3/element.js"
 import * as _OutputBytesWnfs from "./output/bytes/wnfs/element.js"
 import * as _OutputPolymorphicIndexedDb from "./output/polymorphic/indexed-db/element.js"
-import * as _OutputRawFirkinEncryptedIncrementalAutomerge from "./output/raw/firkin/encrypted/incremental-automerge/element.js"
+import * as _OutputRawFirkinEncryptedIncrementalLoro from "./output/raw/firkin/encrypted/incremental-loro/element.js"
 import * as _SupplementAtprotoPublish from "./supplement/atproto-publish/element.js"
 import * as _SupplementLastFm from "./supplement/last.fm/element.js"
 import * as _SupplementListenbrainz from "./supplement/listenbrainz/element.js"
@@ -130,7 +130,7 @@ export const output = {
   raw: {
     firkin: {
       encrypted: {
-        incrementalAutomerge: _OutputRawFirkinEncryptedIncrementalAutomerge,
+        incrementalLoro: _OutputRawFirkinEncryptedIncrementalLoro,
       },
     },
   },

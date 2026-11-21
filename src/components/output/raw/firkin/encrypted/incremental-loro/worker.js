@@ -11,10 +11,9 @@ import {
 /**
  * Apply a large collection save off the main thread.
  *
- * The document has to cross the worker boundary (Automerge docs are not
- * transferable), so the main thread sends its bytes. What comes back is not the
- * whole document but **one delta per batch**: the caller applies them to its
- * own copy, yielding between them, so even the result doesn't block the page.
+ * A document can't cross the worker boundary, so the main thread sends its
+ * snapshot bytes. What comes back is an update plus the document's snapshot and
+ * the entry to push, so the caller doesn't serialise anything twice.
  *
  * @param {{ bytes: Uint8Array; items: any[]; schema?: string; versioned?: boolean; pushHeads?: string[]; snapshot?: boolean }} args
  * @returns {Promise<{ changed: boolean; deltas?: Uint8Array[]; docBytes?: Uint8Array; pushBytes?: Uint8Array; heads?: string[] }>}
@@ -33,10 +32,9 @@ async function applyLargeChange(
   const deltas = [];
   let previous = headsOf(doc);
 
-  // `changeDocumentBatched` writes a first import as a single whole-map change
-  // when it fits under the size budget, and spreads anything larger over several
-  // changes. No yielding is needed here: the worker is already off the main
-  // thread.
+  // `changeDocumentBatched` commits the whole collection in one transaction;
+  // the callback hands the caller one update. No yielding is needed here: the
+  // worker is already off the main thread.
   const { doc: next, changed } = await changeDocumentBatched(
     doc,
     items,

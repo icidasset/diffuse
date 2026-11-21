@@ -57,11 +57,11 @@ import { verifySignature } from "./verify.js";
  * @import { BundleSelector } from "~/common/bundles.d.ts";
  * @import { CollectionName } from "~/common/self-describing.js";
  * @import { Track } from "~/definitions/types.d.ts";
- * @import { Heads } from "@automerge/automerge";
+ * @import { Heads } from "./doc.js";
  * @import { Session } from "~/common/firkin/session.js";
  * @import { LogAuth } from "./log.js";
  * @import { Firkin } from "@tokono.ma/firkin";
- * @import { AutomergeDoc } from "./doc.js";
+ * @import { CollectionDocument } from "./doc.js";
  */
 
 /**
@@ -100,26 +100,26 @@ const yieldToMain = () => new Promise((resolve) => setTimeout(resolve, 0));
 const UNKEYED = "unkeyed";
 
 /**
- * The userdata output: an **encrypted, incremental Automerge log on Firkin**,
- * in one component.
+ * The userdata output: an **encrypted, incremental Loro log on Firkin**, in one
+ * component.
  *
  * This is deliberately one element rather than a chain of transformers. The
  * three layers are inseparable in practice — the log protocol decides what can
  * be replayed, the encryption framing decides how entries are split back up,
- * and the Automerge layer decides what is appendable — so keeping them in one
+ * and the document layer decides what is appendable — so keeping them in one
  * place removes the cross-component contracts (an `output-selector` chain, a
  * shared plaintext framing, a separately delivered key) that only ever had one
  * consumer.
  *
  * What it does, in order of the data flow:
  *
- * - **Collections** are Automerge documents (see `doc.js`): records live in a
- *   map keyed by `id`, so concurrent edits to different records merge.
+ * - **Collections** are Loro documents (see `doc.js`): records live in a map
+ *   keyed by `id`, so concurrent edits to different records merge.
  * - **Bundled mode** (`bundled`) keeps playlist items and tracks in one
  *   document per playlist/source, with a small manifest document naming them.
  *   Saves therefore touch only the affected bundle documents.
  * - **Saves** append only the changes since the log last saw them; a whole
- *   document is appended every `SNAPSHOT_EVERY` saves so the log stays
+ *   snapshot is appended every `SNAPSHOT_EVERY` saves so the log stays
  *   replayable after `keep` trims old entries.
  * - **Entries** are sealed with AES-GCM (see `crypto.js`): one entry per save,
  *   and the decrypted log is length-prefixed per entry so it can be replayed
@@ -127,17 +127,17 @@ const UNKEYED = "unkeyed";
  * - **The log** lives on Firkin (see `log.js`): per-device signed manifests
  *   over content-addressed blobs, with rollback floors, hints and trimming.
  * - **Replay** (see `doc.js`) tolerates interleaved writers and trimmed
- *   dependencies by applying entries one at a time.
+ *   dependencies.
  *
  * Local data lives in IndexedDB, so the UI is usable offline and the remote is
  * only read to merge in other devices' changes.
  *
  * @extends {BroadcastedOutputElement}
  */
-class FirkinAutomergeOutput extends BroadcastedOutputElement {
-  static NAME = "diffuse/output/raw/firkin/encrypted/incremental-automerge";
+class FirkinLoroOutput extends BroadcastedOutputElement {
+  static NAME = "diffuse/output/raw/firkin/encrypted/incremental-loro";
   static WORKER_URL =
-    "components/output/raw/firkin/encrypted/incremental-automerge/worker.js";
+    "components/output/raw/firkin/encrypted/incremental-loro/worker.js";
 
   /** @type {import("~/common/worker.d.ts").ProxiedActions<BulkActions> | undefined} */
   #bulkWorker;
@@ -190,7 +190,7 @@ class FirkinAutomergeOutput extends BroadcastedOutputElement {
 
   // DOCUMENTS
 
-  /** @type {Map<string, AutomergeDoc>} */
+  /** @type {Map<string, CollectionDocument>} */
   #docs = new Map();
 
   /** @type {Map<string, { heads?: Heads; pushes: number }>} */
@@ -644,55 +644,28 @@ class FirkinAutomergeOutput extends BroadcastedOutputElement {
     return `${IDB_DOCS}/${this.#namespace}/${name}`;
   }
 
-  /** @param {string} name */
-  #chunksKey(name) {
-    return `${this.#docKey(name)}/changes`;
-  }
-
   /**
    * Persist a collection's document.
    *
-   * The whole document is written every time, in its compact encoding.
-   * Appending a delta per save was meant to avoid serialising the library, but
-   * serialising is cheap (a fraction of a second for a large library) while
-   * replaying those deltas is not: Automerge copies the whole document on every
-   * `loadIncremental`, so a cache with N chunks cost N full materialisations on
-   * startup. One compact base is a single `load`.
+   * The whole document is written every time, as a Loro snapshot.
    *
    * @param {string} name
-   * @param {AutomergeDoc} doc
+   * @param {CollectionDocument} doc
    * @param {{ bytes?: Uint8Array }} [options] - `bytes` supplies the already
-   *   encoded base (prepared by the worker).
+   *   encoded snapshot (prepared by the worker).
    */
   async #persist(name, doc, options = {}) {
     await IDB.set(
       this.#docKey(name),
       options.bytes ?? encodeDocument(doc),
     );
-
-    try {
-      await IDB.del(this.#chunksKey(name));
-    } catch (err) {
-      console.warn(`Could not clear the '${name}' local changes:`, err);
-    }
-  }
-
-  /** @param {string} name */
-  async #resetChunks(name) {
-    try {
-      await IDB.del(this.#chunksKey(name));
-    } catch (err) {
-      console.warn(`Could not reset the '${name}' local changes:`, err);
-    }
   }
 
   /**
-   * Load one document, plus the delta chunks an older cache may have written.
+   * Load one document from the local cache.
    *
-   * Current versions store the compact document only. The replay is kept so a
-   * cache written before that still loads — it is expensive (every
-   * `loadIncremental` materialises the whole document), which is exactly why
-   * chunks are no longer written.
+   * A stored value that isn't a Loro document is ignored: the collection starts
+   * empty and the next save overwrites the cache.
    *
    * @param {string} name
    * @returns {Promise<boolean>} Whether the local document is an answer.
@@ -700,43 +673,9 @@ class FirkinAutomergeOutput extends BroadcastedOutputElement {
   async #loadDoc(name) {
     try {
       const stored = await IDB.get(this.#docKey(name));
-      let doc = stored instanceof Uint8Array ? loadDocument(stored) : undefined;
+      const doc = stored instanceof Uint8Array ? loadDocument(stored) : undefined;
 
       if (doc) {
-        // Replay the deltas an older cache appended since the base was written.
-        try {
-          const storedChunks = await IDB.get(this.#chunksKey(name));
-          const chunks = Array.isArray(storedChunks)
-            ? storedChunks.filter((chunk) => chunk instanceof Uint8Array)
-            : [];
-
-          for (const chunk of chunks) {
-            try {
-              doc = applyIncremental(doc, chunk);
-            } catch (err) {
-              console.warn(`Could not apply a cached '${name}' change:`, err);
-              break;
-            }
-          }
-
-          // Write the compact base so the chunks aren't replayed again: every
-          // `applyIncremental` materialises the whole document, which makes a
-          // cache with many chunks slow to open. Done before the document is
-          // published, so it cannot race a save.
-          if (chunks.length > 0) {
-            try {
-              await this.#persist(name, doc);
-            } catch (err) {
-              console.warn(
-                `Could not compact the '${name}' local cache:`,
-                err,
-              );
-            }
-          }
-        } catch (err) {
-          console.warn(`Could not read the '${name}' local changes:`, err);
-        }
-
         this.#docs.set(name, doc);
         this.#persisted.add(name);
 
@@ -756,7 +695,6 @@ class FirkinAutomergeOutput extends BroadcastedOutputElement {
 
       await this.#resetCursor(name);
       await this.#resetAppliedLog(name);
-      await this.#resetChunks(name);
       return false;
     } catch (err) {
       console.warn(`Could not read the local '${name}' document:`, err);
@@ -963,19 +901,17 @@ class FirkinAutomergeOutput extends BroadcastedOutputElement {
   }
 
   /**
-   * Apply a large save in the worker, which returns one delta per batch. The
-   * deltas are applied here with yields, so neither the Automerge change nor
-   * the resulting document update blocks the page. The worker also prepares
-   * the push entry and the compact base bytes.
+   * Apply a large save in the worker, which returns the new document's update.
+   * The worker also prepares the push entry and the compact base bytes.
    *
-   * @param {AutomergeDoc} current
+   * @param {CollectionDocument} current
    * @param {any[]} items
    * @param {string} schema
    * @param {Heads | undefined} pushHeads
    * @param {boolean} snapshot
    * @param {boolean} versioned
    * @returns {Promise<{
-   *   doc: AutomergeDoc;
+   *   doc: CollectionDocument;
    *   changed: boolean;
    *   docBytes?: Uint8Array;
    *   pushBytes?: Uint8Array;
@@ -994,23 +930,11 @@ class FirkinAutomergeOutput extends BroadcastedOutputElement {
 
     if (!result.changed) return { doc: current, changed: false };
 
-    // A first import replaces the document's whole contents, and a bulk save
-    // arrives as several deltas. Loading the worker's document once is cheaper
-    // than replaying those deltas here: Automerge copies the whole document for
-    // each `loadIncremental`, so N deltas cost N materialisations.
     let doc = current;
-    const deltas = result.deltas ?? [];
-    const adopt = (!hasRecords(current) || deltas.length > 1) &&
-      result.docBytes;
-    const adopted = adopt ? loadDocument(result.docBytes) : undefined;
 
-    if (adopted) {
-      doc = adopted;
-    } else {
-      for (const delta of deltas) {
-        doc = applyIncremental(doc, delta);
-        await yieldToMain();
-      }
+    for (const delta of result.deltas ?? []) {
+      doc = applyIncremental(doc, delta);
+      await yieldToMain();
     }
 
     return {
@@ -1027,7 +951,7 @@ class FirkinAutomergeOutput extends BroadcastedOutputElement {
    * reads, saves or other collections.
    *
    * @param {string} name
-   * @param {AutomergeDoc} doc
+   * @param {CollectionDocument} doc
    * @param {PreparedPush} [prepared]
    */
   #enqueuePush(name, doc, prepared) {
@@ -1284,10 +1208,8 @@ class FirkinAutomergeOutput extends BroadcastedOutputElement {
   #actorPromises = new Map();
 
   /**
-   * An Automerge actor id per document, persisted so reloads keep writing under
-   * the same identity. Every document (collection, manifest, bundle) has its
-   * own actor: sharing one actor across documents makes a change from one
-   * document look like a conflicting duplicate sequence number in another.
+   * A stable writer id per document, persisted so reloads keep writing under
+   * the same identity. Loro uses it as the document's peer id.
    *
    * @param {string} name
    * @returns {Promise<string>}
@@ -1331,7 +1253,7 @@ class FirkinAutomergeOutput extends BroadcastedOutputElement {
    * save whose push failed, or one interrupted before its queued push ran.
    *
    * @param {string} name
-   * @param {AutomergeDoc} doc
+   * @param {CollectionDocument} doc
    */
   async #hasUnpushed(name, doc) {
     const cursor = await this.#cursor(name);
@@ -1390,7 +1312,7 @@ class FirkinAutomergeOutput extends BroadcastedOutputElement {
    * document anyway.
    *
    * @param {string} name
-   * @param {AutomergeDoc} doc
+   * @param {CollectionDocument} doc
    * @param {PreparedPush} [prepared]
    */
   async #push(name, doc, prepared) {
@@ -1503,7 +1425,7 @@ class FirkinAutomergeOutput extends BroadcastedOutputElement {
    * Read and decrypt one collection's log, framed entry by entry.
    *
    * @param {string} name
-   * @param {AutomergeDoc} current
+   * @param {CollectionDocument} current
    * @returns {Promise<{ data: Uint8Array | undefined; packs: string; unchanged: boolean; complete: boolean; incremental: boolean }>}
    */
   async #readLog(name, current) {
@@ -2032,13 +1954,13 @@ function concat(entries) {
   return out;
 }
 
-export default FirkinAutomergeOutput;
+export default FirkinLoroOutput;
 
 ////////////////////////////////////////////
 // REGISTER
 ////////////////////////////////////////////
 
-export const CLASS = FirkinAutomergeOutput;
-export const NAME = "dob-firkin-automerge";
+export const CLASS = FirkinLoroOutput;
+export const NAME = "dob-firkin-loro";
 
-defineElement(NAME, FirkinAutomergeOutput);
+defineElement(NAME, FirkinLoroOutput);

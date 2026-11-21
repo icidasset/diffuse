@@ -54,8 +54,8 @@ const flush = () => new Promise((resolve) => setTimeout(resolve, 0));
 
 describe("common/firkin/channel", () => {
   it("names channels per namespace", () => {
-    expect(channelName("firkin-automerge")).toBe(
-      "diffuse:output:firkin-automerge",
+    expect(channelName("firkin-loro")).toBe(
+      "diffuse:output:firkin-loro",
     );
     expect(channelName(undefined)).toBe("diffuse:output:default");
   });

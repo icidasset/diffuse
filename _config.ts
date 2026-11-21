@@ -41,7 +41,6 @@ site.use(esbuild({
   extensions: [".js"],
   options: {
     alias: {
-      "@automerge/automerge": "https://esm.sh/@automerge/automerge@^3.2.3",
       "@panproto/core": "https://esm.sh/@panproto/core@0.72.0",
     },
     bundle: true,

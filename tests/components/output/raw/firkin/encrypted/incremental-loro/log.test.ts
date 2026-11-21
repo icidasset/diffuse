@@ -11,12 +11,12 @@ import {
   MANIFEST_VERSION,
   logName,
   registryNamespace,
-} from "~/components/output/raw/firkin/encrypted/incremental-automerge/constants.js";
+} from "~/components/output/raw/firkin/encrypted/incremental-loro/constants.js";
 import {
   appendEntry,
   latestEntry,
   readEntries,
-} from "~/components/output/raw/firkin/encrypted/incremental-automerge/log.js";
+} from "~/components/output/raw/firkin/encrypted/incremental-loro/log.js";
 
 /**
  * The subset of the Firkin client the log helpers use, backed by maps.
@@ -181,7 +181,7 @@ const text = (value) => new TextDecoder().decode(value);
 const read = (rb, name, auth, options = {}) =>
   readEntries(rb, "ns", name, { auth, ...options });
 
-describe("components/output/raw/firkin/encrypted/incremental-automerge/log", () => {
+describe("components/output/raw/firkin/encrypted/incremental-loro/log", () => {
   it("unions the entries of every writer", async () => {
     const rb = fakeClient();
     const auth = fakeAuth(deviceA);
@@ -489,7 +489,7 @@ describe("components/output/raw/firkin/encrypted/incremental-automerge/log", () 
     // The namespace and name end up in the UCAN command
     // (`/firkin/registry/read/<ns>/<name>`), and the server rejects commands
     // that aren't lowercase.
-    const namespace = registryNamespace("firkin-automerge");
+    const namespace = registryNamespace("firkin-loro");
     const name = logName("playlistItems", deviceA);
 
     expect(namespace).toMatch(/^[a-z0-9._-]+$/);

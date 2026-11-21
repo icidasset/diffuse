@@ -13,7 +13,7 @@ import { testWeb } from "@tests/common/index.ts";
  * output's standard interface, so every carried-over collection should be
  * pushed to the Firkin log like any other save.
  */
-describe("components/output/raw/firkin/encrypted/incremental-automerge carry-over", () => {
+describe("components/output/raw/firkin/encrypted/incremental-loro carry-over", () => {
   it("pushes carried-over collections to the remote log", async () => {
     const result = await testWeb(async () => {
       const { Signer, delegate, WebCryptoSigner } = await import(
@@ -183,7 +183,7 @@ describe("components/output/raw/firkin/encrypted/incremental-automerge carry-ove
 
         // --- The output element ---------------------------------------
         await import(
-          "~/components/output/raw/firkin/encrypted/incremental-automerge/element.js"
+          "~/components/output/raw/firkin/encrypted/incremental-loro/element.js"
         );
         const idb = await import(
           "~/components/output/polymorphic/indexed-db/element.js"
@@ -195,9 +195,9 @@ describe("components/output/raw/firkin/encrypted/incremental-automerge carry-ove
         const root = document.createElement("div");
         document.body.append(root);
 
-        const option = document.createElement("dob-firkin-automerge");
+        const option = document.createElement("dob-firkin-loro");
         option.id = "option-carry-test";
-        option.setAttribute("namespace", "firkin-automerge");
+        option.setAttribute("namespace", "firkin-loro");
         option.setAttribute("keep", "64");
 
         const def = new idb.CLASS();
@@ -261,11 +261,11 @@ describe("components/output/raw/firkin/encrypted/incremental-automerge carry-ove
         // browser's device manifest, so starting one while the writer still has
         // pushes queued would race it for that manifest.
         const { IDB_DOCS } = await import(
-          "~/components/output/raw/firkin/encrypted/incremental-automerge/constants.js"
+          "~/components/output/raw/firkin/encrypted/incremental-loro/constants.js"
         );
 
         const cursorHeads = async (name) =>
-          (await IDB.get(`${IDB_DOCS}/firkin-automerge/${name}/cursor`))?.heads;
+          (await IDB.get(`${IDB_DOCS}/firkin-loro/${name}/cursor`))?.heads;
 
         const settled = Date.now() + 5_000;
         while (Date.now() < settled) {
@@ -284,9 +284,9 @@ describe("components/output/raw/firkin/encrypted/incremental-automerge carry-ove
         }
 
         // Read the carried-over data back through a second, fresh instance.
-        const reader = document.createElement("dob-firkin-automerge");
+        const reader = document.createElement("dob-firkin-loro");
         reader.id = "option-carry-read";
-        reader.setAttribute("namespace", "firkin-automerge");
+        reader.setAttribute("namespace", "firkin-loro");
         reader.setAttribute("keep", "64");
 
         root.append(reader);

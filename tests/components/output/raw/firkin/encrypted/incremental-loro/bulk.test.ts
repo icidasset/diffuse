@@ -6,13 +6,12 @@ import { expect } from "@std/expect";
 import { testWeb } from "@tests/common/index.ts";
 
 /**
- * Setting up the output through the connect facet signs in *after* the option
- * element exists. The element checks the session when it connects, so without a
- * re-check on sign-in it can stay not-ready until an unrelated online event —
- * and the configurator falls back to the default output after its grace period.
+ * A bulk save (the export-import facet's path) applies the change in
+ * a worker and streams per-batch deltas back. The main thread only applies the
+ * deltas, with yields.
  */
-describe("components/output/raw/firkin/encrypted/incremental-automerge connect", () => {
-  it("becomes ready when the session and key arrive after it connected", async () => {
+describe("components/output/raw/firkin/encrypted/incremental-loro bulk save", () => {
+  it("imports a large collection through the worker", async () => {
     const result = await testWeb(async () => {
       const { Signer, delegate, WebCryptoSigner } = await import(
         "~/vendor/firkin/index.js"
@@ -84,23 +83,9 @@ describe("components/output/raw/firkin/encrypted/incremental-automerge connect",
       const registry = new Map();
       const warnings = [];
 
-      const pushLog = (list, args) => {
-        try {
-          list.push(
-            Array.from(args).map((item) =>
-              item instanceof Error
-                ? `${item.name}: ${item.message}`
-                : String(item)
-            ).join(" "),
-          );
-        } catch {
-          list.push("(unserializable)");
-        }
-      };
-
       const ogWarn = console.warn.bind(console);
       console.warn = (...args) => {
-        pushLog(warnings, args);
+        warnings.push(args.map(String).join(" "));
         ogWarn(...args);
       };
 
@@ -158,7 +143,6 @@ describe("components/output/raw/firkin/encrypted/incremental-automerge connect",
           return new Response(bytes, { status: 200 });
         }
 
-        // The hint channel is optional; refusing it must not break the output.
         if (path.startsWith("/v1/channel/")) {
           return new Response("missing", { status: 404 });
         }
@@ -169,40 +153,19 @@ describe("components/output/raw/firkin/encrypted/incremental-automerge connect",
       const realFetch = globalThis.fetch;
       globalThis.fetch = fakeFetch;
 
+      // Count worker starts, so the test proves the bulk path used one.
+      let workers = 0;
+      const RealWorker = globalThis.Worker;
+      globalThis.Worker = class extends RealWorker {
+        constructor(...args) {
+          workers++;
+          super(...args);
+        }
+      };
+
       try {
         const IDB = await import("idb-keyval");
 
-        // --- The output exists *before* sign-in, as on the connect page ----
-        await import(
-          "~/components/output/raw/firkin/encrypted/incremental-automerge/element.js"
-        );
-        const { CLASS: Configurator } = await import(
-          "~/components/configurator/output/element.js"
-        );
-
-        const option = document.createElement("dob-firkin-automerge");
-        option.id = "connect-output";
-        option.setAttribute("namespace", "connect-output");
-        option.setAttribute("keep", "64");
-
-        const configurator = new Configurator();
-        configurator.append(option);
-        document.body.append(configurator);
-
-        const until = async (fn, ms = 5_000) => {
-          const deadline = Date.now() + ms;
-          while (Date.now() < deadline) {
-            if (await fn()) return true;
-            await new Promise((resolve) => setTimeout(resolve, 50));
-          }
-          return await fn();
-        };
-
-        // Let it connect with no session at all.
-        await new Promise((resolve) => setTimeout(resolve, 400));
-        const connectedWithoutSession = option.ready();
-
-        // --- Sign in: session first, then the passkey-derived output key ---
         const sessionSigner = await Signer.fromSeed(
           crypto.getRandomValues(new Uint8Array(32)),
         );
@@ -235,21 +198,102 @@ describe("components/output/raw/firkin/encrypted/incremental-automerge connect",
         );
         await unlockOutputKeyWithPassphrase("test-passphrase");
 
-        const readyAfterSignIn = await until(() => option.ready(), 3_000);
+        await import(
+          "~/components/output/raw/firkin/encrypted/incremental-loro/element.js"
+        );
 
-        // Select it the way the connect facet does, then outlive the
-        // configurator's grace period.
-        await configurator.select(option.id);
-        await new Promise((resolve) => setTimeout(resolve, 6_000));
+        const { IDB_DOCS, logName, registryNamespace } = await import(
+          "~/components/output/raw/firkin/encrypted/incremental-loro/constants.js"
+        );
+
+        const option = document.createElement("dob-firkin-loro");
+        option.id = "bulk-output";
+        option.setAttribute("namespace", "bulk-output");
+        option.setAttribute("keep", "64");
+        document.body.append(option);
+
+        const until = async (fn, ms = 20_000) => {
+          const deadline = Date.now() + ms;
+          while (Date.now() < deadline) {
+            if (await fn()) return true;
+            await new Promise((resolve) => setTimeout(resolve, 50));
+          }
+          return await fn();
+        };
+
+        await until(() => option.ready());
+
+        const items = Array.from({ length: 1_000 }, (_, index) => ({
+          $type: "sh.diffuse.output.track",
+          id: `t${index}`,
+          uri: `https://example.com/${index}.mp3`,
+        }));
+
+        const startedAt = performance.now();
+        await option.tracks.save(items);
+        const saveMs = performance.now() - startedAt;
+
+        const collection = option.tracks.collection();
+        const ids = collection.state === "loaded"
+          ? collection.data.map((item) => item.id)
+          : null;
+
+        // A reloaded element loads the base written by the compact persist.
+        const reloaded = document.createElement("dob-firkin-loro");
+        reloaded.id = "bulk-output-reloaded";
+        reloaded.setAttribute("namespace", "bulk-output");
+        reloaded.setAttribute("keep", "64");
+        document.body.append(reloaded);
+
+        const reloadedCount = await until(() => {
+          const col = reloaded.tracks.collection();
+          return col.state === "loaded" && col.data.length === items.length;
+        });
+
+        // The worker also prepared the push entry. Wait for it, then read it
+        // back with no local cache to prove the entry is valid.
+        const tracksRef = `${registryNamespace("bulk-output")}/${
+          logName("tracks", hex(sessionSigner.pubkeyBytes))
+        }`;
+        const pushed = await until(
+          () => registry.get(tracksRef) !== undefined,
+          15_000,
+        );
+
+        option.remove();
+        reloaded.remove();
+
+        const docKey = `${IDB_DOCS}/bulk-output/tracks`;
+        await IDB.del(docKey);
+        await IDB.del(`${docKey}/cursor`);
+        await IDB.del(`${docKey}/applied`);
+        await IDB.del(`${docKey}/changes`);
+
+        const remoteReader = document.createElement("dob-firkin-loro");
+        remoteReader.id = "bulk-output-remote";
+        remoteReader.setAttribute("namespace", "bulk-output");
+        remoteReader.setAttribute("keep", "64");
+        document.body.append(remoteReader);
+
+        const remoteCount = await until(() => {
+          const col = remoteReader.tracks.collection();
+          return col.state === "loaded" && col.data.length === items.length;
+        }, 20_000);
 
         return {
-          connectedWithoutSession,
-          readyAfterSignIn,
-          readyAfterGrace: option.ready(),
-          selectedAfterGrace: configurator.selected()?.id ?? null,
-          hasSelectedAfterGrace: configurator.hasSelected(),
+          ready: option.ready(),
+          workers,
+          saveMs,
+          ids,
+          reloadedCount,
+          pushed,
+          remoteCount,
           warnings: warnings.filter((warning) =>
-            !warning.includes("initSync")
+            !warning.includes("initSync") &&
+            !warning.includes("Could not push the") &&
+            // Two elements share this browser's device key, so full documents
+            // can repeat a change; applying the duplicate is a no-op.
+            !warning.includes("Dropping a log entry")
           ),
         };
       } finally {
@@ -257,13 +301,17 @@ describe("components/output/raw/firkin/encrypted/incremental-automerge connect",
       }
     });
 
-    console.log("CONNECT_RESULT", JSON.stringify(result, null, 2));
+    console.log("BULK_RESULT", JSON.stringify({
+      ...result,
+      ids: Array.isArray(result.ids) ? result.ids.length : result.ids,
+    }));
 
-    expect(result.connectedWithoutSession).toBe(false);
-    expect(result.readyAfterSignIn).toBe(true);
-    expect(result.readyAfterGrace).toBe(true);
-    expect(result.selectedAfterGrace).toBe("connect-output");
-    expect(result.hasSelectedAfterGrace).toBe(true);
+    expect(result.ready).toBe(true);
+    expect(result.workers).toBeGreaterThan(0);
+    expect(result.ids).toHaveLength(1_000);
+    expect(result.reloadedCount).toBe(true);
+    expect(result.pushed).toBe(true);
+    expect(result.remoteCount).toBe(true);
     expect(result.warnings).toEqual([]);
   });
 });

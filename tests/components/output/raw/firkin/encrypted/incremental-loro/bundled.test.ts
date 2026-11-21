@@ -12,7 +12,7 @@ import { testWeb } from "@tests/common/index.ts";
  * Regression target: the manifest and the per-bundle documents reach the remote
  * log, and a fresh reader reassembles the flat collection from them.
  */
-describe("components/output/raw/firkin/encrypted/incremental-automerge bundled", () => {
+describe("components/output/raw/firkin/encrypted/incremental-loro bundled", () => {
   it("writes one document per bundle and reassembles them on read", async () => {
     const result = await testWeb(async () => {
       const { Signer, delegate, WebCryptoSigner } = await import(
@@ -282,14 +282,14 @@ describe("components/output/raw/firkin/encrypted/incremental-automerge bundled",
 
         // --- The output element ---------------------------------------
         await import(
-          "~/components/output/raw/firkin/encrypted/incremental-automerge/element.js"
+          "~/components/output/raw/firkin/encrypted/incremental-loro/element.js"
         );
         const { bundleId } = await import("~/common/bundles.js");
         const { logName, registryNamespace } = await import(
-          "~/components/output/raw/firkin/encrypted/incremental-automerge/constants.js"
+          "~/components/output/raw/firkin/encrypted/incremental-loro/constants.js"
         );
 
-        const namespace = registryNamespace("firkin-automerge");
+        const namespace = registryNamespace("firkin-loro");
         const device = hex(sessionSigner.pubkeyBytes);
         const keyFor = (name) =>
           `${namespace}/${logName(name, device)}`;
@@ -309,9 +309,9 @@ describe("components/output/raw/firkin/encrypted/incremental-automerge bundled",
         const root = document.createElement("div");
         document.body.append(root);
 
-        const option = document.createElement("dob-firkin-automerge");
+        const option = document.createElement("dob-firkin-loro");
         option.id = "option-remote-test";
-        option.setAttribute("namespace", "firkin-automerge");
+        option.setAttribute("namespace", "firkin-loro");
         option.setAttribute("keep", "64");
         option.setAttribute("bundled", "");
 
@@ -368,9 +368,9 @@ describe("components/output/raw/firkin/encrypted/incremental-automerge bundled",
 
         // A second, fresh instance reading the same remote log must see the
         // save.
-        const reader = document.createElement("dob-firkin-automerge");
+        const reader = document.createElement("dob-firkin-loro");
         reader.id = "option-remote-read";
-        reader.setAttribute("namespace", "firkin-automerge");
+        reader.setAttribute("namespace", "firkin-loro");
         reader.setAttribute("keep", "64");
         reader.setAttribute("bundled", "");
 
@@ -428,7 +428,7 @@ describe("components/output/raw/firkin/encrypted/incremental-automerge bundled",
 
     console.log("REMOTE_SAVE_RESULT", JSON.stringify(result, null, 2));
 
-    // The automerge package's own glue warns about its deprecated initSync
+    // The engine's wasm glue warns about its deprecated initSync
     // under the full-fat entrypoint; everything else must be silent.
     expect(
       result.warnings.filter((warning) => !warning.includes("initSync")),

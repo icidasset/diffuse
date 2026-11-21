@@ -9,7 +9,7 @@ import {
   decryptLog,
   encryptEntry,
   frameEntries,
-} from "~/components/output/raw/firkin/encrypted/incremental-automerge/crypto.js";
+} from "~/components/output/raw/firkin/encrypted/incremental-loro/crypto.js";
 
 /** @param {string} text */
 const bytes = (text) => new TextEncoder().encode(text);
@@ -38,7 +38,7 @@ function join(entries) {
   return out;
 }
 
-describe("components/output/raw/firkin/encrypted/incremental-automerge/crypto", () => {
+describe("components/output/raw/firkin/encrypted/incremental-loro/crypto", () => {
   it("round-trips a single entry", async () => {
     const key = await aesKey();
 

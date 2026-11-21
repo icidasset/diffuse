@@ -89,7 +89,7 @@ export async function decryptLog(key, value) {
 /**
  * Join decrypted entries into a log value: each entry length-prefixed
  * (u32be) — the prefixes are what let the layer above apply entries one at a
- * time without parsing automerge's own container format.
+ * time without parsing Loro's own container format.
  *
  * @param {Uint8Array[]} entries
  * @returns {Uint8Array}

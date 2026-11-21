@@ -7,14 +7,14 @@ import { testWeb } from "@tests/common/index.ts";
 
 /**
  * The full Firkin save path in a browser: the single
- * `dob-firkin-automerge` output element, with a fake in-page Firkin server
+ * `dob-firkin-loro` output element, with a fake in-page Firkin server
  * standing in for the network.
  *
  * Regression target: selecting the Firkin option must append entries to the
  * remote log (blob upload + signed manifest registry write), not only to the
  * local cache.
  */
-describe("components/output/raw/firkin/encrypted/incremental-automerge remote save", () => {
+describe("components/output/raw/firkin/encrypted/incremental-loro remote save", () => {
   it("pushes saved collections to the remote log", async () => {
     const result = await testWeb(async () => {
       const { Signer, delegate, WebCryptoSigner } = await import(
@@ -284,7 +284,7 @@ describe("components/output/raw/firkin/encrypted/incremental-automerge remote sa
 
         // --- The output element ---------------------------------------
         await import(
-          "~/components/output/raw/firkin/encrypted/incremental-automerge/element.js"
+          "~/components/output/raw/firkin/encrypted/incremental-loro/element.js"
         );
         const idb = await import(
           "~/components/output/polymorphic/indexed-db/element.js"
@@ -296,9 +296,9 @@ describe("components/output/raw/firkin/encrypted/incremental-automerge remote sa
         const root = document.createElement("div");
         document.body.append(root);
 
-        const option = document.createElement("dob-firkin-automerge");
+        const option = document.createElement("dob-firkin-loro");
         option.id = "option-remote-test";
-        option.setAttribute("namespace", "firkin-automerge");
+        option.setAttribute("namespace", "firkin-loro");
         option.setAttribute("keep", "64");
 
         // Observe saves reaching the output.
@@ -343,9 +343,9 @@ describe("components/output/raw/firkin/encrypted/incremental-automerge remote sa
 
         // A second, fresh instance reading the same remote log must see the
         // save.
-        const reader = document.createElement("dob-firkin-automerge");
+        const reader = document.createElement("dob-firkin-loro");
         reader.id = "option-remote-read";
-        reader.setAttribute("namespace", "firkin-automerge");
+        reader.setAttribute("namespace", "firkin-loro");
         reader.setAttribute("keep", "64");
 
         root.append(reader);
@@ -397,7 +397,7 @@ describe("components/output/raw/firkin/encrypted/incremental-automerge remote sa
 
     console.log("REMOTE_SAVE_RESULT", JSON.stringify(result, null, 2));
 
-    // The automerge package's own glue warns about its deprecated initSync
+    // The engine's wasm glue warns about its deprecated initSync
     // under the full-fat entrypoint; everything else must be silent.
     expect(
       result.warnings.filter((warning) => !warning.includes("initSync")),

@@ -9,7 +9,7 @@ import {
 import {
   decryptLog,
   encryptEntry,
-} from "~/components/output/raw/firkin/encrypted/incremental-automerge/crypto.js";
+} from "~/components/output/raw/firkin/encrypted/incremental-loro/crypto.js";
 
 // PBKDF2 at the real work factor is slow by design; the derivation tests only
 // care that it is deterministic and separated, so they use a cheap count.

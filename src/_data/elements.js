@@ -291,10 +291,10 @@ export default {
         "Store output data as raw bytes in the Dropbox app folder.",
     },
     {
-      url: "components/output/raw/firkin/encrypted/incremental-automerge/element.js",
-      title: "Raw / Firkin / Encrypted / Incremental Automerge",
+      url: "components/output/raw/firkin/encrypted/incremental-loro/element.js",
+      title: "Raw / Firkin / Encrypted / Incremental Loro",
       desc:
-        "The complete Firkin userdata output: an append-only log of encrypted Automerge changes on a Firkin instance. Each save appends only the changes since the log last saw them (a whole document every 32 saves), entries are sealed per save, and per-device manifests are signed by the writer's session key.",
+        "The complete Firkin userdata output: an append-only log of encrypted Loro changes on a Firkin instance. Each save appends only the changes since the log last saw them (a whole snapshot every 32 saves), entries are sealed per save, and per-device manifests are signed by the writer's session key.",
     },
     {
       url: "components/output/bytes/s3/element.js",

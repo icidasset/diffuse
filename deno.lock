@@ -93,7 +93,6 @@
     "npm:@atcute/repo@^1.0.2": "1.0.2_@atcute+cbor@2.3.7_@atcute+cid@2.4.2_@atcute+lexicons@2.1.1",
     "npm:@atcute/tid@^1.1.4": "1.1.4",
     "npm:@atcute/uint8array@^1.1.5": "1.1.5",
-    "npm:@automerge/automerge@^3.4.1": "3.4.1",
     "npm:@awesome.me/webawesome@^3.12.0": "3.12.0_@floating-ui+utils@0.2.12_@types+react@19.3.0",
     "npm:@codemirror/autocomplete@^6.20.3": "6.20.3",
     "npm:@codemirror/lang-css@^6.3.1": "6.3.1",
@@ -138,6 +137,7 @@
     "npm:lightningcss-wasm@1.30.1": "1.30.1",
     "npm:lightningcss-wasm@1.32.0": "1.32.0",
     "npm:lit-html@^3.3.3": "3.3.3",
+    "npm:loro-crdt@^1.18.0": "1.18.0",
     "npm:markdown-it-attrs@4.3.1": "4.3.1_markdown-it@14.1.1",
     "npm:markdown-it-deflist@3.0.0": "3.0.0",
     "npm:markdown-it@14.1.0": "14.1.0",
@@ -666,9 +666,6 @@
     },
     "@atcute/varint@2.0.2": {
       "integrity": "sha512-/+hS1juMgnmf6eL6lICUkTw7wcGTo3I+Q0L1PI521mUz77rGSC6nXAUNKtvm2wYJpuWdEGq+GILGoYkOArn0TQ=="
-    },
-    "@automerge/automerge@3.4.1": {
-      "integrity": "sha512-zsZpbs/iDPvp+ZojIYd+gxmbcPVz2Xbkcx778G8zrt3E0zS+6saHJOm666lOuZyNRlTV4wHw9qzGTKueedeCsQ=="
     },
     "@awesome.me/webawesome@3.12.0_@floating-ui+utils@0.2.12_@types+react@19.3.0": {
       "integrity": "sha512-cO/vSvlyZqiki1upynxpk9q2N48U2+nflIj40OtCKYOs6ZXa4zXhW6+asXKOfeNw1AnD4nzsSIdZSt/Ti9QONA==",
@@ -2362,6 +2359,9 @@
     "lodash.camelcase@4.3.0": {
       "integrity": "sha512-TwuEnCnxbc3rAvhf/LbG7tJUDzhqXyFnv3dtzLOPgCG/hODL7WFnsbwktkD7yUV0RrreP/l1PALq/YSg6VvjlA=="
     },
+    "loro-crdt@1.18.0": {
+      "integrity": "sha512-e/96j7B6MUMVc+AilrY6c/Q4+0uNGhBIqhRosadqeEM1d9+IMpxYKy2mL22NIj6ILuZfP0fF5cYTkipxgbddHg=="
+    },
     "lru-cache@11.2.2": {
       "integrity": "sha512-F9ODfyqML2coTIsQpSkRHnLSZMtkU8Q+mSfcaIyKwy58u+8k5nvAYeiNhsyMARvzNcXJ9QfWVrcPsC9e9rAxtg=="
     },
@@ -3891,7 +3891,6 @@
       "npm:@atcute/repo@^1.0.2",
       "npm:@atcute/tid@^1.1.4",
       "npm:@atcute/uint8array@^1.1.5",
-      "npm:@automerge/automerge@^3.4.1",
       "npm:@awesome.me/webawesome@^3.12.0",
       "npm:@codemirror/autocomplete@^6.20.3",
       "npm:@codemirror/lang-css@^6.3.1",
@@ -3930,6 +3929,7 @@
       "npm:iso-base@^4.4.0",
       "npm:kmenu@^2.0.3",
       "npm:lit-html@^3.3.3",
+      "npm:loro-crdt@^1.18.0",
       "npm:marked@^18.0.11",
       "npm:multiformats@^13.1.0",
       "npm:music-metadata@^11.15.0",

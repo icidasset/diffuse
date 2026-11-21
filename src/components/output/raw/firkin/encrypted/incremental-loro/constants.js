@@ -1,11 +1,11 @@
 import { encodeFileName } from "~/common/firkin/files.js";
 
 /**
- * Constants for the merged Firkin + encrypted + Automerge output.
+ * Constants for the merged Firkin + encrypted + Loro output.
  *
  * The log protocol (registry names, manifests, codecs), the encryption framing
- * and the Automerge collection model all live in this one component, so their
- * constants do too.
+ * and the document model all live in this one component, so their constants do
+ * too.
  */
 
 /** Collections every output stores. */
@@ -60,9 +60,8 @@ export const MANIFEST_CAS_RETRIES = 5;
 export const PUSH_COALESCE_MS = 750;
 
 /**
- * Collections at least this large are saved in yielding batches, because one
- * `Automerge.change` with tens of thousands of writes blocks the page (and is
- * slower than the same writes split into changes).
+ * Collections at least this large are saved in the worker, so applying them
+ * can't block the page.
  */
 export const BULK_SAVE_THRESHOLD = 500;
 
@@ -70,10 +69,10 @@ export const BULK_SAVE_THRESHOLD = 500;
  * IndexedDB prefixes. Documents, push cursors and the actor id are per device;
  * pack and floor caches are shared by every instance using the same namespace.
  */
-export const IDB_DOCS = "diffuse/output/firkin/encrypted/incremental-automerge";
+export const IDB_DOCS = "diffuse/output/firkin/encrypted/incremental-loro";
 export const IDB_ACTOR = `${IDB_DOCS}/actor`;
-export const IDB_FLOORS = "diffuse/output/firkin/encrypted/incremental-automerge/floors";
-export const IDB_PACKS = "diffuse/output/firkin/encrypted/incremental-automerge/packs";
+export const IDB_FLOORS = "diffuse/output/firkin/encrypted/incremental-loro/floors";
+export const IDB_PACKS = "diffuse/output/firkin/encrypted/incremental-loro/packs";
 
 /**
  * Prefix of the registry namespace holding each output's append logs.
@@ -82,7 +81,7 @@ export const IDB_PACKS = "diffuse/output/firkin/encrypted/incremental-automerge/
  * stays organised by what owns each entry. The element's `namespace` attribute
  * is appended so separate outputs don't share a log.
  */
-export const REGISTRY_NAMESPACE_PREFIX = "diffuse.output.automerge.incremental";
+export const REGISTRY_NAMESPACE_PREFIX = "diffuse.output.loro.incremental";
 
 /** Raw block codec for log entries. */
 export const CODEC_RAW = 0x55;

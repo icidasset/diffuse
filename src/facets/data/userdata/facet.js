@@ -177,7 +177,7 @@ effect(() => {
 /**
  * Collapse output options that share a `provider` into one row.
  *
- * A provider can offer several methods ("Firkin (Automerge)", …), but the user
+ * A provider can offer several methods ("Firkin (Loro)", …), but the user
  * is choosing a provider, not a method — so the row is labelled with the
  * provider and resolves to whichever method is active, else the provider's
  * default, else the first.
@@ -248,7 +248,7 @@ effect(() => {
   const activeId = selected?.id ?? defaultId;
 
   // Methods of one provider are a single choice from the user's point of view:
-  // "Firkin", not "Firkin (Automerge)" next to "Firkin (DASL)". The row
+  // "Firkin", not "Firkin (Loro)" next to "Firkin (DASL)". The row
   // resolves to the active method, or the provider's default one.
   const rows = collapseProviders(opts, activeId);
 

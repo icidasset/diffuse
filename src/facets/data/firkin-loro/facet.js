@@ -11,10 +11,10 @@ import { effect } from "~/common/signal.js";
  * The Firkin userdata output, as an opt-in feature facet.
  *
  * The output itself is one self-contained element
- * (`~/components/output/raw/firkin/encrypted/incremental-automerge/element.js`);
+ * (`~/components/output/raw/firkin/encrypted/incremental-loro/element.js`);
  * this facet only puts it in front of the user: it appends the output option to
  * the configurator, and imports the element when the option is activated so no
- * page pays for the Automerge WASM and the Firkin SDK unless it is used.
+ * page pays for the Loro WASM and the Firkin SDK unless it is used.
  *
  * The connect facet finds the option through the configurator's usual
  * `waitForOption(label)` handshake, so it works regardless of which facet added
@@ -32,7 +32,7 @@ effect(() => {
   if (!output) return;
 
   for (const method of FIRKIN_METHODS) {
-    if (method.kind !== "automerge") continue;
+    if (method.kind !== "loro") continue;
 
     // The effect can re-run; never append the same option twice.
     if (document.getElementById(optionId(method))) continue;
@@ -56,13 +56,13 @@ effect(() => {
   previouslyActivated = set;
 
   for (const method of FIRKIN_METHODS) {
-    if (method.kind !== "automerge") continue;
+    if (method.kind !== "loro") continue;
     if (!newlyActivated.has(optionId(method))) continue;
 
     import(
-      "~/components/output/raw/firkin/encrypted/incremental-automerge/element.js"
+      "~/components/output/raw/firkin/encrypted/incremental-loro/element.js"
     ).then(async () => {
-      await customElements.whenDefined("dob-firkin-automerge");
+      await customElements.whenDefined("dob-firkin-loro");
 
       const option = document.getElementById(optionId(method));
       if (option) setTrackGrouping(option);
@@ -76,7 +76,7 @@ effect(() => {
  * @param {import("~/common/firkin/methods.js").FirkinMethod} method
  */
 function optionElement(method) {
-  const element = document.createElement("dob-firkin-automerge");
+  const element = document.createElement("dob-firkin-loro");
 
   element.setAttribute("group", foundation.GROUP);
   element.setAttribute("id", optionId(method));
@@ -92,7 +92,7 @@ function optionElement(method) {
 
   // Set the grouping rule as soon as the class upgrades, before the
   // configurator can select the output and carry local data into it.
-  customElements.whenDefined("dob-firkin-automerge").then(() => {
+  customElements.whenDefined("dob-firkin-loro").then(() => {
     const option = document.getElementById(optionId(method));
     if (option) setTrackGrouping(option);
   });

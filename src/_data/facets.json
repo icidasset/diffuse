@@ -225,12 +225,12 @@
     "desc": "A recreation of the click-wheel iPod UI. Spin the wheel to scroll, tap the ring for menu / prev / next / play, and press the centre button to select. Alternatively, use your keyboard arrow keys."
   },
   {
-    "url": "facets/data/firkin-automerge/index.tile",
-    "title": "Output / Firkin + Automerge + Encryption",
+    "url": "facets/data/firkin-loro/index.tile",
+    "title": "Output / Firkin + Loro + Encryption",
     "kind": "prelude",
     "category": "Data",
     "incomplete": true,
-    "desc": "Store your user-data on a Firkin instance as an encrypted, incremental Automerge log: saves append only the changes since the last one, entries are sealed on this device, and other devices merge them. Requires a Firkin account."
+    "desc": "Store your user-data on a Firkin instance as an encrypted, incremental Loro log: saves append only the changes since the last one, entries are sealed on this device, and other devices merge them. Requires a Firkin account."
   },
   {
     "url": "facets/data/wnfs-firkin/prelude/index.tile",

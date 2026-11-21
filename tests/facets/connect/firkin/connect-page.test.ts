@@ -37,7 +37,7 @@ async function connectPageState() {
       document.querySelector("#container")?.classList.contains("has-loaded") ??
         false,
     optionPresent: Boolean(
-      document.getElementById("do-output__dc-output__firkin-automerge"),
+      document.getElementById("do-output__dc-output__firkin-loro"),
     ),
     inputButton: Boolean(document.querySelector("#connect-add-input-btn")),
     outputButton: Boolean(document.querySelector("#connect-add-output-btn")),
@@ -107,7 +107,7 @@ describe("connect/firkin", () => {
       const { insertPreludes } = await import("~/common/facets/prelude.js");
 
       const facet = buildFacets([
-        "facets/data/firkin-automerge/index.tile",
+        "facets/data/firkin-loro/index.tile",
       ])[0];
 
       const collection = output.facets.collection();
@@ -123,12 +123,12 @@ describe("connect/firkin", () => {
       const deadline = Date.now() + 10_000;
       while (
         Date.now() < deadline &&
-        !document.getElementById("do-output__dc-output__firkin-automerge")
+        !document.getElementById("do-output__dc-output__firkin-loro")
       ) {
         await new Promise((resolve) => setTimeout(resolve, 50));
       }
 
-      return document.getElementById("do-output__dc-output__firkin-automerge")
+      return document.getElementById("do-output__dc-output__firkin-loro")
         ? "enabled"
         : "option missing";
     });

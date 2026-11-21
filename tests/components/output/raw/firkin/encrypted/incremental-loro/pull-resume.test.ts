@@ -13,7 +13,7 @@ import { testWeb } from "@tests/common/index.ts";
  * again, and a page switch or a hint-channel reconnect triggers a catch-up read
  * because hints are best effort.
  */
-describe("components/output/raw/firkin/encrypted/incremental-automerge pull resume", () => {
+describe("components/output/raw/firkin/encrypted/incremental-loro pull resume", () => {
   it("continues an interrupted pull across reloads and page switches", async () => {
     const result = await testWeb(async () => {
       const { Signer, delegate, WebCryptoSigner } = await import(
@@ -225,19 +225,19 @@ describe("components/output/raw/firkin/encrypted/incremental-automerge pull resu
 
         // --- The output elements ----------------------------------------------
         await import(
-          "~/components/output/raw/firkin/encrypted/incremental-automerge/element.js"
+          "~/components/output/raw/firkin/encrypted/incremental-loro/element.js"
         );
 
         const { COLLECTIONS, IDB_DOCS, IDB_PACKS, logName, registryNamespace } =
           await import(
-            "~/components/output/raw/firkin/encrypted/incremental-automerge/constants.js"
+            "~/components/output/raw/firkin/encrypted/incremental-loro/constants.js"
           );
 
         const root = document.createElement("div");
         document.body.append(root);
 
         const makeOption = (id, namespace) => {
-          const option = document.createElement("dob-firkin-automerge");
+          const option = document.createElement("dob-firkin-loro");
           option.id = id;
           option.setAttribute("namespace", namespace);
           option.setAttribute("keep", "64");

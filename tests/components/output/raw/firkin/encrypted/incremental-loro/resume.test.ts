@@ -14,7 +14,7 @@ import { testWeb } from "@tests/common/index.ts";
  * device never saw it. A fresh element reading the same local cache stands in
  * for that reload here.
  */
-describe("components/output/raw/firkin/encrypted/incremental-automerge resume", () => {
+describe("components/output/raw/firkin/encrypted/incremental-loro resume", () => {
   it("pushes changes whose upload was interrupted by a reload", async () => {
     const result = await testWeb(async () => {
       const { Signer, delegate, WebCryptoSigner } = await import(
@@ -225,11 +225,11 @@ describe("components/output/raw/firkin/encrypted/incremental-automerge resume", 
 
         // --- The output elements ----------------------------------------------
         await import(
-          "~/components/output/raw/firkin/encrypted/incremental-automerge/element.js"
+          "~/components/output/raw/firkin/encrypted/incremental-loro/element.js"
         );
 
         const { IDB_DOCS, logName, registryNamespace } = await import(
-          "~/components/output/raw/firkin/encrypted/incremental-automerge/constants.js"
+          "~/components/output/raw/firkin/encrypted/incremental-loro/constants.js"
         );
 
         const namespace = "firkin-resume";
@@ -241,7 +241,7 @@ describe("components/output/raw/firkin/encrypted/incremental-automerge resume", 
         document.body.append(root);
 
         const makeOption = (id) => {
-          const option = document.createElement("dob-firkin-automerge");
+          const option = document.createElement("dob-firkin-loro");
           option.id = id;
           option.setAttribute("namespace", namespace);
           option.setAttribute("keep", "64");

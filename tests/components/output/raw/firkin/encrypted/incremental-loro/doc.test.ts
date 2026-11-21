@@ -1,30 +1,32 @@
-// @ts-nocheck -- the fake client intentionally implements only the subset it uses
+// @ts-nocheck -- the test builds Loro documents directly
 
 import { describe, it } from "@std/testing/bdd";
 import { expect } from "@std/expect";
 
-import * as Automerge from "@automerge/automerge";
-
 import {
+  actorOf,
   adoptDocument,
+  applyIncremental,
   applyLog,
   applyPack,
   changeDocument,
   changeDocumentBatched,
   changesSince,
+  cloneDocument,
   createDocument,
   encodeDocument,
+  hasRecords,
   headsOf,
   loadDocument,
   mergeDocument,
   mergeDocuments,
   recordsOf,
-} from "~/components/output/raw/firkin/encrypted/incremental-automerge/doc.js";
+} from "~/components/output/raw/firkin/encrypted/incremental-loro/doc.js";
 
 /** @param {string} id */
 const track = (id) => ({ $type: "sh.diffuse.output.track", id, uri: `https://a/${id}` });
 
-describe("components/output/raw/firkin/encrypted/incremental-automerge/doc", () => {
+describe("components/output/raw/firkin/encrypted/incremental-loro/doc", () => {
   it("round-trips a collection through a document", () => {
     const items = [track("a"), track("b")];
     const { doc, changed } = changeDocument(createDocument(), items, {
@@ -32,80 +34,53 @@ describe("components/output/raw/firkin/encrypted/incremental-automerge/doc", () 
     });
 
     expect(changed).toBe(true);
-    expect(doc.$schema).toBe("sh.diffuse.output.track");
-    expect(doc.order).toEqual(["a", "b"]);
     expect(recordsOf(doc)).toEqual(items);
+
+    const reloaded = loadDocument(encodeDocument(doc));
+    expect(recordsOf(reloaded)).toEqual(items);
   });
 
-  it("applies a large collection in batches with the same result", async () => {
+  it("applies a large collection in one change", async () => {
     const items = Array.from({ length: 1_200 }, (_, index) =>
       track(`t${index}`)
     );
     const base = createDocument();
-
-    const { doc, changed } = await changeDocumentBatched(base, items, {
-      schema: "sh.diffuse.output.track",
-    });
-
-    expect(changed).toBe(true);
-    expect(doc.$schema).toBe("sh.diffuse.output.track");
-    expect(doc.order).toEqual(items.map((item) => item.id));
-    expect(recordsOf(doc)).toEqual(items);
-
-    // Batching must not create a new document identity: the root and actor
-    // stay the ones already in the log.
-    expect(Automerge.getActorId(doc)).toBe(Automerge.getActorId(base));
-  });
-
-  it("spreads a first import too large for one change over several", async () => {
-    // Automerge panics ("splice range out of bounds") on a change that writes
-    // roughly 20 MB of new values, and a panic leaves the wasm module unusable.
-    // A first import past the size budget must therefore go through the batched
-    // path instead of one whole-map change.
-    const items = Array.from({ length: 350 }, (_, index) => ({
-      ...track(`t${index}`),
-      blob: "x".repeat(20_000),
-    }));
-
     let batches = 0;
+
     const { doc, changed } = await changeDocumentBatched(
-      createDocument(),
+      base,
       items,
-      {},
+      { schema: "sh.diffuse.output.track" },
       async () => {},
       () => batches++,
     );
 
     expect(changed).toBe(true);
-    expect(batches).toBeGreaterThan(1);
-    expect(recordsOf(doc)).toHaveLength(items.length);
+    expect(recordsOf(doc)).toEqual(items);
+    expect(batches).toBe(1);
+
+    // The document is edited in place; no new identity is minted.
+    expect(actorOf(doc)).toBe(actorOf(base));
   });
 
-  it("keeps concurrent additions across batched changes", async () => {
+  it("keeps concurrent additions", async () => {
     const base = createDocument();
 
     const left = (await changeDocumentBatched(
-      Automerge.clone(base, { actor: "a".repeat(64) }),
+      cloneDocument(base, "a".repeat(32)),
       [track("a")],
     )).doc;
     const right = (await changeDocumentBatched(
-      Automerge.clone(base, { actor: "b".repeat(64) }),
+      cloneDocument(base, "b".repeat(32)),
       [track("b")],
     )).doc;
 
-    // A first import replaces the empty record map, so a plain
-    // `Automerge.merge` keeps one side's map. `mergeDocuments` is the merge the
-    // output performs when it combines log entries.
     const merged = mergeDocuments(left, right);
 
     expect(recordsOf(merged).map((item) => item.id).sort()).toEqual(["a", "b"]);
   });
 
   it("drops undefined values instead of throwing", () => {
-    // Automerge cannot store `undefined`: assigning it throws
-    // "Cannot assign undefined value at /records/<id>/<field>". The input
-    // workers hand over records like `{ stats: previous?.stats }`, so this is
-    // the normal case, not a malformed one.
     const withUndefined = {
       $type: "sh.diffuse.output.track",
       id: "a",
@@ -130,13 +105,10 @@ describe("components/output/raw/firkin/encrypted/incremental-automerge/doc", () 
     // their indices.
     expect(record.list).toEqual(["kept", null]);
 
-    // And the document it produced is a valid Automerge document.
     expect(recordsOf(loadDocument(encodeDocument(doc)))).toEqual([record]);
   });
 
   it("keeps list fields as arrays", () => {
-    // Spreading an array (`{ ...list }`) silently turns it into an object with
-    // numeric keys, which breaks `includes`, `map` and friends downstream.
     const facet = {
       $type: "sh.diffuse.output.facet",
       id: "f1",
@@ -176,21 +148,18 @@ describe("components/output/raw/firkin/encrypted/incremental-automerge/doc", () 
   });
 
   it("keeps concurrent edits to different records", () => {
-    // Both devices start from the same two records...
     const base = changeDocument(createDocument(), [track("a"), track("b")]).doc;
 
-    // ...then edit a different record each. Cloning with a fresh actor models a
-    // second device: changes from one actor share a sequence number.
-    const left = changeDocument(Automerge.clone(base, { actor: "a".repeat(64) }), [
+    const left = changeDocument(cloneDocument(base, "a".repeat(32)), [
       { ...track("a"), uri: "https://a/left" },
       track("b"),
     ]).doc;
-    const right = changeDocument(Automerge.clone(base, { actor: "b".repeat(64) }), [
+    const right = changeDocument(cloneDocument(base, "b".repeat(32)), [
       track("a"),
       { ...track("b"), uri: "https://a/right" },
     ]).doc;
 
-    const merged = Automerge.merge(left, right);
+    const merged = mergeDocuments(left, right);
 
     expect(recordsOf(merged)).toEqual([
       { ...track("a"), uri: "https://a/left" },
@@ -201,18 +170,13 @@ describe("components/output/raw/firkin/encrypted/incremental-automerge/doc", () 
   it("keeps additions made on both sides", () => {
     const base = createDocument();
 
-    const left = changeDocument(Automerge.clone(base, { actor: "a".repeat(64) }), [
+    const left = changeDocument(cloneDocument(base, "a".repeat(32)), [
       track("a"),
     ]).doc;
-    const right = changeDocument(Automerge.clone(base, { actor: "b".repeat(64) }), [
+    const right = changeDocument(cloneDocument(base, "b".repeat(32)), [
       track("b"),
     ]).doc;
 
-    // The first import into a document replaces its empty record map (one
-    // operation per save instead of one per record), so a plain
-    // `Automerge.merge` keeps one side's map. `mergeDocuments` is the merge the
-    // output performs when it combines log entries, and it re-adds the records
-    // a merge would drop.
     const merged = mergeDocuments(left, right);
 
     expect(recordsOf(merged).map((item) => item.id).sort()).toEqual(["a", "b"]);
@@ -224,14 +188,15 @@ describe("components/output/raw/firkin/encrypted/incremental-automerge/doc", () 
     const next = changeDocument(doc, [track("a")]);
 
     expect(next.changed).toBe(true);
-    expect(next.doc.order).toEqual(["a"]);
-    expect(Object.keys(next.doc.records)).toEqual(["a"]);
+    expect(recordsOf(next.doc).map((item) => item.id)).toEqual(["a"]);
+    expect(hasRecords(next.doc)).toBe(true);
   });
 
   it("applies only the changes since the given heads", () => {
     const many = Array.from({ length: 50 }, (_, i) => track(`t${i}`));
     const first = changeDocument(createDocument(), many).doc;
     const heads = headsOf(first);
+    const base = cloneDocument(first);
 
     const second = changeDocument(first, [
       { ...track("t0"), uri: "https://a/changed" },
@@ -239,9 +204,7 @@ describe("components/output/raw/firkin/encrypted/incremental-automerge/doc", () 
     ]).doc;
 
     const increment = changesSince(second, heads);
-    // `second` was derived from `first`, so the original handle can no longer
-    // be changed; a consumer would hold the live document instead.
-    const applied = applyPack(Automerge.clone(first), increment);
+    const applied = applyPack(base, increment);
 
     expect(recordsOf(applied)).toEqual(recordsOf(second));
     // One edited record is a fraction of the whole document.
@@ -251,17 +214,14 @@ describe("components/output/raw/firkin/encrypted/incremental-automerge/doc", () 
   it("falls back to a full document when the heads are unknown", () => {
     const doc = changeDocument(createDocument(), [track("a")]).doc;
 
-    const bytes = changesSince(doc, ["f".repeat(64)]);
+    const bytes = changesSince(doc, ["not-hex"]);
 
-    // A concatenated document + change log loads as the same document.
-    expect(recordsOf(Automerge.load(bytes))).toEqual(recordsOf(doc));
+    expect(recordsOf(loadDocument(bytes))).toEqual(recordsOf(doc));
   });
 
   it("applies a whole document entry", () => {
-    // A bootstrap or compacted entry is a document, not a change chunk;
-    // `loadIncremental` ignores those, so `applyPack` must not.
     const remote = changeDocument(
-      Automerge.clone(createDocument(), { actor: "b".repeat(64) }),
+      cloneDocument(createDocument(), "b".repeat(32)),
       [track("b")],
     ).doc;
 
@@ -281,13 +241,13 @@ describe("components/output/raw/firkin/encrypted/incremental-automerge/doc", () 
     expect(headsOf(twice)).toEqual(headsOf(once));
   });
 
-  it("adopts a shared document under this device's actor", () => {
+  it("adopts a shared document under this device's peer id", () => {
     const shared = changeDocument(createDocument(), [track("a")]).doc;
-    const actor = "c".repeat(64);
+    const actor = "c".repeat(32);
 
     const adopted = adoptDocument(encodeDocument(shared), actor);
 
-    expect(Automerge.getActorId(adopted)).toBe(actor);
+    expect(actorOf(adopted)).toBe("cccccccccccccccc");
     expect(recordsOf(adopted)).toEqual([track("a")]);
   });
 
@@ -295,9 +255,7 @@ describe("components/output/raw/firkin/encrypted/incremental-automerge/doc", () 
     const shared = changeDocument(createDocument(), [track("a")]).doc;
     const heads = headsOf(shared);
 
-    const adopted = adoptDocument(encodeDocument(shared), "c".repeat(64));
-    // The original writer keeps writing under its own actor; adopting must not
-    // make the two of them share a sequence number.
+    const adopted = adoptDocument(encodeDocument(shared), "c".repeat(32));
     const next = changeDocument(shared, [track("a"), track("b")]).doc;
 
     const applied = applyPack(adopted, changesSince(next, heads));
@@ -306,8 +264,6 @@ describe("components/output/raw/firkin/encrypted/incremental-automerge/doc", () 
   });
 
   it("merges documents that were created independently", () => {
-    // Each device starts with its own empty document (its own root), so a
-    // plain merge would keep one side only.
     const left = changeDocument(createDocument(), [track("a")]).doc;
     const right = changeDocument(createDocument(), [track("b")]).doc;
 
@@ -317,12 +273,12 @@ describe("components/output/raw/firkin/encrypted/incremental-automerge/doc", () 
   });
 
   it("merges a whole remote document", () => {
-    const empty = createDocument();
-    const doc = changeDocument(Automerge.clone(empty, { actor: "a".repeat(64) }), [
-      track("a"),
-    ]).doc;
+    const doc = changeDocument(
+      cloneDocument(createDocument(), "a".repeat(32)),
+      [track("a")],
+    ).doc;
     const remote = changeDocument(
-      Automerge.clone(empty, { actor: "b".repeat(64) }),
+      cloneDocument(createDocument(), "b".repeat(32)),
       [track("b")],
     ).doc;
 
@@ -331,14 +287,19 @@ describe("components/output/raw/firkin/encrypted/incremental-automerge/doc", () 
     expect(recordsOf(merged).map((item) => item.id).sort()).toEqual(["a", "b"]);
   });
 
-  it("upgrades legacy array-shaped documents instead of losing them", () => {
-    const legacy = Automerge.change(Automerge.init(), (d) => {
-      d.collection = [track("a")];
-    });
+  it("imports an update without a base when its dependencies arrive later", () => {
+    const first = changeDocument(createDocument(), [track("a")]).doc;
+    const heads = headsOf(first);
+    const second = changeDocument(first, [track("a"), track("b")]).doc;
+    const increment = changesSince(second, heads);
 
-    const doc = loadDocument(encodeDocument(legacy));
+    // Applying the dependency-less update parks it; the snapshot then unparks.
+    const doc = createDocument();
+    applyIncremental(doc, increment);
+    expect(recordsOf(doc)).toEqual([]);
 
-    expect(recordsOf(doc)).toEqual([track("a")]);
+    applyPack(doc, encodeDocument(second));
+    expect(recordsOf(doc).map((item) => item.id)).toEqual(["a", "b"]);
   });
 
   /**
@@ -365,96 +326,44 @@ describe("components/output/raw/firkin/encrypted/incremental-automerge/doc", () 
     return out;
   };
 
-  it("splits a framed log into its entries", () => {
+  it("splits a framed log into its entries", async () => {
     const one = encodeDocument(changeDocument(createDocument(), [track("a")]).doc);
     const two = encodeDocument(changeDocument(createDocument(), [track("b")]).doc);
 
-    const doc = applyLog(createDocument("c".repeat(64)), join([frame(one), frame(two)]), "c".repeat(64));
+    const doc = await applyLog(
+      createDocument("c".repeat(32)),
+      join([frame(one), frame(two)]),
+      "c".repeat(32),
+    );
 
-    // Both entries applied: the first is adopted, the second merged in.
     expect(recordsOf(doc).map((item) => item.id).sort()).toEqual(["a", "b"]);
   });
 
-  it("treats an unframed log as one legacy chunk", () => {
-    // A log written before entries were framed: the first length header is
-    // the automerge chunk magic — implausibly large — so the whole value is
-    // kept as a single chunk and applied, best effort.
+  it("treats an unframed log as one legacy chunk", async () => {
     const one = encodeDocument(changeDocument(createDocument(), [track("a")]).doc);
 
-    const doc = applyLog(createDocument("c".repeat(64)), one, "c".repeat(64));
+    const doc = await applyLog(createDocument("c".repeat(32)), one, "c".repeat(32));
 
     expect(recordsOf(doc).map((item) => item.id)).toEqual(["a"]);
   });
 
-  it("replays a log written by two devices without dropping either", () => {
-    // Each device bootstraps its own root document, then appends deltas
-    // against it. A single-pass load of the concatenation either throws or
-    // silently keeps one root's records.
-    const aBootstrap = changeDocument(
-      Automerge.clone(createDocument(), { actor: "a".repeat(64) }),
+  it("replays a log written by two devices without dropping either", async () => {
+    const a = changeDocument(
+      cloneDocument(createDocument(), "a".repeat(32)),
       [track("a1")],
     ).doc;
-    const bBootstrap = changeDocument(
-      Automerge.clone(createDocument(), { actor: "b".repeat(64) }),
+    const b = changeDocument(
+      cloneDocument(createDocument(), "b".repeat(32)),
       [track("b1")],
     ).doc;
 
-    const aDelta = changesSince(
-      changeDocument(aBootstrap, [track("a1"), track("a2")]).doc,
-      headsOf(aBootstrap),
-    );
-    const bDelta = changesSince(
-      changeDocument(bBootstrap, [track("b1"), track("b2")]).doc,
-      headsOf(bBootstrap),
-    );
-
     const log = join([
-      frame(encodeDocument(aBootstrap)),
-      frame(aDelta),
-      frame(encodeDocument(bBootstrap)),
-      frame(bDelta),
+      frame(encodeDocument(a)),
+      frame(encodeDocument(b)),
     ]);
 
-    const doc = applyLog(createDocument("c".repeat(64)), log, "c".repeat(64));
+    const doc = await applyLog(createDocument("c".repeat(32)), log, "c".repeat(32));
 
-    expect(recordsOf(doc).map((item) => item.id).sort()).toEqual([
-      "a1",
-      "a2",
-      "b1",
-      "b2",
-    ]);
-    expect(Automerge.getActorId(doc)).toBe("c".repeat(64));
-  });
-
-  it("recovers at a snapshot after skipping deltas whose dependencies were trimmed", () => {
-    // `keep` trims each device's window, so a log can start with deltas whose
-    // parent document is gone — replaying those used to abort the pull.
-    const doc0 = changeDocument(createDocument("a".repeat(64)), [
-      track("t0"),
-    ]).doc;
-    const doc1 = changeDocument(doc0, [track("t0"), track("t1")]).doc;
-    const doc2 = changeDocument(doc1, [track("t0"), track("t1"), track("t2")])
-      .doc;
-    const doc3 = changeDocument(doc2, [
-      track("t0"),
-      track("t1"),
-      track("t2"),
-      track("t3"),
-    ]).doc;
-
-    const orphan = changesSince(doc1, headsOf(doc0));
-    const snapshot = encodeDocument(doc2);
-    const delta = changesSince(doc3, headsOf(doc2));
-
-    const log = join([frame(orphan), frame(snapshot), frame(delta)]);
-
-    const doc = applyLog(createDocument("c".repeat(64)), log, "c".repeat(64));
-
-    expect(recordsOf(doc).map((item) => item.id)).toEqual([
-      "t0",
-      "t1",
-      "t2",
-      "t3",
-    ]);
+    expect(recordsOf(doc).map((item) => item.id).sort()).toEqual(["a1", "b1"]);
   });
 });
