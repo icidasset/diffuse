@@ -238,6 +238,10 @@ describe("firkin output facet on the real page", () => {
           ? facetsCollection.data
           : [];
 
+        const localEl = document.getElementById(
+          "do-output__dc-output__local",
+        );
+
         await output.facets.save([
           ...existingFacets.filter((existing) => existing.id !== facet.id),
           facet,
@@ -297,11 +301,34 @@ describe("firkin output facet on the real page", () => {
           await new Promise((resolve) => setTimeout(resolve, 50));
         }
 
+        // Facets must survive selecting the output: the configurator mirrors
+        // the selected output into the local store, so an empty pre-pull value
+        // would wipe them.
+        let facetsAfter = output.facets.collection();
+        const facetDeadline = Date.now() + 5_000;
+        while (
+          Date.now() < facetDeadline &&
+          !(facetsAfter.state === "loaded" &&
+            facetsAfter.data.some((f) => f.uri === facet.uri))
+        ) {
+          await new Promise((resolve) => setTimeout(resolve, 50));
+          facetsAfter = output.facets.collection();
+        }
+
+        const localAfterSelect = localEl?.facets?.collection();
+
         return {
           selectedId: output.selected()?.id ?? null,
+          facetUri: facet.uri,
+          localAfterSelect: localAfterSelect?.state === "loaded"
+            ? localAfterSelect.data.map((f) => f.uri)
+            : localAfterSelect?.state,
           uploads: calls.filter((call) => call.startsWith("PUT /v1/blob/")).length,
           manifests: [...registry.keys()],
           tracks: output.tracks.collection(),
+          facetsAfter: facetsAfter.state === "loaded"
+            ? facetsAfter.data.map((f) => f.uri)
+            : facetsAfter.state,
           warnings,
           errors,
         };
@@ -322,6 +349,8 @@ describe("firkin output facet on the real page", () => {
     expect(result.selectedId).toBe("do-output__dc-output__firkin-automerge");
     expect(result.uploads).toBeGreaterThan(0);
     expect(result.manifests.length).toBeGreaterThan(0);
+    expect(result.facetsAfter).toContain(result.facetUri);
+    expect(result.localAfterSelect).toContain(result.facetUri);
     expect(
       result.tracks?.state === "loaded"
         ? result.tracks.data.map((t) => t.id)

@@ -301,7 +301,7 @@ class OutputConfigurator extends BroadcastableDiffuseElement {
 
       const def = this.#defaultOutput.value;
       if (def) {
-        if (!this.#shouldMirror(out)) return;
+        if (!this.#shouldMirror(out, col)) return;
         def.collaborations.save(col.data);
       } else {
         this.#memory.collaborations.set(col.data);
@@ -317,7 +317,7 @@ class OutputConfigurator extends BroadcastableDiffuseElement {
 
       const def = this.#defaultOutput.value;
       if (def) {
-        if (!this.#shouldMirror(out)) return;
+        if (!this.#shouldMirror(out, col)) return;
         def.facets.save(col.data);
       } else {
         this.#memory.facets.set(col.data);
@@ -333,7 +333,7 @@ class OutputConfigurator extends BroadcastableDiffuseElement {
 
       const def = this.#defaultOutput.value;
       if (def) {
-        if (!this.#shouldMirror(out)) return;
+        if (!this.#shouldMirror(out, col)) return;
         def.playlistItems.save(col.data);
       } else {
         this.#memory.playlistItems.set(col.data);
@@ -349,7 +349,7 @@ class OutputConfigurator extends BroadcastableDiffuseElement {
 
       const def = this.#defaultOutput.value;
       if (def) {
-        if (!this.#shouldMirror(out)) return;
+        if (!this.#shouldMirror(out, col)) return;
         def.settings.save(col.data);
       } else {
         this.#memory.settings.set(col.data);
@@ -365,7 +365,7 @@ class OutputConfigurator extends BroadcastableDiffuseElement {
 
       const def = this.#defaultOutput.value;
       if (def) {
-        if (!this.#shouldMirror(out)) return;
+        if (!this.#shouldMirror(out, col)) return;
         def.tracks.save(col.data);
       } else {
         this.#memory.tracks.set(col.data);
@@ -386,12 +386,7 @@ class OutputConfigurator extends BroadcastableDiffuseElement {
       const def = this.#defaultOutput.value;
       if (!out || !def || out === def) return;
 
-      const id = out.id;
-      if (isOutputInitialized(id) || this.#carryingOver.has(id)) return;
-      if (!this.#isEmptyAndUninitialized(out)) return;
-
-      this.#carryingOver.add(id);
-      void this.#carryOver(out, def, id);
+      this.#scheduleCarryOver(out, def);
     });
 
     /**
@@ -536,55 +531,76 @@ class OutputConfigurator extends BroadcastableDiffuseElement {
   }
 
   /**
-   * Whether the selected output is completely empty and has never been used.
-   * Only then should its contents be carried over from the default output.
-   *
-   * @param {Output} out
-   * @returns {boolean}
-   */
-  #isEmptyAndUninitialized(out) {
-    if (isOutputInitialized(out.id)) return false;
-
-    for (const name of COLLECTIONS) {
-      const collection = out[name].collection();
-      // A transformer can still be mid-evaluation when a dependency it sets
-      // during its own first read flushes this effect. Treat that as "not
-      // ready yet"; the change that caused it re-runs this effect.
-      if (!collection || collection.state !== "loaded") return false;
-      if (asArray(collection.data).length > 0) return false;
-    }
-
-    return true;
-  }
-
-  /**
    * Mirroring a selected output into the default store is only safe once the
-   * output has been used. Before that, an empty collection would overwrite the
-   * local copy it is about to be seeded from.
+   * output has been used, or for a collection that actually has data. An empty
+   * collection from a fresh output must not overwrite the local copy it is
+   * about to be seeded from — even when another collection already has data.
    *
    * @param {Output} out
+   * @param {{ data: unknown }} collection
    * @returns {boolean}
    */
-  #shouldMirror(out) {
-    return isOutputInitialized(out.id) || this.#hasData(out);
-  }
-
-  /**
-   * @param {Output} out
-   * @returns {boolean}
-   */
-  #hasData(out) {
-    return COLLECTIONS.some((name) => {
-      const collection = out[name].collection();
-      return collection?.state === "loaded" &&
-        asArray(collection.data).length > 0;
-    });
+  #shouldMirror(out, collection) {
+    return isOutputInitialized(out.id) || asArray(collection.data).length > 0;
   }
 
   /**
    * Read the default output and write it into an empty selected output. Runs
    * once per output; the initialized flag prevents a later carry-over after
    * the user intentionally emptied it.
+   *
+   * @param {Output} out
+   * @param {Output} def
+   * @param {string} id
+   */
+  /**
+   * Start the initial carry-over once the selected output's collections have
+   * answers. The collections load asynchronously (local cache, pull, or both),
+   * so waiting here is what keeps a save that races the selection from skipping
+   * the collections that are still empty.
+   *
+   * @param {Output} out
+   * @param {Output} def
+   */
+  #scheduleCarryOver(out, def) {
+    const id = out.id;
+    if (isOutputInitialized(id) || this.#carryingOver.has(id)) return;
+
+    this.#carryingOver.add(id);
+
+    void (async () => {
+      try {
+        const deadline = Date.now() + 10_000;
+
+        while (Date.now() < deadline) {
+          if (this.#selected.value !== out) return;
+
+          const collections = COLLECTIONS.map((name) =>
+            out[name].collection()
+          );
+
+          if (collections.every((collection) =>
+            collection?.state === "loaded"
+          )) {
+            await this.#carryOver(out, def, id);
+            return;
+          }
+
+          await new Promise((resolve) => setTimeout(resolve, 50));
+        }
+      } finally {
+        this.#carryingOver.delete(id);
+      }
+    })();
+  }
+
+  /**
+   * Read the default output and fill the collections of an uninitialized
+   * selected output. Collections that already have data are left alone: a save
+   * can race the selection, and the carry-over must not overwrite it.
+   *
+   * Runs once per output; the initialized flag prevents a later carry-over after
+   * the user intentionally emptied a collection.
    *
    * @param {Output} out
    * @param {Output} def
@@ -605,16 +621,26 @@ class OutputConfigurator extends BroadcastableDiffuseElement {
       // starting set.
       if (!Object.values(data).some((items) => items.length > 0)) return;
 
-      await Promise.all([
-        out.collaborations.save(data.collaborations),
-        out.facets.save(
-          data.facets.length > 0 ? data.facets : buildFacets(STARTING_SET_URIS),
-        ),
-        out.playlistItems.save(data.playlistItems),
-        out.settings.save(data.settings),
-        out.tracks.save(data.tracks),
-      ]);
+      /** @type {Promise<void>[]} */
+      const saves = [];
 
+      for (const name of COLLECTIONS) {
+        const current = out[name].collection();
+        if (current?.state !== "loaded") continue;
+        if (asArray(current.data).length > 0) continue;
+
+        // A fresh install still needs the starting-set facets, even though the
+        // local store has no facets of its own.
+        const items = name === "facets" && data.facets.length === 0
+          ? buildFacets(STARTING_SET_URIS)
+          : data[name];
+
+        saves.push(
+          /** @type {Promise<void>} */ (out[name].save(items)),
+        );
+      }
+
+      await Promise.all(saves);
       markOutputInitialized(id);
     } catch (err) {
       console.error("Could not carry the local output over:", err);
@@ -803,6 +829,10 @@ class OutputConfigurator extends BroadcastableDiffuseElement {
     }
 
     this.#selected.value = await this.#findOutput(id);
+
+    const out = this.#selected.value;
+    const def = this.#defaultOutput.value;
+    if (out && def && out !== def) this.#scheduleCarryOver(out, def);
   };
 
   #selectedOutputId() {
