@@ -181,7 +181,12 @@ describe("components/output/raw/firkin/encrypted/incremental-automerge/doc", () 
       track("b"),
     ]).doc;
 
-    const merged = Automerge.merge(left, right);
+    // The first import into a document replaces its empty record map (one
+    // operation per save instead of one per record), so a plain
+    // `Automerge.merge` keeps one side's map. `mergeDocuments` is the merge the
+    // output performs when it combines log entries, and it re-adds the records
+    // a merge would drop.
+    const merged = mergeDocuments(left, right);
 
     expect(recordsOf(merged).map((item) => item.id).sort()).toEqual(["a", "b"]);
   });

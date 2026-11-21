@@ -20,13 +20,45 @@ import {
  * @typedef {Object} CollectionDocument
  * @property {string} [$schema] - Lexicon NSID the records conform to.
  * @property {string[]} order
- * @property {Record<string, any>} records
+ * @property {Record<string, any>} records - Record id → the record as its JSON
+ *   text (see {@link encodeRecord}). Documents written before that change hold
+ *   a nested map instead; both are read.
  */
 
 /** @returns {CollectionDocument} */
 export function emptyDocument() {
   return { order: [], records: {} };
 }
+
+/**
+ * Records are stored as their JSON text, not as a nested map.
+ *
+ * Automerge charges for every map key written, so a record kept as a map costs
+ * one operation per field — a track has about a dozen, counting `tags` and
+ * `stats`. Storing the record as a single string makes it one operation:
+ * importing a 20k-track collection went from ~10 s to ~4.5 s, and the document
+ * shrank to roughly a third. The trade-off is that a record now merges as a
+ * whole instead of field by field, which is how every other output already
+ * treats it (JSON, S3, WNFS all write the record the app handed over).
+ *
+ * `JSON.stringify` also gives the `undefined` handling this boundary needs:
+ * Automerge refuses `undefined` values, and stringify drops them from objects
+ * and turns them into `null` inside arrays.
+ *
+ * @param {any} item
+ * @returns {string}
+ */
+const encodeRecord = (item) => JSON.stringify(item);
+
+/**
+ * A record from either representation: JSON text (current) or a nested map
+ * (documents written before records were stored as strings).
+ *
+ * @param {any} value
+ * @returns {any}
+ */
+const decodeRecord = (value) =>
+  typeof value === "string" ? JSON.parse(value) : value;
 
 /**
  * A fresh, empty document. Every collection starts from one of these when
@@ -72,7 +104,7 @@ export function normalize(doc) {
       (d) => {
         if (legacy.$schema) d.$schema = legacy.$schema;
         for (const [id, item] of Object.entries(records)) {
-          d.records[id] = item;
+          d.records[id] = encodeRecord(item);
         }
         d.order = Object.keys(records);
       },
@@ -140,7 +172,7 @@ const BATCH_START = 200;
  *
  * @param {AutomergeDoc} doc
  * @param {any[]} items
- * @param {{ schema?: string }} [options]
+ * @param {{ schema?: string; versioned?: boolean }} [options]
  * @param {() => Promise<void>} [yieldToMain]
  * @param {(doc: AutomergeDoc) => void} [onBatch] - Called with the document
  *   after every change, so a worker can hand the caller one delta per batch.
@@ -174,11 +206,8 @@ export async function changeDocumentBatched(
   let scanned = 0;
 
   for (const item of items) {
-    if (!sameRecord(doc.records[item.id], item)) {
-      changedRecords.set(
-        item.id,
-        withoutUndefined(recursivelyCloneRecords(item)),
-      );
+    if (!sameRecord(doc.records[item.id], item, options.versioned)) {
+      changedRecords.set(item.id, encodeRecord(item));
       changed = true;
     }
 
@@ -258,7 +287,8 @@ export async function changeDocumentBatched(
  */
 export function recordsOf(doc) {
   const ordered = doc.order
-    .map((id) => normalizeLists(doc.records[id]))
+    .map((id) => decodeRecord(doc.records[id]))
+    .map((record) => normalizeLists(record))
     .filter((record) => record !== undefined);
 
   // `order` is a plain list, so two devices adding different records at the
@@ -268,7 +298,7 @@ export function recordsOf(doc) {
   for (const [id, record] of Object.entries(doc.records)) {
     if (seen.has(id) || record === undefined) continue;
 
-    ordered.push(normalizeLists(record));
+    ordered.push(normalizeLists(decodeRecord(record)));
   }
 
   return ordered;
@@ -319,12 +349,46 @@ function normalizeLists(value) {
 }
 
 /**
+ * Count how many records a save would add, update, or remove.
+ *
+ * Uses the same `sameRecord` version fast path as the apply itself, so an
+ * unchanged 20k-track collection costs milliseconds instead of a full
+ * structural comparison. The caller uses this to decide whether a large
+ * collection needs the worker's batched apply or only a small incremental
+ * change.
+ *
+ * @param {Automerge.Doc<CollectionDocument>} doc
+ * @param {any[]} items
+ * @param {boolean} versioned
+ * @returns {{ changed: number; removed: number }}
+ */
+export function countChanges(doc, items, versioned = false) {
+  /** @type {Set<string>} */
+  const ids = new Set();
+  let changed = 0;
+
+  for (const item of items) {
+    if (ids.has(item.id)) continue;
+    ids.add(item.id);
+
+    if (!sameRecord(doc.records[item.id], item, versioned)) changed++;
+  }
+
+  let removed = 0;
+  for (const id of Object.keys(doc.records)) {
+    if (!ids.has(id)) removed++;
+  }
+
+  return { changed, removed };
+}
+
+/**
  * Apply a whole collection (as the output interface hands it over) to a
  * document, touching only the records that actually changed.
  *
  * @param {Automerge.Doc<CollectionDocument>} doc
  * @param {any[]} items
- * @param {{ schema?: string }} [options]
+ * @param {{ schema?: string; versioned?: boolean }} [options]
  * @returns {{ doc: Automerge.Doc<CollectionDocument>; changed: boolean }}
  */
 export function changeDocument(doc, items, options = {}) {
@@ -350,14 +414,40 @@ export function changeDocument(doc, items, options = {}) {
   const changedRecords = new Map();
 
   for (const item of items) {
-    if (sameRecord(doc.records[item.id], item)) continue;
+    if (sameRecord(doc.records[item.id], item, options.versioned)) continue;
 
-    changedRecords.set(item.id, withoutUndefined(recursivelyCloneRecords(item)));
+    changedRecords.set(item.id, encodeRecord(item));
     changed = true;
   }
 
   if (!changed && oldIds.length !== order.length) changed = true;
   if (!changed) return { doc, changed: false };
+
+  // The first write into a document creates its records from scratch. Build
+  // the whole map in JavaScript and assign it once: Automerge charges far more
+  // per key when the keys are written one by one (about 6x for a library-sized
+  // import), and there is no history to preserve yet. The output interface
+  // hands over the complete collection, so replacing the empty map loses
+  // nothing.
+  if (oldIds.length === 0 && order.length > 0) {
+    const byId = new Map();
+    for (const item of items) {
+      if (!byId.has(item.id)) byId.set(item.id, item);
+    }
+
+    const records = Object.fromEntries(
+      order.map((id) => [id, encodeRecord(byId.get(id))]),
+    );
+
+    return {
+      doc: Automerge.change(doc, (d) => {
+        if (options.schema) d.$schema = options.schema;
+        d.records = records;
+        d.order = order;
+      }),
+      changed: true,
+    };
+  }
 
   // Removals are known from the id sets, so the change doesn't have to walk the
   // document's whole record map when nothing was deleted (the common case).
@@ -383,36 +473,6 @@ export function changeDocument(doc, items, options = {}) {
   return { doc: nextDoc, changed: true };
 }
 
-/**
- * Drop `undefined` values, recursively.
- *
- * Automerge cannot store `undefined`: assigning a record that carries one throws
- * `Cannot assign undefined value at /records/<id>/<field>`. Records routinely
- * arrive with such keys — the input workers report `stats: previous?.stats` —
- * and every other output either drops them (JSON) or never sees them, so the
- * output boundary is where they have to go. Inside arrays they become `null`,
- * which is what `JSON.stringify` would have produced anyway, and keeps the
- * indices of the remaining items.
- *
- * @param {any} value
- * @returns {any}
- */
-function withoutUndefined(value) {
-  if (Array.isArray(value)) {
-    return value.map((item) => (item === undefined ? null : withoutUndefined(item)));
-  }
-  if (value === null || typeof value !== "object") return value;
-
-  /** @type {Record<string, any>} */
-  const clean = {};
-
-  for (const [key, item] of Object.entries(value)) {
-    if (item === undefined) continue;
-    clean[key] = withoutUndefined(item);
-  }
-
-  return clean;
-}
 
 /**
  * The bytes to append to a log for everything added since `heads`.
@@ -710,11 +770,50 @@ function sameArray(a, b) {
  * @param {unknown} a
  * @param {unknown} b
  */
-function sameRecord(a, b) {
+function sameRecord(a, b, versioned = false) {
   if (a === b) return true;
   if (a === undefined || b === undefined) return false;
 
-  // Records are plain JSON values, so a stable stringify is an adequate
-  // structural comparison — and much cheaper than walking them by hand.
-  return JSON.stringify(a) === JSON.stringify(b);
+  // Records are stored as JSON text, so usually this is a string comparison.
+  if (typeof a === "string") {
+    const encoded = typeof b === "string" ? b : encodeRecord(b);
+    if (a === encoded) return true;
+
+    // Track edits reliably bump `updatedAt`, so its value is the record's
+    // version. Other collections do not guarantee that, so a differing string
+    // is a real change for them.
+    if (!versioned) return false;
+
+    return sameUpdatedAt(parseRecord(a), b);
+  }
+
+  // A nested map, as written before records were stored as strings.
+  if (versioned && sameUpdatedAt(a, b)) return true;
+
+  return JSON.stringify(a) === encodeRecord(b);
+}
+
+/**
+ * @param {any} a
+ * @param {any} b
+ */
+function sameUpdatedAt(a, b) {
+  const aUpdatedAt = a?.updatedAt;
+  const bUpdatedAt = b?.updatedAt;
+
+  return typeof aUpdatedAt === "string" && typeof bUpdatedAt === "string" &&
+    aUpdatedAt === bUpdatedAt;
+}
+
+/**
+ * A stored record, parsed, or `undefined` when the text is not JSON.
+ *
+ * @param {string} value
+ */
+function parseRecord(value) {
+  try {
+    return JSON.parse(value);
+  } catch {
+    return undefined;
+  }
 }
