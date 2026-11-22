@@ -166,7 +166,7 @@ const { setItems, setError, setDialogError } = setup({
       <input
         id="rb-api"
         placeholder="${DEFAULT_API_BASE}"
-        value="${initialAccount?.apiBase ?? DEFAULT_API_BASE}"
+        value="${initialAccount?.apiBase ?? ""}"
       >
     </label>
     <p class="caption">
