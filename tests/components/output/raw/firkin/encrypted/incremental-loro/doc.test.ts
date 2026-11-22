@@ -16,6 +16,7 @@ import {
   createDocument,
   encodeDocument,
   hasRecords,
+  headsAtLeast,
   headsOf,
   loadDocument,
   mergeDocument,
@@ -209,6 +210,23 @@ describe("components/output/raw/firkin/encrypted/incremental-loro/doc", () => {
     expect(recordsOf(applied)).toEqual(recordsOf(second));
     // One edited record is a fraction of the whole document.
     expect(increment.length * 2).toBeLessThan(encodeDocument(second).length);
+  });
+
+  it("orders heads by what they include", () => {
+    const base = changeDocument(createDocument("aa".repeat(16)), [track("a")])
+      .doc;
+    const first = headsOf(base);
+
+    const next = changeDocument(cloneDocument(base, "bb".repeat(16)), [
+      track("a"),
+      track("b"),
+    ]).doc;
+    const second = headsOf(next);
+
+    expect(headsAtLeast(second, first)).toBe(true);
+    expect(headsAtLeast(first, second)).toBe(false);
+    expect(headsAtLeast(first, first)).toBe(true);
+    expect(headsAtLeast(first, ["not-hex"])).toBe(false);
   });
 
   it("falls back to a full document when the heads are unknown", () => {

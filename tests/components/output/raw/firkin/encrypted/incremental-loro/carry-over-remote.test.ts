@@ -11,7 +11,9 @@ import { testWeb } from "@tests/common/index.ts";
  *
  * The carry-over (`OutputConfigurator.#carryOver`) saves through the selected
  * output's standard interface, so every carried-over collection should be
- * pushed to the Firkin log like any other save.
+ * pushed to the Firkin log like any other save. Collections with no local data
+ * must be left alone: saving an empty collection is not a no-op on a syncing
+ * output, because it may already have read its own log into the document.
  */
 describe("components/output/raw/firkin/encrypted/incremental-loro carry-over", () => {
   it("pushes carried-over collections to the remote log", async () => {
@@ -262,7 +264,8 @@ describe("components/output/raw/firkin/encrypted/incremental-loro carry-over", (
         const { registryNamespace, logName } = await import(
           "~/components/output/raw/firkin/encrypted/incremental-loro/constants.js"
         );
-        const names = [
+        const names = ["facets", "tracks"];
+        const allNames = [
           "collaborations",
           "facets",
           "playlistItems",
@@ -274,16 +277,16 @@ describe("components/output/raw/firkin/encrypted/incremental-loro carry-over", (
             logName(name, hex(sessionSigner.pubkeyBytes))
           }`;
         const manifestsBefore = new Map(
-          names.map((name) => [name, registry.get(ref(name)) ?? null]),
+          allNames.map((name) => [name, registry.get(ref(name)) ?? null]),
         );
 
         await configurator.select(option.id);
 
-        // Wait until every collection's log has a manifest on the remote —
-        // that is the carry-over having been pushed, not just cached. Each
-        // collection's manifest has to *change*: the startup bootstrap writes
-        // one too, and starting a second element while the carry-over push is
-        // still coalescing would hand leadership over before it lands.
+        // Wait until the collections that had local data have a manifest on the
+        // remote — that is the carry-over having been pushed, not just cached.
+        // Each such manifest has to *change*: the startup bootstrap writes one
+        // too, and starting a second element while the carry-over push is still
+        // coalescing would hand leadership over before it lands.
         const deadline = Date.now() + 15_000;
         while (Date.now() < deadline) {
           const pushed = names.every((name) => {
@@ -386,15 +389,10 @@ describe("components/output/raw/firkin/encrypted/incremental-loro carry-over", (
     console.log("CARRY_OVER_RESULT", JSON.stringify(result, null, 2));
 
     expect(result.errors).toEqual([]);
-    expect(result.carried).toEqual(
-      expect.arrayContaining([
-        "collaborations",
-        "facets",
-        "playlistItems",
-        "settings",
-        "tracks",
-      ]),
-    );
+    // Only the collections with local data are carried over. Writing empty
+    // collections would create logs (and, on a device that already pulled,
+    // delete records) for data that was never local.
+    expect(result.carried).toEqual(["facets", "tracks"]);
     expect(result.uploads).toBeGreaterThan(0);
     expect(result.tracks).toEqual(["t1"]);
     expect(result.facets).toEqual(["f1"]);

@@ -15,7 +15,7 @@ import { testWeb } from "@tests/common/index.ts";
 describe("components/output/raw/firkin/encrypted/incremental-loro bundled", () => {
   it("writes one document per bundle and reassembles them on read", async () => {
     const result = await testWeb(async () => {
-      const { Signer, delegate, WebCryptoSigner } = await import(
+      const { Firkin, Signer, delegate, WebCryptoSigner } = await import(
         "~/vendor/firkin/index.js"
       );
 
@@ -318,7 +318,13 @@ describe("components/output/raw/firkin/encrypted/incremental-loro bundled", () =
           "~/components/output/raw/firkin/encrypted/incremental-loro/element.js"
         );
         const { bundleId } = await import("~/common/bundles.js");
-        const { logName, registryNamespace } = await import(
+        const {
+          IDB_DOCS,
+          IDB_FLOORS,
+          IDB_PACKS,
+          logName,
+          registryNamespace,
+        } = await import(
           "~/components/output/raw/firkin/encrypted/incremental-loro/constants.js"
         );
 
@@ -423,6 +429,70 @@ describe("components/output/raw/firkin/encrypted/incremental-loro bundled", () =
           await new Promise((resolve) => setTimeout(resolve, 50));
         }
 
+        // --- A truly fresh device ----------------------------------------
+        // Drop every local trace of this namespace, as a new device has none,
+        // then read the library back. It must not publish anything: all it has
+        // came from the log.
+        root.remove();
+        await new Promise((resolve) => setTimeout(resolve, 500));
+
+        const prefixes = [
+          `${IDB_DOCS}/`,
+          `${IDB_FLOORS}/`,
+          `${IDB_PACKS}/`,
+        ];
+        for (const key of await IDB.keys()) {
+          if (
+            typeof key === "string" &&
+            prefixes.some((prefix) => key.startsWith(prefix))
+          ) {
+            await IDB.del(key);
+          }
+        }
+
+        let freshWrites = 0;
+        const writeNames = [
+          "ingestCar",
+          "upload",
+          "registrySetIf",
+          "registryLookup",
+        ];
+        const writeOriginals = new Map();
+        for (const name of writeNames) {
+          writeOriginals.set(name, Firkin.prototype[name]);
+          Firkin.prototype[name] = async function (...args) {
+            freshWrites += 1;
+            return await writeOriginals.get(name).apply(this, args);
+          };
+        }
+
+        const fresh = document.createElement("dob-firkin-loro");
+        fresh.id = "option-fresh";
+        fresh.setAttribute("namespace", "firkin-loro");
+        fresh.setAttribute("keep", "64");
+        fresh.setAttribute("bundled", "");
+        document.body.append(fresh);
+
+        let freshRead = { state: "loading" };
+        const freshDeadline = Date.now() + 10_000;
+        while (Date.now() < freshDeadline) {
+          try {
+            freshRead = await fresh.tracks.reload().then(() =>
+              fresh.tracks.collection()
+            );
+          } catch (err) {
+            freshRead = { state: "error", error: String(err) };
+          }
+          if (freshRead.state === "loaded" && freshRead.data?.length > 0) break;
+          await new Promise((resolve) => setTimeout(resolve, 50));
+        }
+
+        await new Promise((resolve) => setTimeout(resolve, 500));
+
+        for (const name of writeNames) {
+          Firkin.prototype[name] = writeOriginals.get(name);
+        }
+
         return {
           diag,
           selectedId: configurator.selected()?.id ?? null,
@@ -453,6 +523,10 @@ describe("components/output/raw/firkin/encrypted/incremental-loro bundled", () =
           tracks: read.state === "loaded"
             ? read.data.map((item) => item.id)
             : read.state,
+          freshWrites,
+          freshTracks: freshRead.state === "loaded"
+            ? freshRead.data.map((item) => item.id)
+            : freshRead.state,
           warnings,
           errors,
         };
@@ -477,5 +551,7 @@ describe("components/output/raw/firkin/encrypted/incremental-loro bundled", () =
       s3: true,
     });
     expect(result.tracks).toEqual(["t1", "t2"]);
+    expect(result.freshTracks).toEqual(["t1", "t2"]);
+    expect(result.freshWrites).toBe(0);
   });
 });

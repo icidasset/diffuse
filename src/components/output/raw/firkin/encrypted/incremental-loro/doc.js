@@ -65,6 +65,38 @@ function sameRecord(a, b, versioned = false) {
 }
 
 /**
+ * Whether heads fingerprint `a` includes everything in `b`.
+ *
+ * The push cursor must only move forwards. A pull and a push can finish in the
+ * opposite order from the one they started in, and a cursor that moves
+ * backwards makes the next pull believe the local document has unpushed
+ * changes — which it appends, hinting the other device and looping.
+ *
+ * @param {Heads} a
+ * @param {Heads} b
+ */
+export function headsAtLeast(a, b) {
+  const left = versionVectorFromHeads(a);
+  const right = versionVectorFromHeads(b);
+
+  if (!left || !right) return false;
+
+  const entries = right.toJSON();
+  const pairs = entries instanceof Map
+    ? entries
+    : Object.entries(entries ?? {});
+
+  for (const [peer, counter] of pairs) {
+    // Peer ids are decimal strings; `get` wants a number or a bigint.
+    const id = typeof peer === "string" ? BigInt(peer) : peer;
+
+    if ((left.get(id) ?? 0) < counter) return false;
+  }
+
+  return true;
+}
+
+/**
  * @param {any} a
  * @param {any} b
  */

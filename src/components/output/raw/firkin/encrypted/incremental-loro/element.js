@@ -46,6 +46,7 @@ import {
   createDocument,
   encodeDocument,
   hasRecords,
+  headsAtLeast,
   headsOf,
   loadDocument,
   recordsOf,
@@ -218,6 +219,10 @@ class FirkinLoroOutput extends BroadcastedOutputElement {
 
   /** @type {Map<string, { heads?: Heads; pushes: number }>} */
   #cursors = new Map();
+
+  /** Serialises cursor writes per log, so an older write can't land last. */
+  /** @type {Map<string, Promise<void>>} */
+  #cursorWrites = new Map();
 
   /**
    * The last manifest read or written per log and device, so an append can skip
@@ -618,9 +623,14 @@ class FirkinLoroOutput extends BroadcastedOutputElement {
   /**
    * Re-read one collection, coalescing a burst of hints into one read.
    *
-   * @param {string} collection
+   * A bundled collection writes one log per bundle and one for its manifest,
+   * so its hints arrive under names like `tracks#<id>`; refresh the collection
+   * that owns them.
+   *
+   * @param {string} hinted
    */
-  #refreshCollection(collection) {
+  #refreshCollection(hinted) {
+    const collection = hinted.split("#")[0];
     if (!COLLECTIONS.includes(/** @type {any} */ (collection))) return;
 
     const pending = this.#hints.get(collection);
@@ -720,13 +730,23 @@ class FirkinLoroOutput extends BroadcastedOutputElement {
 
       // Nothing cached: start from an empty document of our own, under this
       // document's actor so concurrent writers never share a sequence number.
+      //
+      // Cache it and keep the push cursor and the applied log: those describe
+      // the remote log, not the local cache. Resetting them made every load
+      // treat a settled collection as a fresh one, re-bootstrap an empty entry
+      // and pull it back the next time.
       const empty = createDocument(await this.#actor(name));
 
       this.#docs.set(name, empty);
-      this.#persisted.delete(name);
 
-      await this.#resetCursor(name);
-      await this.#resetAppliedLog(name);
+      try {
+        await this.#persist(name, empty);
+        this.#persisted.add(name);
+      } catch (err) {
+        this.#persisted.delete(name);
+        console.warn(`Could not cache the empty '${name}' document:`, err);
+      }
+
       return false;
     } catch (err) {
       console.warn(`Could not read the local '${name}' document:`, err);
@@ -829,8 +849,11 @@ class FirkinLoroOutput extends BroadcastedOutputElement {
     );
 
     // Migrate the old single-document log: its records are now represented by
-    // the manifest and bundles.
-    if (this.#docs.has(name)) {
+    // the manifest and bundles. Only when it actually has records — an empty
+    // legacy log would otherwise get an empty entry on every device's first
+    // save.
+    const legacy = this.#docs.get(name);
+    if (legacy && hasRecords(legacy)) {
       await this.#saveDoc(name, []);
     }
   }
@@ -1177,15 +1200,6 @@ class FirkinLoroOutput extends BroadcastedOutputElement {
     }
   }
 
-  /** @param {string} name */
-  async #resetAppliedLog(name) {
-    try {
-      await IDB.del(this.#appliedLogKey(name));
-    } catch (err) {
-      console.warn(`Could not reset the '${name}' applied log:`, err);
-    }
-  }
-
   // REMOTE
 
   /** @param {string} name */
@@ -1227,25 +1241,35 @@ class FirkinLoroOutput extends BroadcastedOutputElement {
    * @param {{ heads?: Heads; pushes: number }} cursor
    */
   async #setCursor(name, cursor) {
+    const existing = this.#cursors.get(name);
+
+    // Only ever move forwards. A push and a pull can finish in the opposite
+    // order from the one they started in; a cursor that moves backwards makes
+    // the next pull think the local document has unpushed changes, which it
+    // appends — and the other device does the same — so the two devices keep
+    // updating each other.
+    if (
+      existing?.heads && cursor.heads &&
+      !headsAtLeast(cursor.heads, existing.heads)
+    ) {
+      return existing;
+    }
+
     this.#cursors.set(name, cursor);
 
+    // Persist the cursor as it is when the write runs, and in call order.
+    const write = (this.#cursorWrites.get(name) ?? Promise.resolve()).then(
+      () => IDB.set(this.#cursorKey(name), this.#cursors.get(name) ?? cursor),
+    );
+    this.#cursorWrites.set(name, write.catch(() => {}));
+
     try {
-      await IDB.set(this.#cursorKey(name), cursor);
+      await write;
     } catch (err) {
       console.warn(`Could not persist the '${name}' push cursor:`, err);
     }
-  }
 
-  /** @param {string} name */
-  async #resetCursor(name) {
-    const cursor = { pushes: 0 };
-    this.#cursors.set(name, cursor);
-
-    try {
-      await IDB.del(this.#cursorKey(name));
-    } catch (err) {
-      console.warn(`Could not reset the '${name}' push cursor:`, err);
-    }
+    return cursor;
   }
 
   /** @type {Map<string, Promise<string>>} */
@@ -1300,9 +1324,21 @@ class FirkinLoroOutput extends BroadcastedOutputElement {
    * @param {CollectionDocument} doc
    */
   async #hasUnpushed(name, doc) {
+    // A document with no operations has nothing of its own to publish, however
+    // its cursor looks (a fresh device has none at all).
+    if (doc.opCount() === 0) return false;
+
+    const heads = headsOf(doc).join(";");
     const cursor = await this.#cursor(name);
 
-    return headsOf(doc).join(";") !== (cursor.heads ?? []).join(";");
+    if (heads === (cursor.heads ?? []).join(";")) return false;
+
+    // The applied record says what the log already contains. A document that is
+    // exactly that has nothing of its own to push, even when its cursor was
+    // lost (a restored cache, a cleared IndexedDB, a race).
+    const applied = await this.#appliedLog(name);
+
+    return applied?.heads !== heads;
   }
 
   /**
@@ -1341,6 +1377,7 @@ class FirkinLoroOutput extends BroadcastedOutputElement {
       for (const docName of this.#docNames(name)) {
         const doc = this.#docs.get(docName);
         if (!doc) continue;
+
         if (!(await this.#hasUnpushed(docName, doc))) continue;
 
         this.#enqueuePush(docName, doc);
@@ -1566,9 +1603,13 @@ class FirkinLoroOutput extends BroadcastedOutputElement {
 
     // The stored log is a prefix of the remote one: another writer appended,
     // which is the usual case. Fetch, decrypt and replay only the new entries
-    // instead of the whole (up to `keep`) log.
+    // instead of the whole (up to `keep`) log. The stored log only describes
+    // *this* document when its heads still match it; a document that diverged
+    // (another tab wrote, a cache was restored) must replay the whole log, or
+    // the entries it is missing would look like they are already applied.
     const appliedPacks = applied?.packs ? applied.packs.split(";") : [];
     const incremental = appliedPacks.length > 0 &&
+      applied?.heads === heads &&
       hasRecords(current) &&
       appliedPacks.every((cid, index) => entries[index]?.cid === cid);
 
@@ -1737,10 +1778,10 @@ class FirkinLoroOutput extends BroadcastedOutputElement {
       const unpushed = await this.#hasUnpushed(name, current);
 
       if (!(bytes instanceof Uint8Array)) {
-        // Nothing remote yet: publish what we have so the namespace exists and
-        // another device can start from it. An empty document counts — it makes
-        // the first read cheaper and surfaces a failing push straight away.
-        if (options.bootstrap) {
+        // Nothing remote yet: publish what we have. Only when there is
+        // something to publish — an empty document would just add an empty
+        // entry to the log on every device that opens the page.
+        if (options.bootstrap && current.opCount() > 0) {
           this.#enqueuePush(name, current);
         }
         return;
@@ -1760,6 +1801,16 @@ class FirkinLoroOutput extends BroadcastedOutputElement {
             before,
             collection.signature,
           );
+        }
+
+        // Reconcile the push cursor with a log that added nothing: a device
+        // that restored its document from the cache can have the applied record
+        // without a cursor, and without one its next push sends a snapshot.
+        if (!unpushed && !this.#dirty.has(name)) {
+          await this.#setCursor(name, {
+            heads: headsOf(current),
+            pushes: (await this.#cursor(name)).pushes,
+          });
         }
         return;
       }
@@ -1788,7 +1839,17 @@ class FirkinLoroOutput extends BroadcastedOutputElement {
         // Retry a failed push now that something proved the server is
         // reachable; without this a dirty collection would wait for its next
         // save.
-        if (unpushed) this.#enqueuePush(name, doc);
+        if (unpushed) {
+          this.#enqueuePush(name, doc);
+          return;
+        }
+
+        if (!this.#dirty.has(name)) {
+          await this.#setCursor(name, {
+            heads: headsOf(doc),
+            pushes: (await this.#cursor(name)).pushes,
+          });
+        }
         return;
       }
 

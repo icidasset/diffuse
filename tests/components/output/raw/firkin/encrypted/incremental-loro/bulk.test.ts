@@ -265,7 +265,11 @@ describe("components/output/raw/firkin/encrypted/incremental-loro bulk save", ()
         const tracksRef = `${registryNamespace("bulk-output")}/${
           logName("tracks", hex(sessionSigner.pubkeyBytes))
         }`;
-        const appliedKey = `${IDB_DOCS}/bulk-output/tracks/applied`;
+        const docKey = `${IDB_DOCS}/bulk-output/tracks`;
+        const appliedKey = `${docKey}/applied`;
+        const { headsOf, loadDocument } = await import(
+          "~/components/output/raw/firkin/encrypted/incremental-loro/doc.js"
+        );
 
         // Let the startup bootstrap settle first, so "the manifest changed"
         // below can only mean this save's push.
@@ -293,12 +297,33 @@ describe("components/output/raw/firkin/encrypted/incremental-loro bulk save", ()
         );
         const manifestAfterSave = registry.get(tracksRef);
 
-        // The push records itself as applied just after the append lands; a
-        // reload happens well after that.
+        // The push records itself as applied just after the append lands, and
+        // a reload happens well after that. Wait for the exact state a reload
+        // checks: manifest signature, applied heads, document heads and cursor
+        // all agreeing.
         await until(async () => {
-          const record = await IDB.get(appliedKey);
-          return typeof record?.signature === "string" &&
-            record.signature.includes(manifestAfterSave);
+          const [record, stored, cursor] = await Promise.all([
+            IDB.get(appliedKey),
+            IDB.get(docKey),
+            IDB.get(`${docKey}/cursor`),
+          ]);
+
+          if (
+            typeof record?.signature !== "string" ||
+            !record.signature.includes(manifestAfterSave)
+          ) {
+            return false;
+          }
+
+          const doc = stored instanceof Uint8Array
+            ? loadDocument(stored)
+            : undefined;
+          if (!doc) return false;
+
+          const heads = headsOf(doc).join(";");
+
+          return record.heads === heads &&
+            (cursor?.heads ?? []).join(";") === heads;
         }, 5_000);
 
         // A reload must not pull its own write back: the push records what it
@@ -325,14 +350,72 @@ describe("components/output/raw/firkin/encrypted/incremental-loro bulk save", ()
 
         const reloadPulledTracks = pulls.includes(manifestAfterSave);
 
+        // A settled reload — nothing touched since the last push — should make
+        // no log requests at all beyond the namespace listing: no DAG pull, no
+        // upload, no registry write, no manifest lookup.
+        await new Promise((resolve) => setTimeout(resolve, 1_200));
+
+        let logRequests = 0;
+        const tracked = [
+          "dagPull",
+          "ingestCar",
+          "upload",
+          "registrySetIf",
+          "registryLookup",
+        ];
+        const originals = new Map();
+        for (const name of tracked) {
+          originals.set(name, Firkin.prototype[name]);
+          Firkin.prototype[name] = async function (...args) {
+            logRequests += 1;
+            return await originals.get(name).apply(this, args);
+          };
+        }
+
+        const settled = document.createElement("dob-firkin-loro");
+        settled.id = "bulk-output-settled";
+        settled.setAttribute("namespace", "bulk-output");
+        settled.setAttribute("keep", "64");
+        document.body.append(settled);
+
+        const settledCount = await until(() => {
+          const col = settled.tracks.collection();
+          return col.state === "loaded" && col.data.length === items.length;
+        });
+        await new Promise((resolve) => setTimeout(resolve, 800));
+
+        const settledLogRequests = logRequests;
+
+        for (const name of tracked) {
+          Firkin.prototype[name] = originals.get(name);
+        }
+
+        settled.remove();
+
         option.remove();
         reloaded.remove();
 
-        const docKey = `${IDB_DOCS}/bulk-output/tracks`;
         await IDB.del(docKey);
         await IDB.del(`${docKey}/cursor`);
         await IDB.del(`${docKey}/applied`);
         await IDB.del(`${docKey}/changes`);
+
+        // A fresh device reads the log; it has nothing of its own to publish.
+        let remoteWrites = 0;
+        const writeNames = [
+          "ingestCar",
+          "upload",
+          "registrySetIf",
+          "registryLookup",
+        ];
+        const writeOriginals = new Map();
+        for (const name of writeNames) {
+          writeOriginals.set(name, Firkin.prototype[name]);
+          Firkin.prototype[name] = async function (...args) {
+            remoteWrites += 1;
+            return await writeOriginals.get(name).apply(this, args);
+          };
+        }
 
         const remoteReader = document.createElement("dob-firkin-loro");
         remoteReader.id = "bulk-output-remote";
@@ -345,6 +428,10 @@ describe("components/output/raw/firkin/encrypted/incremental-loro bulk save", ()
           return col.state === "loaded" && col.data.length === items.length;
         }, 20_000);
 
+        for (const name of writeNames) {
+          Firkin.prototype[name] = writeOriginals.get(name);
+        }
+
         return {
           ready: option.ready(),
           workers,
@@ -352,8 +439,11 @@ describe("components/output/raw/firkin/encrypted/incremental-loro bulk save", ()
           ids,
           reloadedCount,
           reloadPulledTracks,
+          settledCount,
+          settledLogRequests,
           pushed,
           remoteCount,
+          remoteWrites,
           warnings: warnings.filter((warning) =>
             !warning.includes("initSync") &&
             !warning.includes("Could not push the") &&
@@ -377,8 +467,11 @@ describe("components/output/raw/firkin/encrypted/incremental-loro bulk save", ()
     expect(result.ids).toHaveLength(1_000);
     expect(result.reloadedCount).toBe(true);
     expect(result.reloadPulledTracks).toBe(false);
+    expect(result.settledCount).toBe(true);
+    expect(result.settledLogRequests).toBe(0);
     expect(result.pushed).toBe(true);
     expect(result.remoteCount).toBe(true);
+    expect(result.remoteWrites).toBe(0);
     expect(result.warnings).toEqual([]);
   });
 });

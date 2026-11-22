@@ -349,16 +349,6 @@ describe("components/output/raw/firkin/encrypted/incremental-loro pull resume", 
           );
         };
 
-        /** Number of this device's manifests in a namespace. */
-        const manifestCount = (namespace) => {
-          const suffix = `.${hex(sessionSigner.pubkeyBytes)}`;
-          const prefix = `${registryNamespace(namespace)}/`;
-
-          return [...registry.keys()].filter((key) =>
-            key.startsWith(prefix) && key.endsWith(suffix)
-          ).length;
-        };
-
         /** Drop the cached packs so a pull that reads them has to fetch them. */
         const clearPackCache = async () => {
           for (const key of await IDB.keys()) {
@@ -426,11 +416,11 @@ describe("components/output/raw/firkin/encrypted/incremental-loro pull resume", 
         failGets = true;
 
         const paused = makeOption("pull-paused", namespaceC);
-        const failedBeforeSwitch = await until(
-          () =>
-            warnings.filter((warning) =>
-              warning.includes("Could not pull the")
-            ).length >= COLLECTIONS.length,
+        // Only the collection whose local state was cleared has a log to read;
+        // a settled one is recognised from the registry listing and never
+        // requests its manifest, so it cannot fail.
+        const failedBeforeSwitch = await until(() =>
+          warnings.some((warning) => warning.includes("Could not pull the"))
         );
 
         // Let the failed pull clear its in-flight marker before the catch-up.
@@ -504,14 +494,10 @@ describe("components/output/raw/firkin/encrypted/incremental-loro pull resume", 
         const writerD = makeOption("pull-writer-d", namespaceD);
         await until(() => writerD.ready());
 
-        // Capture the bootstrap cursor before the save, so the wait below is
-        // for the *save's* push (and its cursor), not the startup one.
-        await until(async () =>
-          Array.isArray(await cursorHeads(namespaceD, "tracks"))
-        );
-        const headsBeforeSave = (
-          await cursorHeads(namespaceD, "tracks")
-        ).join(";");
+        // A collection with no data has no log and no bootstrap cursor; the
+        // save below creates the first entry.
+        const headsBeforeSave =
+          ((await cursorHeads(namespaceD, "tracks")) ?? []).join(";");
 
         await writerD.tracks.save([track("t1")]);
 
@@ -520,18 +506,6 @@ describe("components/output/raw/firkin/encrypted/incremental-loro pull resume", 
           return Array.isArray(heads) && heads.join(";") !== headsBeforeSave;
         });
 
-        // Wait for the startup pushes and their cursors: a reader that finds
-        // an unpushed collection would push it and skew the read count below.
-        await until(() => manifestCount(namespaceD) >= COLLECTIONS.length);
-        await until(async () => {
-          const cursors = await Promise.all(
-            COLLECTIONS.map((name) => cursorHeads(namespaceD, name)),
-          );
-
-          return cursors.every((heads) =>
-            Array.isArray(heads) && heads.length > 0
-          );
-        });
 
         const firstReader = makeOption("pull-first-reader", namespaceD);
         await until(() => tracksOf(firstReader));
@@ -594,20 +568,14 @@ describe("components/output/raw/firkin/encrypted/incremental-loro pull resume", 
 
         const writerE = makeOption("pull-writer-e", namespaceE);
         await until(() => writerE.ready());
-        await until(async () =>
-          Array.isArray(await cursorHeads(namespaceE, "tracks"))
-        );
-
-        const headsBeforeE = (
-          await cursorHeads(namespaceE, "tracks")
-        ).join(";");
+        const headsBeforeE =
+          ((await cursorHeads(namespaceE, "tracks")) ?? []).join(";");
 
         await writerE.tracks.save([track("t1")]);
         await until(async () => {
           const heads = await cursorHeads(namespaceE, "tracks");
           return Array.isArray(heads) && heads.join(";") !== headsBeforeE;
         });
-        await until(() => manifestCount(namespaceE) >= COLLECTIONS.length);
 
         const beforeReader = makeOption("pull-before-reader", namespaceE);
         const appliedE = await until(async () => {

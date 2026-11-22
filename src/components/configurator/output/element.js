@@ -635,6 +635,13 @@ class OutputConfigurator extends BroadcastableDiffuseElement {
           ? buildFacets(STARTING_SET_URIS)
           : data[name];
 
+        // Nothing local to carry. Saving an empty collection is not a no-op on
+        // an output that syncs: by the time the selection settles it may have
+        // read its own log into the same document, and saving `[]` would remove
+        // every record it just pulled. That made a new device erase the
+        // library it had signed in to see.
+        if (items.length === 0) continue;
+
         saves.push(
           /** @type {Promise<void>} */ (out[name].save(items)),
         );
