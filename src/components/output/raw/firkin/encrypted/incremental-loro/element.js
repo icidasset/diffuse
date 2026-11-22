@@ -32,6 +32,8 @@ import {
   NOT_READY_GRACE_MS,
   PUSH_COALESCE_MS,
   SNAPSHOT_EVERY,
+  logName,
+  registryNamespace,
 } from "./constants.js";
 import { decryptLog, encryptEntry, frameEntries } from "./crypto.js";
 import {
@@ -48,7 +50,12 @@ import {
   loadDocument,
   recordsOf,
 } from "./doc.js";
-import { appendEntry, readEntries } from "./log.js";
+import {
+  appendEntry,
+  extendLogSignature,
+  logSignature,
+  readEntries,
+} from "./log.js";
 import { verifySignature } from "./verify.js";
 
 /**
@@ -1125,7 +1132,7 @@ class FirkinLoroOutput extends BroadcastedOutputElement {
 
   /**
    * @param {string} name
-   * @returns {Promise<{ packs: string; heads: string } | undefined>}
+   * @returns {Promise<{ packs: string; heads: string; signature?: string } | undefined>}
    */
   async #appliedLog(name) {
     try {
@@ -1136,7 +1143,13 @@ class FirkinLoroOutput extends BroadcastedOutputElement {
         typeof stored.packs === "string" &&
         typeof stored.heads === "string"
       ) {
-        return { packs: stored.packs, heads: stored.heads };
+        return {
+          packs: stored.packs,
+          heads: stored.heads,
+          signature: typeof stored.signature === "string"
+            ? stored.signature
+            : undefined,
+        };
       }
     } catch (err) {
       console.warn(`Could not read the '${name}' applied log:`, err);
@@ -1150,9 +1163,15 @@ class FirkinLoroOutput extends BroadcastedOutputElement {
    * @param {string} packs - `;`-joined ordered pack CIDs.
    * @param {string} heads - The document heads those packs produced.
    */
-  async #setAppliedLog(name, packs, heads) {
+  /**
+   * @param {string} name
+   * @param {string} packs
+   * @param {string} heads
+   * @param {string} [signature]
+   */
+  async #setAppliedLog(name, packs, heads, signature) {
     try {
-      await IDB.set(this.#appliedLogKey(name), { packs, heads });
+      await IDB.set(this.#appliedLogKey(name), { packs, heads, signature });
     } catch (err) {
       console.warn(`Could not persist the '${name}' applied log:`, err);
     }
@@ -1376,8 +1395,11 @@ class FirkinLoroOutput extends BroadcastedOutputElement {
 
     if (bytes.length === 0) return;
 
+    /** @type {{ device: string; manifest: import("./log.js").ManifestState; cid: string; appended: boolean } | undefined} */
+    let appended;
+
     try {
-      await this.#append(name, bytes);
+      appended = await this.#append(name, bytes);
     } catch (err) {
       this.#dirty.add(name);
       console.warn(`Could not push the '${name}' changes:`, err);
@@ -1385,10 +1407,40 @@ class FirkinLoroOutput extends BroadcastedOutputElement {
     }
 
     this.#dirty.delete(name);
+
+    // The cursor first: the applied record below is only meaningful once the
+    // push cursor agrees, and a loader may observe the record as soon as it is
+    // written.
     await this.#setCursor(name, {
       heads,
       pushes: cursor.pushes + 1,
     });
+
+    // This device's log is now exactly what its document holds, so record the
+    // push as applied. Without this, the next page load would see a manifest it
+    // hasn't recorded and pull its own write back.
+    if (appended?.manifest) {
+      const applied = await this.#appliedLog(name);
+      const packs = applied?.packs ?? "";
+      const known = packs.split(";");
+
+      // The entry this push appended belongs to the applied log too; the rest
+      // is whatever the last pull recorded.
+      const nextPacks = appended.appended && !known.includes(appended.cid)
+        ? (packs ? `${packs};${appended.cid}` : appended.cid)
+        : packs;
+
+      await this.#setAppliedLog(
+        name,
+        nextPacks,
+        heads.join(";"),
+        extendLogSignature(
+          applied?.signature,
+          logName(name, appended.device),
+          appended.manifest.cid,
+        ),
+      );
+    }
   }
 
   /**
@@ -1396,7 +1448,7 @@ class FirkinLoroOutput extends BroadcastedOutputElement {
    *
    * @param {string} name
    * @param {Uint8Array} entry
-   * @returns {Promise<void>}
+   * @returns {Promise<{ device: string; manifest: import("./log.js").ManifestState; cid: string; appended: boolean } | undefined>}
    */
   #append(name, entry) {
     const run = async () => {
@@ -1411,7 +1463,7 @@ class FirkinLoroOutput extends BroadcastedOutputElement {
       const auth = this.#auth(client.session);
       const cacheKey = `${name}\u0000${auth.device}`;
 
-      const { cid, manifest } = await appendEntry(
+      const { cid, appended, manifest } = await appendEntry(
         client.rb,
         this.#namespace,
         name,
@@ -1440,6 +1492,8 @@ class FirkinLoroOutput extends BroadcastedOutputElement {
       // Best effort: the entry is already committed, so a lost hint only
       // delays other devices.
       this.#channel?.send(name);
+
+      return { device: auth.device, manifest, cid, appended };
     };
 
     // Serialize appends per log so concurrent saves can't rewrite the same
@@ -1456,7 +1510,7 @@ class FirkinLoroOutput extends BroadcastedOutputElement {
    *
    * @param {string} name
    * @param {CollectionDocument} current
-   * @returns {Promise<{ data: Uint8Array | undefined; packs: string; unchanged: boolean; complete: boolean; incremental: boolean }>}
+   * @returns {Promise<{ data: Uint8Array | undefined; packs: string; signature?: string; unchanged: boolean; complete: boolean; incremental: boolean }>}
    */
   async #readLog(name, current) {
     const client = await getSessionClient({ cache: blockCache });
@@ -1464,42 +1518,46 @@ class FirkinLoroOutput extends BroadcastedOutputElement {
       return {
         data: undefined,
         packs: "",
+        signature: undefined,
         unchanged: false,
         complete: false,
         incremental: false,
       };
     }
 
-    const entries = await this.#entries(client, name);
-    const packs = entries.map((entry) => entry.cid).join(";");
-    const applied = entries.length > 0 ? await this.#appliedLog(name) : undefined;
+    const names = await this.#names(client.rb);
+    const signature = logSignature(names, name);
+    const heads = headsOf(current).join(";");
+    const unpushed = await this.#hasUnpushed(name, current);
+    const applied = await this.#appliedLog(name);
 
-    // Content-addressed change detection: the ordered pack CIDs are the log's
-    // identity, and the stored heads prove the local document still has exactly
-    // the result of applying them. Nothing was appended, so skip the fetch,
-    // decrypt and replay entirely.
-    if (entries.length > 0) {
-      if (
-        applied?.packs === packs &&
-        applied.heads === headsOf(current).join(";") &&
-        // The cursor must agree too, or a crash between recording the log and
-        // the push cursor would make this skip hide a pending push.
-        !(await this.#hasUnpushed(name, current))
-      ) {
-        return {
-          data: undefined,
-          packs,
-          unchanged: true,
-          complete: true,
-          incremental: false,
-        };
-      }
+    // The registry listing is the log's identity: when every writer's manifest
+    // still has the CID this device applied last, and the local document is
+    // exactly that result, nothing was appended. Skip reading any manifest —
+    // and the DAG pull each one would otherwise cost — entirely.
+    if (
+      applied?.signature === signature &&
+      applied.heads === heads &&
+      !unpushed
+    ) {
+      return {
+        data: undefined,
+        packs: applied.packs,
+        signature,
+        unchanged: true,
+        complete: true,
+        incremental: false,
+      };
     }
+
+    const entries = await this.#entries(client, name, names);
+    const packs = entries.map((entry) => entry.cid).join(";");
 
     if (entries.length === 0) {
       return {
         data: undefined,
         packs,
+        signature,
         unchanged: false,
         complete: false,
         incremental: false,
@@ -1526,6 +1584,7 @@ class FirkinLoroOutput extends BroadcastedOutputElement {
       return {
         data: undefined,
         packs,
+        signature,
         unchanged: false,
         complete: false,
         incremental,
@@ -1537,6 +1596,7 @@ class FirkinLoroOutput extends BroadcastedOutputElement {
       return {
         data: undefined,
         packs,
+        signature,
         unchanged: false,
         complete: false,
         incremental,
@@ -1546,6 +1606,7 @@ class FirkinLoroOutput extends BroadcastedOutputElement {
     return {
       data: frameEntries(await decryptLog(key, concat(present))),
       packs,
+      signature,
       unchanged: false,
       complete: present.length === pending.length,
       incremental,
@@ -1648,7 +1709,7 @@ class FirkinLoroOutput extends BroadcastedOutputElement {
    * The shared body. Must be called inside `#serialize`.
    *
    * @param {string} name
-   * @param {{ state: "loading" } | { state: "loaded"; data: Uint8Array | undefined; packs: string; unchanged: boolean; complete: boolean; incremental: boolean } | { state: "error" }} collection
+   * @param {{ state: "loading" } | { state: "loaded"; data: Uint8Array | undefined; packs: string; signature?: string; unchanged: boolean; complete: boolean; incremental: boolean } | { state: "error" }} collection
    * @param {{ bootstrap?: boolean }} [options] - `bootstrap` publishes our local
    *   document when the log has nothing yet; only safe right after a read.
    */
@@ -1693,7 +1754,12 @@ class FirkinLoroOutput extends BroadcastedOutputElement {
           this.#persisted.has(name) && !unpushed &&
           collection.complete && collection.packs.length > 0
         ) {
-          await this.#setAppliedLog(name, collection.packs, before);
+          await this.#setAppliedLog(
+            name,
+            collection.packs,
+            before,
+            collection.signature,
+          );
         }
         return;
       }
@@ -1711,7 +1777,12 @@ class FirkinLoroOutput extends BroadcastedOutputElement {
           this.#persisted.has(name) && !unpushed &&
           collection.complete && collection.packs.length > 0
         ) {
-          await this.#setAppliedLog(name, collection.packs, before);
+          await this.#setAppliedLog(
+            name,
+            collection.packs,
+            before,
+            collection.signature,
+          );
         }
 
         // Retry a failed push now that something proved the server is
@@ -1746,6 +1817,7 @@ class FirkinLoroOutput extends BroadcastedOutputElement {
           name,
           collection.packs,
           headsOf(doc).join(";"),
+          collection.signature,
         );
       }
 
@@ -1930,20 +2002,30 @@ class FirkinLoroOutput extends BroadcastedOutputElement {
   }
 
   /**
+   * The namespace listing, shared by every collection in this pull pass.
+   *
+   * @param {Firkin} rb
+   */
+  async #names(rb) {
+    return await this.#loadNames(rb)(registryNamespace(this.#namespace));
+  }
+
+  /**
    * Read a log with signature and rollback checks, recording the sequences it
    * accepted so a later replay can be recognised.
    *
    * @param {{ session: Session; rb: Firkin }} client
    * @param {string} name
+   * @param {Record<string, string> | null} names
    */
-  async #entries(client, name) {
+  async #entries(client, name, names) {
     /** @type {Array<[string, number]>} */
     const accepted = [];
 
     const entries = await readEntries(client.rb, this.#namespace, name, {
       auth: this.#auth(client.session),
       floors: await this.#floors(name),
-      loadNames: this.#loadNames(client.rb),
+      loadNames: async () => names,
       onAccept: (device, seq) => accepted.push([device, seq]),
       onManifest: (device, manifestCid, payload) => {
         this.#manifests.set(`${name}\u0000${device}`, {

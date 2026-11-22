@@ -262,6 +262,20 @@ describe("components/output/raw/firkin/encrypted/incremental-loro bulk save", ()
           uri: `https://example.com/${index}.mp3`,
         }));
 
+        const tracksRef = `${registryNamespace("bulk-output")}/${
+          logName("tracks", hex(sessionSigner.pubkeyBytes))
+        }`;
+        const appliedKey = `${IDB_DOCS}/bulk-output/tracks/applied`;
+
+        // Let the startup bootstrap settle first, so "the manifest changed"
+        // below can only mean this save's push.
+        await until(async () => {
+          const record = await IDB.get(appliedKey);
+          return typeof record?.signature === "string";
+        }, 5_000);
+
+        const manifestBeforeSave = registry.get(tracksRef);
+
         const startedAt = performance.now();
         await option.tracks.save(items);
         const saveMs = performance.now() - startedAt;
@@ -270,6 +284,32 @@ describe("components/output/raw/firkin/encrypted/incremental-loro bulk save", ()
         const ids = collection.state === "loaded"
           ? collection.data.map((item) => item.id)
           : null;
+
+        // Let the coalesced push of this save land, as a user would before
+        // reloading the page.
+        const pushed = await until(
+          () => registry.get(tracksRef) !== manifestBeforeSave,
+          15_000,
+        );
+        const manifestAfterSave = registry.get(tracksRef);
+
+        // The push records itself as applied just after the append lands; a
+        // reload happens well after that.
+        await until(async () => {
+          const record = await IDB.get(appliedKey);
+          return typeof record?.signature === "string" &&
+            record.signature.includes(manifestAfterSave);
+        }, 5_000);
+
+        // A reload must not pull its own write back: the push records what it
+        // appended, so the manifest is recognised as applied.
+        const { Firkin } = await import("~/vendor/firkin/index.js");
+        const pulls = [];
+        const ogDagPull = Firkin.prototype.dagPull;
+        Firkin.prototype.dagPull = async function (root) {
+          pulls.push(root);
+          return await ogDagPull.call(this, root);
+        };
 
         // A reloaded element loads the base written by the compact persist.
         const reloaded = document.createElement("dob-firkin-loro");
@@ -283,15 +323,7 @@ describe("components/output/raw/firkin/encrypted/incremental-loro bulk save", ()
           return col.state === "loaded" && col.data.length === items.length;
         });
 
-        // The worker also prepared the push entry. Wait for it, then read it
-        // back with no local cache to prove the entry is valid.
-        const tracksRef = `${registryNamespace("bulk-output")}/${
-          logName("tracks", hex(sessionSigner.pubkeyBytes))
-        }`;
-        const pushed = await until(
-          () => registry.get(tracksRef) !== undefined,
-          15_000,
-        );
+        const reloadPulledTracks = pulls.includes(manifestAfterSave);
 
         option.remove();
         reloaded.remove();
@@ -319,6 +351,7 @@ describe("components/output/raw/firkin/encrypted/incremental-loro bulk save", ()
           saveMs,
           ids,
           reloadedCount,
+          reloadPulledTracks,
           pushed,
           remoteCount,
           warnings: warnings.filter((warning) =>
@@ -343,6 +376,7 @@ describe("components/output/raw/firkin/encrypted/incremental-loro bulk save", ()
     expect(result.workers).toBeGreaterThan(0);
     expect(result.ids).toHaveLength(1_000);
     expect(result.reloadedCount).toBe(true);
+    expect(result.reloadPulledTracks).toBe(false);
     expect(result.pushed).toBe(true);
     expect(result.remoteCount).toBe(true);
     expect(result.warnings).toEqual([]);

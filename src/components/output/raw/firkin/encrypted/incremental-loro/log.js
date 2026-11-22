@@ -67,6 +67,60 @@ import {
  */
 
 /**
+ * A fingerprint of the refs that make up one log: every writer's manifest CID,
+ * sorted.
+ *
+ * The registry listing is the log's identity, so a reader that stored this
+ * alongside the entries it applied can tell from one listing — without reading
+ * a single manifest — that nothing was appended.
+ *
+ * @param {Record<string, string> | null | undefined} names
+ * @param {string} name
+ */
+export function logSignature(names, name) {
+  const prefix = `${encodeFileName(name)}.`;
+
+  return Object.entries(names ?? {})
+    .filter(([key]) => key.startsWith(prefix))
+    .sort((a, b) => a[0].localeCompare(b[0]))
+    .map(([key, cid]) => `${key}=${cid}`)
+    .join(";");
+}
+
+/**
+ * Replace one writer's manifest CID in a stored log signature.
+ *
+ * A push changes only our own ref, so the signature can be advanced from the
+ * one we applied without listing the namespace again. Other writers keep their
+ * recorded CIDs; if one of them pushed in the meantime, the next load sees a
+ * mismatch and pulls.
+ *
+ * @param {string | undefined} previous
+ * @param {string} ref
+ * @param {string} cid
+ */
+export function extendLogSignature(previous, ref, cid) {
+  /** @type {Map<string, string>} */
+  const entries = new Map();
+
+  for (const part of (previous ?? "").split(";")) {
+    if (!part) continue;
+
+    const at = part.indexOf("=");
+    if (at <= 0) continue;
+
+    entries.set(part.slice(0, at), part.slice(at + 1));
+  }
+
+  entries.set(ref, cid);
+
+  return [...entries]
+    .sort(([a], [b]) => a.localeCompare(b))
+    .map(([key, value]) => `${key}=${value}`)
+    .join(";");
+}
+
+/**
  * Resolve every log entry for `name`, across all writers, oldest first.
  *
  * Manifests that fail verification, don't belong to their ref, or roll a

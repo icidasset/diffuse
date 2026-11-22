@@ -248,6 +248,13 @@ describe("components/output/raw/firkin/encrypted/incremental-loro pull resume", 
         let countGets = false;
         /** @type {string[]} */
         const getCids = [];
+        let listingGets = 0;
+
+        const ogRegistryNames = Firkin.prototype.registryNames;
+        Firkin.prototype.registryNames = async function (ns) {
+          listingGets += 1;
+          return await ogRegistryNames.call(this, ns);
+        };
 
         const ogGet = Firkin.prototype.get;
         Firkin.prototype.get = async function (cid) {
@@ -272,6 +279,9 @@ describe("components/output/raw/firkin/encrypted/incremental-loro pull resume", 
           await import(
             "~/components/output/raw/firkin/encrypted/incremental-loro/constants.js"
           );
+        const { logSignature } = await import(
+          "~/components/output/raw/firkin/encrypted/incremental-loro/log.js"
+        );
 
         const root = document.createElement("div");
         document.body.append(root);
@@ -327,6 +337,17 @@ describe("components/output/raw/firkin/encrypted/incremental-loro pull resume", 
               logName("tracks", hex(sessionSigner.pubkeyBytes))
             }`,
           );
+
+        /** The listing the output reads, as `readEntries` would see it. */
+        const namesOf = (namespace) => {
+          const prefix = `${registryNamespace(namespace)}/`;
+
+          return Object.fromEntries(
+            [...registry]
+              .filter(([key]) => key.startsWith(prefix))
+              .map(([key, cid]) => [key.slice(prefix.length), cid]),
+          );
+        };
 
         /** Number of this device's manifests in a namespace. */
         const manifestCount = (namespace) => {
@@ -519,32 +540,54 @@ describe("components/output/raw/firkin/encrypted/incremental-loro pull resume", 
         const applied = await until(async () => {
           const record = await IDB.get(appliedKey("tracks"));
 
-          return record && typeof record.packs === "string"
+          // Wait for the signature too: that is what the next pull compares.
+          return record && typeof record.packs === "string" &&
+              typeof record.signature === "string"
             ? record
             : undefined;
         }, 5_000);
         const tracksPacks = new Set(applied?.packs.split(";") ?? []);
 
-        firstReader.remove();
-        writerD.remove();
+        // The writer and the reader share IndexedDB. Make the reader converge
+        // on the current listing (a hint can be missed) so what it applied is
+        // what a new element will read.
+        const converged = Date.now() + 10_000;
+        while (Date.now() < converged) {
+          const record = await IDB.get(appliedKey("tracks"));
+          if (
+            record?.signature === logSignature(namesOf(namespaceD), "tracks")
+          ) {
+            break;
+          }
 
-        // No pack cache: only the CID-list short-circuit can keep the next
-        // reader from fetching the tracks packs.
+          await firstReader.tracks.reload();
+          await new Promise((resolve) => setTimeout(resolve, 100));
+        }
+
+        firstReader.remove();
+
+        // No pack cache: only the registry signature can keep the next reader
+        // from reading the log.
         await clearPackCache();
 
         getCids.length = 0;
+        listingGets = 0;
         countGets = true;
 
         const secondReader = makeOption("pull-second-reader", namespaceD);
         const manifest = tracksManifest(namespaceD);
-        await until(() => getCids.includes(manifest));
-        // Give a pull that *did* read the packs time to fetch them too.
+        // The registry listing is the log's identity now: an unchanged log is
+        // recognised from it, before any manifest is read.
+        await until(() => listingGets > 0);
         await new Promise((resolve) => setTimeout(resolve, 400));
 
         const tracksPacksRefetched = getCids.some((cid) => tracksPacks.has(cid));
+        const tracksManifestRead = getCids.includes(manifest);
         const secondRead = await until(() => tracksOf(secondReader));
         const secondGets = getCids.length;
         countGets = false;
+
+        writerD.remove();
 
         // ===== 5. Only an appended entry is fetched on the next pull ========
         const namespaceE = "firkin-pull-e";
@@ -615,6 +658,7 @@ describe("components/output/raw/firkin/encrypted/incremental-loro pull resume", 
           pushed,
           failed,
           reloadedTracks,
+          tracksManifestRead,
           failedBeforeSwitch,
           continued,
           initial,
@@ -659,11 +703,11 @@ describe("components/output/raw/firkin/encrypted/incremental-loro pull resume", 
     expect(result.whileHidden).toEqual(["t1"]);
     expect(result.afterVisible).toEqual(["t1", "t2"]);
 
-    // The persisted CID list proved the tracks log was unchanged: its packs
-    // were not re-read, and the reader still had the data.
+    // The stored signature proved the tracks log was unchanged: neither its
+    // manifest nor its packs were read, and the reader still had the data.
     expect(result.appliedPacks).toBe(true);
     expect(result.tracksPacksRefetched).toBe(false);
-    expect(result.secondGets).toBeGreaterThan(0);
+    expect(result.tracksManifestRead).toBe(false);
     expect(result.secondRead).toEqual(["t1"]);
 
     // An appended small entry rides inside the manifest, so it needs no pack

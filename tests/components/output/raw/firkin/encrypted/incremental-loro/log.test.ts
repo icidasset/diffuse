@@ -6,6 +6,7 @@ import { expect } from "@std/expect";
 import * as DagCBOR from "@ipld/dag-cbor";
 import { CID } from "multiformats/cid";
 import { ApiError } from "@tokono.ma/firkin";
+import { encodeFileName } from "~/common/firkin/files.js";
 import {
   cidForBytes,
   parseCarBlocks,
@@ -19,7 +20,9 @@ import {
 } from "~/components/output/raw/firkin/encrypted/incremental-loro/constants.js";
 import {
   appendEntry,
+  extendLogSignature,
   latestEntry,
+  logSignature,
   readEntries,
 } from "~/components/output/raw/firkin/encrypted/incremental-loro/log.js";
 
@@ -253,6 +256,32 @@ const read = (rb, name, auth, options = {}) =>
   readEntries(rb, "ns", name, { auth, ...options });
 
 describe("components/output/raw/firkin/encrypted/incremental-loro/log", () => {
+  it("advances a stored signature for one writer", () => {
+    expect(extendLogSignature("a=1;b=2", "b", "3")).toBe("a=1;b=3");
+    expect(extendLogSignature("a=1", "c", "4")).toBe("a=1;c=4");
+    expect(extendLogSignature(undefined, "a", "1")).toBe("a=1");
+  });
+
+  it("fingerprints only the refs that make up one log", () => {
+    const tracks = encodeFileName("tracks");
+    const facets = encodeFileName("facets");
+    const settings = encodeFileName("settings");
+
+    const names = {
+      [`${tracks}.a`]: "cid-a",
+      [`${tracks}.b`]: "cid-b",
+      [`${facets}.a`]: "cid-c",
+      [`${settings}.a`]: "cid-d",
+    };
+
+    expect(logSignature(names, "tracks")).toBe(
+      `${tracks}.a=cid-a;${tracks}.b=cid-b`,
+    );
+    expect(logSignature(names, "facets")).toBe(`${facets}.a=cid-c`);
+    expect(logSignature({}, "tracks")).toBe("");
+    expect(logSignature(null, "tracks")).toBe("");
+  });
+
   it("unions the entries of every writer", async () => {
     const rb = fakeClient();
     const auth = fakeAuth(deviceA);

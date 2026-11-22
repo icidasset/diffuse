@@ -113,11 +113,12 @@ export const INLINE_ENTRY_MAX_BYTES = 1024;
 /**
  * How long one namespace listing is reused.
  *
- * Every collection of an output lives in the same namespace, so a pull asks
- * the same question five times in a row. Coalescing those is enough; anything
- * longer would hide another device's write from an explicit reload.
+ * Every collection of an output lives in the same namespace, and bundle
+ * documents multiply that, so a pull asks the same question many times in a
+ * row. The listing is also the log's change signal now, so it is reused for a
+ * few seconds; a hint or a local append clears it immediately.
  */
-export const NAMES_TTL_MS = 1_000;
+export const NAMES_TTL_MS = 5_000;
 
 export const NOT_CONNECTED =
   "Firkin is not connected. Sign in on the Connect → Firkin page first.";
