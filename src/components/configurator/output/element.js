@@ -554,10 +554,14 @@ class OutputConfigurator extends BroadcastableDiffuseElement {
    * @param {string} id
    */
   /**
-   * Start the initial carry-over once the selected output's collections have
-   * answers. The collections load asynchronously (local cache, pull, or both),
-   * so waiting here is what keeps a save that races the selection from skipping
-   * the collections that are still empty.
+   * Start the initial carry-over once the selected output has read its own
+   * collections. The collections load asynchronously (local cache, pull, or
+   * both), so waiting here is what keeps a save that races the selection from
+   * skipping the collections that are still empty.
+   *
+   * A local-first output reports `loaded` from its cache before the remote read
+   * lands. Ask it to read before deciding: on a new device the cache is empty,
+   * and seeding from it would write data the log already holds.
    *
    * @param {Output} out
    * @param {Output} def
@@ -575,18 +579,23 @@ class OutputConfigurator extends BroadcastableDiffuseElement {
         while (Date.now() < deadline) {
           if (this.#selected.value !== out) return;
 
-          const collections = COLLECTIONS.map((name) =>
-            out[name].collection()
-          );
-
-          if (collections.every((collection) =>
-            collection?.state === "loaded"
-          )) {
-            await this.#carryOver(out, def, id);
-            return;
+          if (!out.ready()) {
+            await new Promise((resolve) => setTimeout(resolve, 50));
+            continue;
           }
 
-          await new Promise((resolve) => setTimeout(resolve, 50));
+          // Re-read through the selected output so the decision below uses
+          // what its log holds, not what happened to be cached.
+          await Promise.all(
+            COLLECTIONS.map((name) =>
+              Promise.resolve(out[name].reload?.()).catch(() => {})
+            ),
+          );
+
+          if (this.#selected.value !== out) return;
+
+          await this.#carryOver(out, def, id);
+          return;
         }
       } finally {
         this.#carryingOver.delete(id);

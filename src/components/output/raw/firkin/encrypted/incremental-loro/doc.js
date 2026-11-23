@@ -97,6 +97,20 @@ export function headsAtLeast(a, b) {
 }
 
 /**
+ * Whether two heads fingerprints describe the same version.
+ *
+ * Loro's encoding preserves peer insertion order, so the same version vector
+ * can encode to different strings depending on how a document learned about its
+ * peers. Compare what the versions include, not their encodings.
+ *
+ * @param {Heads} a
+ * @param {Heads} b
+ */
+export function headsEqual(a, b) {
+  return headsAtLeast(a, b) && headsAtLeast(b, a);
+}
+
+/**
  * @param {any} a
  * @param {any} b
  */
@@ -507,7 +521,25 @@ export function changesSince(doc, heads) {
 export function headsOf(doc) {
   doc.commit();
 
-  return [hexOf(doc.oplogVersion().encode())];
+  const version = doc.oplogVersion();
+  const json = version.toJSON();
+  /** @type {Array<[`${number}`, number]>} */
+  const entries = /** @type {any} */ (
+    json instanceof Map ? [...json] : Object.entries(json ?? {})
+  );
+
+  // Loro's encoding preserves the order peers were inserted into the version
+  // vector, so the same version can encode differently depending on the order
+  // the document learned about its peers. Cursors and applied records compare
+  // these strings, so encode in a canonical (peer-sorted) order.
+  entries.sort(([left], [right]) => {
+    const a = BigInt(left);
+    const b = BigInt(right);
+
+    return a < b ? -1 : a > b ? 1 : 0;
+  });
+
+  return [hexOf(new VersionVector(new Map(entries)).encode())];
 }
 
 /**

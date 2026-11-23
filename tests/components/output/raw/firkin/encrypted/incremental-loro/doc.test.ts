@@ -229,6 +229,26 @@ describe("components/output/raw/firkin/encrypted/incremental-loro/doc", () => {
     expect(headsAtLeast(first, ["not-hex"])).toBe(false);
   });
 
+  it("encodes equivalent versions identically", () => {
+    const a = changeDocument(createDocument("aa".repeat(16)), [track("a")])
+      .doc;
+    const b = changeDocument(createDocument("bb".repeat(16)), [track("b")])
+      .doc;
+
+    const left = applyLog(
+      applyLog(createDocument(), changesSince(a, [])),
+      changesSince(b, []),
+    );
+    const right = applyLog(
+      applyLog(createDocument(), changesSince(b, [])),
+      changesSince(a, []),
+    );
+
+    // Same operations, learned in the opposite order: the heads fingerprint
+    // must not depend on the order peers were added.
+    expect(headsOf(left)).toEqual(headsOf(right));
+  });
+
   it("falls back to a full document when the heads are unknown", () => {
     const doc = changeDocument(createDocument(), [track("a")]).doc;
 

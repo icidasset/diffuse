@@ -166,7 +166,13 @@ async function setupDevice(args: {
   globalThis.__reads = [];
 
   const writes = ["ingestCar", "upload", "registrySet", "registrySetIf"];
-  const reads = ["dagPull", "get", "registryNames", "registryLookup"];
+  const reads = [
+    "dagPull",
+    "get",
+    "registryNames",
+    "registryList",
+    "registryLookup",
+  ];
 
   for (const name of writes) {
     const original = Firkin.prototype[name];
@@ -214,6 +220,46 @@ async function setupDevice(args: {
     state: element.tracks.collection().state,
     warnings: globalThis.__warnings,
   };
+}
+
+/** Runs inside a page: the cached document snapshots, by document name. */
+async function snapshotDocs() {
+  const IDB = await import("idb-keyval");
+  const { IDB_DOCS } = await import(
+    "~/components/output/raw/firkin/encrypted/incremental-loro/constants.js"
+  );
+  const prefix = `${IDB_DOCS}/firkin-two-devices/`;
+  const out: Record<string, number[]> = {};
+
+  for (const key of await IDB.keys()) {
+    if (typeof key !== "string" || !key.startsWith(prefix)) continue;
+    // Cursor/applied/changes keys live under `<docKey>/...`.
+    if (key.slice(prefix.length).includes("/")) continue;
+
+    const bytes = await IDB.get(key);
+    if (bytes instanceof Uint8Array) {
+      out[key.slice(prefix.length)] = Array.from(bytes);
+    }
+  }
+
+  return out;
+}
+
+/** Runs inside a page: put older document snapshots back, as a stale write. */
+async function restoreDocs(snapshot: Record<string, number[]>) {
+  const IDB = await import("idb-keyval");
+  const { IDB_DOCS } = await import(
+    "~/components/output/raw/firkin/encrypted/incremental-loro/constants.js"
+  );
+  const prefix = `${IDB_DOCS}/firkin-two-devices/`;
+  let restored = 0;
+
+  for (const [name, bytes] of Object.entries(snapshot)) {
+    await IDB.set(`${prefix}${name}`, Uint8Array.from(bytes));
+    restored += 1;
+  }
+
+  return restored;
 }
 
 /** Runs inside a page: save the given track ids as the whole collection. */
@@ -404,8 +450,7 @@ describe("components/output/raw/firkin/encrypted/incremental-loro two devices", 
       await settle(3_000);
       await pageA.evaluate(resetOperations);
       await pageB.evaluate(resetOperations);
-      await settle(3_000);
-
+      await settle(2_000);
       expect((await pageA.evaluate(operationCounts)).writes).toEqual([]);
       expect((await pageB.evaluate(operationCounts)).writes).toEqual([]);
 
@@ -424,6 +469,86 @@ describe("components/output/raw/firkin/encrypted/incremental-loro two devices", 
       await settle(2_000);
       expect((await pageA.evaluate(operationCounts)).writes).toEqual([]);
       expect((await pageB.evaluate(operationCounts)).writes).toEqual([]);
+
+      // --- 7. A settled reload writes nothing and reads no manifests ------
+      await pageB.goto(DEVICE_URL);
+
+      const reloadedB = await pageB.evaluate(setupDevice, {
+        args: [{
+          apiBase,
+          accountSeed,
+          sessionSeed: Array.from(new Uint8Array(32).fill(22)),
+          saltHex: hex(SALT),
+          id: "device-b",
+          namespace,
+        }],
+      });
+      expect(reloadedB.state).toBe("loaded");
+
+      const readAfterReload = await until(async () => {
+        const ids = await pageB.evaluate(trackIds);
+        return ids?.length === 4 ? ids : undefined;
+      }, 20_000);
+      expect(readAfterReload).toEqual(["t1", "t2", "t3", "t4"]);
+
+      await settle(1_000);
+      await pageB.evaluate(resetOperations);
+      await settle(3_000);
+
+      const reloadIdle = await pageB.evaluate(operationCounts);
+      expect(reloadIdle.writes).toEqual([]);
+      expect(
+        reloadIdle.reads.filter((read: string) =>
+          read === "dagPull" || read === "get" || read === "registryLookup"
+        ),
+      ).toEqual([]);
+
+      // --- 8. A stale document cache is restored, not re-published ---------
+      // Capture B's four-track documents, let the log advance to five, then put
+      // the older snapshots back while keeping the (five-track) cursor — the
+      // state a stale tab leaves behind. The pull restores the lost op; nothing
+      // should be pushed for it.
+      const stale = await pageB.evaluate(snapshotDocs);
+      expect(Object.keys(stale).length).toBeGreaterThan(0);
+
+      await pageA.evaluate(resetOperations);
+      await pageA.evaluate(saveTracks, {
+        args: [["t1", "t2", "t3", "t4", "t5"]],
+      });
+
+      const fiveOnB = await until(async () => {
+        const ids = await pageB.evaluate(trackIds);
+        return ids?.length === 5 ? ids : undefined;
+      }, 20_000);
+      expect(fiveOnB).toEqual(["t1", "t2", "t3", "t4", "t5"]);
+
+      await pageB.evaluate(restoreDocs, { args: [stale] });
+      await pageB.goto(DEVICE_URL);
+
+      const afterCacheLoss = await pageB.evaluate(setupDevice, {
+        args: [{
+          apiBase,
+          accountSeed,
+          sessionSeed: Array.from(new Uint8Array(32).fill(22)),
+          saltHex: hex(SALT),
+          id: "device-b",
+          namespace,
+        }],
+      });
+      expect(afterCacheLoss.state).toBe("loaded");
+
+      const restored = await until(async () => {
+        const ids = await pageB.evaluate(trackIds);
+        return ids?.length === 5 ? ids : undefined;
+      }, 20_000);
+      expect(restored).toEqual(["t1", "t2", "t3", "t4", "t5"]);
+
+      await settle(2_000);
+      const afterRestore = await pageB.evaluate(operationCounts);
+      if (afterRestore.writes.length > 0) {
+        console.log("CACHE_LOSS_PUSHED", afterRestore);
+      }
+      expect(afterRestore.writes).toEqual([]);
     } finally {
       await pageA.close();
       await pageB.close();

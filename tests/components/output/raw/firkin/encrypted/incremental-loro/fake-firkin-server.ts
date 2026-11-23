@@ -22,6 +22,16 @@ export function startFakeFirkin() {
   const registry = new Map<string, string>();
   const channels = new Map<string, Set<WebSocket>>();
 
+  /** Artificial latency for data requests, to expose races with the UI. */
+  let delayMs = 0;
+  const setDelay = (ms: number) => {
+    delayMs = ms;
+  };
+  const pause = () =>
+    delayMs > 0
+      ? new Promise((resolve) => setTimeout(resolve, delayMs))
+      : Promise.resolve();
+
   const cors = (response: Response) => {
     response.headers.set("Access-Control-Allow-Origin", "*");
     response.headers.set("Access-Control-Allow-Headers", "*");
@@ -59,6 +69,8 @@ export function startFakeFirkin() {
 
       return response;
     }
+
+    if (delayMs > 0) await pause();
 
     if (path === "/v1/registry") {
       return cors(json({ namespaces: [] }));
@@ -167,5 +179,13 @@ export function startFakeFirkin() {
 
   const port = (http.addr as Deno.NetAddr).port;
 
-  return { http, port, blobs, registry };
+  /** Drop every open hint socket, as a flaky network would. */
+  const dropChannels = () => {
+    for (const peers of channels.values()) {
+      for (const socket of peers) socket.close();
+    }
+    channels.clear();
+  };
+
+  return { http, port, blobs, registry, dropChannels, setDelay };
 }

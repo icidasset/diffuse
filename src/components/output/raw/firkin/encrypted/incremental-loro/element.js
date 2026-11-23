@@ -47,6 +47,7 @@ import {
   encodeDocument,
   hasRecords,
   headsAtLeast,
+  headsEqual,
   headsOf,
   loadDocument,
   recordsOf,
@@ -725,6 +726,7 @@ class FirkinLoroOutput extends BroadcastedOutputElement {
         // straight away — even when it is empty, because then "empty" is the
         // truth rather than "unknown".
         const cursor = await this.#cursor(name);
+        await this.#reconcileCursor(name, doc);
         return hasRecords(doc) || cursor.heads !== undefined;
       }
 
@@ -747,11 +749,43 @@ class FirkinLoroOutput extends BroadcastedOutputElement {
         console.warn(`Could not cache the empty '${name}' document:`, err);
       }
 
+      await this.#reconcileCursor(name, empty);
+
       return false;
     } catch (err) {
       console.warn(`Could not read the local '${name}' document:`, err);
       return false;
     }
+  }
+
+  /**
+   * Make the push cursor describe the document that is actually here.
+   *
+   * The cursor is written after the document on every path, so a cursor that
+   * covers operations the document does not have means the cached document was
+   * lost or replaced (eviction, a failed write, a restored older cache). The
+   * cursor would then look "ahead": the next pull re-reads the log and restores
+   * the document, but until then every load thinks it has unpushed changes and
+   * appends Loro's empty update (a 22-byte entry) for nothing.
+   *
+   * Moving the cursor back is safe: the document is the source of truth for
+   * what this device has, and the pull re-delivers whatever it lost.
+   *
+   * @param {string} name
+   * @param {CollectionDocument} doc
+   */
+  async #reconcileCursor(name, doc) {
+    const cursor = await this.#cursor(name);
+    if (!cursor.heads) return;
+
+    const heads = headsOf(doc);
+    if (headsAtLeast(heads, cursor.heads)) return;
+
+    console.warn(
+      `The cached '${name}' document is behind its push cursor; re-reading it from the log.`,
+    );
+
+    await this.#setCursor(name, { heads, pushes: cursor.pushes }, true);
   }
 
   /**
@@ -1239,8 +1273,9 @@ class FirkinLoroOutput extends BroadcastedOutputElement {
   /**
    * @param {string} name
    * @param {{ heads?: Heads; pushes: number }} cursor
+   * @param {boolean} [force] - Allow the cursor to move backwards (reconcile).
    */
-  async #setCursor(name, cursor) {
+  async #setCursor(name, cursor, force = false) {
     const existing = this.#cursors.get(name);
 
     // Only ever move forwards. A push and a pull can finish in the opposite
@@ -1249,7 +1284,7 @@ class FirkinLoroOutput extends BroadcastedOutputElement {
     // appends — and the other device does the same — so the two devices keep
     // updating each other.
     if (
-      existing?.heads && cursor.heads &&
+      !force && existing?.heads && cursor.heads &&
       !headsAtLeast(cursor.heads, existing.heads)
     ) {
       return existing;
@@ -1328,17 +1363,27 @@ class FirkinLoroOutput extends BroadcastedOutputElement {
     // its cursor looks (a fresh device has none at all).
     if (doc.opCount() === 0) return false;
 
-    const heads = headsOf(doc).join(";");
+    const heads = headsOf(doc);
     const cursor = await this.#cursor(name);
 
-    if (heads === (cursor.heads ?? []).join(";")) return false;
+    // Compare versions semantically: Loro encodes the same version differently
+    // depending on the order peers were added, so string equality is not enough.
+    if (cursor.heads) {
+      // Cursor ahead: the cached document was lost, and the next pull restores
+      // it from the log. There is nothing here to publish.
+      if (!headsAtLeast(heads, cursor.heads)) return false;
+
+      // Same version: whatever the encoding says, nothing changed.
+      if (headsAtLeast(cursor.heads, heads)) return false;
+    }
 
     // The applied record says what the log already contains. A document that is
     // exactly that has nothing of its own to push, even when its cursor was
     // lost (a restored cache, a cleared IndexedDB, a race).
     const applied = await this.#appliedLog(name);
 
-    return applied?.heads !== heads;
+    return !applied?.heads ||
+      !headsEqual(applied ? [applied.heads] : [], heads);
   }
 
   /**
@@ -1372,6 +1417,11 @@ class FirkinLoroOutput extends BroadcastedOutputElement {
    */
   async #pushUnpushed() {
     await this.#initialise();
+
+    // Let an in-flight pull settle first: it records what the log already holds
+    // (the cursor and the applied record), and without that a document that is
+    // merely cached looks unpushed and gets re-sent on every load.
+    if (this.#pulling) await this.#pulling.catch(() => {});
 
     for (const name of COLLECTIONS) {
       for (const docName of this.#docNames(name)) {
@@ -1411,8 +1461,21 @@ class FirkinLoroOutput extends BroadcastedOutputElement {
     }
 
     const cursor = await this.#cursor(name);
-    const snapshot = cursor.pushes > 0 && cursor.pushes % SNAPSHOT_EVERY === 0;
     const heads = headsOf(doc);
+
+    // Export only when the document is strictly ahead of the cursor.
+    // - The cursor can be ahead when the cached document lost operations (it
+    //   was evicted or replaced): nothing to export, and Loro would answer with
+    //   a small empty update.
+    // - The versions can be equal while their encodings differ (Loro encodes in
+    //   peer-insertion order): nothing changed either.
+    // Appending the empty update would add an empty log entry on every load.
+    if (cursor.heads) {
+      if (!headsAtLeast(heads, cursor.heads)) return;
+      if (headsAtLeast(cursor.heads, heads)) return;
+    }
+
+    const snapshot = cursor.pushes > 0 && cursor.pushes % SNAPSHOT_EVERY === 0;
 
     // Use the worker's precomputed entry only while the document and cursor
     // still match what it saw; otherwise compute it here.
@@ -1447,10 +1510,11 @@ class FirkinLoroOutput extends BroadcastedOutputElement {
 
     // The cursor first: the applied record below is only meaningful once the
     // push cursor agrees, and a loader may observe the record as soon as it is
-    // written.
+    // written. A duplicate append (the same plaintext already in the log) did
+    // not add anything, so it must not advance the snapshot cadence either.
     await this.#setCursor(name, {
       heads,
-      pushes: cursor.pushes + 1,
+      pushes: cursor.pushes + (appended?.appended ? 1 : 0),
     });
 
     // This device's log is now exactly what its document holds, so record the
@@ -1523,12 +1587,15 @@ class FirkinLoroOutput extends BroadcastedOutputElement {
         console.warn("Could not cache a Firkin entry:", err);
       }
 
-      // Our own write changes the namespace listing.
-      this.#listings.clear();
+      // A duplicate entry changes neither the listing nor the other devices, so
+      // it is not worth invalidating the cache or sending a hint for it.
+      if (appended) {
+        this.#listings.clear();
 
-      // Best effort: the entry is already committed, so a lost hint only
-      // delays other devices.
-      this.#channel?.send(name);
+        // Best effort: the entry is already committed, so a lost hint only
+        // delays other devices.
+        this.#channel?.send(name);
+      }
 
       return { device: auth.device, manifest, cid, appended };
     };
@@ -1564,7 +1631,7 @@ class FirkinLoroOutput extends BroadcastedOutputElement {
 
     const names = await this.#names(client.rb);
     const signature = logSignature(names, name);
-    const heads = headsOf(current).join(";");
+    const heads = headsOf(current);
     const unpushed = await this.#hasUnpushed(name, current);
     const applied = await this.#appliedLog(name);
 
@@ -1574,7 +1641,7 @@ class FirkinLoroOutput extends BroadcastedOutputElement {
     // and the DAG pull each one would otherwise cost — entirely.
     if (
       applied?.signature === signature &&
-      applied.heads === heads &&
+      headsEqual(applied ? [applied.heads] : [], heads) &&
       !unpushed
     ) {
       return {
@@ -1609,7 +1676,7 @@ class FirkinLoroOutput extends BroadcastedOutputElement {
     // the entries it is missing would look like they are already applied.
     const appliedPacks = applied?.packs ? applied.packs.split(";") : [];
     const incremental = appliedPacks.length > 0 &&
-      applied?.heads === heads &&
+      headsEqual(applied ? [applied.heads] : [], heads) &&
       hasRecords(current) &&
       appliedPacks.every((cid, index) => entries[index]?.cid === cid);
 
@@ -1778,10 +1845,15 @@ class FirkinLoroOutput extends BroadcastedOutputElement {
       const unpushed = await this.#hasUnpushed(name, current);
 
       if (!(bytes instanceof Uint8Array)) {
-        // Nothing remote yet: publish what we have. Only when there is
-        // something to publish — an empty document would just add an empty
-        // entry to the log on every device that opens the page.
-        if (options.bootstrap && current.opCount() > 0) {
+        // Nothing remote yet: publish what we have. Only when the log has no
+        // entries at all — a non-empty pack list that produced no bytes means
+        // the read failed partway, and pushing a whole snapshot then would
+        // re-upload what the log already holds on every load. An empty
+        // document is never published either.
+        if (
+          options.bootstrap && current.opCount() > 0 &&
+          collection.packs === ""
+        ) {
           this.#enqueuePush(name, current);
         }
         return;

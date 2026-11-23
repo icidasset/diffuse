@@ -5,6 +5,7 @@ import { describe, it } from "@std/testing/bdd";
 import { expect } from "@std/expect";
 
 import { startFakeFirkin } from "./fake-firkin-server.ts";
+import { startStaticServer } from "./static-server.ts";
 
 /**
  * Two real dashboard pages, each in its own browser profile, sharing one Firkin
@@ -17,7 +18,6 @@ import { startFakeFirkin } from "./fake-firkin-server.ts";
  * the UI's reactive pipeline.
  */
 
-const DASHBOARD_URL = "http://localhost:3000/dashboard";
 const SALT = new Uint8Array(16).fill(7);
 
 const hex = (bytes: Uint8Array) =>
@@ -33,6 +33,13 @@ async function setupDashboard(args: {
   sessionSeed: number[];
   saltHex: string;
 }) {
+  // The injected script reads this on the next load and installs the shim
+  // before the app's modules run, so a reload behaves like a real one.
+  localStorage.setItem(
+    "__test_session_seed",
+    JSON.stringify(args.sessionSeed),
+  );
+
   const { Signer, delegate, WebCryptoSigner } = await import(
     "~/vendor/firkin/index.js"
   );
@@ -152,26 +159,38 @@ async function setupDashboard(args: {
   const output = await until(() => document.querySelector("do-output"));
   if (!output) return { fatal: "no do-output element" };
 
-  const { buildFacets } = await import("~/common/facets/utils.js");
-  const { insertPreludes } = await import("~/common/facets/prelude.js");
+  // On a reload the option is already part of the stored facet set; adding the
+  // facet again would duplicate its prelude.
+  const alreadyEnabled = Boolean(
+    await until(
+      () => document.getElementById("do-output__dc-output__firkin-loro"),
+      2_000,
+    ),
+  );
 
-  const facet = buildFacets(["facets/data/firkin-loro/index.tile"])[0];
-  const facets = output.facets.collection();
-  const existing = facets.state === "loaded" ? facets.data : [];
+  let facet;
 
-  await output.facets.save([
-    ...existing.filter((saved: any) => saved.id !== facet.id),
-    facet,
-  ]);
+  if (!alreadyEnabled) {
+    const { buildFacets } = await import("~/common/facets/utils.js");
+    const { insertPreludes } = await import("~/common/facets/prelude.js");
 
-  await until(() => {
-    const collection = output.facets.collection();
-    return collection.state === "loaded" &&
-      collection.data.some((saved: any) => saved.uri === facet.uri);
-  }, 10_000);
+    facet = buildFacets(["facets/data/firkin-loro/index.tile"])[0];
+    const facets = output.facets.collection();
+    const existing = facets.state === "loaded" ? facets.data : [];
 
-  await insertPreludes([facet]);
+    await output.facets.save([
+      ...existing.filter((saved: any) => saved.id !== facet.id),
+      facet,
+    ]);
 
+    await until(() => {
+      const collection = output.facets.collection();
+      return collection.state === "loaded" &&
+        collection.data.some((saved: any) => saved.uri === facet.uri);
+    }, 10_000);
+
+    await insertPreludes([facet]);
+  }
   const option = await until(() => document.getElementById("do-output__dc-output__firkin-loro"));
   if (!option) return { fatal: "no firkin option" };
 
@@ -182,32 +201,11 @@ async function setupDashboard(args: {
   );
   if (!selected) return { fatal: "selection did not stick" };
 
-  // Wait for the output to actually answer, so counters start from a settled
-  // state.
+  // Wait for the output to actually answer.
   await until(() => output.ready(), 30_000);
   await until(() => output.tracks.collection().state === "loaded", 30_000);
 
   globalThis.__output = output;
-
-  const { Firkin } = await import("~/vendor/firkin/index.js");
-  globalThis.__writes = [];
-  globalThis.__reads = [];
-
-  for (const name of ["ingestCar", "upload", "registrySet", "registrySetIf"]) {
-    const original = Firkin.prototype[name];
-    Firkin.prototype[name] = async function (...rest: any[]) {
-      globalThis.__writes.push(name);
-      return await original.apply(this, rest);
-    };
-  }
-
-  for (const name of ["dagPull", "get", "registryNames", "registryLookup"]) {
-    const original = Firkin.prototype[name];
-    Firkin.prototype[name] = async function (...rest: any[]) {
-      globalThis.__reads.push(name);
-      return await original.apply(this, rest);
-    };
-  }
 
   return {
     device: toHex(sessionSigner.pubkeyBytes),
@@ -228,9 +226,57 @@ async function saveThroughOutput(ids: string[]) {
   );
 }
 
+/**
+ * Runs inside a page: fill every collection, with tracks and playlist items
+ * split across bundles (the shape a real library has).
+ */
+async function seedEverything() {
+  const output = globalThis.__output;
+  const at = "2020-01-01T00:00:00.000Z";
+  const track = (id: string, uri: string) => ({
+    $type: "sh.diffuse.output.track",
+    id,
+    uri,
+    createdAt: at,
+    updatedAt: at,
+  });
+
+  await output.tracks.save([
+    track("t1", "https://a.example/1.mp3"),
+    track("t2", "https://b.example/2.mp3"),
+    track("t3", "https://a.example/3.mp3"),
+  ]);
+
+  await output.playlistItems.save([
+    {
+      $type: "sh.diffuse.output.playlistItem",
+      id: "p1",
+      playlist: "https://a.example/list",
+      uri: "https://a.example/1.mp3",
+    },
+    {
+      $type: "sh.diffuse.output.playlistItem",
+      id: "p2",
+      playlist: "https://b.example/list",
+      uri: "https://b.example/2.mp3",
+    },
+  ]);
+
+  await output.settings.save([
+    { $type: "sh.diffuse.output.setting", id: "s1", key: "volume", value: "0.5" },
+  ]);
+
+  await output.collaborations.save([
+    { $type: "sh.diffuse.output.collaboration", id: "c1", did: "did:example:1" },
+  ]);
+}
+
 /** Runs inside a page: the ids the app shows for tracks. */
 function visibleTracks() {
-  const collection = globalThis.__output.tracks.collection();
+  const output = globalThis.__output ?? document.querySelector("do-output");
+  if (!output) return undefined;
+
+  const collection = output.tracks.collection();
   return collection.state === "loaded"
     ? collection.data.map((track: any) => track.id).sort()
     : undefined;
@@ -242,7 +288,8 @@ function pageState() {
     writes: globalThis.__writes,
     reads: globalThis.__reads,
     warnings: globalThis.__warnings,
-    tracks: globalThis.__output.tracks.collection().state,
+    tracks: (globalThis.__output ?? document.querySelector("do-output"))
+      ?.tracks.collection().state,
   };
 }
 
@@ -268,8 +315,10 @@ const until = async <T>(fn: () => T | Promise<T>, ms = 20_000) => {
 
 describe("firkin output on two real dashboards", () => {
   it("a new device reads, and both dashboards settle", async () => {
-    const { http, port, registry } = startFakeFirkin();
+    const { http, port, registry, dropChannels, setDelay } = startFakeFirkin();
+    const staticServer = startStaticServer("dist");
     const apiBase = `http://127.0.0.1:${port}`;
+    const dashboardUrl = `${staticServer.url}/dashboard`;
     const accountSeed = Array.from(new Uint8Array(32).fill(5));
 
     const encoded = (value: string) =>
@@ -280,8 +329,8 @@ describe("firkin output on two real dashboards", () => {
     await using a = await launch();
     await using b = await launch();
 
-    const pageA = await a.newPage(DASHBOARD_URL);
-    const pageB = await b.newPage(DASHBOARD_URL);
+    const pageA = await a.newPage(dashboardUrl);
+    const pageB = await b.newPage(dashboardUrl);
 
     try {
       // --- 1. The first dashboard publishes t1 ------------------------------
@@ -314,6 +363,10 @@ describe("firkin output on two real dashboards", () => {
       });
 
       // --- 2. A second, fresh dashboard reads it ----------------------------
+      // Slow the data plane so the second dashboard's output settles *before*
+      // its pull lands. The carry-over must wait for the read instead of
+      // seeding from the empty cache (which used to erase the log).
+      setDelay(2_000);
       const deviceB = await pageB.evaluate(setupDashboard, {
         args: [{
           apiBase,
@@ -333,6 +386,12 @@ describe("firkin output on two real dashboards", () => {
         console.log("DASH_REGISTRY", [...registry.keys()]);
       }
       expect(readOnB).toEqual(["t1"]);
+
+      await settle(1_000);
+      const bBoot = await pageB.evaluate(pageState);
+      expect(bBoot.writes).toEqual([]);
+
+      setDelay(0);
 
       // Let anything the second dashboard did on its own finish, then check it
       // has stopped writing.
@@ -367,9 +426,87 @@ describe("firkin output on two real dashboards", () => {
 
       expect(aIdle.writes).toEqual([]);
       expect(bSettled.writes).toEqual([]);
+
+      // --- 4b. Seed a full library, then let both settle --------------------
+      await pageA.evaluate(resetPageOperations);
+      await pageB.evaluate(resetPageOperations);
+      await pageA.evaluate(seedEverything);
+
+      const seededOnB = await until(async () => {
+        const ids = await pageB.evaluate(visibleTracks);
+        return ids?.length === 3 ? ids : undefined;
+      }, 30_000);
+      expect(seededOnB).toEqual(["t1", "t2", "t3"]);
+
+      // Let the seed's pushes drain before measuring idleness.
+      await until(async () => {
+        const before = (await pageA.evaluate(pageState)).writes.length;
+        await settle(1_500);
+        const after = (await pageA.evaluate(pageState)).writes.length;
+        return before === after && after > 0;
+      }, 30_000);
+
+      await pageA.evaluate(resetPageOperations);
+      await pageB.evaluate(resetPageOperations);
+      await settle(4_000);
+      const seededA = await pageA.evaluate(pageState);
+      const seededB = await pageB.evaluate(pageState);
+      if (seededA.writes.length > 0) console.log("SEED_A_STILL_WRITING", seededA);
+      if (seededB.writes.length > 0) {
+        console.log("SEED_B_STILL_WRITING", seededB);
+        console.log(
+          "SEED_B_REFS",
+          [...registry.keys()].filter((key) => key.endsWith(deviceB.device)),
+        );
+      }
+      expect(seededA.writes).toEqual([]);
+      expect(seededB.writes).toEqual([]);
+
+      // --- 5. Reloading the settled dashboard writes nothing ---------------
+      const registryBeforeReload = [...registry.keys()].sort();
+
+      // A real reload: the stored session is present, so the output reads
+      // before any of the app's effects settle.
+      await pageB.goto(dashboardUrl);
+
+      const readAfterReload = await until(async () => {
+        const ids = await pageB.evaluate(visibleTracks);
+        return ids?.length === 3 ? ids : undefined;
+      }, 30_000);
+      expect(readAfterReload).toEqual(["t1", "t2", "t3"]);
+
+      await settle(2_000);
+      const reloadState = await pageB.evaluate(pageState);
+      if (reloadState.writes.length > 0) {
+        console.log("DASH_B_RELOAD_WROTE", reloadState);
+        console.log("DASH_REGISTRY_AFTER_RELOAD", {
+          before: registryBeforeReload,
+          after: [...registry.keys()].sort(),
+        });
+      }
+      expect(reloadState.writes).toEqual([]);
+
+      // --- 5. A hint-channel reconnect on a settled log is a read only -----
+      await pageA.evaluate(resetPageOperations);
+      await pageB.evaluate(resetPageOperations);
+
+      dropChannels();
+      await settle(4_000);
+
+      const aReconnected = await pageA.evaluate(pageState);
+      const bReconnected = await pageB.evaluate(pageState);
+      if (aReconnected.writes.length > 0) {
+        console.log("DASH_A_RECONNECT_WROTE", aReconnected);
+      }
+      if (bReconnected.writes.length > 0) {
+        console.log("DASH_B_RECONNECT_WROTE", bReconnected);
+      }
+      expect(aReconnected.writes).toEqual([]);
+      expect(bReconnected.writes).toEqual([]);
     } finally {
       await pageA.close();
       await pageB.close();
+      await staticServer.http.shutdown();
       await http.shutdown();
     }
   });
