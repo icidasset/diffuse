@@ -50,6 +50,7 @@
     "@zip-js/zip-js": "jsr:@zip-js/zip-js@^2.9.0",
     "alien-signals": "npm:alien-signals@^3.2.1",
     "bs58check": "npm:bs58check@^4.0.0",
+    "cborg": "npm:cborg@^5.1.11",
     "codemirror": "npm:codemirror@^6.0.2",
     "fast-average-color": "npm:fast-average-color@^9.5.2",
     "fast-uri": "./src/common/fast-uri.js",
