@@ -463,6 +463,27 @@ describe("components/output/raw/firkin/encrypted/record-sync", () => {
         .toBe(1);
       expect(restoredReads).not.toContain("dagPull");
 
+      // A second instance in the same page reuses the shared listing.
+      await pageB.evaluate(resetOperations);
+      await pageB.evaluate(() => {
+        const second = document.createElement("dob-record-sync");
+        second.id = "record-sync-b2";
+        second.setAttribute("namespace", "record-sync-test");
+        second.setAttribute("keep", "64");
+        globalThis.__second = second;
+        document.body.append(second);
+      });
+
+      const secondReady = await until(
+        () => pageB.evaluate(() => globalThis.__second?.ready() === true),
+        20_000,
+      );
+      expect(secondReady).toBe(true);
+
+      await settle(1_000);
+      const secondReads = (await pageB.evaluate(operationCounts)).reads;
+      expect(secondReads).not.toContain("registryNames");
+
       // A real read's 401 marks the output unusable; there is no separate
       // auth probe.
       const readyAfterAuthFailure = await pageA.evaluate(async () => {

@@ -10,6 +10,11 @@ import {
   HINT_DEBOUNCE_MS,
   openHintChannel,
 } from "~/common/firkin/channel.js";
+import {
+  invalidate as invalidateListing,
+  listingKey,
+  names as sharedNames,
+} from "~/common/firkin/listings.js";
 import { fieldKey } from "~/common/firkin/output-key.js";
 import {
   fieldContext,
@@ -185,8 +190,9 @@ class FirkinRecordSyncOutput extends BroadcastedOutputElement {
    */
   #hints = new Map();
 
-  /** @type {Map<string, { at: number; names: Promise<Record<string, string> | null> }>} */
-  #listings = new Map();
+  /** Cache scope for the shared registry listing: apiBase + account + namespace. */
+  /** @type {string | undefined} */
+  #listingKey;
 
   /** @type {{ publicKey: Uint8Array; auth: LogAuth } | undefined} */
   #authCache;
@@ -344,7 +350,7 @@ class FirkinRecordSyncOutput extends BroadcastedOutputElement {
       return;
     }
 
-    if (force) this.#listings.clear();
+    if (force) this.#invalidateListings();
 
     void this.#pull();
   }
@@ -373,8 +379,20 @@ class FirkinRecordSyncOutput extends BroadcastedOutputElement {
     try {
       const client = await getSessionClient({ cache: blockCache });
       if (!client) {
+        this.#invalidateListings();
+        this.#listingKey = undefined;
         this.#connected.value = false;
         return;
+      }
+
+      const nextKey = listingKey(
+        client.session,
+        registryNamespace(this.#namespace),
+      );
+
+      if (this.#listingKey !== nextKey) {
+        if (this.#listingKey) invalidateListing(this.#listingKey);
+        this.#listingKey = nextKey;
       }
 
       this.#deviceId = bytesToHex(client.session.publicKey);
@@ -404,6 +422,7 @@ class FirkinRecordSyncOutput extends BroadcastedOutputElement {
 
     if (!isUnauthorized(err)) return;
 
+    this.#invalidateListings();
     this.#connected.value = false;
     this.#closeChannel();
   }
@@ -485,7 +504,7 @@ class FirkinRecordSyncOutput extends BroadcastedOutputElement {
             }
           }
 
-          this.#listings.clear();
+          this.#invalidateListings();
 
           try {
             await this.#pullCollection(name);
@@ -970,7 +989,7 @@ class FirkinRecordSyncOutput extends BroadcastedOutputElement {
         // The log has it; the local cache is only an optimisation.
       }
 
-      this.#listings.clear();
+      this.#invalidateListings();
       this.#channel?.send(name, manifest.cid);
 
       await this.#setCursor(name, {
@@ -1247,7 +1266,7 @@ class FirkinRecordSyncOutput extends BroadcastedOutputElement {
       return true;
     });
 
-    if (handled) this.#listings.clear();
+    if (handled) this.#invalidateListings();
 
     return handled;
   }
@@ -1271,27 +1290,24 @@ class FirkinRecordSyncOutput extends BroadcastedOutputElement {
   }
 
   /**
-   * The namespace listing, reused for a moment so the collections don't ask
-   * the same question once each.
+   * The namespace listing, shared across collections, output instances and
+   * tabs. The shared store owns the TTL, in-flight dedupe and invalidation
+   * broadcast.
    *
    * @param {Firkin} rb
    */
   #loadNames(rb) {
     return (/** @type {string} */ namespace) => {
-      const cached = this.#listings.get(namespace);
-      if (cached && Date.now() - cached.at < NAMES_TTL_MS) {
-        return cached.names;
-      }
-
-      const names = rb.registryNames(namespace).catch((err) => {
-        this.#listings.delete(namespace);
-        throw err;
-      });
-
-      this.#listings.set(namespace, { at: Date.now(), names });
-
-      return names;
+      const key = this.#listingKey;
+      return key
+        ? sharedNames(rb, key, namespace, NAMES_TTL_MS)
+        : rb.registryNames(namespace);
     };
+  }
+
+  #invalidateListings() {
+    const key = this.#listingKey;
+    if (key) invalidateListing(key);
   }
 
   /** @param {Firkin} rb */

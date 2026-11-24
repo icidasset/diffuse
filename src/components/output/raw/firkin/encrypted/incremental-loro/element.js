@@ -17,6 +17,11 @@ import {
   channelName,
   openHintChannel,
 } from "~/common/firkin/channel.js";
+import {
+  invalidate as invalidateListing,
+  listingKey,
+  names as sharedNames,
+} from "~/common/firkin/listings.js";
 import { outputKey } from "~/common/firkin/output-key.js";
 
 import {
@@ -280,15 +285,9 @@ class FirkinLoroOutput extends BroadcastedOutputElement {
   /** @type {Map<string, ReturnType<typeof setTimeout>>} */
   #hints = new Map();
 
-  /**
-   * One namespace listing, shared by the collections that read from it.
-   *
-   * All five collections of an output live in the same namespace, so a pull
-   * would otherwise ask the same question five times.
-   *
-   * @type {Map<string, { at: number; names: Promise<Record<string, string> | null> }>}
-   */
-  #listings = new Map();
+  /** Cache scope for the shared registry listing: apiBase + account + namespace. */
+  /** @type {string | undefined} */
+  #listingKey;
 
   /** @type {{ publicKey: Uint8Array; auth: LogAuth } | undefined} */
   #authCache;
@@ -530,7 +529,7 @@ class FirkinLoroOutput extends BroadcastedOutputElement {
       return;
     }
 
-    if (force) this.#listings.clear();
+    if (force) this.#invalidateListings();
 
     void this.#pull();
   }
@@ -568,8 +567,20 @@ class FirkinLoroOutput extends BroadcastedOutputElement {
     try {
       const client = await getSessionClient({ cache: blockCache });
       if (!client) {
+        this.#invalidateListings();
+        this.#listingKey = undefined;
         this.#connected.value = false;
         return;
+      }
+
+      const nextKey = listingKey(
+        client.session,
+        registryNamespace(this.#namespace),
+      );
+
+      if (this.#listingKey !== nextKey) {
+        if (this.#listingKey) invalidateListing(this.#listingKey);
+        this.#listingKey = nextKey;
       }
 
       // A stored session is enough to start the local-first path. The first
@@ -597,6 +608,7 @@ class FirkinLoroOutput extends BroadcastedOutputElement {
 
     if (!isUnauthorized(err)) return;
 
+    this.#invalidateListings();
     this.#connected.value = false;
     this.#closeChannel();
   }
@@ -661,7 +673,7 @@ class FirkinLoroOutput extends BroadcastedOutputElement {
         this.#hints.delete(collection);
 
         // Another device wrote something: don't trust the cached listing.
-        this.#listings.clear();
+        this.#invalidateListings();
 
         const name = /** @type {CollectionName} */ (collection);
 
@@ -1608,7 +1620,7 @@ class FirkinLoroOutput extends BroadcastedOutputElement {
       // A duplicate entry changes neither the listing nor the other devices, so
       // it is not worth invalidating the cache or sending a hint for it.
       if (appended) {
-        this.#listings.clear();
+        this.#invalidateListings();
 
         // Best effort: the entry is already committed, so a lost hint only
         // delays other devices.
@@ -2129,27 +2141,24 @@ class FirkinLoroOutput extends BroadcastedOutputElement {
   }
 
   /**
-   * The namespace listing, reused for a moment so a pull doesn't ask the same
-   * question once per collection.
+   * The namespace listing, shared across collections, output instances and
+   * tabs. The shared store owns the TTL, in-flight dedupe and invalidation
+   * broadcast.
    *
    * @param {Firkin} rb
    */
   #loadNames(rb) {
     return (/** @type {string} */ namespace) => {
-      const cached = this.#listings.get(namespace);
-      if (cached && Date.now() - cached.at < NAMES_TTL_MS) {
-        return cached.names;
-      }
-
-      const names = rb.registryNames(namespace).catch((err) => {
-        this.#listings.delete(namespace);
-        throw err;
-      });
-
-      this.#listings.set(namespace, { at: Date.now(), names });
-
-      return names;
+      const key = this.#listingKey;
+      return key
+        ? sharedNames(rb, key, namespace, NAMES_TTL_MS)
+        : rb.registryNames(namespace);
     };
+  }
+
+  #invalidateListings() {
+    const key = this.#listingKey;
+    if (key) invalidateListing(key);
   }
 
   /**
