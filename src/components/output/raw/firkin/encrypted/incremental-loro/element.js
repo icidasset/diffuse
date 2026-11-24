@@ -11,7 +11,8 @@ import {
   byUriScheme,
 } from "~/common/bundles.js";
 import { collectionSchema } from "~/common/self-describing.js";
-import { getSessionClient, isUnauthorized } from "~/common/firkin/session.js";
+import { getSessionClient, isUnauthorized, sessionScope } from "~/common/firkin/session.js";
+import { writeIfNewer } from "~/common/firkin/storage.js";
 import {
   HINT_DEBOUNCE_MS,
   channelName,
@@ -128,6 +129,19 @@ const blockCache = {
 
 /** Bundle key for items without a grouping key; keeps them instead of dropping. */
 const UNKEYED = "unkeyed";
+
+/**
+ * Heads are persisted as `;`-joined strings in cursors/applied records, while
+ * newer call sites pass arrays. Normalize both for comparison.
+ *
+ * @param {unknown} value
+ */
+function headList(value) {
+  if (Array.isArray(value)) return value.map(String);
+  if (typeof value === "string" && value.length > 0) return value.split(";");
+
+  return [];
+}
 
 /**
  * The userdata output: an **encrypted, incremental Loro log on Firkin**, in one
@@ -288,6 +302,10 @@ class FirkinLoroOutput extends BroadcastedOutputElement {
   /** Cache scope for the shared registry listing: apiBase + account + namespace. */
   /** @type {string | undefined} */
   #listingKey;
+
+  /** IDB scope for the signed-in server + account. */
+  /** @type {string | undefined} */
+  #accountKey;
 
   /** @type {{ publicKey: Uint8Array; auth: LogAuth } | undefined} */
   #authCache;
@@ -565,12 +583,22 @@ class FirkinLoroOutput extends BroadcastedOutputElement {
 
   async #checkConnected() {
     try {
+      await this.#initialise();
+
       const client = await getSessionClient({ cache: blockCache });
       if (!client) {
+        this.#accountKey = undefined;
         this.#invalidateListings();
         this.#listingKey = undefined;
+        this.#ready.value = new Set();
+        this.#bumpAll();
         this.#connected.value = false;
+        this.#closeChannel();
         return;
+      }
+
+      if (this.#accountKey !== sessionScope(client.session)) {
+        await this.#loadAccount();
       }
 
       const nextKey = listingKey(
@@ -712,9 +740,13 @@ class FirkinLoroOutput extends BroadcastedOutputElement {
 
   // LOCAL
 
+  #accountPrefix() {
+    return `${this.#accountKey ?? "anonymous"}/${this.#namespace}`;
+  }
+
   /** @param {string} name */
   #docKey(name) {
-    return `${IDB_DOCS}/${this.#namespace}/${name}`;
+    return `${IDB_DOCS}/${this.#accountPrefix()}/${name}`;
   }
 
   /**
@@ -819,11 +851,59 @@ class FirkinLoroOutput extends BroadcastedOutputElement {
   }
 
   /**
-   * Load the cached documents. Runs once; subsequent calls await the same work.
+   * Discard one account's in-memory state and load another's.
+   *
+   * Runs inside the serialization queue so an in-flight apply finishes against
+   * the old scope before the documents are reset. `ready` is cleared first so a
+   * pull that has not started applying yet gives up instead.
+   */
+  async #loadAccount() {
+    this.#loaded.value = false;
+    this.#ready.value = new Set();
+    this.#bumpAll();
+    this.#closeChannel();
+
+    await this.#serialize(async () => {
+      this.#initialising = undefined;
+      this.#resetLocal();
+      await this.#initialise();
+    });
+  }
+
+  #resetLocal() {
+    this.#docs.clear();
+    for (const name of COLLECTIONS) this.#docs.set(name, createDocument());
+    this.#cursors.clear();
+    this.#cursorWrites.clear();
+    this.#manifests.clear();
+    this.#applied.clear();
+    this.#persisted.clear();
+    this.#dirty.clear();
+    this.#preparedPushes.clear();
+    this.#floorCache.clear();
+    this.#actorPromises.clear();
+    this.#ready.value = new Set();
+    this.#loaded.value = false;
+
+    for (const timer of this.#pushTimers.values()) clearTimeout(timer);
+    this.#pushTimers.clear();
+
+    this.#bumpAll();
+  }
+
+  /**
+   * Load the cached documents. Runs once per account; subsequent calls await
+   * the same work.
    */
   #initialise() {
     this.#initialising ??= (async () => {
       try {
+        const client = await getSessionClient({ cache: blockCache });
+        const scope = client ? sessionScope(client.session) : undefined;
+        this.#accountKey = scope;
+
+        if (!scope) return;
+
         await Promise.all(COLLECTIONS.map(async (name) => {
           if (!this.#isBundled(name)) {
             if (await this.#loadDoc(name)) this.#markReady(name);
@@ -1214,7 +1294,7 @@ class FirkinLoroOutput extends BroadcastedOutputElement {
    * @param {string} name
    */
   #appliedLogKey(name) {
-    return `${IDB_DOCS}/${this.#namespace}/${name}/applied`;
+    return `${IDB_DOCS}/${this.#accountPrefix()}/${name}/applied`;
   }
 
   /**
@@ -1257,8 +1337,24 @@ class FirkinLoroOutput extends BroadcastedOutputElement {
    * @param {string} [signature]
    */
   async #setAppliedLog(name, packs, heads, signature) {
+    const record = { packs, heads, signature };
+
     try {
-      await IDB.set(this.#appliedLogKey(name), { packs, heads, signature });
+      await writeIfNewer(
+        this.#appliedLogKey(name),
+        record,
+        (next, current) => {
+          if (!current) return true;
+
+          const a = headList(next.heads);
+          const b = headList(current.heads);
+
+          if (b.length === 0) return true;
+          if (a.length === 0) return false;
+
+          return headsAtLeast(a, b);
+        },
+      );
     } catch (err) {
       console.warn(`Could not persist the '${name}' applied log:`, err);
     }
@@ -1268,7 +1364,7 @@ class FirkinLoroOutput extends BroadcastedOutputElement {
 
   /** @param {string} name */
   #cursorKey(name) {
-    return `${IDB_DOCS}/${this.#namespace}/${name}/cursor`;
+    return `${IDB_DOCS}/${this.#accountPrefix()}/${name}/cursor`;
   }
 
   /**
@@ -1324,7 +1420,36 @@ class FirkinLoroOutput extends BroadcastedOutputElement {
 
     // Persist the cursor as it is when the write runs, and in call order.
     const write = (this.#cursorWrites.get(name) ?? Promise.resolve()).then(
-      () => IDB.set(this.#cursorKey(name), this.#cursors.get(name) ?? cursor),
+      async () => {
+        const key = this.#cursorKey(name);
+
+        if (force) {
+          await IDB.set(key, this.#cursors.get(name) ?? cursor);
+          return;
+        }
+
+        const stored = await writeIfNewer(key, cursor, (next, current) => {
+          if (!current) return true;
+          if (
+            Number.isInteger(current.pushes) &&
+            next.pushes < current.pushes
+          ) {
+            return false;
+          }
+
+          const a = headList(next.heads);
+          const b = headList(current.heads);
+
+          if (b.length === 0) return true;
+          if (a.length === 0) return false;
+
+          return headsAtLeast(a, b);
+        });
+
+        if (stored && stored !== cursor) {
+          this.#cursors.set(name, stored);
+        }
+      },
     );
     this.#cursorWrites.set(name, write.catch(() => {}));
 
@@ -1352,7 +1477,7 @@ class FirkinLoroOutput extends BroadcastedOutputElement {
     if (existing) return existing;
 
     const created = (async () => {
-      const key = `${IDB_ACTOR}/${this.#namespace}/${name}`;
+      const key = `${IDB_ACTOR}/${this.#accountPrefix()}/${name}`;
 
       try {
         const stored = await IDB.get(key);
@@ -1490,6 +1615,9 @@ class FirkinLoroOutput extends BroadcastedOutputElement {
       return;
     }
 
+    const scope = this.#accountKey;
+    if (!scope) return;
+
     const cursor = await this.#cursor(name);
     const heads = headsOf(doc);
 
@@ -1535,6 +1663,8 @@ class FirkinLoroOutput extends BroadcastedOutputElement {
       this.#remoteFailure(err, `Could not push the '${name}' changes:`);
       return;
     }
+
+    if (this.#accountKey !== scope) return;
 
     this.#dirty.delete(name);
 
@@ -1585,6 +1715,9 @@ class FirkinLoroOutput extends BroadcastedOutputElement {
     const run = async () => {
       const client = await getSessionClient({ cache: blockCache });
       if (!client) throw new Error(NOT_CONNECTED);
+      if (sessionScope(client.session) !== this.#accountKey) {
+        throw new Error("The account changed while pushing");
+      }
 
       const key = outputKey();
       if (!key) throw new Error("The output encryption key is not loaded");
@@ -2081,7 +2214,7 @@ class FirkinLoroOutput extends BroadcastedOutputElement {
 
   /** @param {string} name */
   #floorsKey(name) {
-    return `${IDB_FLOORS}/${this.#namespace}/${name}`;
+    return `${IDB_FLOORS}/${this.#accountPrefix()}/${name}`;
   }
 
   /**

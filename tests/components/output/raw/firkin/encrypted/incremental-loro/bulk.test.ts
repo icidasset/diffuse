@@ -238,6 +238,11 @@ describe("components/output/raw/firkin/encrypted/incremental-loro bulk save", ()
         const { IDB_DOCS, logName, registryNamespace } = await import(
           "~/components/output/raw/firkin/encrypted/incremental-loro/constants.js"
         );
+        const { sessionScope } = await import("~/common/firkin/session.js");
+        const scope = sessionScope({
+          apiBase: "https://firkin.test",
+          did: accountSigner.did(),
+        });
 
         const option = document.createElement("dob-firkin-loro");
         option.id = "bulk-output";
@@ -265,7 +270,7 @@ describe("components/output/raw/firkin/encrypted/incremental-loro bulk save", ()
         const tracksRef = `${registryNamespace("bulk-output")}/${
           logName("tracks", hex(sessionSigner.pubkeyBytes))
         }`;
-        const docKey = `${IDB_DOCS}/bulk-output/tracks`;
+        const docKey = `${IDB_DOCS}/${scope}/bulk-output/tracks`;
         const appliedKey = `${docKey}/applied`;
         const { headsOf, loadDocument } = await import(
           "~/components/output/raw/firkin/encrypted/incremental-loro/doc.js"
@@ -457,10 +462,13 @@ describe("components/output/raw/firkin/encrypted/incremental-loro bulk save", ()
       }
     });
 
-    console.log("BULK_RESULT", JSON.stringify({
-      ...result,
-      ids: Array.isArray(result.ids) ? result.ids.length : result.ids,
-    }));
+    console.log(
+      "BULK_RESULT",
+      JSON.stringify({
+        ...result,
+        ids: Array.isArray(result.ids) ? result.ids.length : result.ids,
+      }),
+    );
 
     expect(result.ready).toBe(true);
     expect(result.workers).toBeGreaterThan(0);

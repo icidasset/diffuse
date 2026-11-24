@@ -4,7 +4,12 @@ import * as IDB from "idb-keyval";
 import { computed, signal } from "~/common/signal.js";
 import { BroadcastedOutputElement } from "../../../../common.js";
 import { defineElement } from "~/common/element.js";
-import { getSessionClient, isUnauthorized } from "~/common/firkin/session.js";
+import {
+  getSessionClient,
+  isUnauthorized,
+  sessionScope,
+} from "~/common/firkin/session.js";
+import { writeIfNewer } from "~/common/firkin/storage.js";
 import {
   channelName,
   HINT_DEBOUNCE_MS,
@@ -141,7 +146,7 @@ class FirkinRecordSyncOutput extends BroadcastedOutputElement {
   /** @type {Map<string, { pushes: number }>} */
   #cursors = new Map();
 
-  /** @type {Map<string, { packs: string; signature?: string }>} */
+  /** @type {Map<string, { packs: string; signature?: string; at?: number }>} */
   #applied = new Map();
 
   /**
@@ -193,6 +198,10 @@ class FirkinRecordSyncOutput extends BroadcastedOutputElement {
   /** Cache scope for the shared registry listing: apiBase + account + namespace. */
   /** @type {string | undefined} */
   #listingKey;
+
+  /** IDB scope for the signed-in server + account. */
+  /** @type {string | undefined} */
+  #accountKey;
 
   /** @type {{ publicKey: Uint8Array; auth: LogAuth } | undefined} */
   #authCache;
@@ -377,12 +386,22 @@ class FirkinRecordSyncOutput extends BroadcastedOutputElement {
 
   async #checkConnected() {
     try {
+      await this.#initialise();
+
       const client = await getSessionClient({ cache: blockCache });
       if (!client) {
+        this.#accountKey = undefined;
         this.#invalidateListings();
         this.#listingKey = undefined;
+        this.#ready.value = new Set();
+        this.#bumpAll();
         this.#connected.value = false;
+        this.#closeChannel();
         return;
+      }
+
+      if (this.#accountKey !== sessionScope(client.session)) {
+        await this.#loadAccount();
       }
 
       const nextKey = listingKey(
@@ -537,35 +556,45 @@ class FirkinRecordSyncOutput extends BroadcastedOutputElement {
 
   // LOCAL
 
+  #keyPrefix() {
+    return `${IDB_DOCS}/${this.#accountKey ?? "anonymous"}/${this.#namespace}`;
+  }
+
   /** @param {string} name */
   #stateKey(name) {
-    return `${IDB_DOCS}/${this.#namespace}/${name}/state`;
+    return `${this.#keyPrefix()}/${name}/state`;
   }
 
   /** @param {string} name */
   #cursorKey(name) {
-    return `${IDB_DOCS}/${this.#namespace}/${name}/cursor`;
+    return `${this.#keyPrefix()}/${name}/cursor`;
   }
 
   /** @param {string} name */
   #appliedKey(name) {
-    return `${IDB_DOCS}/${this.#namespace}/${name}/applied`;
+    return `${this.#keyPrefix()}/${name}/applied`;
   }
 
   /** @param {string} name */
   #pendingKey(name) {
-    return `${IDB_DOCS}/${this.#namespace}/${name}/pending`;
+    return `${this.#keyPrefix()}/${name}/pending`;
   }
 
   /**
-   * Load every collection from the local cache. Runs once.
+   * Load every collection from the local cache. Runs once per account.
    */
   #initialise() {
     this.#initialising ??= (async () => {
       try {
-        await Promise.all(
-          COLLECTIONS.map((name) => this.#loadCollection(name)),
-        );
+        const client = await getSessionClient({ cache: blockCache });
+        const scope = client ? sessionScope(client.session) : undefined;
+        this.#accountKey = scope;
+
+        if (scope) {
+          await Promise.all(
+            COLLECTIONS.map((name) => this.#loadCollection(name)),
+          );
+        }
       } finally {
         this.#loaded.value = true;
         this.#bumpAll();
@@ -573,6 +602,45 @@ class FirkinRecordSyncOutput extends BroadcastedOutputElement {
     })();
 
     return this.#initialising;
+  }
+
+  /**
+   * Discard one account's in-memory state and load another's.
+   *
+   * Runs inside the serialization queue so an in-flight apply finishes against
+   * the old scope before the maps are reset. `ready` is cleared first so a pull
+   * that has not started applying yet gives up instead.
+   */
+  async #loadAccount() {
+    this.#loaded.value = false;
+    this.#ready.value = new Set();
+    this.#bumpAll();
+    this.#closeChannel();
+
+    await this.#serialize(async () => {
+      this.#initialising = undefined;
+      this.#resetLocal();
+      await this.#initialise();
+    });
+  }
+
+  #resetLocal() {
+    for (const name of COLLECTIONS) this.#states.set(name, emptyState());
+    this.#views.clear();
+    this.#cursors.clear();
+    this.#applied.clear();
+    this.#pending.clear();
+    this.#pendingSnapshots.clear();
+    this.#persisted.clear();
+    this.#manifests.clear();
+    this.#lastAt = 0;
+    this.#ready.value = new Set();
+    this.#loaded.value = false;
+
+    for (const timer of this.#pushTimers.values()) clearTimeout(timer);
+    this.#pushTimers.clear();
+
+    this.#bumpAll();
   }
 
   /** @param {string} name */
@@ -609,6 +677,7 @@ class FirkinRecordSyncOutput extends BroadcastedOutputElement {
             signature: typeof applied.signature === "string"
               ? applied.signature
               : undefined,
+            at: typeof applied.at === "number" ? applied.at : undefined,
           });
         }
 
@@ -776,18 +845,35 @@ class FirkinRecordSyncOutput extends BroadcastedOutputElement {
     this.#cursors.set(name, cursor);
 
     try {
-      await IDB.set(this.#cursorKey(name), cursor);
+      const stored = await writeIfNewer(
+        this.#cursorKey(name),
+        cursor,
+        (next, current) =>
+          !Number.isInteger(current?.pushes) || next.pushes >= current.pushes,
+      );
+
+      if (Number.isInteger(stored?.pushes) && stored.pushes > cursor.pushes) {
+        this.#cursors.set(name, { pushes: stored.pushes });
+      }
     } catch (err) {
       console.warn(`Could not persist the '${name}' push cursor:`, err);
     }
   }
 
-  /** @param {string} name; @param {{ packs: string; signature?: string }} applied */
+  /** @param {string} name; @param {{ packs: string; signature?: string; at?: number }} applied */
   async #setApplied(name, applied) {
-    this.#applied.set(name, applied);
+    /** @type {{ packs: string; signature?: string; at: number }} */
+    const record = { ...applied, at: Math.max(applied.at ?? 0, this.#lastAt) };
+
+    this.#applied.set(name, record);
 
     try {
-      await IDB.set(this.#appliedKey(name), applied);
+      await writeIfNewer(
+        this.#appliedKey(name),
+        record,
+        (next, current) =>
+          !Number.isFinite(current?.at) || next.at >= current.at,
+      );
     } catch (err) {
       console.warn(`Could not persist the '${name}' applied log:`, err);
     }
@@ -801,6 +887,11 @@ class FirkinRecordSyncOutput extends BroadcastedOutputElement {
    */
   async #save(name, items) {
     await this.#initialise();
+
+    // A save can arrive immediately after the output is selected, before the
+    // first connection check has finished loading the account. Wait for it
+    // rather than rejecting work that is about to be writable.
+    if (!this.ready()) await this.#refreshConnected();
 
     return await this.#serialize(async () => {
       const key = fieldKey();
@@ -945,6 +1036,9 @@ class FirkinRecordSyncOutput extends BroadcastedOutputElement {
     const client = await getSessionClient({ cache: blockCache });
     if (!client) return;
 
+    const scope = sessionScope(client.session);
+    if (scope !== this.#accountKey) return;
+
     const state = this.#states.get(name) ?? emptyState();
     const snapshot = pendingSnapshot ||
       (cursor.pushes > 0 && cursor.pushes % SNAPSHOT_EVERY === 0);
@@ -979,6 +1073,8 @@ class FirkinRecordSyncOutput extends BroadcastedOutputElement {
           registry: registryNamespace(this.#namespace),
         },
       );
+
+      if (sessionScope(client.session) !== this.#accountKey) return;
 
       this.#manifests.set(cacheKey, manifest);
       this.#packs.set(cid, bytes);

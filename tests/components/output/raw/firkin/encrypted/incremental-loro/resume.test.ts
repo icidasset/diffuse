@@ -272,9 +272,14 @@ describe("components/output/raw/firkin/encrypted/incremental-loro resume", () =>
         const { IDB_DOCS, logName, registryNamespace } = await import(
           "~/components/output/raw/firkin/encrypted/incremental-loro/constants.js"
         );
+        const { sessionScope } = await import("~/common/firkin/session.js");
+        const scope = sessionScope({
+          apiBase: "https://firkin.test",
+          did: accountSigner.did(),
+        });
 
         const namespace = "firkin-resume";
-        const tracksCursor = `${IDB_DOCS}/${namespace}/tracks/cursor`;
+        const tracksCursor = `${IDB_DOCS}/${scope}/${namespace}/tracks/cursor`;
 
         const cursorHeads = async () => (await IDB.get(tracksCursor))?.heads;
 
@@ -359,7 +364,9 @@ describe("components/output/raw/firkin/encrypted/incremental-loro resume", () =>
         // The interrupted save is still durable locally: the document is written
         // as a compact base, which a reloaded element loads and then notices the
         // unpushed heads on.
-        const localDoc = await IDB.get(`${IDB_DOCS}/${namespace}/tracks`);
+        const localDoc = await IDB.get(
+          `${IDB_DOCS}/${scope}/${namespace}/tracks`,
+        );
         const localDocBytes = localDoc instanceof Uint8Array
           ? localDoc.length
           : 0;

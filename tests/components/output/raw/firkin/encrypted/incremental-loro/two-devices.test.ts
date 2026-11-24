@@ -23,8 +23,9 @@ const DEVICE_URL = "http://localhost:3000/testing/index.html";
 const SALT = new Uint8Array(16).fill(7);
 
 const hex = (bytes: Uint8Array) =>
-  Array.from(bytes).map((value) => value.toString(16).padStart(2, "0")).join("");
-
+  Array.from(bytes).map((value) => value.toString(16).padStart(2, "0")).join(
+    "",
+  );
 
 /**
  * Runs inside a page: sign in as this device, unlock the shared output key,
@@ -228,7 +229,13 @@ async function snapshotDocs() {
   const { IDB_DOCS } = await import(
     "~/components/output/raw/firkin/encrypted/incremental-loro/constants.js"
   );
-  const prefix = `${IDB_DOCS}/firkin-two-devices/`;
+  const { readSession, sessionScope } = await import(
+    "~/common/firkin/session.js"
+  );
+  const session = await readSession();
+  if (!session) throw new Error("No session");
+
+  const prefix = `${IDB_DOCS}/${sessionScope(session)}/firkin-two-devices/`;
   const out: Record<string, number[]> = {};
 
   for (const key of await IDB.keys()) {
@@ -251,7 +258,13 @@ async function restoreDocs(snapshot: Record<string, number[]>) {
   const { IDB_DOCS } = await import(
     "~/components/output/raw/firkin/encrypted/incremental-loro/constants.js"
   );
-  const prefix = `${IDB_DOCS}/firkin-two-devices/`;
+  const { readSession, sessionScope } = await import(
+    "~/common/firkin/session.js"
+  );
+  const session = await readSession();
+  if (!session) throw new Error("No session");
+
+  const prefix = `${IDB_DOCS}/${sessionScope(session)}/firkin-two-devices/`;
   let restored = 0;
 
   for (const [name, bytes] of Object.entries(snapshot)) {
@@ -304,7 +317,8 @@ function resetOperations() {
   globalThis.__reads = [];
 }
 
-const settle = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
+const settle = (ms: number) =>
+  new Promise((resolve) => setTimeout(resolve, ms));
 
 const until = async <T>(fn: () => T | Promise<T>, ms = 15_000) => {
   const deadline = Date.now() + ms;

@@ -41,7 +41,13 @@ describe("components/output/raw/firkin/encrypted/incremental-loro carry-over", (
           ["sign", "verify"],
         );
 
-      crypto.subtle.importKey = async (format, data, alg, extractable, usages) => {
+      crypto.subtle.importKey = async (
+        format,
+        data,
+        alg,
+        extractable,
+        usages,
+      ) => {
         if (alg?.name === "Ed25519") {
           const bytes = new Uint8Array(data);
           const id = hex(bytes);
@@ -304,9 +310,7 @@ describe("components/output/raw/firkin/encrypted/incremental-loro carry-over", (
             // "<namespace>/<encoded-collection>.<device-hex>"
             const [encoded] = key.split("/")[1].split(".");
             return [...Array(encoded.length / 2)]
-              .map((_, i) =>
-                parseInt(encoded.slice(i * 2, i * 2 + 2), 16)
-              )
+              .map((_, i) => parseInt(encoded.slice(i * 2, i * 2 + 2), 16))
               .map((byte) => String.fromCharCode(byte))
               .join("");
           }),
@@ -319,9 +323,16 @@ describe("components/output/raw/firkin/encrypted/incremental-loro carry-over", (
         const { IDB_DOCS } = await import(
           "~/components/output/raw/firkin/encrypted/incremental-loro/constants.js"
         );
+        const { readSession, sessionScope } = await import(
+          "~/common/firkin/session.js"
+        );
+        const session = await readSession();
+        if (!session) throw new Error("No session");
+        const scope = sessionScope(session);
 
         const cursorHeads = async (name) =>
-          (await IDB.get(`${IDB_DOCS}/firkin-loro/${name}/cursor`))?.heads;
+          (await IDB.get(`${IDB_DOCS}/${scope}/firkin-loro/${name}/cursor`))
+            ?.heads;
 
         const settled = Date.now() + 5_000;
         while (Date.now() < settled) {
@@ -374,7 +385,9 @@ describe("components/output/raw/firkin/encrypted/incremental-loro carry-over", (
             call.startsWith("PUT /v1/blob/") || call.startsWith("POST /v1/car")
           ).length,
           tracks: tracks.state === "loaded"
-            ? tracks.data.map((item) => item.id)
+            ? tracks.data.map((item) =>
+              item.id
+            )
             : tracks.state,
           facets: facets.state === "loaded"
             ? facets.data.map((item) => item.id)

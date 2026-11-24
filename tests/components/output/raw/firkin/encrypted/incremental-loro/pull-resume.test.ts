@@ -282,6 +282,12 @@ describe("components/output/raw/firkin/encrypted/incremental-loro pull resume", 
         const { logSignature } = await import(
           "~/components/output/raw/firkin/encrypted/incremental-loro/log.js"
         );
+        const { sessionScope } = await import("~/common/firkin/session.js");
+
+        const scope = sessionScope({
+          apiBase: "https://firkin.test",
+          did: accountSigner.did(),
+        });
 
         const root = document.createElement("div");
         document.body.append(root);
@@ -319,7 +325,7 @@ describe("components/output/raw/firkin/encrypted/incremental-loro pull resume", 
         };
 
         const docKey = (namespace, name) =>
-          `${IDB_DOCS}/${namespace}/${name}`;
+          `${IDB_DOCS}/${scope}/${namespace}/${name}`;
 
         const clearLocal = async (namespace, name) => {
           await IDB.del(docKey(namespace, name));
@@ -510,7 +516,6 @@ describe("components/output/raw/firkin/encrypted/incremental-loro pull resume", 
           return Array.isArray(heads) && heads.join(";") !== headsBeforeSave;
         });
 
-
         const firstReader = makeOption("pull-first-reader", namespaceD);
         await until(() => tracksOf(firstReader));
 
@@ -559,7 +564,9 @@ describe("components/output/raw/firkin/encrypted/incremental-loro pull resume", 
         await until(() => listingGets > 0);
         await new Promise((resolve) => setTimeout(resolve, 400));
 
-        const tracksPacksRefetched = getCids.some((cid) => tracksPacks.has(cid));
+        const tracksPacksRefetched = getCids.some((cid) =>
+          tracksPacks.has(cid)
+        );
         const tracksManifestRead = getCids.includes(manifest);
         const secondRead = await until(() => tracksOf(secondReader));
         const secondGets = getCids.length;
@@ -572,8 +579,8 @@ describe("components/output/raw/firkin/encrypted/incremental-loro pull resume", 
 
         const writerE = makeOption("pull-writer-e", namespaceE);
         await until(() => writerE.ready());
-        const headsBeforeE =
-          ((await cursorHeads(namespaceE, "tracks")) ?? []).join(";");
+        const headsBeforeE = ((await cursorHeads(namespaceE, "tracks")) ?? [])
+          .join(";");
 
         await writerE.tracks.save([track("t1")]);
         await until(async () => {

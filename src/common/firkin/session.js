@@ -15,6 +15,18 @@ import {
 export const IDB_SESSION = "diffuse/firkin/session";
 
 /**
+ * A stable local-storage scope for one server + account.
+ *
+ * Output state must never be reused across accounts, even when the output
+ * method (and therefore its namespace) is the same.
+ *
+ * @param {{ apiBase: string; did: string }} session
+ */
+export function sessionScope(session) {
+  return `${encodeURIComponent(session.apiBase)}/${session.did}`;
+}
+
+/**
  * Whether a Firkin error means the session is no longer accepted.
  *
  * Only explicit authorization failures count: a 404, a 5xx or a network error
