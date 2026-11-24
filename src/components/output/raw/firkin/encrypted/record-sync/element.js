@@ -4,6 +4,7 @@ import * as IDB from "idb-keyval";
 import { computed, signal } from "~/common/signal.js";
 import { BroadcastedOutputElement } from "../../../../common.js";
 import { defineElement } from "~/common/element.js";
+import { RpcChannel } from "~/common/worker/rpc-channel.js";
 import {
   getSessionClient,
   isUnauthorized,
@@ -149,6 +150,8 @@ const blockCache = {
  */
 class FirkinRecordSyncOutput extends BroadcastedOutputElement {
   static NAME = "diffuse/output/raw/firkin/encrypted/record-sync";
+  static WORKER_URL =
+    "components/output/raw/firkin/encrypted/record-sync/worker.js";
 
   // SIGNALS
 
@@ -238,6 +241,24 @@ class FirkinRecordSyncOutput extends BroadcastedOutputElement {
   /** @type {string | undefined} */
   #deviceId;
 
+  // SHARED WORKER
+
+  /** Whether this element drives the SharedWorker engine instead of a local one. */
+  #workerMode = signal(false);
+
+  /** @type {RpcChannel<any, any> | undefined} */
+  #workerChannel;
+
+  /** @type {Promise<void> | undefined} Resolves once `open` is served. */
+  #workerOpening;
+
+  /** @type {Map<string, any[]>} */
+  #workerViews = new Map();
+
+  #workerLoaded = signal(new Set());
+  #workerStatus = signal(false);
+  #workerListening = false;
+
   /** Last version timestamp issued by this device. */
   #lastAt = 0;
 
@@ -262,20 +283,26 @@ class FirkinRecordSyncOutput extends BroadcastedOutputElement {
     this.settings = this.#entry("settings");
     this.tracks = this.#entry("tracks");
 
-    this.ready = computed(() =>
-      this.#loaded.value &&
-      this.#connected.value &&
-      this.#isOnline.value &&
-      fieldKey() !== undefined
-    );
+    this.ready = computed(() => {
+      if (this.#workerMode.value) return this.#workerStatus.value;
 
-    this.effect(() => {
-      if (fieldKey() === undefined) return;
-
-      void this.#refreshConnected();
+      return this.#loaded.value &&
+        this.#connected.value &&
+        this.#isOnline.value &&
+        fieldKey() !== undefined;
     });
 
     this.effect(() => {
+      if (this.#workerMode.value) return;
+      if (fieldKey() === undefined) return;
+
+      void this.#refreshConnected();
+      void this.#refreshViews();
+    });
+
+    this.effect(() => {
+      if (this.#workerMode.value) return;
+
       if (!this.ready()) {
         this.#scheduleSettle();
         return;
@@ -296,17 +323,34 @@ class FirkinRecordSyncOutput extends BroadcastedOutputElement {
     return {
       collection: computed(() => {
         this.#versions.get(name)?.get();
+
+        if (this.#workerMode.value) {
+          if (!this.#workerLoaded.value.has(name)) return { state: "loading" };
+
+          return { state: "loaded", data: this.#workerViews.get(name) ?? [] };
+        }
+
         if (!this.#ready.value.has(name)) return { state: "loading" };
 
         return { state: "loaded", data: this.#views.get(name) ?? [] };
       }),
       reload: () =>
-        this.#pullCollection(name).catch((err) => {
-          this.#remoteFailure(err, `Could not reload the '${name}' records:`);
-          throw err;
-        }),
-      save: (/** @type {any[]} */ items) => this.#save(name, items),
+        this.#workerMode.value
+          ? this.#workerReload(name)
+          : this.#reloadLocal(name),
+      save: (/** @type {any[]} */ items) =>
+        this.#workerMode.value
+          ? this.#workerSave(name, items)
+          : this.#save(name, items),
     };
+  }
+
+  /** @param {string} name */
+  #reloadLocal(name) {
+    return this.#pullCollection(name).catch((err) => {
+      this.#remoteFailure(err, `Could not reload the '${name}' records:`);
+      throw err;
+    });
   }
 
   // LIFECYCLE
@@ -321,6 +365,16 @@ class FirkinRecordSyncOutput extends BroadcastedOutputElement {
     document.addEventListener("visibilitychange", this.#visibilityChange);
     globalThis.addEventListener("pageshow", this.#pageShow);
 
+    if (
+      this.hasAttribute("shared") &&
+      this.hasAttribute("group") &&
+      typeof SharedWorker !== "undefined"
+    ) {
+      this.#workerMode.value = true;
+      void this.#connectWorker();
+      return;
+    }
+
     void this.#initialise();
     void this.#refreshConnected();
   }
@@ -333,6 +387,17 @@ class FirkinRecordSyncOutput extends BroadcastedOutputElement {
     document.removeEventListener("visibilitychange", this.#visibilityChange);
     globalThis.removeEventListener("pageshow", this.#pageShow);
 
+    if (this.#workerMode.value) {
+      void this.#workerCall("close");
+
+      // `close` unregisters the port; a re-mounted element has to `open`
+      // again (on the same port) to receive broadcasts.
+      this.#workerOpening = undefined;
+
+      super.disconnectedCallback();
+      return;
+    }
+
     this.#flushPushes();
     this.#closeChannel();
 
@@ -341,17 +406,39 @@ class FirkinRecordSyncOutput extends BroadcastedOutputElement {
 
   #offline = () => {
     this.#isOnline.set(false);
+
+    if (this.#workerMode.value) {
+      void this.#workerCall("online", false);
+      return;
+    }
+
     this.#closeChannel();
   };
 
   #online = () => {
     this.#isOnline.set(true);
+
+    if (this.#workerMode.value) {
+      void this.#workerCall("online", true);
+      return;
+    }
+
     void this.#refreshConnected();
   };
 
   #visibilityChange = () => {
     if (document.visibilityState !== "visible") {
+      if (this.#workerMode.value) {
+        void this.#workerCall("hidden");
+        return;
+      }
+
       this.#flushPushes();
+      return;
+    }
+
+    if (this.#workerMode.value) {
+      void this.#workerCall("visible");
       return;
     }
 
@@ -359,11 +446,23 @@ class FirkinRecordSyncOutput extends BroadcastedOutputElement {
   };
 
   /** The page is going away: send anything still coalescing. */
-  #pageHide = () => this.#flushPushes();
+  #pageHide = () => {
+    if (this.#workerMode.value) {
+      void this.#workerCall("hidden");
+      return;
+    }
+
+    this.#flushPushes();
+  };
 
   /** A page restored from the back/forward cache skipped its normal load. */
   #pageShow = (/** @type {PageTransitionEvent} */ event) => {
     if (!event.persisted) return;
+
+    if (this.#workerMode.value) {
+      void this.#workerCall("visible");
+      return;
+    }
 
     this.#catchUp(true);
   };
@@ -567,6 +666,11 @@ class FirkinRecordSyncOutput extends BroadcastedOutputElement {
   }
 
   // CONFIGURATION
+
+  /** Which engine this element is currently driving. */
+  get mode() {
+    return this.#workerMode.value ? "shared-worker" : "local";
+  }
 
   get #namespace() {
     return this.namespace ?? "default";
@@ -791,6 +895,13 @@ class FirkinRecordSyncOutput extends BroadcastedOutputElement {
     }
 
     this.#views.set(name, items);
+  }
+
+  async #refreshViews() {
+    for (const name of COLLECTIONS) {
+      await this.#refreshView(name);
+      this.#bump(name);
+    }
   }
 
   /**
@@ -1544,6 +1655,116 @@ class FirkinRecordSyncOutput extends BroadcastedOutputElement {
     this.#authCache = { publicKey: session.publicKey, auth };
 
     return auth;
+  }
+
+  // SHARED WORKER
+
+  #connectWorker() {
+    this.#workerOpening ??= this.#openWorker();
+
+    return this.#workerOpening;
+  }
+
+  async #openWorker() {
+    try {
+      const port = this.workerLink();
+      this.#workerChannel ??= new RpcChannel(port);
+
+      if (!this.#workerListening) {
+        port.addEventListener(
+          "message",
+          /** @type {EventListener} */ (this.#workerMessage),
+        );
+        this.#workerListening = true;
+      }
+
+      await this.#workerChannel.callMethod("open", [{
+        namespace: this.#namespace,
+        keep: this.keep,
+      }]);
+    } catch (err) {
+      console.warn(
+        "Could not start the Record Sync shared worker; using the local engine:",
+        err,
+      );
+
+      this.#workerChannel?.destroy();
+      this.#workerChannel = undefined;
+      this.#workerListening = false;
+      this.#workerMode.value = false;
+
+      void this.#initialise();
+      void this.#refreshConnected();
+    }
+  }
+
+  #workerMessage = (/** @type {MessageEvent} */ event) => {
+    const message = event.data;
+    if (!message || message.ns !== "record-sync") return;
+
+    if (message.type === "items") {
+      const name = String(message.collection);
+      if (!COLLECTIONS.includes(/** @type {any} */ (name))) return;
+
+      this.#workerViews.set(
+        name,
+        Array.isArray(message.items) ? message.items : [],
+      );
+      this.#workerLoaded.value = new Set([...this.#workerLoaded.value, name]);
+      this.#bump(name);
+      return;
+    }
+
+    if (message.type === "status") {
+      this.#workerStatus.value = Boolean(message.ready);
+    }
+  };
+
+  /**
+   * @param {string} name
+   * @param {any[]} items
+   */
+  async #workerSave(name, items) {
+    await this.#workerOpening;
+
+    // `open` can fail and fall back to the local engine; hand the save over
+    // rather than rejecting work that is about to be writable.
+    if (!this.#workerMode.value) return await this.#save(name, items);
+
+    const channel = this.#workerChannel;
+    if (!channel) throw new Error("Record Sync is not connected");
+
+    await channel.callMethod("save", [name, items]);
+
+    // The worker applied the patch; mirror it so readers of this element see
+    // the save without waiting for the broadcast.
+    this.#workerViews.set(name, items.map((item) => ({ ...item })));
+    this.#workerLoaded.value = new Set([...this.#workerLoaded.value, name]);
+    this.#bump(name);
+  }
+
+  /** @param {string} name */
+  async #workerReload(name) {
+    await this.#workerOpening;
+
+    if (!this.#workerMode.value) return await this.#reloadLocal(name);
+
+    const channel = this.#workerChannel;
+    if (!channel) throw new Error("Record Sync is not connected");
+
+    return await channel.callMethod("reload", [name]);
+  }
+
+  /**
+   * @param {string} method
+   * @param {...any} args
+   */
+  async #workerCall(method, ...args) {
+    try {
+      await this.#workerChannel?.callMethod(method, args);
+    } catch (err) {
+      console.warn(`Record Sync worker call '${method}' failed:`, err);
+    }
   }
 
   // QUEUE / READY

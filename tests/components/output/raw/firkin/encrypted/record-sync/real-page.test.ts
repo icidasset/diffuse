@@ -321,6 +321,11 @@ describe("record sync facet on the real page", () => {
           };
         }
 
+        // This page shims WebCrypto Ed25519 for the test browser; the worker
+        // has its own realm and cannot see the shim. Exercise the local engine
+        // here; the shared-worker transport has its own test.
+        option.removeAttribute("shared");
+
         // --- Select it and save through it ----------------------------------
         await output.select(optionId);
 

@@ -75,6 +75,7 @@ function optionElement(method) {
   const element = document.createElement("dob-record-sync");
 
   element.setAttribute("group", foundation.GROUP);
+  element.setAttribute("shared", "");
   element.setAttribute("id", optionId(method));
   element.setAttribute("namespace", method.id);
   if (method.keep !== undefined) {
