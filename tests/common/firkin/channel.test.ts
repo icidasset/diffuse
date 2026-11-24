@@ -4,8 +4,8 @@ import { describe, it } from "@std/testing/bdd";
 import { expect } from "@std/expect";
 
 import {
-  HINT_DEBOUNCE_MS,
   channelName,
+  HINT_DEBOUNCE_MS,
   openHintChannel,
   parseHint,
 } from "~/common/firkin/channel.js";
@@ -68,24 +68,37 @@ describe("common/firkin/channel", () => {
     expect(
       parseHint(JSON.stringify({ v: 1, collection: "tracks", device: "abc" })),
     ).toEqual({ collection: "tracks", device: "abc" });
+    expect(
+      parseHint(
+        JSON.stringify({
+          v: 1,
+          collection: "tracks",
+          device: "abc",
+          manifestCid: "bafy123",
+        }),
+      ),
+    ).toEqual({ collection: "tracks", device: "abc", manifestCid: "bafy123" });
 
     expect(parseHint("not json")).toBeUndefined();
     expect(parseHint(JSON.stringify({ v: 2, collection: "tracks" })))
       .toBeUndefined();
     expect(parseHint(JSON.stringify({ v: 1 }))).toBeUndefined();
     expect(parseHint(new Uint8Array([1]))).toBeUndefined();
+    expect(
+      parseHint(JSON.stringify({ v: 1, collection: "tracks", manifestCid: 1 })),
+    ).toEqual({ collection: "tracks", device: undefined });
   });
 
   it("reports hints from other devices only", async () => {
     FakeSocket.reset();
 
-    /** @type {string[]} */
+    /** @type {import("~/common/firkin/channel.js").Hint[]} */
     const hints = [];
 
     const channel = openHintChannel({
       device: "mine",
       url: async () => "ws://test/1",
-      onHint: (collection) => hints.push(collection),
+      onHint: (hint) => hints.push(hint),
       WebSocketImpl: FakeSocket,
     });
 
@@ -95,11 +108,22 @@ describe("common/firkin/channel", () => {
     expect(socket.url).toBe("ws://test/1");
     socket.open();
 
-    socket.receive(JSON.stringify({ v: 1, collection: "tracks", device: "other" }));
-    socket.receive(JSON.stringify({ v: 1, collection: "facets", device: "mine" }));
+    socket.receive(
+      JSON.stringify({
+        v: 1,
+        collection: "tracks",
+        device: "other",
+        manifestCid: "bafy123",
+      }),
+    );
+    socket.receive(
+      JSON.stringify({ v: 1, collection: "facets", device: "mine" }),
+    );
     socket.receive("garbage");
 
-    expect(hints).toEqual(["tracks"]);
+    expect(hints).toEqual([
+      { collection: "tracks", device: "other", manifestCid: "bafy123" },
+    ]);
 
     channel.close();
     expect(socket.closed).toBe(true);
@@ -123,11 +147,18 @@ describe("common/firkin/channel", () => {
 
     socket.open();
     channel.send("tracks");
+    channel.send("tracks", "bafy123");
 
     expect(JSON.parse(socket.sent[0])).toEqual({
       v: 1,
       collection: "tracks",
       device: "mine",
+    });
+    expect(JSON.parse(socket.sent[1])).toEqual({
+      v: 1,
+      collection: "tracks",
+      device: "mine",
+      manifestCid: "bafy123",
     });
 
     channel.close();
@@ -142,7 +173,7 @@ describe("common/firkin/channel", () => {
     const channel = openHintChannel({
       device: "mine",
       url: async () => "ws://test/3",
-      onHint: (collection) => hints.push(collection),
+      onHint: (hint) => hints.push(hint.collection),
       WebSocketImpl: FakeSocket,
     });
 
@@ -151,7 +182,9 @@ describe("common/firkin/channel", () => {
     socket.open();
 
     channel.close();
-    socket.receive(JSON.stringify({ v: 1, collection: "tracks", device: "other" }));
+    socket.receive(
+      JSON.stringify({ v: 1, collection: "tracks", device: "other" }),
+    );
 
     expect(hints).toEqual([]);
     expect(FakeSocket.instances.length).toBe(1);

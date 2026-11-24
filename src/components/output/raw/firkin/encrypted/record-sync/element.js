@@ -33,6 +33,7 @@ import {
   appendEntry,
   extendLogSignature,
   logSignature,
+  logSignatureCid,
   readEntries,
 } from "../incremental-loro/log.js";
 import { verifySignature } from "../incremental-loro/verify.js";
@@ -51,6 +52,7 @@ import {
 
 /**
  * @import { Session } from "~/common/firkin/session.js";
+ * @import { Hint } from "~/common/firkin/channel.js";
  * @import { LogAuth } from "../incremental-loro/log.js";
  * @import { Firkin } from "@tokono.ma/firkin";
  * @import { Patch, State } from "./codec.js";
@@ -175,7 +177,12 @@ class FirkinRecordSyncOutput extends BroadcastedOutputElement {
   /** @type {ReturnType<typeof openHintChannel> | undefined} */
   #channel;
 
-  /** @type {Map<string, ReturnType<typeof setTimeout>>} */
+  /**
+   * Pending hints per collection. `writers` keeps the latest manifest each
+   * device announced, so one writer with a CID can skip the registry listing.
+   *
+   * @type {Map<string, { timer: ReturnType<typeof setTimeout>; writers: Map<string, string | undefined> }>}
+   */
   #hints = new Map();
 
   /** @type {Map<string, { at: number; names: Promise<Record<string, string> | null> }>} */
@@ -388,7 +395,7 @@ class FirkinRecordSyncOutput extends BroadcastedOutputElement {
 
         return await current.rb.channelUrl(name);
       },
-      onHint: (collection) => this.#refreshCollection(collection),
+      onHint: (hint) => this.#refreshCollection(hint),
       onReconnect: () => this.#catchUp(),
     });
   }
@@ -397,31 +404,68 @@ class FirkinRecordSyncOutput extends BroadcastedOutputElement {
     this.#channel?.close();
     this.#channel = undefined;
 
-    for (const timer of this.#hints.values()) clearTimeout(timer);
+    for (const hint of this.#hints.values()) clearTimeout(hint.timer);
     this.#hints.clear();
   }
 
-  /** @param {string} collection */
-  #refreshCollection(collection) {
+  /**
+   * Re-read one collection, coalescing a burst of hints into one read.
+   *
+   * A hint that names a manifest for a single known writer skips the registry
+   * listing and reads that manifest directly. More than one writer, a writer
+   * we have not seen yet, or a hint from an older sender without a CID falls
+   * back to listing.
+   *
+   * @param {Hint} hint
+   */
+  #refreshCollection(hint) {
+    const collection = hint.collection;
     if (!COLLECTIONS.includes(/** @type {any} */ (collection))) return;
 
     const pending = this.#hints.get(collection);
-    if (pending !== undefined) clearTimeout(pending);
+    if (pending !== undefined) clearTimeout(pending.timer);
 
-    this.#hints.set(
-      collection,
-      setTimeout(() => {
+    const writers = pending?.writers ??
+      new Map();
+
+    writers.set(hint.device ?? "", hint.manifestCid);
+
+    this.#hints.set(collection, {
+      writers,
+      timer: setTimeout(() => {
         this.#hints.delete(collection);
 
-        this.#listings.clear();
-
         const name = /** @type {CollectionName} */ (collection);
+        const announced = [...writers];
 
-        void this.#pullCollection(name).catch((err) => {
-          console.warn(`Could not refresh '${collection}' after a hint:`, err);
-        });
+        void (async () => {
+          if (
+            announced.length === 1 && announced[0][0] && announced[0][1]
+          ) {
+            try {
+              if (
+                await this.#applyHinted(name, announced[0][0], announced[0][1])
+              ) {
+                return;
+              }
+            } catch (err) {
+              console.warn(`Could not apply the '${collection}' hint:`, err);
+            }
+          }
+
+          this.#listings.clear();
+
+          try {
+            await this.#pullCollection(name);
+          } catch (err) {
+            console.warn(
+              `Could not refresh '${collection}' after a hint:`,
+              err,
+            );
+          }
+        })();
       }, HINT_DEBOUNCE_MS),
-    );
+    });
   }
 
   // CONFIGURATION
@@ -895,7 +939,7 @@ class FirkinRecordSyncOutput extends BroadcastedOutputElement {
       }
 
       this.#listings.clear();
-      this.#channel?.send(name);
+      this.#channel?.send(name, manifest.cid);
 
       await this.#setCursor(name, {
         pushes: cursor.pushes + (appended ? 1 : 0),
@@ -1072,6 +1116,109 @@ class FirkinRecordSyncOutput extends BroadcastedOutputElement {
   }
 
   // TRANSPORT HELPERS
+
+  /**
+   * Apply one writer's announced manifest without listing the namespace.
+   *
+   * Returns `false` when the hint can't stand in for a listing (no applied
+   * record yet, a writer we have not seen in a listing, the manifest can't be
+   * read, or an entry block is missing), so the caller can fall back. A new
+   * writer must be introduced by a listing: that is where its ref was
+   * authorized. Duplicate and stale hints are handled here: applying a patch
+   * twice is a no-op, and an older manifest is not allowed to roll the stored
+   * signature (or the manifest cache) back.
+   *
+   * @param {CollectionName} name
+   * @param {string} device
+   * @param {string} manifestCid
+   * @returns {Promise<boolean>}
+   */
+  async #applyHinted(name, device, manifestCid) {
+    if (!this.ready()) return false;
+
+    const applied = this.#applied.get(name);
+    if (!applied?.signature) return false;
+
+    const ref = logName(name, device);
+    const currentCid = logSignatureCid(applied.signature, ref);
+
+    // A writer the registry has not introduced yet has to be discovered by a
+    // listing first; hints only shortcut writers we already know.
+    if (currentCid === undefined) return false;
+    if (currentCid === manifestCid) return true;
+
+    const client = await getSessionClient({ cache: blockCache });
+    if (!client) return false;
+
+    const key = `${name}\u0000${device}`;
+    const before = this.#manifests.get(key);
+    const entries = await this.#entries(client, name, { [ref]: manifestCid });
+    if (entries.length === 0) return false;
+
+    const manifest = this.#manifests.get(key);
+    if (before && manifest && manifest.payload.seq < before.payload.seq) {
+      this.#manifests.set(key, before);
+      return true;
+    }
+
+    /** @type {Patch[]} */
+    const patches = [];
+
+    for (const entry of entries) {
+      const bytes = entry.bytes ?? await this.#readPack(client.rb, entry.cid);
+      if (!bytes) return false;
+
+      try {
+        patches.push(decodePatch(bytes));
+      } catch (err) {
+        console.warn(`Ignoring an unreadable '${name}' entry:`, err);
+      }
+    }
+
+    // Nothing that decodes as a Record Sync patch means this is the wrong
+    // manifest (or the wrong output's log); a listing is the safe answer.
+    if (patches.length === 0) return false;
+
+    const handled = await this.#serialize(async () => {
+      if (!this.ready()) return false;
+
+      const current = this.#applied.get(name) ?? { packs: "" };
+      const seen = new Set(current.packs.split(";").filter(Boolean));
+
+      // A duplicate or older manifest adds nothing; leave the stored ref alone
+      // rather than rolling it back.
+      if (entries.every((entry) => seen.has(entry.cid))) return true;
+
+      const state = this.#states.get(name) ?? emptyState();
+      let changed = false;
+
+      for (const patch of patches) {
+        const at = Date.parse(patch.at);
+        if (Number.isFinite(at)) this.#lastAt = Math.max(this.#lastAt, at);
+
+        changed = applyPatch(state, patch) || changed;
+      }
+
+      if (changed) {
+        await this.#refreshView(name);
+        await this.#persistState(name);
+        this.#bump(name);
+      }
+
+      for (const entry of entries) seen.add(entry.cid);
+
+      await this.#setApplied(name, {
+        packs: [...seen].join(";"),
+        signature: extendLogSignature(current.signature, ref, manifestCid),
+      });
+
+      return true;
+    });
+
+    if (handled) this.#listings.clear();
+
+    return handled;
+  }
 
   /**
    * @param {{ session: Session; rb: Firkin }} client

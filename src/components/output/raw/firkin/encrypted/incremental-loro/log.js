@@ -88,6 +88,21 @@ export function logSignature(names, name) {
 }
 
 /**
+ * The manifest CID recorded for one ref in an applied log signature.
+ *
+ * @param {string | undefined} signature
+ * @param {string} ref
+ */
+export function logSignatureCid(signature, ref) {
+  for (const part of (signature ?? "").split(";")) {
+    const at = part.indexOf("=");
+    if (at > 0 && part.slice(0, at) === ref) return part.slice(at + 1);
+  }
+
+  return undefined;
+}
+
+/**
  * Replace one writer's manifest CID in a stored log signature.
  *
  * A push changes only our own ref, so the signature can be advanced from the

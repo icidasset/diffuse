@@ -134,7 +134,8 @@ operation history.
   ```
 
 - A registry maps `collection/device` to the manifest CID. A hint channel tells
-  other devices that a manifest changed.
+  other devices that a manifest changed and may name the new manifest, letting a
+  reader fetch it directly instead of re-listing the registry.
 - A reader lists the collection, reads changed manifests (compare the CID it
   applied last), fetches the entries it is missing, verifies each entry against
   its CID and signature, and applies the patches.

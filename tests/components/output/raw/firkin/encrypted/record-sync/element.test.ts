@@ -366,6 +366,13 @@ describe("components/output/raw/firkin/encrypted/record-sync", () => {
       }, 20_000);
       expect(updateOnB).toEqual(["t1", "t2"]);
 
+      // The hint names A's manifest, so B reads it directly instead of listing
+      // the namespace again.
+      await settle(1_000);
+      const readsOnB = (await pageB.evaluate(operationCounts)).reads;
+      expect(readsOnB).toContain("dagPull");
+      expect(readsOnB).not.toContain("registryNames");
+
       // --- An update from B reaches A ----------------------------------
       await pageB.evaluate(saveTracks, { args: [["t1", "t2", "t3"]] });
 
@@ -374,6 +381,31 @@ describe("components/output/raw/firkin/encrypted/record-sync", () => {
         return ids?.length === 3 ? ids : undefined;
       }, 20_000);
       expect(updateOnA).toEqual(["t1", "t2", "t3"]);
+
+      // A had not seen B's ref yet, so this first hint had to list: that is
+      // where B's writer was authorized. It still reads the manifests.
+      await settle(1_000);
+      const firstReadsOnA = (await pageA.evaluate(operationCounts)).reads;
+      expect(firstReadsOnA).toContain("registryNames");
+      expect(firstReadsOnA).toContain("dagPull");
+
+      // --- A second update from B uses the fast path --------------------
+      await pageA.evaluate(resetOperations);
+      await pageB.evaluate(resetOperations);
+      await pageB.evaluate(saveTracks, { args: [["t1", "t2", "t3", "t4"]] });
+
+      const updateOnA2 = await until(async () => {
+        const ids = await pageA.evaluate(trackIds);
+        return ids?.length === 4 ? ids : undefined;
+      }, 20_000);
+      expect(updateOnA2).toEqual(["t1", "t2", "t3", "t4"]);
+
+      // Now that B's ref is known, the hint names its manifest and A reads it
+      // directly instead of re-listing.
+      await settle(1_000);
+      const readsOnA = (await pageA.evaluate(operationCounts)).reads;
+      expect(readsOnA).toContain("dagPull");
+      expect(readsOnA).not.toContain("registryNames");
 
       // --- Both settle -------------------------------------------------
       await settle(2_000);

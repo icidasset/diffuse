@@ -2,9 +2,10 @@
  * Best-effort change hints over a Firkin channel.
  *
  * The channel is a relay: it may drop, duplicate or reorder messages, and it
- * carries no data. A hint only says "collection X changed", after which the
- * reader re-reads the signed manifests. A missed hint costs latency, never
- * correctness — which is why the connection is entirely optional.
+ * carries no data. A hint says "collection X changed" and may name the
+ * writer's new manifest, after which the reader can read that manifest
+ * directly. A missed hint costs latency, never correctness — which is why the
+ * connection is entirely optional.
  */
 
 /** Prefix of the channel name used for output hints. */
@@ -24,7 +25,7 @@ export function channelName(namespace) {
 }
 
 /**
- * @typedef {{ collection: string; device?: string }} Hint
+ * @typedef {{ collection: string; device?: string; manifestCid?: string }} Hint
  */
 
 /**
@@ -44,10 +45,23 @@ export function parseHint(data) {
       return undefined;
     }
 
-    return {
+    /** @type {Hint} */
+    const hint = {
       collection: value.collection,
       device: typeof value.device === "string" ? value.device : undefined,
     };
+
+    // Older writers omit this; a malformed value is ignored so the reader
+    // falls back to listing instead of chasing a bad CID.
+    if (
+      typeof value.manifestCid === "string" &&
+      value.manifestCid.length > 0 &&
+      value.manifestCid.length <= 256
+    ) {
+      hint.manifestCid = value.manifestCid;
+    }
+
+    return hint;
   } catch {
     return undefined;
   }
@@ -62,11 +76,11 @@ export function parseHint(data) {
  * @param {Object} options
  * @param {string} options.device - Ignore our own hints.
  * @param {() => Promise<string | undefined>} options.url
- * @param {(collection: string) => void} options.onHint
+ * @param {(hint: Hint) => void} options.onHint
  * @param {() => void} [options.onReconnect] - Called when a dropped channel is
  *   re-established, so the caller can catch up on hints it missed.
  * @param {typeof WebSocket} [options.WebSocketImpl] - Injectable for tests.
- * @returns {{ send(collection: string): void; close(): void }}
+ * @returns {{ send(collection: string, manifestCid?: string): void; close(): void }}
  */
 export function openHintChannel(
   { device, url, onHint, onReconnect, WebSocketImpl = WebSocket },
@@ -106,7 +120,7 @@ export function openHintChannel(
       if (!hint) return;
       if (hint.device === device) return;
 
-      onHint(hint.collection);
+      onHint(hint);
     });
 
     opened.addEventListener("close", () => {
@@ -127,12 +141,17 @@ export function openHintChannel(
      * already committed, so a lost hint only delays other devices.
      *
      * @param {string} collection
+     * @param {string} [manifestCid] - The writer's new manifest, when known.
      */
-    send(collection) {
+    send(collection, manifestCid) {
       if (!socket || socket.readyState !== 1) return;
 
+      /** @type {Hint & { v: 1 }} */
+      const hint = { v: 1, collection, device };
+      if (manifestCid) hint.manifestCid = manifestCid;
+
       try {
-        socket.send(JSON.stringify({ v: 1, collection, device }));
+        socket.send(JSON.stringify(hint));
       } catch {
         // A closing socket is not worth reporting.
       }

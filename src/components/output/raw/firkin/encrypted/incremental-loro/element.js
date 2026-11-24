@@ -608,7 +608,7 @@ class FirkinLoroOutput extends BroadcastedOutputElement {
 
         return await current.rb.channelUrl(name);
       },
-      onHint: (collection) => this.#refreshCollection(collection),
+      onHint: (hint) => this.#refreshCollection(hint.collection),
       onReconnect: () => this.#catchUp(),
     });
   }
