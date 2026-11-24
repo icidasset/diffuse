@@ -1,9 +1,10 @@
 import * as IDB from "idb-keyval";
 import {
-  Firkin,
-  WebCryptoSigner,
+  ApiError,
   delegationTokenSource,
+  Firkin,
   inlineInvocation,
+  WebCryptoSigner,
 } from "@tokono.ma/firkin";
 
 /**
@@ -12,6 +13,18 @@ import {
 
 /** IndexedDB key for the delegated Firkin account session. */
 export const IDB_SESSION = "diffuse/firkin/session";
+
+/**
+ * Whether a Firkin error means the session is no longer accepted.
+ *
+ * Only explicit authorization failures count: a 404, a 5xx or a network error
+ * is not an auth problem and must not make a remote output look unusable.
+ *
+ * @param {unknown} err
+ */
+export function isUnauthorized(err) {
+  return err instanceof ApiError && (err.status === 401 || err.status === 403);
+}
 
 /**
  * The Firkin account session shared by the storage output and the Firkin

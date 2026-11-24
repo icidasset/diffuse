@@ -64,4 +64,27 @@ describe("common/firkin/session", () => {
       expired: false,
     });
   });
+
+  it("classifies only authorization failures", async () => {
+    const result = await testWeb(async () => {
+      const { ApiError } = await import("~/vendor/firkin/index.js");
+      const { isUnauthorized } = await import("~/common/firkin/session.js");
+
+      return {
+        unauthorized: isUnauthorized(new ApiError("unauthorized", 401)),
+        forbidden: isUnauthorized(new ApiError("forbidden", 403)),
+        missing: isUnauthorized(new ApiError("missing", 404)),
+        server: isUnauthorized(new ApiError("server", 500)),
+        plain: isUnauthorized(new Error("network")),
+      };
+    });
+
+    expect(result).toEqual({
+      unauthorized: true,
+      forbidden: true,
+      missing: false,
+      server: false,
+      plain: false,
+    });
+  });
 });

@@ -11,7 +11,7 @@ import {
   byUriScheme,
 } from "~/common/bundles.js";
 import { collectionSchema } from "~/common/self-describing.js";
-import { getSessionClient } from "~/common/firkin/session.js";
+import { getSessionClient, isUnauthorized } from "~/common/firkin/session.js";
 import {
   HINT_DEBOUNCE_MS,
   channelName,
@@ -368,10 +368,16 @@ class FirkinLoroOutput extends BroadcastedOutputElement {
           data: this.#records(name),
         };
       }),
-      reload: () =>
-        this.#isBundled(name)
+      reload: () => {
+        const run = this.#isBundled(name)
           ? this.#pullBundled(name)
-          : this.#pullCollection(name),
+          : this.#pullCollection(name);
+
+        return run.catch((err) => {
+          this.#remoteFailure(err, `Could not reload the '${name}' document:`);
+          throw err;
+        });
+      },
       save: (/** @type {any[]} */ items) => this.#save(name, items),
     };
   }
@@ -559,28 +565,33 @@ class FirkinLoroOutput extends BroadcastedOutputElement {
         return;
       }
 
-      // A stored session is enough to start the local-first path. Validate it
-      // in the background: a slow registry round trip must not hold the page's
-      // first render (or the first pull) hostage. The pull surfaces real
-      // connectivity errors on its own.
+      // A stored session is enough to start the local-first path. The first
+      // real read or write validates it; an auth failure marks the output
+      // unready (see #remoteFailure).
       this.#connected.value = true;
       this.#ensureChannel(client);
-
-      try {
-        // A cheap authenticated read proves the session (and account) works.
-        await client.rb.registryList();
-      } catch (err) {
-        // Unauthorized/forbidden means the account is unregistered or the
-        // delegation was revoked; other errors are treated optimistically.
-        if (
-          err instanceof ApiError && (err.status === 401 || err.status === 403)
-        ) {
-          this.#connected.value = false;
-        }
-      }
     } catch {
       this.#connected.value = false;
     }
+  }
+
+  /**
+   * Record a failed remote operation.
+   *
+   * Only an authorization failure means the session is no longer accepted;
+   * a transient network or server error must not make the output fall back to
+   * the local store.
+   *
+   * @param {unknown} err
+   * @param {string} message
+   */
+  #remoteFailure(err, message) {
+    console.warn(message, err);
+
+    if (!isUnauthorized(err)) return;
+
+    this.#connected.value = false;
+    this.#closeChannel();
   }
 
   // HINTS
@@ -651,9 +662,9 @@ class FirkinLoroOutput extends BroadcastedOutputElement {
           ? this.#pullBundled(name)
           : this.#pullCollection(name))
           .catch((err) => {
-            console.warn(
-              `Could not refresh '${collection}' after a hint:`,
+            this.#remoteFailure(
               err,
+              `Could not refresh '${collection}' after a hint:`,
             );
           });
       }, HINT_DEBOUNCE_MS),
@@ -1502,7 +1513,7 @@ class FirkinLoroOutput extends BroadcastedOutputElement {
       appended = await this.#append(name, bytes);
     } catch (err) {
       this.#dirty.add(name);
-      console.warn(`Could not push the '${name}' changes:`, err);
+      this.#remoteFailure(err, `Could not push the '${name}' changes:`);
       return;
     }
 
@@ -1741,7 +1752,7 @@ class FirkinLoroOutput extends BroadcastedOutputElement {
               ? this.#pullBundled(name)
               : this.#pullCollection(name));
           } catch (err) {
-            console.warn(`Could not pull the '${name}' document:`, err);
+            this.#remoteFailure(err, `Could not pull the '${name}' document:`);
             this.#markReady(name);
           }
         }));

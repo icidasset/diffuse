@@ -415,6 +415,29 @@ describe("components/output/raw/firkin/encrypted/record-sync", () => {
 
       expect((await pageA.evaluate(operationCounts)).writes).toEqual([]);
       expect((await pageB.evaluate(operationCounts)).writes).toEqual([]);
+
+      // A real read's 401 marks the output unusable; there is no separate
+      // auth probe.
+      const readyAfterAuthFailure = await pageA.evaluate(async () => {
+        const { ApiError, Firkin } = await import("~/vendor/firkin/index.js");
+        const current = Firkin.prototype.registryNames;
+
+        Firkin.prototype.registryNames = async () => {
+          throw new ApiError("unauthorized", 401);
+        };
+
+        try {
+          await globalThis.__el.tracks.reload();
+        } catch {
+          // The reload rejects; the element records the auth failure.
+        } finally {
+          Firkin.prototype.registryNames = current;
+        }
+
+        return globalThis.__el.ready();
+      });
+
+      expect(readyAfterAuthFailure).toBe(false);
     } finally {
       await pageA.close();
       await pageB.close();

@@ -4,7 +4,7 @@ import * as IDB from "idb-keyval";
 import { computed, signal } from "~/common/signal.js";
 import { BroadcastedOutputElement } from "../../../../common.js";
 import { defineElement } from "~/common/element.js";
-import { getSessionClient } from "~/common/firkin/session.js";
+import { getSessionClient, isUnauthorized } from "~/common/firkin/session.js";
 import {
   channelName,
   HINT_DEBOUNCE_MS,
@@ -257,7 +257,11 @@ class FirkinRecordSyncOutput extends BroadcastedOutputElement {
 
         return { state: "loaded", data: this.#views.get(name) ?? [] };
       }),
-      reload: () => this.#pullCollection(name),
+      reload: () =>
+        this.#pullCollection(name).catch((err) => {
+          this.#remoteFailure(err, `Could not reload the '${name}' records:`);
+          throw err;
+        }),
       save: (/** @type {any[]} */ items) => this.#save(name, items),
     };
   }
@@ -362,21 +366,34 @@ class FirkinRecordSyncOutput extends BroadcastedOutputElement {
       }
 
       this.#deviceId = bytesToHex(client.session.publicKey);
+
+      // A stored session is enough to start the local-first path. The first
+      // real read or write validates it; an auth failure marks the output
+      // unready (see #remoteFailure).
       this.#connected.value = true;
       this.#ensureChannel(client);
-
-      try {
-        await client.rb.registryList();
-      } catch (err) {
-        if (
-          err instanceof ApiError && (err.status === 401 || err.status === 403)
-        ) {
-          this.#connected.value = false;
-        }
-      }
     } catch {
       this.#connected.value = false;
     }
+  }
+
+  /**
+   * Record a failed remote operation.
+   *
+   * Only an authorization failure means the session is no longer accepted;
+   * a transient network or server error must not make the output fall back to
+   * the local store.
+   *
+   * @param {unknown} err
+   * @param {string} message
+   */
+  #remoteFailure(err, message) {
+    console.warn(message, err);
+
+    if (!isUnauthorized(err)) return;
+
+    this.#connected.value = false;
+    this.#closeChannel();
   }
 
   // HINTS
@@ -449,7 +466,10 @@ class FirkinRecordSyncOutput extends BroadcastedOutputElement {
                 return;
               }
             } catch (err) {
-              console.warn(`Could not apply the '${collection}' hint:`, err);
+              this.#remoteFailure(
+                err,
+                `Could not apply the '${collection}' hint:`,
+              );
             }
           }
 
@@ -458,9 +478,9 @@ class FirkinRecordSyncOutput extends BroadcastedOutputElement {
           try {
             await this.#pullCollection(name);
           } catch (err) {
-            console.warn(
-              `Could not refresh '${collection}' after a hint:`,
+            this.#remoteFailure(
               err,
+              `Could not refresh '${collection}' after a hint:`,
             );
           }
         })();
@@ -970,7 +990,7 @@ class FirkinRecordSyncOutput extends BroadcastedOutputElement {
         this.#pending.has(name) || this.#pendingSnapshots.has(name),
       );
     } catch (err) {
-      console.warn(`Could not push the '${name}' records:`, err);
+      this.#remoteFailure(err, `Could not push the '${name}' records:`);
     }
   }
 
@@ -989,7 +1009,7 @@ class FirkinRecordSyncOutput extends BroadcastedOutputElement {
           try {
             await this.#pullCollection(name);
           } catch (err) {
-            console.warn(`Could not pull the '${name}' records:`, err);
+            this.#remoteFailure(err, `Could not pull the '${name}' records:`);
             this.#markReady(name);
           }
         }));
