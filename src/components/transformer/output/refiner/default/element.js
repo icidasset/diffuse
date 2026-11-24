@@ -1,5 +1,6 @@
 import * as IDB from "idb-keyval";
 
+import { durable, isEphemeral } from "~/common/ephemeral.js";
 import { computed, signal } from "~/common/signal.js";
 import { OutputTransformer } from "../../base.js";
 import { defineElement } from "~/common/element.js";
@@ -54,22 +55,12 @@ class DefaultOutputRefinerTransformer extends OutputTransformer {
           };
         }),
         save: async (newPlaylists) => {
-          /** @type {PlaylistItem[]} */
-          const ephemeral = [];
-
-          const filtered = newPlaylists.filter((p) => {
-            if (p.ephemeral) {
-              ephemeral.push(p);
-              return false;
-            } else {
-              return true;
-            }
-          });
+          const ephemeral = newPlaylists.filter(isEphemeral);
 
           await IDB.set(IDB_KEY_PLAYLISTS, ephemeral);
           this.#ephemeralPlaylistItems.set(ephemeral);
 
-          await base.playlistItems.save(filtered);
+          await base.playlistItems.save(durable(newPlaylists));
         },
       },
       tracks: {
@@ -83,22 +74,12 @@ class DefaultOutputRefinerTransformer extends OutputTransformer {
           };
         }),
         save: async (newTracks) => {
-          /** @type {Track[]} */
-          const ephemeral = [];
-
-          const filtered = newTracks.filter((t) => {
-            if (t.ephemeral) {
-              ephemeral.push(t);
-              return false;
-            } else {
-              return true;
-            }
-          });
+          const ephemeral = newTracks.filter(isEphemeral);
 
           await IDB.set(IDB_KEY_TRACKS, ephemeral);
           this.#ephemeralTracks.set(ephemeral);
 
-          await base.tracks.save(filtered);
+          await base.tracks.save(durable(newTracks));
         },
       },
 

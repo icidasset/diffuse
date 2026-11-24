@@ -1,6 +1,7 @@
 import { xxh32r } from "xxh32/dist/raw.js";
 
 import { bundle, bundleId, byField } from "~/common/bundles.js";
+import { isEphemeral } from "~/common/ephemeral.js";
 
 /**
  * @import {Bundle} from "~/common/bundles.d.ts"
@@ -110,7 +111,7 @@ export function stableStringify(value) {
 export function bundlePlaylistItems(items) {
   return bundle(items, {
     by: byField("playlist"),
-    skip: (item) => Boolean(item.ephemeral),
+    skip: isEphemeral,
     id: playlistRkey,
   });
 }

@@ -12,6 +12,8 @@
 
 import * as TID from "@atcute/tid";
 
+import { isEphemeral } from "~/common/ephemeral.js";
+
 export const TYPE = /** @type {const} */ ("sh.diffuse.output.collaboration");
 
 /**
@@ -459,7 +461,7 @@ export function mergeItems(localItems, remoteGroups) {
   for (const group of remoteGroups) {
     for (const item of scopeItems(group.owner, group.items, group.label)) {
       // Generated/unsaved items from a collaborator's output are not shared.
-      if (item.ephemeral) continue;
+      if (isEphemeral(item)) continue;
 
       const key = `${group.owner}\0${item.$sourceId}`;
       if (seen.has(key)) continue;

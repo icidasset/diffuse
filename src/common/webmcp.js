@@ -2,6 +2,7 @@ import foundation from "~/common/foundation.js";
 import { effect } from "~/common/signal.js";
 import * as TID from "@atcute/tid";
 import * as Output from "~/common/output.js";
+import { isEphemeral } from "~/common/ephemeral.js";
 import { resolveFacetTile } from "~/common/loader.js";
 import {
   filterByPlaylist,
@@ -1066,7 +1067,7 @@ export async function registerDiffuseTools(options = {}) {
           name: group.name,
           tracks: filterByPlaylist(tracks, group.items).length,
           ordered: !group.unordered,
-          ephemeral: group.items.every((i) => i.ephemeral ?? false),
+          ephemeral: group.items.every(isEphemeral),
         }))
         .sort((a, b) => a.name.localeCompare(b.name));
 

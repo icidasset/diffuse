@@ -1,4 +1,5 @@
 import * as Output from "~/common/output.js";
+import { durable } from "~/common/ephemeral.js";
 import foundation from "~/common/foundation.js";
 import { effect } from "~/common/signal.js";
 
@@ -50,9 +51,9 @@ effect(() => {
 // Export all data as a JSON snapshot
 exportBtn.onclick = async () => {
   const facets = await Output.data(output.facets);
-  const playlistItems = await Output.data(output.playlistItems);
+  const playlistItems = durable(await Output.data(output.playlistItems));
   const settings = await Output.data(output.settings);
-  const tracks = await Output.data(output.tracks);
+  const tracks = durable(await Output.data(output.tracks));
 
   const data = {
     exportedAt: new Date().toISOString(),
