@@ -238,7 +238,7 @@
     "kind": "prelude",
     "category": "Data",
     "incomplete": true,
-    "desc": "Store your user-data on a Firkin instance as encrypted, incremental Record Sync patches: last-writer-wins records, tombstones, and selective field encryption, with snapshots instead of CRDT history. Requires a Firkin account."
+    "desc": "Store your user-data on a Firkin instance as incremental Record Sync patches with selective field encryption: last-writer-wins records, tombstones, and snapshots instead of CRDT history. Requires a Firkin account."
   },
   {
     "url": "facets/data/wnfs-firkin/prelude/index.tile",

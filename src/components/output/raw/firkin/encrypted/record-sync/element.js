@@ -10,7 +10,7 @@ import {
   HINT_DEBOUNCE_MS,
   openHintChannel,
 } from "~/common/firkin/channel.js";
-import { fieldKey, outputKey } from "~/common/firkin/output-key.js";
+import { fieldKey } from "~/common/firkin/output-key.js";
 import {
   fieldContext,
   openField,
@@ -29,7 +29,6 @@ import {
   registryNamespace,
   SNAPSHOT_EVERY,
 } from "./constants.js";
-import { decryptLog, encryptEntry } from "../incremental-loro/crypto.js";
 import {
   appendEntry,
   extendLogSignature,
@@ -91,9 +90,11 @@ const blockCache = {
  *
  * A collection is a map of records with last-writer-wins versions, tombstones
  * for deletes and one LWW order. Saves append a patch (or a full snapshot every
- * `SNAPSHOT_EVERY` pushes) to the same signed, encrypted Firkin log the Loro
- * output uses; pulls replay the log and merge with LWW. There is no operation
- * history beyond the retained log window and tombstones.
+ * `SNAPSHOT_EVERY` pushes) to the same signed Firkin log the Loro output uses;
+ * pulls replay the log and merge with LWW. The log stores patches in the clear:
+ * only the `$enc` fields are sealed, so metadata and public fields are visible
+ * to the server. There is no operation history beyond the retained log window
+ * and tombstones.
  *
  * Sensitive fields are sealed with the Record Sync field key (`$enc`) before a
  * record is stored locally or remotely, and opened when the collection is read.
@@ -215,12 +216,11 @@ class FirkinRecordSyncOutput extends BroadcastedOutputElement {
       this.#loaded.value &&
       this.#connected.value &&
       this.#isOnline.value &&
-      outputKey() !== undefined &&
       fieldKey() !== undefined
     );
 
     this.effect(() => {
-      if (outputKey() === undefined || fieldKey() === undefined) return;
+      if (fieldKey() === undefined) return;
 
       void this.#refreshConnected();
     });
@@ -850,9 +850,6 @@ class FirkinRecordSyncOutput extends BroadcastedOutputElement {
     const client = await getSessionClient({ cache: blockCache });
     if (!client) return;
 
-    const key = outputKey();
-    if (!key) return;
-
     const state = this.#states.get(name) ?? emptyState();
     const snapshot = pendingSnapshot ||
       (cursor.pushes > 0 && cursor.pushes % SNAPSHOT_EVERY === 0);
@@ -870,14 +867,7 @@ class FirkinRecordSyncOutput extends BroadcastedOutputElement {
     const patch = snapshot ? snapshotPatch(state, version) : pending;
     if (!patch) return;
 
-    let sealed;
-    try {
-      sealed = await encryptEntry(key, encodePatch(patch));
-    } catch (err) {
-      console.warn(`Could not seal the '${name}' push:`, err);
-      return;
-    }
-
+    const bytes = encodePatch(patch);
     const auth = this.#auth(client.session);
     const cacheKey = `${name}\u0000${auth.device}`;
 
@@ -886,7 +876,7 @@ class FirkinRecordSyncOutput extends BroadcastedOutputElement {
         client.rb,
         this.#namespace,
         name,
-        sealed,
+        bytes,
         {
           auth,
           keep: this.keep,
@@ -896,10 +886,10 @@ class FirkinRecordSyncOutput extends BroadcastedOutputElement {
       );
 
       this.#manifests.set(cacheKey, manifest);
-      this.#packs.set(cid, sealed);
+      this.#packs.set(cid, bytes);
 
       try {
-        await IDB.set(`${IDB_PACKS}/${cid}`, sealed);
+        await IDB.set(`${IDB_PACKS}/${cid}`, bytes);
       } catch {
         // The log has it; the local cache is only an optimisation.
       }
@@ -1029,17 +1019,6 @@ class FirkinRecordSyncOutput extends BroadcastedOutputElement {
 
     const pending = entries.slice(incremental ? appliedPacks.length : 0);
 
-    const key = outputKey();
-    if (!key) {
-      return {
-        patches: /** @type {Patch[]} */ ([]),
-        packs,
-        signature,
-        unchanged: false,
-        complete: false,
-      };
-    }
-
     /** @type {Patch[]} */
     const patches = [];
     let complete = true;
@@ -1051,14 +1030,8 @@ class FirkinRecordSyncOutput extends BroadcastedOutputElement {
         continue;
       }
 
-      const [plaintext] = await decryptLog(key, bytes);
-      if (!plaintext) {
-        complete = false;
-        continue;
-      }
-
       try {
-        patches.push(decodePatch(plaintext));
+        patches.push(decodePatch(bytes));
       } catch (err) {
         console.warn(`Ignoring an unreadable '${name}' entry:`, err);
       }

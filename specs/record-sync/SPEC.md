@@ -19,6 +19,11 @@ tombstones for deletes, and selective field encryption. It is incremental, keeps
 no operation history, and lets a server replicate and verify data without the
 content key.
 
+Encryption is **field-level only**. Patches, snapshots and manifests are stored
+as plaintext CBOR; a server sees record ids, versions, field names and every
+value that is not explicitly sealed in `$enc`. Whole-entry encryption is a
+separate, optional profile (see _Leakage_).
+
 ## Goals
 
 - Incremental replication: a reader fetches only entries after its cursor.
@@ -177,15 +182,17 @@ and transfer layer, not the merge rules.
   `$enc[field]` instead of re-sealing. Re-sealing with a fresh nonce changes the
   record, its CID and the log entry, even though nothing changed.
 - **Key separation:** derive a dedicated 256-bit (32-byte) field key, e.g.
-  `HKDF-SHA256(secret, info = "diffuse.records.field.v1")`. Do not reuse the
-  entry-encryption key.
+  `HKDF-SHA256(secret, info = "diffuse.records.field.v1")`. Do not reuse a key
+  that seals log entries (the Loro output's profile); this profile never seals
+  entries, so the field key is the only content key.
 - **Rotation:** a new key gets a new key id. Keep old keys for decryption and
   re-seal a field on its next write; do not re-seal unchanged fields just to
   rotate.
 - **No key:** expose the record with the field locked, and refuse to edit it.
   Preserve the ciphertext on save.
-- **Reference defaults:** `tracks.uri`, `playlistItems.uri` and `settings.value`
-  are the fields sealed by the reference output.
+- **Reference defaults:** `tracks.uri` and `settings.value` are the fields
+  sealed by the reference output. A playlist item carries no URI of its own (its
+  criteria reference tracks), so there is nothing to seal there.
 
 ### Post-quantum posture
 
@@ -214,10 +221,12 @@ implementations of ML-KEM, ML-DSA and SLH-DSA are available in
 
 ### Leakage
 
-The server (and anyone with the log) learns: record ids, timestamps, device ids,
-field names, which fields changed, ciphertext sizes, and every non-encrypted
-field. If the metadata itself is sensitive, use whole-entry encryption instead
-(or in addition) and accept that servers cannot merge or index it.
+Because entries are not sealed, the server (and anyone with the log) learns:
+record ids, timestamps, device ids, field names, tombstones, which fields
+changed, `$enc` ciphertext sizes, and every non-encrypted field. Only the values
+listed in `$enc` are confidential. If the metadata itself is sensitive, use a
+whole-entry encryption profile instead (or in addition) and accept that servers
+cannot merge or index it; that profile is out of scope for v1.
 
 ## Test vector
 

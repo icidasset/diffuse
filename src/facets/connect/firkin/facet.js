@@ -336,11 +336,13 @@ async function ensureAccount(mode) {
     }
   }
 
-  // Record Sync needs its field key as well; a session restored from before
-  // that key existed has to go through sign-in again.
+  // Record Sync needs its field key; a session restored from before that key
+  // existed has to go through sign-in again. The other outputs need the entry
+  // encryption key.
   const keysReady = account.get() &&
-    outputKey() !== undefined &&
-    (method.kind !== "record-sync" || fieldKey() !== undefined);
+    (method.kind === "record-sync"
+      ? fieldKey() !== undefined
+      : outputKey() !== undefined);
 
   if (keysReady) return;
 

@@ -1,10 +1,12 @@
 // @ts-nocheck -- the fake server, crypto shim and page wiring are untyped
 
 import { launch } from "@astral/astral";
+import * as DagCBOR from "@ipld/dag-cbor";
 import { describe, it } from "@std/testing/bdd";
 import { expect } from "@std/expect";
 
 import { startFakeFirkin } from "../incremental-loro/fake-firkin-server.ts";
+import { decodePatch } from "~/components/output/raw/firkin/encrypted/record-sync/codec.js";
 
 /**
  * Two independent Record Sync clients on one Firkin server: separate browser
@@ -253,7 +255,7 @@ const until = async (fn, ms = 15_000) => {
 
 describe("components/output/raw/firkin/encrypted/record-sync", () => {
   it("syncs records between two devices and settles", async () => {
-    const { http, port, registry } = startFakeFirkin();
+    const { http, port, registry, blobs } = startFakeFirkin();
     const apiBase = `http://127.0.0.1:${port}`;
     const accountSeed = Array.from(new Uint8Array(32).fill(21));
     const namespace = "record-sync-test";
@@ -300,6 +302,27 @@ describe("components/output/raw/firkin/encrypted/record-sync", () => {
         const after = (await pageA.evaluate(operationCounts)).writes.length;
         return before === after;
       });
+
+      // The log stores the patch in the clear: only the field is sealed. Read
+      // the manifest the device published and decode its inline entry.
+      const registryKey = [...registry.keys()].find((key) =>
+        key.startsWith("diffuse.output.record-sync.") &&
+        key.includes(`/${encodedTracks}.`) &&
+        key.endsWith(deviceA.device)
+      );
+      const envelope = DagCBOR.decode(blobs.get(registry.get(registryKey)));
+      const manifest = DagCBOR.decode(blobs.get(String(envelope.p)));
+      const pushed = manifest.packs.flatMap((pack) => {
+        try {
+          return [decodePatch(pack.bytes)];
+        } catch {
+          return [];
+        }
+      }).find((patch) => patch.put?.t1);
+
+      expect(pushed).toBeDefined();
+      expect(pushed.put.t1.uri).toBeUndefined();
+      expect(pushed.put.t1.$enc?.uri).toEqual(expect.any(String));
 
       // --- A second device reads the log --------------------------------
       const deviceB = await pageB.evaluate(setupDevice, {
