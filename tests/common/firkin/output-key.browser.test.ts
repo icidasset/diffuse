@@ -9,7 +9,9 @@ describe("common/firkin/output-key (browser)", () => {
   it("stores, reloads and forgets a passphrase key", async () => {
     const result = await testWeb(async () => {
       const {
+        fieldKey,
         forgetOutputKey,
+        loadFieldKey,
         loadOutputKey,
         readOutputKeyMeta,
         unlockOutputKeyWithPassphrase,
@@ -23,7 +25,31 @@ describe("common/firkin/output-key (browser)", () => {
       await unlockOutputKeyWithPassphrase("a memorable passphrase");
 
       const stored = await loadOutputKey();
+      const field = await loadFieldKey();
+      const fieldReactive = fieldKey() !== undefined;
       const meta = await readOutputKeyMeta();
+
+      // The field key is derived from the same secret but is a different key:
+      // the entry key must not open something sealed with the field key.
+      const iv = crypto.getRandomValues(new Uint8Array(12));
+      const message = new TextEncoder().encode("separation");
+      const sealed = await crypto.subtle.encrypt(
+        { name: "AES-GCM", iv },
+        /** @type {CryptoKey} */ (field),
+        message,
+      );
+
+      let entryOpensField = true;
+
+      try {
+        await crypto.subtle.decrypt(
+          { name: "AES-GCM", iv },
+          /** @type {CryptoKey} */ (stored),
+          sealed,
+        );
+      } catch {
+        entryOpensField = false;
+      }
 
       await forgetOutputKey();
 
@@ -33,9 +59,13 @@ describe("common/firkin/output-key (browser)", () => {
         stored: stored instanceof CryptoKey,
         extractable: stored?.extractable,
         algorithm: stored?.algorithm?.name,
+        field: field instanceof CryptoKey,
+        fieldReactive,
         source: meta?.source,
         saltLength: meta?.salt?.length,
+        entryOpensField,
         afterForget: (await loadOutputKey()) !== undefined,
+        fieldAfterForget: (await loadFieldKey()) !== undefined,
       };
     });
 
@@ -44,15 +74,21 @@ describe("common/firkin/output-key (browser)", () => {
     expect(result.stored).toBe(true);
     expect(result.extractable).toBe(false);
     expect(result.algorithm).toBe("AES-GCM");
+    expect(result.field).toBe(true);
+    expect(result.fieldReactive).toBe(true);
     expect(result.source).toBe("passphrase");
     expect(result.saltLength).toBe(16);
+    expect(result.entryOpensField).toBe(false);
     expect(result.afterForget).toBe(false);
+    expect(result.fieldAfterForget).toBe(false);
   });
 
   it("derives the key from the passkey's PRF output", async () => {
     const result = await testWeb(async () => {
       const {
+        fieldKey,
         forgetOutputKey,
+        loadFieldKey,
         loadOutputKey,
         outputKey,
         readOutputKeyMeta,
@@ -66,6 +102,8 @@ describe("common/firkin/output-key (browser)", () => {
       await storePasskeyOutputKey(prfSecond);
 
       const stored = await loadOutputKey();
+      const field = await loadFieldKey();
+      const fieldReactive = fieldKey() !== undefined;
       const meta = await readOutputKeyMeta();
       const reactive = outputKey() !== undefined;
 
@@ -93,6 +131,8 @@ describe("common/firkin/output-key (browser)", () => {
 
       return {
         reactive,
+        fieldReactive,
+        field: field instanceof CryptoKey,
         stored: stored instanceof CryptoKey,
         extractable: stored?.extractable,
         algorithm: stored?.algorithm?.name,
@@ -101,10 +141,13 @@ describe("common/firkin/output-key (browser)", () => {
         opened: new TextDecoder().decode(opened),
         purposesDiffer: same.some((byte, index) => byte !== other[index]),
         afterForget: (await loadOutputKey()) !== undefined,
+        fieldAfterForget: (await loadFieldKey()) !== undefined,
       };
     });
 
     expect(result.reactive).toBe(true);
+    expect(result.fieldReactive).toBe(true);
+    expect(result.field).toBe(true);
     expect(result.stored).toBe(true);
     expect(result.extractable).toBe(false);
     expect(result.algorithm).toBe("AES-GCM");
@@ -113,5 +156,6 @@ describe("common/firkin/output-key (browser)", () => {
     expect(result.opened).toBe("round trip");
     expect(result.purposesDiffer).toBe(true);
     expect(result.afterForget).toBe(false);
+    expect(result.fieldAfterForget).toBe(false);
   });
 });

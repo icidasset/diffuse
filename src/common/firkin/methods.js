@@ -17,7 +17,7 @@ export const CONNECT_URL = "facets/connect/firkin/index.tile";
 
 /**
  * @typedef {Object} FirkinMethod
- * @property {"loro" | "wnfs"} kind - The output implementation.
+ * @property {"loro" | "wnfs" | "record-sync"} kind - The output implementation.
  * @property {string} id - Stable slug; also the log namespace and id suffix.
  * @property {string} label - Output option label; must be unique.
  * @property {string} provider - Display name shared by a provider's methods;
@@ -33,6 +33,13 @@ export const FIRKIN_METHODS = [
     kind: "loro",
     id: "firkin-loro",
     label: "Firkin (Loro)",
+    provider: "Firkin",
+    keep: 64,
+  },
+  {
+    kind: "record-sync",
+    id: "firkin-record-sync",
+    label: "Firkin (Record Sync)",
     provider: "Firkin",
     keep: 64,
   },

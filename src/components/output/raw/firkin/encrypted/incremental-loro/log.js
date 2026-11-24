@@ -223,7 +223,7 @@ export async function latestEntry(rb, namespace, name, options) {
  * @param {string} namespace
  * @param {string} name
  * @param {Uint8Array} bytes
- * @param {{ auth: LogAuth; keep?: number; floors?: Map<string, number>; current?: ManifestState }} options
+ * @param {{ auth: LogAuth; keep?: number; floors?: Map<string, number>; current?: ManifestState; registry?: string }} options
  *   - `keep` trims the log to its newest entries, for consumers that only ever
  *   read the latest value.
  * @returns {Promise<{ cid: string; appended: boolean; manifest: ManifestState }>}
@@ -233,7 +233,7 @@ export async function appendEntry(rb, namespace, name, bytes, options) {
   const inline = bytes.length <= INLINE_ENTRY_MAX_BYTES;
   const cid = cidForBytes(bytes, { codec: CODEC_RAW });
   const ref = logName(name, auth.device);
-  const registry = registryNamespace(namespace);
+  const registry = options.registry ?? registryNamespace(namespace);
 
   /** @type {ManifestState | undefined} */
   let current = options.current;
@@ -294,6 +294,7 @@ export async function appendEntry(rb, namespace, name, bytes, options) {
       payload,
       when,
       inline ? undefined : { cid, bytes },
+      registry,
     );
 
     if (written.ok) {
@@ -450,9 +451,19 @@ async function readManifest(rb, name, device, cid, options) {
  * @param {string | null} when - CID the name must still hold (`null`: unset).
  * @param {{ cid: string; bytes: Uint8Array }} [entry] - A large entry to store
  *   alongside the manifest.
+ * @param {string} [registry] - Registry namespace override.
  * @returns {Promise<{ ok: true; cid: string } | { ok: false; current: string | null }>}
  */
-async function writeManifest(rb, namespace, name, auth, payload, when, entry) {
+async function writeManifest(
+  rb,
+  namespace,
+  name,
+  auth,
+  payload,
+  when,
+  entry,
+  registry,
+) {
   // Block entries are links in the DAG; inline entries stay strings.
   const stored = {
     ...payload,
@@ -480,7 +491,7 @@ async function writeManifest(rb, namespace, name, auth, payload, when, entry) {
   await uploadBlocks(rb, blocks);
 
   return await rb.registrySetIf(
-    registryNamespace(namespace),
+    registry ?? registryNamespace(namespace),
     logName(name, auth.device),
     envelopeCid,
     when,

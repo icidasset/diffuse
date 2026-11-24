@@ -3,10 +3,11 @@
 _Incremental, history-free replication of record collections with selective
 field encryption._
 
-**Status:** draft / prototype. The field cipher lives in
+**Status:** draft, with a reference implementation. The output lives in
+`src/components/output/raw/firkin/encrypted/record-sync/` and is exposed by the
+`facets/data/record-sync` feature facet. The field cipher lives in
 `src/common/record-sync/field-cipher.js`; its tests (including the vector below)
-are in `tests/common/record-sync/field-cipher.test.ts`. Nothing is wired into an
-output yet.
+are in `tests/common/record-sync/field-cipher.test.ts`.
 
 This is a **data format and merge profile**, not a session protocol: it defines
 what a patch, snapshot, manifest and encrypted field look like. Any transport
@@ -144,6 +145,9 @@ and transfer layer, not the merge rules.
 - Sign each patch/snapshot with **COSE_Sign1** (RFC 9052; Ed25519) over the
   canonical bytes. A server can verify authorship and integrity without any
   content key.
+- In the reference Firkin transport the signed manifest commits to every entry
+  CID instead, so the manifest signature is the v1 signature profile; a
+  per-patch COSE_Sign1 envelope is an alternative profile.
 - Authorize writes with a **UCAN** delegation for the collection's namespace
   (the current Firkin model). Read capabilities may be broader than write.
 - Servers store, deduplicate, verify, replicate and GC. They do not decrypt.
@@ -180,6 +184,8 @@ and transfer layer, not the merge rules.
   rotate.
 - **No key:** expose the record with the field locked, and refuse to edit it.
   Preserve the ciphertext on save.
+- **Reference defaults:** `tracks.uri`, `playlistItems.uri` and `settings.value`
+  are the fields sealed by the reference output.
 
 ### Post-quantum posture
 

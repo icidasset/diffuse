@@ -11,7 +11,7 @@ import {
 } from "~/common/firkin/account.js";
 import { SOURCE_URI } from "~/common/firkin/files.js";
 import { FIRKIN_METHODS } from "~/common/firkin/methods.js";
-import { outputKey } from "~/common/firkin/output-key.js";
+import { fieldKey, outputKey } from "~/common/firkin/output-key.js";
 import { effect, signal } from "~/common/signal.js";
 import foundation from "~/common/foundation.js";
 
@@ -336,7 +336,13 @@ async function ensureAccount(mode) {
     }
   }
 
-  if (account.get() && outputKey() !== undefined) return;
+  // Record Sync needs its field key as well; a session restored from before
+  // that key existed has to go through sign-in again.
+  const keysReady = account.get() &&
+    outputKey() !== undefined &&
+    (method.kind !== "record-sync" || fieldKey() !== undefined);
+
+  if (keysReady) return;
 
   await connectWithDid(mode);
 }
