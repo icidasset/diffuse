@@ -83,6 +83,34 @@ const SENSITIVE_FIELDS = {
   tracks: ["uri"],
 };
 
+/**
+ * The newest version timestamp in a state.
+ *
+ * Used to detect a persisted state that is older than the applied log: a stale
+ * tab can write state without winning the monotonic applied-record race, and a
+ * reload must then replay the log instead of trusting the signature.
+ *
+ * @param {State} state
+ */
+function stateVersion(state) {
+  let version = 0;
+
+  for (const record of Object.values(state.records)) {
+    const at = Date.parse(record.at);
+    if (Number.isFinite(at) && at > version) version = at;
+  }
+
+  for (const tombstone of Object.values(state.tombstones)) {
+    const at = Date.parse(tombstone.at);
+    if (Number.isFinite(at) && at > version) version = at;
+  }
+
+  const order = Date.parse(state.order.at);
+  if (Number.isFinite(order) && order > version) version = order;
+
+  return version;
+}
+
 /** The client's block cache, shared with the log's inline entries. */
 const blockCache = {
   /** @param {string} cid */
@@ -146,7 +174,7 @@ class FirkinRecordSyncOutput extends BroadcastedOutputElement {
   /** @type {Map<string, { pushes: number }>} */
   #cursors = new Map();
 
-  /** @type {Map<string, { packs: string; signature?: string; at?: number }>} */
+  /** @type {Map<string, { packs: string; signature?: string; at?: number; stateAt?: number }>} */
   #applied = new Map();
 
   /**
@@ -659,6 +687,8 @@ class FirkinRecordSyncOutput extends BroadcastedOutputElement {
 
       this.#states.set(name, state);
 
+      const stateAt = stateVersion(state);
+
       if (stored instanceof Uint8Array) this.#persisted.add(name);
 
       if (cursor && typeof cursor === "object") {
@@ -672,13 +702,25 @@ class FirkinRecordSyncOutput extends BroadcastedOutputElement {
       // rather than sending a snapshot of an empty state over the remote.
       if (stored instanceof Uint8Array) {
         if (applied && typeof applied === "object") {
-          this.#applied.set(name, {
-            packs: typeof applied.packs === "string" ? applied.packs : "",
-            signature: typeof applied.signature === "string"
-              ? applied.signature
-              : undefined,
-            at: typeof applied.at === "number" ? applied.at : undefined,
-          });
+          const appliedStateAt = typeof applied.stateAt === "number"
+            ? applied.stateAt
+            : undefined;
+
+          // A stale tab can persist an older state without winning the
+          // monotonic applied-record race. Don't let the applied signature
+          // claim more than the state has; the pull will replay the log.
+          if (appliedStateAt !== undefined && stateAt < appliedStateAt) {
+            await IDB.del(this.#appliedKey(name)).catch(() => {});
+          } else {
+            this.#applied.set(name, {
+              packs: typeof applied.packs === "string" ? applied.packs : "",
+              signature: typeof applied.signature === "string"
+                ? applied.signature
+                : undefined,
+              at: typeof applied.at === "number" ? applied.at : undefined,
+              stateAt: appliedStateAt,
+            });
+          }
         }
 
         if (pending) this.#pendingSnapshots.add(name);
@@ -860,10 +902,16 @@ class FirkinRecordSyncOutput extends BroadcastedOutputElement {
     }
   }
 
-  /** @param {string} name; @param {{ packs: string; signature?: string; at?: number }} applied */
+  /** @param {string} name; @param {{ packs: string; signature?: string; at?: number; stateAt?: number }} applied */
   async #setApplied(name, applied) {
-    /** @type {{ packs: string; signature?: string; at: number }} */
-    const record = { ...applied, at: Math.max(applied.at ?? 0, this.#lastAt) };
+    const state = this.#states.get(name) ?? emptyState();
+
+    /** @type {{ packs: string; signature?: string; at: number; stateAt: number }} */
+    const record = {
+      ...applied,
+      at: Math.max(applied.at ?? 0, this.#lastAt),
+      stateAt: stateVersion(state),
+    };
 
     this.#applied.set(name, record);
 
@@ -877,6 +925,25 @@ class FirkinRecordSyncOutput extends BroadcastedOutputElement {
     } catch (err) {
       console.warn(`Could not persist the '${name}' applied log:`, err);
     }
+  }
+
+  /**
+   * Whether an applied record describes a state this element actually has.
+   *
+   * A local save legitimately advances the state beyond the applied log, so the
+   * check is one-directional: the state must be at least as new as the applied
+   * record. A newer applied record with an older state means a stale tab lost
+   * the write race, and the log must be replayed.
+   *
+   * @param {string} name
+   * @param {{ stateAt?: number }} applied
+   */
+  #appliedTrustworthy(name, applied) {
+    const state = this.#states.get(name);
+    if (!state) return false;
+    if (applied.stateAt === undefined) return true;
+
+    return stateVersion(state) >= applied.stateAt;
   }
 
   // WRITING
@@ -1039,6 +1106,9 @@ class FirkinRecordSyncOutput extends BroadcastedOutputElement {
     const scope = sessionScope(client.session);
     if (scope !== this.#accountKey) return;
 
+    const current = this.#applied.get(name);
+    if (current && !this.#appliedTrustworthy(name, current)) return;
+
     const state = this.#states.get(name) ?? emptyState();
     const snapshot = pendingSnapshot ||
       (cursor.pushes > 0 && cursor.pushes % SNAPSHOT_EVERY === 0);
@@ -1189,7 +1259,10 @@ class FirkinRecordSyncOutput extends BroadcastedOutputElement {
 
     const names = await this.#names(client.rb);
     const signature = logSignature(names, name);
-    const applied = this.#applied.get(name);
+    const stored = this.#applied.get(name);
+    const applied = stored && this.#appliedTrustworthy(name, stored)
+      ? stored
+      : undefined;
 
     if (applied?.signature === signature && applied.packs !== undefined) {
       return {
@@ -1285,6 +1358,7 @@ class FirkinRecordSyncOutput extends BroadcastedOutputElement {
 
     const applied = this.#applied.get(name);
     if (!applied?.signature) return false;
+    if (!this.#appliedTrustworthy(name, applied)) return false;
 
     const ref = logName(name, device);
     const currentCid = logSignatureCid(applied.signature, ref);

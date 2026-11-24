@@ -484,6 +484,53 @@ describe("components/output/raw/firkin/encrypted/record-sync", () => {
       const secondReads = (await pageB.evaluate(operationCounts)).reads;
       expect(secondReads).not.toContain("registryNames");
 
+      // --- A stale state with a newer applied record forces a replay -----
+      await pageB.evaluate(async () => {
+        globalThis.__el.remove();
+        globalThis.__second?.remove();
+        await new Promise((resolve) => setTimeout(resolve, 500));
+
+        const IDB = await import("idb-keyval");
+        const { readSession, sessionScope } = await import(
+          "~/common/firkin/session.js"
+        );
+        const { IDB_DOCS } = await import(
+          "~/components/output/raw/firkin/encrypted/record-sync/constants.js"
+        );
+        const { encodeState, emptyState } = await import(
+          "~/components/output/raw/firkin/encrypted/record-sync/codec.js"
+        );
+
+        const session = await readSession();
+        const scope = sessionScope(session);
+        const base = `${IDB_DOCS}/${scope}/record-sync-test/tracks`;
+
+        // Keep the applied record; replace the state with an older one, as a
+        // stale tab could have done.
+        await IDB.set(`${base}/state`, encodeState(emptyState()));
+      });
+
+      await pageB.evaluate(() => {
+        const third = document.createElement("dob-record-sync");
+        third.id = "record-sync-b3";
+        third.setAttribute("namespace", "record-sync-test");
+        third.setAttribute("keep", "64");
+        globalThis.__el = third;
+        document.body.append(third);
+      });
+
+      const thirdReady = await until(
+        () => pageB.evaluate(() => globalThis.__el?.ready() === true),
+        20_000,
+      );
+      expect(thirdReady).toBe(true);
+
+      const replayed = await until(async () => {
+        const ids = await pageB.evaluate(trackIds);
+        return ids?.length === 4 ? ids : undefined;
+      }, 20_000);
+      expect(replayed).toEqual(["t1", "t2", "t3", "t4"]);
+
       // A real read's 401 marks the output unusable; there is no separate
       // auth probe.
       const readyAfterAuthFailure = await pageA.evaluate(async () => {
