@@ -34,7 +34,7 @@ const SUBMISSION_CLIENT_AGENT = "sh.diffuse/unknown";
 
 /**
  * How long a now-playing status stays current when the track length is unknown.
- * Matches the teal.fm lexicon's documented default.
+ * Matches the Teal.fm lexicon's documented default.
  */
 const DEFAULT_STATUS_EXPIRY_MS = 10 * 60 * 1000;
 
@@ -110,7 +110,7 @@ class TealScrobbler extends BroadcastableDiffuseElement {
     } catch (err) {
       // Transient failure (offline, timeout, auth server hiccup). The session
       // is still stored, so keep the persisted state and retry later.
-      console.warn("teal.fm: Failed to restore/finalize session", err);
+      console.warn("Teal.fm: Failed to restore/finalize session", err);
     }
 
     // Restore previously stored connection state.
@@ -156,12 +156,12 @@ class TealScrobbler extends BroadcastableDiffuseElement {
    * failures forever.
    */
   async #handleSessionLost() {
-    console.warn("teal.fm: session expired or revoked; sign-in required");
+    console.warn("Teal.fm: session expired or revoked; sign-in required");
 
     try {
       await clearStoredSession();
     } catch (err) {
-      console.warn("teal.fm: Failed to clear stored session", err);
+      console.warn("Teal.fm: Failed to clear stored session", err);
     }
 
     this.#connected.set(false);
@@ -172,7 +172,7 @@ class TealScrobbler extends BroadcastableDiffuseElement {
   // AUTH
 
   /**
-   * Connect to teal.fm by initiating the AT Protocol OAuth flow for the given
+   * Connect to Teal.fm by initiating the AT Protocol OAuth flow for the given
    * handle. Navigates the browser away to the authorization server.
    *
    * @param {string} handle
@@ -188,7 +188,7 @@ class TealScrobbler extends BroadcastableDiffuseElement {
   }
 
   /**
-   * Disconnect from teal.fm.
+   * Disconnect from Teal.fm.
    */
   async signOut() {
     // Reflect the disconnect immediately; revocation is best-effort.
@@ -199,7 +199,7 @@ class TealScrobbler extends BroadcastableDiffuseElement {
     try {
       await logout();
     } catch (err) {
-      console.warn("teal.fm: Failed to sign out", err);
+      console.warn("Teal.fm: Failed to sign out", err);
     }
   }
 
@@ -275,7 +275,7 @@ class TealScrobbler extends BroadcastableDiffuseElement {
 
     const duration = track.stats?.duration ?? durationMs;
     if (duration != null && duration > 0) {
-      // teal.fm records the duration in whole seconds.
+      // Teal.fm records the duration in whole seconds.
       item.duration = Math.max(1, Math.round(duration / 1000));
     }
 
@@ -341,7 +341,7 @@ class TealScrobbler extends BroadcastableDiffuseElement {
       }
 
       throw new Error(
-        `teal.fm: ${collection} write failed ${response.status}: ${
+        `Teal.fm: ${collection} write failed ${response.status}: ${
           error.message ?? ""
         }`,
       );

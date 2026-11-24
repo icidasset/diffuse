@@ -68,7 +68,7 @@ const OAUTH_CONFIG = {
 };
 
 /**
- * Configure the atcute library for teal.fm.
+ * Configure the atcute library for Teal.fm.
  *
  * `@atcute/oauth-browser-client` keeps its database and client id in module
  * globals, shared with every other module that imports it (notably the AT
@@ -109,7 +109,7 @@ function asDid(did) {
 // =====
 
 /**
- * Initiate the teal.fm OAuth authorization flow for a given handle.
+ * Initiate the Teal.fm OAuth authorization flow for a given handle.
  * Navigates the browser away to the authorization server.
  *
  * @param {string} handle
@@ -136,7 +136,7 @@ export function login(handle) {
 // ==========================
 
 /**
- * Attempt to restore an existing teal.fm session or finalize an OAuth callback.
+ * Attempt to restore an existing Teal.fm session or finalize an OAuth callback.
  *
  * Returns the session if successful, or `null` if there is no session to
  * restore. Transient failures (offline, timeouts, auth server errors) are
@@ -180,7 +180,7 @@ export function restoreOrFinalize() {
         // network at page load would permanently log the user out and every
         // subsequent scrobble would fail silently.
         if (err instanceof TokenRefreshError) {
-          console.warn("teal.fm: stored session is no longer valid", err);
+          console.warn("Teal.fm: stored session is no longer valid", err);
           clearStoredSessionUnlocked();
           return null;
         }
@@ -237,8 +237,8 @@ export function logout() {
 // ===================
 
 /**
- * Run `fn` with a valid teal.fm session. The whole operation holds the OAuth
- * lock so the library keeps using the teal.fm database and client id while the
+ * Run `fn` with a valid Teal.fm session. The whole operation holds the OAuth
+ * lock so the library keeps using the Teal.fm database and client id while the
  * session is refreshed, and so another module can't swap them mid-request.
  *
  * @template T
@@ -250,7 +250,7 @@ export function withSession(fn) {
     const did = localStorage.getItem(DID_STORAGE_KEY);
 
     if (!did) {
-      throw new Error("teal.fm: no stored session");
+      throw new Error("Teal.fm: no stored session");
     }
 
     const session = await getSession(asDid(did));

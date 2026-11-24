@@ -14,7 +14,7 @@ import { NAME as ATPROTO_PUBLISH_NAME } from "~/components/supplement/atproto-pu
 ////////////////////////////////////////////
 
 // Set doc title
-foundation.setup({ title: "teal.fm | Scrobble" });
+foundation.setup({ title: "Teal.fm | Scrobble" });
 
 const [configurator, output] = await Promise.all([
   foundation.configurator.scrobbles(),
@@ -81,8 +81,8 @@ effect(() => {
             </svg>
           </a>
         </div>
-        <h1>teal.fm</h1>
-        <p>Scrobble tracks to teal.fm using your AT Protocol identity.</p>
+        <h1>Teal.fm</h1>
+        <p>Scrobble tracks to Teal.fm using your AT Protocol identity.</p>
       </div>
 
       <div class="facet__right">
@@ -104,7 +104,7 @@ effect(() => {
           `
           : html`
             <div>
-              <p>Sign in with your AT Protocol identity to connect teal.fm.</p>
+              <p>Sign in with your AT Protocol identity to connect Teal.fm.</p>
               <form @submit="${handleSignIn}">
                 <label>Handle
                   <input placeholder="you.bsky.social" />

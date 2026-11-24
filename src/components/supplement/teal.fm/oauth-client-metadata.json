@@ -1,6 +1,6 @@
 {
   "client_id": "https://diffuse.sh/latest/components/supplement/teal.fm/oauth-client-metadata.json",
-  "client_name": "teal.fm | Diffuse",
+  "client_name": "Teal.fm | Diffuse",
   "client_uri": "https://diffuse.sh",
   "redirect_uris": ["https://diffuse.sh/oauth/callback"],
   "scope": "atproto repo:fm.teal.feed.play repo:fm.teal.actor.status",

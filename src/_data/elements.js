@@ -334,8 +334,8 @@ export default {
     },
     {
       url: "components/supplement/teal.fm/element.js",
-      title: "teal.fm Scrobbler",
-      desc: "Scrobbles track plays to teal.fm.",
+      title: "Teal.fm Scrobbler",
+      desc: "Scrobbles track plays to Teal.fm.",
     },
   ],
 
