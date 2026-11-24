@@ -332,6 +332,11 @@ export default {
       title: "Rocksky Scrobbler",
       desc: "Scrobbles track plays to Rocksky.",
     },
+    {
+      url: "components/supplement/teal.fm/element.js",
+      title: "teal.fm Scrobbler",
+      desc: "Scrobbles track plays to teal.fm.",
+    },
   ],
 
   transformers: [

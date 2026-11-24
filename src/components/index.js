@@ -46,6 +46,7 @@ import * as _SupplementAtprotoPublish from "./supplement/atproto-publish/element
 import * as _SupplementLastFm from "./supplement/last.fm/element.js"
 import * as _SupplementListenbrainz from "./supplement/listenbrainz/element.js"
 import * as _SupplementRocksky from "./supplement/rocksky/element.js"
+import * as _SupplementTealFm from "./supplement/teal.fm/element.js"
 import * as _TransformerOutputBundles from "./transformer/output/bundles/element.js"
 import * as _TransformerOutputBytesDaslSync from "./transformer/output/bytes/dasl-sync/element.js"
 import * as _TransformerOutputBytesJson from "./transformer/output/bytes/json/element.js"
@@ -141,6 +142,7 @@ export const supplement = {
   lastFm: _SupplementLastFm,
   listenbrainz: _SupplementListenbrainz,
   rocksky: _SupplementRocksky,
+  tealFm: _SupplementTealFm,
 }
 
 export const transformer = {

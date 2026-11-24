@@ -312,7 +312,7 @@
     "title": "Scrobble",
     "kind": "prelude",
     "category": "Miscellaneous",
-    "desc": "Enable scrobbling, keep track of what you're listening to. Adds support for these scrobblers: Last.fm, ListenBrainz, Rocksky"
+    "desc": "Enable scrobbling, keep track of what you're listening to. Adds support for these scrobblers: Last.fm, ListenBrainz, Rocksky, teal.fm"
   },
   {
     "url": "facets/misc/scrobble/last.fm/index.tile",
@@ -333,6 +333,12 @@
     "title": "Scrobble / Rocksky",
     "category": "Miscellaneous",
     "desc": "Connect to Rocksky to setup the Rocksky scrobbler."
+  },
+  {
+    "url": "facets/misc/scrobble/teal.fm/index.tile",
+    "title": "Scrobble / teal.fm",
+    "category": "Miscellaneous",
+    "desc": "Connect to teal.fm to setup the teal.fm scrobbler."
   },
   {
     "url": "facets/setup/index.tile",

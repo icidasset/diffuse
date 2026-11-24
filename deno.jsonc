@@ -239,6 +239,7 @@
     "./components/supplement/last.fm/element.js": "./src/components/supplement/last.fm/element.js",
     "./components/supplement/listenbrainz/element.js": "./src/components/supplement/listenbrainz/element.js",
     "./components/supplement/rocksky/element.js": "./src/components/supplement/rocksky/element.js",
+    "./components/supplement/teal.fm/element.js": "./src/components/supplement/teal.fm/element.js",
     "./components/supplement/session.js": "./src/components/supplement/session.js",
     "./components/transformer/output/base.js": "./src/components/transformer/output/base.js",
     "./components/transformer/output/bytes/dasl-sync/constants.js": "./src/components/transformer/output/bytes/dasl-sync/constants.js",

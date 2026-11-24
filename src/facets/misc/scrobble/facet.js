@@ -34,6 +34,15 @@ async function setup() {
   rocksky.setAttribute("output-selector", output.selector);
   configurator.append(rocksky);
 
+  const { default: TealScrobbler } = await import(
+    "~/components/supplement/teal.fm/element.js"
+  );
+
+  const teal = new TealScrobbler();
+  teal.setAttribute("group", foundation.GROUP);
+  teal.setAttribute("output-selector", output.selector);
+  configurator.append(teal);
+
   const { default: ListenBrainzScrobbler } = await import(
     "~/components/supplement/listenbrainz/element.js"
   );
