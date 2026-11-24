@@ -444,7 +444,7 @@ describe("components/output/raw/firkin/encrypted/incremental-loro pull resume", 
 
         const continued = await until(() => tracksOf(paused));
 
-        // ===== 3. A page switch catches up on missed hints ==================
+        // ===== 3. A page switch catches up once the listing is stale ========
         const namespaceB = "firkin-pull-b";
 
         const liveWriter = makeOption("pull-live-writer", namespaceB);
@@ -469,6 +469,10 @@ describe("components/output/raw/firkin/encrypted/incremental-loro pull resume", 
         // No hint is delivered in this harness, so the follower is still on t1.
         await new Promise((resolve) => setTimeout(resolve, 500));
         const whileHidden = tracksOf(follower);
+
+        // A page switch reuses a fresh listing; only a stale one re-reads the
+        // registry. Wait past the listing TTL to model a missed hint.
+        await new Promise((resolve) => setTimeout(resolve, 5_500));
 
         Object.defineProperty(document, "visibilityState", {
           configurable: true,

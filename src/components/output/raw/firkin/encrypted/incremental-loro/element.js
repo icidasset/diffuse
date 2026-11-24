@@ -506,15 +506,21 @@ class FirkinLoroOutput extends BroadcastedOutputElement {
   #pageShow = (/** @type {PageTransitionEvent} */ event) => {
     if (!event.persisted) return;
 
-    this.#catchUp();
+    this.#catchUp(true);
   };
 
   /**
    * Re-read the log after the page was away or the connection was
-   * re-established. Hints are best effort, so a missed hint is recovered here
-   * rather than waiting for the next write or a reload.
+   * re-established.
+   *
+   * The cached listing is reused unless the caller knows hints may have been
+   * missed. A long hidden period is covered by the listing TTL, so this only
+   * forces when the socket was down (reconnect) or the page skipped its normal
+   * load (bfcache).
+   *
+   * @param {boolean} [force]
    */
-  #catchUp() {
+  #catchUp(force = false) {
     if (!this.isConnected) return;
 
     // The session check may be what is stale. A successful one flips `ready`,
@@ -524,7 +530,8 @@ class FirkinLoroOutput extends BroadcastedOutputElement {
       return;
     }
 
-    this.#listings.clear();
+    if (force) this.#listings.clear();
+
     void this.#pull();
   }
 
@@ -620,7 +627,7 @@ class FirkinLoroOutput extends BroadcastedOutputElement {
         return await current.rb.channelUrl(name);
       },
       onHint: (hint) => this.#refreshCollection(hint.collection),
-      onReconnect: () => this.#catchUp(),
+      onReconnect: () => this.#catchUp(true),
     });
   }
 

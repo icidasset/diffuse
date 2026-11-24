@@ -322,10 +322,21 @@ class FirkinRecordSyncOutput extends BroadcastedOutputElement {
   #pageShow = (/** @type {PageTransitionEvent} */ event) => {
     if (!event.persisted) return;
 
-    this.#catchUp();
+    this.#catchUp(true);
   };
 
-  #catchUp() {
+  /**
+   * Re-read after the page was away or the hint connection was
+   * re-established.
+   *
+   * The cached listing is reused unless the caller knows hints may have been
+   * missed. A long hidden period is covered by the listing TTL, so this only
+   * forces when the socket was down (reconnect) or the page skipped its normal
+   * load (bfcache).
+   *
+   * @param {boolean} [force]
+   */
+  #catchUp(force = false) {
     if (!this.isConnected) return;
 
     if (!this.ready()) {
@@ -333,7 +344,8 @@ class FirkinRecordSyncOutput extends BroadcastedOutputElement {
       return;
     }
 
-    this.#listings.clear();
+    if (force) this.#listings.clear();
+
     void this.#pull();
   }
 
@@ -413,7 +425,7 @@ class FirkinRecordSyncOutput extends BroadcastedOutputElement {
         return await current.rb.channelUrl(name);
       },
       onHint: (hint) => this.#refreshCollection(hint),
-      onReconnect: () => this.#catchUp(),
+      onReconnect: () => this.#catchUp(true),
     });
   }
 

@@ -416,6 +416,53 @@ describe("components/output/raw/firkin/encrypted/record-sync", () => {
       expect((await pageA.evaluate(operationCounts)).writes).toEqual([]);
       expect((await pageB.evaluate(operationCounts)).writes).toEqual([]);
 
+      // --- Focus changes reuse the listing cache ------------------------
+      expect(await pageB.evaluate(() => document.visibilityState)).toBe(
+        "visible",
+      );
+
+      // Warm the listing without changing anything.
+      await pageB.evaluate(async () => {
+        await globalThis.__el.tracks.reload();
+      });
+      await settle(1_000);
+      await pageB.evaluate(resetOperations);
+
+      // A quick alt-tab must not re-list; the applied signature also skips
+      // the DAG read.
+      await pageB.evaluate(() => {
+        document.dispatchEvent(new Event("visibilitychange"));
+      });
+      await settle(1_000);
+      const focusReads = (await pageB.evaluate(operationCounts)).reads;
+      expect(focusReads).toEqual([]);
+
+      // Once the listing TTL has passed, the same focus change lists again.
+      await settle(5_500);
+      await pageB.evaluate(resetOperations);
+      await pageB.evaluate(() => {
+        document.dispatchEvent(new Event("visibilitychange"));
+      });
+      await settle(1_000);
+      const staleReads = (await pageB.evaluate(operationCounts)).reads;
+      expect(staleReads.filter((name) => name === "registryNames").length)
+        .toBe(1);
+      expect(staleReads).not.toContain("dagPull");
+
+      // A bfcache restore can have missed hints, so it forces a listing even
+      // with a fresh cache.
+      await pageB.evaluate(resetOperations);
+      await pageB.evaluate(() => {
+        globalThis.dispatchEvent(
+          new PageTransitionEvent("pageshow", { persisted: true }),
+        );
+      });
+      await settle(1_000);
+      const restoredReads = (await pageB.evaluate(operationCounts)).reads;
+      expect(restoredReads.filter((name) => name === "registryNames").length)
+        .toBe(1);
+      expect(restoredReads).not.toContain("dagPull");
+
       // A real read's 401 marks the output unusable; there is no separate
       // auth probe.
       const readyAfterAuthFailure = await pageA.evaluate(async () => {
